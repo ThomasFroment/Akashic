@@ -1,0 +1,149 @@
+FFFFF                                                                    [100%]
+================================== FAILURES ===================================
+_ test_the_folder_name_selects_the_backend_without_importing_it[qwen3-asr-1.7b-TransformerTranscriber] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000029793A7A060>
+tmp_path = WindowsPath('C:/Users/thoma/Documents/Akashic/.test-tmp/m00-mut-dispatch/test_the_folder_name_selects_t0')
+key = 'qwen3-asr-1.7b'
+expected = <class 'akashic.pipeline.speech.TransformerTranscriber'>
+
+    @pytest.mark.parametrize(
+        ("key", "expected"),
+        [
+            (QWEN3_ASR.key, TransformerTranscriber),
+            (CANARY_V2.key, TransformerTranscriber),
+            (WHISPER_LARGE_V3_MODEL, WhisperTranscriber),
+            (WHISPER_TURBO_MODEL, WhisperTranscriber),
+            ("some-unknown-folder", WhisperTranscriber),
+        ],
+    )
+    def test_the_folder_name_selects_the_backend_without_importing_it(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, key: str, expected: type
+    ) -> None:
+        for heavy in ("torch", "transformers", "faster_whisper"):
+            monkeypatch.setitem(sys.modules, heavy, None)  # importing any of them now raises
+        transcriber = speech.make_transcriber(tmp_path / key, 60.0)
+>       assert type(transcriber) is expected
+E       AssertionError: assert <class 'object'> is <class 'akashic.pipeline.speech.TransformerTranscriber'>
+E        +  where <class 'object'> = type(<object object at 0x00000297FFCB4B50>)
+
+tests\test_speech_transcribers.py:296: AssertionError
+_ test_the_folder_name_selects_the_backend_without_importing_it[canary-1b-v2-TransformerTranscriber] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000029793A7A520>
+tmp_path = WindowsPath('C:/Users/thoma/Documents/Akashic/.test-tmp/m00-mut-dispatch/test_the_folder_name_selects_t1')
+key = 'canary-1b-v2'
+expected = <class 'akashic.pipeline.speech.TransformerTranscriber'>
+
+    @pytest.mark.parametrize(
+        ("key", "expected"),
+        [
+            (QWEN3_ASR.key, TransformerTranscriber),
+            (CANARY_V2.key, TransformerTranscriber),
+            (WHISPER_LARGE_V3_MODEL, WhisperTranscriber),
+            (WHISPER_TURBO_MODEL, WhisperTranscriber),
+            ("some-unknown-folder", WhisperTranscriber),
+        ],
+    )
+    def test_the_folder_name_selects_the_backend_without_importing_it(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, key: str, expected: type
+    ) -> None:
+        for heavy in ("torch", "transformers", "faster_whisper"):
+            monkeypatch.setitem(sys.modules, heavy, None)  # importing any of them now raises
+        transcriber = speech.make_transcriber(tmp_path / key, 60.0)
+>       assert type(transcriber) is expected
+E       AssertionError: assert <class 'object'> is <class 'akashic.pipeline.speech.TransformerTranscriber'>
+E        +  where <class 'object'> = type(<object object at 0x00000297FFCB4B60>)
+
+tests\test_speech_transcribers.py:296: AssertionError
+_ test_the_folder_name_selects_the_backend_without_importing_it[faster-whisper-large-v3-WhisperTranscriber] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000029793A82F90>
+tmp_path = WindowsPath('C:/Users/thoma/Documents/Akashic/.test-tmp/m00-mut-dispatch/test_the_folder_name_selects_t2')
+key = 'faster-whisper-large-v3'
+expected = <class 'akashic.pipeline.whisper.WhisperTranscriber'>
+
+    @pytest.mark.parametrize(
+        ("key", "expected"),
+        [
+            (QWEN3_ASR.key, TransformerTranscriber),
+            (CANARY_V2.key, TransformerTranscriber),
+            (WHISPER_LARGE_V3_MODEL, WhisperTranscriber),
+            (WHISPER_TURBO_MODEL, WhisperTranscriber),
+            ("some-unknown-folder", WhisperTranscriber),
+        ],
+    )
+    def test_the_folder_name_selects_the_backend_without_importing_it(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, key: str, expected: type
+    ) -> None:
+        for heavy in ("torch", "transformers", "faster_whisper"):
+            monkeypatch.setitem(sys.modules, heavy, None)  # importing any of them now raises
+        transcriber = speech.make_transcriber(tmp_path / key, 60.0)
+>       assert type(transcriber) is expected
+E       AssertionError: assert <class 'object'> is <class 'akashic.pipeline.whisper.WhisperTranscriber'>
+E        +  where <class 'object'> = type(<object object at 0x00000297FFCB4BC0>)
+
+tests\test_speech_transcribers.py:296: AssertionError
+_ test_the_folder_name_selects_the_backend_without_importing_it[faster-whisper-large-v3-turbo-WhisperTranscriber] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000029793A897B0>
+tmp_path = WindowsPath('C:/Users/thoma/Documents/Akashic/.test-tmp/m00-mut-dispatch/test_the_folder_name_selects_t3')
+key = 'faster-whisper-large-v3-turbo'
+expected = <class 'akashic.pipeline.whisper.WhisperTranscriber'>
+
+    @pytest.mark.parametrize(
+        ("key", "expected"),
+        [
+            (QWEN3_ASR.key, TransformerTranscriber),
+            (CANARY_V2.key, TransformerTranscriber),
+            (WHISPER_LARGE_V3_MODEL, WhisperTranscriber),
+            (WHISPER_TURBO_MODEL, WhisperTranscriber),
+            ("some-unknown-folder", WhisperTranscriber),
+        ],
+    )
+    def test_the_folder_name_selects_the_backend_without_importing_it(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, key: str, expected: type
+    ) -> None:
+        for heavy in ("torch", "transformers", "faster_whisper"):
+            monkeypatch.setitem(sys.modules, heavy, None)  # importing any of them now raises
+        transcriber = speech.make_transcriber(tmp_path / key, 60.0)
+>       assert type(transcriber) is expected
+E       AssertionError: assert <class 'object'> is <class 'akashic.pipeline.whisper.WhisperTranscriber'>
+E        +  where <class 'object'> = type(<object object at 0x00000297FFCB4BE0>)
+
+tests\test_speech_transcribers.py:296: AssertionError
+_ test_the_folder_name_selects_the_backend_without_importing_it[some-unknown-folder-WhisperTranscriber] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000029793A8A7A0>
+tmp_path = WindowsPath('C:/Users/thoma/Documents/Akashic/.test-tmp/m00-mut-dispatch/test_the_folder_name_selects_t4')
+key = 'some-unknown-folder'
+expected = <class 'akashic.pipeline.whisper.WhisperTranscriber'>
+
+    @pytest.mark.parametrize(
+        ("key", "expected"),
+        [
+            (QWEN3_ASR.key, TransformerTranscriber),
+            (CANARY_V2.key, TransformerTranscriber),
+            (WHISPER_LARGE_V3_MODEL, WhisperTranscriber),
+            (WHISPER_TURBO_MODEL, WhisperTranscriber),
+            ("some-unknown-folder", WhisperTranscriber),
+        ],
+    )
+    def test_the_folder_name_selects_the_backend_without_importing_it(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, key: str, expected: type
+    ) -> None:
+        for heavy in ("torch", "transformers", "faster_whisper"):
+            monkeypatch.setitem(sys.modules, heavy, None)  # importing any of them now raises
+        transcriber = speech.make_transcriber(tmp_path / key, 60.0)
+>       assert type(transcriber) is expected
+E       AssertionError: assert <class 'object'> is <class 'akashic.pipeline.whisper.WhisperTranscriber'>
+E        +  where <class 'object'> = type(<object object at 0x00000297FFCB4C10>)
+
+tests\test_speech_transcribers.py:296: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_speech_transcribers.py::test_the_folder_name_selects_the_backend_without_importing_it[qwen3-asr-1.7b-TransformerTranscriber]
+FAILED tests/test_speech_transcribers.py::test_the_folder_name_selects_the_backend_without_importing_it[canary-1b-v2-TransformerTranscriber]
+FAILED tests/test_speech_transcribers.py::test_the_folder_name_selects_the_backend_without_importing_it[faster-whisper-large-v3-WhisperTranscriber]
+FAILED tests/test_speech_transcribers.py::test_the_folder_name_selects_the_backend_without_importing_it[faster-whisper-large-v3-turbo-WhisperTranscriber]
+FAILED tests/test_speech_transcribers.py::test_the_folder_name_selects_the_backend_without_importing_it[some-unknown-folder-WhisperTranscriber]
+5 failed in 0.36s

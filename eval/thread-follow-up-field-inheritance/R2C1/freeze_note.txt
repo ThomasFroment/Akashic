@@ -1,0 +1,7 @@
+R2C1 notes (not a report; kept beside the candidate)
+- Precondition (refuter, checks.md "QC round-2 refuter" (a)): S and E are heuristic_plan outputs of each
+  question planned ALONE, as harness.py provides. Production must plan the new question without
+  earlier-question context (today planner._plan passes earlier[-3:] and asks the model to resolve
+  he/that/then; ask.py stores the merged model plan as E) for this arbitration to hold.
+- Refuter (b): the LLM must be accurate on routed cells; ~72% of heldout2 questions route.
+- Rule-only path (R2C1_LLM unset, LlamaError, invalid JSON) returns the C1fix plan byte for byte.

@@ -1,0 +1,1 @@
+name=R2slots_iter1 rules_pass=1.0000 rules_dev=1.0000 rules_heldout=1.0000 model_pass=0.7008 future_rules=0 future_model=0 false_filter_rules=0 false_filter_model=0 errors=0 p50_us=54.1 p99_us=140.4 cases=1290

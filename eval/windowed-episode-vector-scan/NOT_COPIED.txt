@@ -1,0 +1,10 @@
+# windowed-episode-vector-scan: files not copied from the study folder (10 files, 38.0 MB)
+#
+# Models, raw downloads, generated audio, vector stores, pickles, logs, local shell
+# scripts and keys. The study README says how each one is rebuilt.
+
+C2/  1 files  0.0 MB
+C3/  3 files  0.0 MB
+C3/f64/  2 files  0.0 MB
+cache/  3 files  38.0 MB
+ref/  1 files  0.0 MB

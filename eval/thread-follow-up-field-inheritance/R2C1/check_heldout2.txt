@@ -1,0 +1,551 @@
+[h2-topic_switch-en-01] heldout2  'What did Karim say about the LAN party on Saturday?' -> 'Which Twitch streams did I watch this morning?'
+    people   gold=none    S=[] E=['Karim']
+    kinds    gold=own     S=['video'] E=['conversation']
+    keywords gold=none    S=[] E=['lan', 'party', 'saturday']
+    time     gold=own     S=(1794286800000, 1794308400000) E=(1794006000000, 1794092400000)
+[h2-topic_switch-en-02] heldout2  'What video did I watch about sourdough bread yesterday evening?' -> 'What did Tom tell me about his new job'
+    people   gold=own     S=['Tom'] E=[]
+    kinds    gold=own     S=['conversation'] E=['video']
+    keywords gold=own     S=['job', 'new'] E=['bread', 'sourdough']
+    time     gold=none    S=None E=(1794243600000, 1794261600000)
+[h2-topic_switch-en-03] heldout2  'what did I play last night' -> 'What did Inès say about the apartment visit on Monday?'
+    people   gold=own     S=['Inès'] E=[]
+    kinds    gold=own     S=['conversation'] E=['game']
+    keywords gold=own     S=['apartment', 'monday', 'visit'] E=[]
+    time     gold=own     S=(1794178800000, 1794265200000) E=(1794261600000, 1794286800000)
+[h2-topic_switch-en-04] heldout2  'What did Sacha say about Balatro yesterday?' -> 'What did Léa think about the Factorio mod?'
+    people   gold=own     S=['Léa'] E=['Sacha']
+    kinds    gold=none    S=[] E=['conversation']
+    keywords gold=own     S=['factorio', 'mod', 'think'] E=['balatro']
+    time     gold=none    S=None E=(1794178800000, 1794265200000)
+[h2-topic_switch-en-05] heldout2  'What did I watch this morning?' -> 'ok so Karim was going on and on about some weird Godot bug during the Discord call yesterday evening, what exactly did Karim say about the bug'
+    people   gold=own     S=['Karim'] E=[]
+    kinds    gold=own     S=['conversation'] E=['video']
+    keywords gold=own     S=['bug', 'exactly', 'godot', 'going', 'weird'] E=[]
+    time     gold=own     S=(1794243600000, 1794261600000) E=(1794286800000, 1794308400000)
+[h2-topic_switch-en-06] heldout2  'Which videos did I watch about chess openings on Sunday?' -> 'btw what did Inès say about her Spotify wrapped yesterday'
+    people   gold=own     S=['Inès'] E=[]
+    kinds    gold=own     S=['conversation'] E=['video']
+    keywords gold=own     S=['btw', 'spotify', 'wrapped'] E=['chess', 'openings', 'sunday']
+    time     gold=own     S=(1794178800000, 1794265200000) E=(1794092400000, 1794178800000)
+[h2-topic_switch-fr-01] heldout2  "Qu'est-ce que Minlo a dit sur le tournoi Valorant hier soir ?" -> "J'ai regardé quelles vidéos de cuisine ce matin ?"
+    people   gold=none    S=[] E=['Minlo']
+    kinds    gold=own     S=['video'] E=['conversation']
+    keywords gold=own     S=['cuisine'] E=['tournoi', 'valorant']
+    time     gold=own     S=(1794286800000, 1794308400000) E=(1794243600000, 1794261600000)
+[h2-topic_switch-fr-02] heldout2  "Qu'est-ce que j'ai écouté dimanche après-midi ?" -> "De quoi Karim a parlé pendant l'appel de jeudi ?"
+    people   gold=own     S=['Karim'] E=[]
+    kinds    gold=own     S=['conversation'] E=['music']
+    keywords gold=none    S=['jeudi'] E=['dimanche']  (none, standalone has a value)
+    time     gold=own     S=(1793833200000, 1793919600000) E=(1794135600000, 1794157200000)
+[h2-topic_switch-fr-03] heldout2  "Qu'est-ce que j'ai regardé sur YouTube avant-hier ?" -> "Qu'est-ce qu'Inès pense du nouveau patch de Hades ?"
+    people   gold=own     S=['Inès'] E=[]
+    kinds    gold=none    S=[] E=['video']
+    keywords gold=own     S=['hades', 'nouveau', 'patch', 'pense'] E=[]
+    time     gold=none    S=None E=(1794092400000, 1794178800000)
+[h2-topic_switch-fr-04] heldout2  "Léa m'a dit quoi ce matin au sujet du déménagement ?" -> "À quoi j'ai joué la semaine dernière ?"
+    people   gold=none    S=[] E=['Léa']
+    kinds    gold=own     S=['game'] E=['conversation']
+    keywords gold=none    S=[] E=['demenagement', 'sujet']
+    time     gold=own     S=(1793574000000, 1794178800000) E=(1794286800000, 1794308400000)
+[h2-topic_switch-fr-05] heldout2  "Qu'est-ce que Tom a dit sur le budget ce matin ?" -> "du coup je me rappelle plus, c'est quoi la vidéo sur les claviers mécaniques que j'ai regardée avant-hier soir ?"
+    people   gold=none    S=[] E=['Tom']
+    kinds    gold=own     S=['video'] E=['conversation']
+    keywords gold=own     S=['claviers', 'coup', 'mecaniques', 'rappelle'] E=['budget']
+    time     gold=own     S=(1794157200000, 1794175200000) E=(1794286800000, 1794308400000)
+[h2-topic_switch-fr-06] heldout2  "J'ai regardé quoi ce matin ?" -> "Et sinon, qu'est-ce que Karim a dit sur le resto hier ?"
+    people   gold=own     S=['Karim'] E=[]
+    kinds    gold=own     S=['conversation'] E=['video']
+    keywords gold=own     S=['resto', 'sinon'] E=[]
+    time     gold=own     S=(1794178800000, 1794265200000) E=(1794286800000, 1794308400000)
+[h2-topic_switch-fr-07] heldout2  "Qu'est-ce que j'ai écouté hier soir ?" -> 'ptet que Léa a parlé du concert de Stromae lundi ?'
+    people   gold=own     S=['Léa'] E=[]
+    kinds    gold=own     S=['conversation'] E=['music']
+    keywords gold=own     S=['concert', 'lundi', 'ptet', 'stromae'] E=[]
+    time     gold=own     S=(1794178800000, 1794265200000) E=(1794243600000, 1794261600000)
+[h2-topic_switch-mixed-01] heldout2  "Qu'est-ce que Sacha a dit hier soir sur le build de Path of Exile ?" -> 'What did Karim say about le stage chez Ubisoft?'
+    people   gold=own     S=['Karim'] E=['Sacha']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=own     S=['chez', 'stage', 'ubisoft'] E=['build', 'exile', 'path']
+    time     gold=none    S=None E=(1794243600000, 1794261600000)
+[h2-topic_switch-mixed-02] heldout2  'what did I watch on twitch yesterday' -> "Qu'est-ce que Minlo m'a raconté about his trip to Lyon ce matin ?"
+    people   gold=own     S=['Minlo'] E=[]
+    kinds    gold=own     S=['conversation'] E=['video']
+    keywords gold=own     S=['lyon', 'trip'] E=[]
+    time     gold=own     S=(1794286800000, 1794308400000) E=(1794178800000, 1794265200000)
+[h2-topic_switch-mixed-03] heldout2  'What did Tom say about the Steam sale hier ?' -> "C'était quoi la musique que j'ai écoutée this morning ?"
+    people   gold=none    S=[] E=['Tom']
+    kinds    gold=own     S=['music'] E=['conversation']
+    keywords gold=own     S=['musique'] E=['sale', 'steam']
+    time     gold=own     S=(1794286800000, 1794308400000) E=(1794178800000, 1794265200000)
+[h2-topic_switch-mixed-04] heldout2  "J'ai joué à quoi samedi soir ?" -> "What did Sacha say about la nouvelle saison d'Apex"
+    people   gold=own     S=['Sacha'] E=[]
+    kinds    gold=own     S=['conversation'] E=['game']
+    keywords gold=own     S=['apex', 'nouvelle', 'saison'] E=['samedi']
+    time     gold=none    S=None E=(1794070800000, 1794088800000)
+[h2-short_selfcontained-en-01] heldout2  'What did I watch on Sunday?' -> 'Videos from this morning?'
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=none    S=[] E=['sunday']
+    time     gold=own     S=(1794286800000, 1794308400000) E=(1794092400000, 1794178800000)
+[h2-short_selfcontained-en-02] heldout2  'What did I play last week?' -> 'what did i play today'
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['game'] E=['game']
+    keywords gold=none    S=[] E=[]
+    time     gold=own     S=(1794265200000, 1794351600000) E=(1793574000000, 1794178800000)
+[h2-short_selfcontained-en-03] heldout2  'What did Sacha say about Rocket League on Friday?' -> 'Any calls this afternoon?'
+    people   gold=none    S=[] E=['Sacha']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=[] E=['friday', 'league', 'rocket']
+    time     gold=own     S=(1794308400000, 1794330000000) E=(1793919600000, 1794006000000)
+[h2-short_selfcontained-en-04] heldout2  'What music did I listen to yesterday?' -> 'Summarize today.'
+    people   gold=none    S=[] E=[]
+    kinds    gold=none    S=[] E=['music']
+    keywords gold=none    S=[] E=['music']
+    time     gold=own     S=(1794265200000, 1794351600000) E=(1794178800000, 1794265200000)
+[h2-short_selfcontained-en-05] heldout2  'Who did I call on Wednesday?' -> 'who did I call today'
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=[] E=['wednesday']
+    time     gold=own     S=(1794265200000, 1794351600000) E=(1793746800000, 1793833200000)
+[h2-short_selfcontained-en-06] heldout2  'What did I watch on Saturday?' -> 'waht did i watch yesterday'
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=none    S=['waht'] E=['saturday']  (none, standalone has a value)
+    time     gold=own     S=(1794178800000, 1794265200000) E=(1794006000000, 1794092400000)
+[h2-short_selfcontained-fr-01] heldout2  "Qu'est-ce que j'ai regardé hier soir ?" -> "J'ai vu quoi ce matin ?"
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=none    S=[] E=[]
+    time     gold=own     S=(1794286800000, 1794308400000) E=(1794243600000, 1794261600000)
+[h2-short_selfcontained-fr-02] heldout2  "J'ai joué à quoi samedi ?" -> "bon, j'ai joué à quoi avant-hier"
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['game'] E=['game']
+    keywords gold=none    S=['bon'] E=['samedi']  (none, standalone has a value)
+    time     gold=own     S=(1794092400000, 1794178800000) E=(1794006000000, 1794092400000)
+[h2-short_selfcontained-fr-03] heldout2  'Karim a dit quoi samedi ?' -> "Qui m'a appelé hier ?"
+    people   gold=none    S=[] E=['Karim']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=[] E=['samedi']
+    time     gold=own     S=(1794178800000, 1794265200000) E=(1794006000000, 1794092400000)
+[h2-short_selfcontained-fr-04] heldout2  'Résume ma semaine.' -> 'Bilan du mois dernier stp'
+    people   gold=none    S=[] E=[]
+    kinds    gold=none    S=[] E=[]
+    keywords gold=none    S=['stp'] E=[]  (none, standalone has a value)
+    time     gold=own     S=(1790805600000, 1793487600000) E=None
+[h2-short_selfcontained-fr-05] heldout2  "J'ai écouté quoi hier ?" -> "petite kestion : j'ai écouté quoi ce matin ?"
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['music'] E=['music']
+    keywords gold=none    S=['kestion', 'petite'] E=[]  (none, standalone has a value)
+    time     gold=own     S=(1794286800000, 1794308400000) E=(1794178800000, 1794265200000)
+[h2-short_selfcontained-mixed-01] heldout2  'What did I listen to on Spotify yesterday?' -> "J'ai écouté quoi this morning ?"
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['music'] E=['music']
+    keywords gold=none    S=[] E=['spotify']
+    time     gold=own     S=(1794286800000, 1794308400000) E=(1794178800000, 1794265200000)
+[h2-short_selfcontained-mixed-02] heldout2  "Qu'est-ce que j'ai regardé hier ?" -> 'My YouTube history from avant-hier?'
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=none    S=['history'] E=[]  (none, standalone has a value)
+    time     gold=own     S=(1794092400000, 1794178800000) E=(1794178800000, 1794265200000)
+[h2-pronoun-en-01] heldout2  'What did Karim say about the internship yesterday afternoon?' -> 'Did he sound worried about it?'
+    people   gold=inherit S=[] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['sound', 'worried'] E=['internship']
+    time     gold=inherit S=None E=(1794222000000, 1794243600000)
+[h2-pronoun-en-02] heldout2  'What did Inès say about the wedding this morning?' -> 'what did she say about the playlist'
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=own     S=['playlist', 'she'] E=['wedding']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-pronoun-en-03] heldout2  'What did Tom tell me about Helldivers on Thursday?' -> 'Did he mention the new warbond too?'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=own     S=['mention', 'new', 'too', 'warbond'] E=['helldivers', 'thursday']
+    time     gold=inherit S=None E=(1793833200000, 1793919600000)
+[h2-pronoun-en-04] heldout2  'What did Sacha say during the call last night?' -> 'did she bring up the rent again'
+    people   gold=inherit S=[] E=['Sacha']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=own     S=['again', 'bring', 'rent', 'she'] E=[]
+    time     gold=inherit S=None E=(1794261600000, 1794286800000)
+[h2-pronoun-en-05] heldout2  'What did Léa say about her exam this morning' -> 'how did she feel about it'
+    people   gold=inherit S=[] E=['Léa']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['feel', 'she'] E=['exam']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-pronoun-fr-01] heldout2  "Qu'est-ce que Karim a dit sur Baldur's Gate hier ?" -> 'Il a dit quoi sur la fin du jeu'
+    people   gold=inherit S=[] E=['Karim']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=own     S=['fin', 'jeu'] E=['baldur', 'gate']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-pronoun-fr-02] heldout2  "Qu'est-ce que Léa m'a raconté ce matin sur son voyage ?" -> 'Elle part quand déjà ?'
+    people   gold=inherit S=[] E=['Léa']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['deja', 'part'] E=['voyage']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-pronoun-fr-03] heldout2  "Inès a parlé de quoi pendant l'appel de mardi ?" -> "Chui sûr qu'elle a parlé du concert, non ?"
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=own     S=['chui', 'concert', 'non'] E=['mardi']
+    time     gold=inherit S=None E=(1793660400000, 1793746800000)
+[h2-pronoun-fr-04] heldout2  "Qu'est-ce que Tom a dit hier soir sur le tournoi de belote ?" -> 'Et moi, je lui ai dit quoi ?'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=inherit S=[] E=['belote', 'tournoi']
+    time     gold=inherit S=None E=(1794243600000, 1794261600000)
+[h2-pronoun-mixed-01] heldout2  'What did Minlo say about the raid on Saturday?' -> 'Il a dit quoi sur the healer ?'
+    people   gold=inherit S=[] E=['Minlo']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=own     S=['healer'] E=['raid', 'saturday']
+    time     gold=inherit S=None E=(1794006000000, 1794092400000)
+[h2-pronoun-mixed-02] heldout2  "Qu'est-ce que Inès a dit sur Notion hier ?" -> 'did she send me the template'
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=own     S=['send', 'she', 'template'] E=['notion']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-deictic-en-01] heldout2  'What video did I watch about mechanical keyboards yesterday?' -> 'who uploaded that one'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['video']
+    keywords gold=inherit S=['one', 'uploaded'] E=['keyboards', 'mechanical']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-deictic-en-02] heldout2  'What did I watch on YouTube on Sunday evening?' -> 'was it any good'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['video']
+    keywords gold=inherit S=['good'] E=['sunday']
+    time     gold=inherit S=None E=(1794157200000, 1794175200000)
+[h2-deictic-en-03] heldout2  'What did Karim say about the Rust rewrite on Monday?' -> 'Did Sacha mention that too?'
+    people   gold=own     S=['Sacha'] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['mention', 'too'] E=['monday', 'rewrite', 'rust']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-deictic-en-04] heldout2  'Which browser tabs did I have open about GPU prices yesterday?' -> 'Did I buy that in the end?'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['browsing']
+    keywords gold=inherit S=['buy', 'end'] E=['gpu', 'open', 'prices', 'tabs']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-deictic-en-05] heldout2  'what did sacha say about the linux install friday' -> 'did it actually work in the end'
+    people   gold=inherit S=[] E=['Sacha']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['actually', 'end', 'work'] E=['friday', 'install', 'linux']
+    time     gold=inherit S=None E=(1793919600000, 1794006000000)
+[h2-deictic-fr-01] heldout2  "J'ai regardé quoi sur Twitch hier soir ?" -> "C'était qui le streamer, sur cette vidéo ?"
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=['video'] E=['video']
+    keywords gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    time     gold=inherit S=None E=(1794243600000, 1794261600000)
+[h2-deictic-fr-02] heldout2  "Qu'est-ce que Karim a dit sur l'appart ce matin ?" -> 'Ça coûtait combien, ça ?'
+    people   gold=inherit S=[] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['combien', 'coutait'] E=['appart']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-deictic-fr-03] heldout2  "Qu'est-ce que j'ai regardé hier sur la Formule 1 ?" -> 'Ça parlait de quoi exactement, cette vidéo ?'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=['conversation', 'video'] E=['video']
+    keywords gold=inherit S=['exactement'] E=['formule']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-deictic-fr-04] heldout2  "Qu'est-ce que Léa a dit sur la recette de lasagnes dimanche ?" -> "Elle m'a envoyé ça par message ?"
+    people   gold=inherit S=[] E=['Léa']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['envoye', 'message'] E=['dimanche', 'lasagnes', 'recette']
+    time     gold=inherit S=None E=(1794092400000, 1794178800000)
+[h2-deictic-mixed-01] heldout2  'What video did I watch about the James Webb telescope hier ?' -> "C'était sur quelle chaîne, that one ?"
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['video']
+    keywords gold=inherit S=['chaine', 'one'] E=['james', 'telescope', 'webb']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-deictic-mixed-02] heldout2  "Qu'est-ce que Tom a dit sur Factorio ce matin ?" -> 'Ça date de quand, that thing ?'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['date', 'thing'] E=['factorio']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-time_link-en-01] heldout2  'What did Karim say about the deadline this morning?' -> 'Did he bring it up again later that day?'
+    people   gold=inherit S=[] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['again', 'bring', 'day', 'later'] E=['deadline']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-time_link-en-02] heldout2  'What did I watch yesterday evening?' -> 'And what did I watch right after that?'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=inherit S=['right'] E=[]  (inherit of an empty earlier value)
+    time     gold=inherit S=None E=(1794243600000, 1794261600000)
+[h2-time_link-en-03] heldout2  'What did Tom say about the Satisfactory factory on Thursday?' -> 'Then what did he say?'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=inherit S=[] E=['factory', 'satisfactory', 'thursday']
+    time     gold=inherit S=None E=(1793833200000, 1793919600000)
+[h2-time_link-en-04] heldout2  'What did I play on Saturday night?' -> 'after that what did i play'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=own     S=['game'] E=['game']
+    keywords gold=inherit S=[] E=['saturday']
+    time     gold=inherit S=None E=(1794088800000, 1794114000000)
+[h2-time_link-fr-01] heldout2  "Qu'est-ce que Inès a raconté ce matin sur son entretien ?" -> 'Et ensuite, elle a dit quoi ?'
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=inherit S=['ensuite'] E=['entretien']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-time_link-fr-02] heldout2  "J'ai regardé quoi hier après-midi ?" -> "Juste après, j'ai regardé quoi ?"
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=inherit S=['juste'] E=[]  (inherit of an empty earlier value)
+    time     gold=inherit S=None E=(1794222000000, 1794243600000)
+[h2-time_link-fr-03] heldout2  "Qu'est-ce que Minlo a dit sur Lethal Company samedi ?" -> 'Le même jour, il en a reparlé ?'
+    people   gold=inherit S=[] E=['Minlo']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['jour', 'meme', 'reparle'] E=['company', 'lethal', 'samedi']
+    time     gold=inherit S=None E=(1794006000000, 1794092400000)
+[h2-time_link-fr-04] heldout2  "Qu'est-ce que Tom a dit sur le budget hier soir ?" -> 'Il a dit quoi juste après'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=inherit S=['juste'] E=['budget']
+    time     gold=inherit S=None E=(1794243600000, 1794261600000)
+[h2-time_link-mixed-01] heldout2  'What did Léa say about the concert tickets hier ?' -> 'Et après ça, elle a dit quoi ?'
+    people   gold=inherit S=[] E=['Léa']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=inherit S=[] E=['concert', 'tickets']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-time_link-mixed-02] heldout2  "Qu'est-ce que j'ai regardé sur YouTube dimanche soir ?" -> "Then j'ai regardé quoi ?"
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=inherit S=[] E=['dimanche']
+    time     gold=inherit S=None E=(1794157200000, 1794175200000)
+[h2-time_link-mixed-03] heldout2  'What did Sacha tell me about Hades II this morning?' -> 'ensuite she said what?'
+    people   gold=inherit S=[] E=['Sacha']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=inherit S=['ensuite', 'she'] E=['hades']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-conjunction-en-01] heldout2  'What did Tom say about the release on Monday?' -> 'and on Friday?'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['friday'] E=['monday', 'release']
+    time     gold=own     S=(1793919600000, 1794006000000) E=(1794178800000, 1794265200000)
+[h2-conjunction-en-02] heldout2  'What did I watch this morning?' -> 'And yesterday afternoon?'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['video']
+    keywords gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    time     gold=own     S=(1794222000000, 1794243600000) E=(1794286800000, 1794308400000)
+[h2-conjunction-en-03] heldout2  'What did Sacha say about the speedrun yesterday?' -> 'What about Karim?'
+    people   gold=own     S=['Karim'] E=['Sacha']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=[] E=['speedrun']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-conjunction-en-04] heldout2  'What did Minlo say about Deep Rock Galactic last week?' -> 'and about Rocket League'
+    people   gold=inherit S=[] E=['Minlo']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=own     S=['league', 'rocket'] E=['deep', 'galactic', 'rock']
+    time     gold=inherit S=None E=(1793574000000, 1794178800000)
+[h2-conjunction-en-05] heldout2  'What did Karim say about the job offer on Tuesday?' -> 'And on Thursday'
+    people   gold=inherit S=[] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['thursday'] E=['job', 'offer', 'tuesday']
+    time     gold=own     S=(1793833200000, 1793919600000) E=(1793660400000, 1793746800000)
+[h2-conjunction-fr-01] heldout2  "Qu'est-ce que Léa a dit sur le mariage mercredi ?" -> 'Et pour jeudi ?'
+    people   gold=inherit S=[] E=['Léa']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['jeudi'] E=['mariage', 'mercredi']
+    time     gold=own     S=(1793833200000, 1793919600000) E=(1793746800000, 1793833200000)
+[h2-conjunction-fr-02] heldout2  "J'ai joué à quoi hier soir ?" -> 'Et avant-hier ?'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['game']
+    keywords gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    time     gold=own     S=(1794092400000, 1794178800000) E=(1794243600000, 1794261600000)
+[h2-conjunction-fr-03] heldout2  "Qu'est-ce que Karim a dit sur Valorant ce matin ?" -> 'Et Inès ?'
+    people   gold=own     S=['Inès'] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=[] E=['valorant']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-conjunction-fr-04] heldout2  "Qu'est-ce que Tom a dit sur le loyer lundi ?" -> 'Et concernant les travaux ?'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=own     S=['concernant', 'travaux'] E=['loyer', 'lundi']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-conjunction-mixed-01] heldout2  'What did Inès say about the vacances this morning?' -> 'Et pour la semaine dernière alors ?'
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=[] E=['vacances']
+    time     gold=own     S=(1793574000000, 1794178800000) E=(1794286800000, 1794308400000)
+[h2-conjunction-mixed-02] heldout2  "Qu'est-ce que Sacha a dit sur le patch hier ?" -> 'what about Tom'
+    people   gold=own     S=['Tom'] E=['Sacha']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=[] E=['patch']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-conjunction-mixed-03] heldout2  'What did I watch hier soir ?' -> 'Et sur Netflix ?'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['video']
+    keywords gold=own     S=['netflix'] E=[]
+    time     gold=inherit S=None E=(1794243600000, 1794261600000)
+[h2-continuation-en-01] heldout2  "What did Karim say about the Baldur's Gate ending yesterday?" -> 'can you elaborate?'
+    people   gold=inherit S=[] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['elaborate'] E=['baldur', 'ending', 'gate']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-continuation-en-02] heldout2  'What video did I watch about home espresso this morning?' -> 'go deeper'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['video']
+    keywords gold=inherit S=['deeper'] E=['espresso', 'home']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-continuation-en-03] heldout2  'What did Inès tell me about her new apartment on Sunday?' -> 'how come'
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['come'] E=['apartment', 'new', 'sunday']
+    time     gold=inherit S=None E=(1794092400000, 1794178800000)
+[h2-continuation-en-04] heldout2  'What did Tom say about the Steam Deck last week?' -> 'ok so give me the full story'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['full', 'give', 'story'] E=['deck', 'steam']
+    time     gold=inherit S=None E=(1793574000000, 1794178800000)
+[h2-continuation-en-05] heldout2  'what did sacha say about counter strike on friday' -> 'elaborate pls, i didnt get it'
+    people   gold=inherit S=[] E=['Sacha']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['didnt', 'elaborate', 'pls'] E=['counter', 'friday', 'strike']
+    time     gold=inherit S=None E=(1793919600000, 1794006000000)
+[h2-continuation-fr-01] heldout2  "Qu'est-ce que Léa a dit sur son stage hier ?" -> 'Développe.'
+    people   gold=inherit S=[] E=['Léa']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['developpe'] E=['stage']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-continuation-fr-02] heldout2  "Qu'est-ce que Minlo a dit sur Stardew Valley ce matin ?" -> 'plus de détails stp'
+    people   gold=inherit S=[] E=['Minlo']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['details', 'stp'] E=['stardew', 'valley']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-continuation-fr-03] heldout2  "Qu'est-ce que Sacha m'a dit hier soir sur la raclette ?" -> 'Comment ça ?'
+    people   gold=inherit S=[] E=['Sacha']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=[] E=['raclette']
+    time     gold=inherit S=None E=(1794243600000, 1794261600000)
+[h2-continuation-fr-04] heldout2  "Qu'est-ce que j'ai regardé dimanche sur la Coupe du monde ?" -> 'bon, vas-y, continue'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=inherit S=[] E=['video']
+    keywords gold=inherit S=['bon', 'continue', 'vas'] E=['coupe', 'dimanche', 'monde']
+    time     gold=inherit S=None E=(1794092400000, 1794178800000)
+[h2-continuation-mixed-01] heldout2  'What did Karim say about the GPU drivers hier ?' -> 'Explique-moi mieux stp'
+    people   gold=inherit S=[] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['explique', 'mieux', 'stp'] E=['drivers', 'gpu']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-continuation-mixed-02] heldout2  "Qu'est-ce que Inès a dit about the startup this morning ?" -> 'and then what happened'
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['happened'] E=['startup']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-continuation-mixed-03] heldout2  'What did Tom say about the Bitcoin crash ce matin ?' -> "C'est-à-dire ? tell me more"
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=inherit S=['conversation'] E=['conversation']
+    keywords gold=inherit S=['dire', 'more'] E=['bitcoin', 'crash']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-exclusion-en-01] heldout2  'What did Karim say about the move this morning?' -> 'What else did Karim say?'
+    people   gold=own     S=['Karim'] E=['Karim']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=['else'] E=['move']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-exclusion-en-02] heldout2  'What videos did I watch about woodworking yesterday?' -> 'and what other videos did I watch'
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=none    S=['other'] E=['woodworking']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-exclusion-en-03] heldout2  'What did Inès say about her thesis on Monday?' -> 'Anything else she brought up?'
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=none    S=['brought', 'else', 'she'] E=['monday', 'thesis']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-exclusion-en-04] heldout2  'What did Tom tell me about the camping trip last week?' -> 'did he talk about other stuff too'
+    people   gold=inherit S=[] E=['Tom']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=['other', 'stuff', 'too'] E=['camping', 'trip']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1793574000000, 1794178800000)
+[h2-exclusion-en-05] heldout2  'What did Tom say about the Factorio megabase on Saturday?' -> 'besides that, what did Tom and Sacha talk about'
+    people   gold=own     S=['Sacha', 'Tom'] E=['Tom']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=['besides'] E=['factorio', 'megabase', 'saturday']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794006000000, 1794092400000)
+[h2-exclusion-fr-01] heldout2  "Qu'est-ce que Léa a dit sur le cadeau d'anniversaire hier ?" -> "Elle a dit quoi d'autre ?"
+    people   gold=inherit S=[] E=['Léa']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=['autre'] E=['anniversaire', 'cadeau']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-exclusion-fr-02] heldout2  "J'ai regardé quoi sur le tricot avant-hier ?" -> "Et à part ça, j'ai regardé quoi ?"
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=own     S=['video'] E=['video']
+    keywords gold=none    S=['part'] E=['tricot']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794092400000, 1794178800000)
+[h2-exclusion-fr-03] heldout2  "Qu'est-ce que Sacha a raconté ce matin sur sa voiture ?" -> "Sacha a parlé d'autre chose ?"
+    people   gold=own     S=['Sacha'] E=['Sacha']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=['autre'] E=['voiture']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-exclusion-fr-04] heldout2  "Qu'est-ce que Minlo a dit sur la mise à jour de Balatro mardi ?" -> "Il a rien dit d'autre ?"
+    people   gold=inherit S=[] E=['Minlo']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=['autre', 'rien'] E=['balatro', 'jour', 'mardi', 'mise']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1793660400000, 1793746800000)
+[h2-exclusion-mixed-01] heldout2  'What did Inès say about le dentiste hier ?' -> 'Et à part ça, what did she say ?'
+    people   gold=inherit S=[] E=['Inès']
+    kinds    gold=own     S=['conversation'] E=['conversation']
+    keywords gold=none    S=['part', 'she'] E=['dentiste']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-exclusion-mixed-02] heldout2  "Qu'est-ce que j'ai écouté ce matin on Spotify ?" -> "anything else que j'ai écouté ?"
+    people   gold=inherit S=[] E=[]  (inherit of an empty earlier value)
+    kinds    gold=own     S=['music'] E=['music']
+    keywords gold=none    S=['else'] E=['spotify']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-partial_shift-en-01] heldout2  'What did Karim say about the hackathon yesterday afternoon?' -> 'And what did I listen to then?'
+    people   gold=none    S=[] E=['Karim']
+    kinds    gold=own     S=['music'] E=['conversation']
+    keywords gold=none    S=[] E=['hackathon']
+    time     gold=inherit S=None E=(1794222000000, 1794243600000)
+[h2-partial_shift-en-02] heldout2  'What did I play on Saturday evening?' -> 'And what was I watching at the same time?'
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['video'] E=['game']
+    keywords gold=none    S=['same', 'time'] E=['saturday']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794070800000, 1794088800000)
+[h2-partial_shift-en-03] heldout2  'What video did I watch about Satisfactory yesterday?' -> 'And did Tom talk about that the same day?'
+    people   gold=own     S=['Tom'] E=[]
+    kinds    gold=own     S=['conversation'] E=['video']
+    keywords gold=inherit S=['day', 'same'] E=['satisfactory']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-partial_shift-en-04] heldout2  'What did Sacha say about Hades II on Wednesday?' -> 'And did I play it afterwards?'
+    people   gold=none    S=[] E=['Sacha']
+    kinds    gold=own     S=['game'] E=['conversation']
+    keywords gold=inherit S=['afterwards'] E=['hades', 'wednesday']
+    time     gold=inherit S=None E=(1793746800000, 1793833200000)
+[h2-partial_shift-en-05] heldout2  'What did Inès say about the job interview on Monday?' -> 'And Léa, did she say anything about it?'
+    people   gold=own     S=['Léa'] E=['Inès']
+    kinds    gold=inherit S=['conversation'] E=['conversation']
+    keywords gold=inherit S=['she'] E=['interview', 'job', 'monday']
+    time     gold=inherit S=None E=(1794178800000, 1794265200000)
+[h2-partial_shift-fr-01] heldout2  "Qu'est-ce que Inès a dit sur Dune hier soir ?" -> "Et ensuite, j'ai regardé quoi ?"
+    people   gold=none    S=[] E=['Inès']
+    kinds    gold=own     S=['video'] E=['conversation']
+    keywords gold=none    S=['ensuite'] E=['dune']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794243600000, 1794261600000)
+[h2-partial_shift-fr-02] heldout2  "J'ai joué à quoi ce matin ?" -> "Et j'ai écouté quoi pendant ce temps-là ?"
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['music'] E=['game']
+    keywords gold=none    S=['temps'] E=[]  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-partial_shift-fr-03] heldout2  "Qu'est-ce que Tom a dit sur Hollow Knight jeudi ?" -> 'Et Karim, il en pensait quoi ?'
+    people   gold=own     S=['Karim'] E=['Tom']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['pensait'] E=['hollow', 'jeudi', 'knight']
+    time     gold=inherit S=None E=(1793833200000, 1793919600000)
+[h2-partial_shift-fr-04] heldout2  "Qu'est-ce que Léa a dit sur les impôts ce matin ?" -> 'Et Minlo, il a dit quoi là-dessus ?'
+    people   gold=own     S=['Minlo'] E=['Léa']
+    kinds    gold=inherit S=['conversation'] E=['conversation']
+    keywords gold=inherit S=['dessus'] E=['impots']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-partial_shift-fr-05] heldout2  "Qu'est-ce que j'ai regardé sur YouTube hier matin ?" -> "Et du coup, j'ai joué à quoi juste après ?"
+    people   gold=none    S=[] E=[]
+    kinds    gold=own     S=['game'] E=['video']
+    keywords gold=none    S=['coup', 'juste'] E=[]  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794200400000, 1794222000000)
+[h2-partial_shift-mixed-01] heldout2  'What did Karim say about the Discord bot this morning?' -> 'Et Tom, what did he think ?'
+    people   gold=own     S=['Tom'] E=['Karim']
+    kinds    gold=inherit S=[] E=['conversation']
+    keywords gold=inherit S=['think'] E=['bot']
+    time     gold=inherit S=None E=(1794286800000, 1794308400000)
+[h2-partial_shift-mixed-02] heldout2  "Qu'est-ce que Sacha a dit sur Path of Exile samedi ?" -> 'And what did I watch that day?'
+    people   gold=none    S=[] E=['Sacha']
+    kinds    gold=own     S=['video'] E=['conversation']
+    keywords gold=none    S=['day'] E=['exile', 'path', 'samedi']  (none, standalone has a value)
+    time     gold=inherit S=None E=(1794006000000, 1794092400000)
+0 flag(s)

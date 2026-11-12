@@ -1,0 +1,1 @@
+cand=C2_calib solo_auth=0.6870 solo10k_auth=0.8155 solo10_0_auth=0.5536 cont2_auth=0.5000 wrong=0.0704 wrong_mixed=0.3523 wrong_impostor=0.0000 p50_ms=351.0 p95_ms=698.9 drift_wrong_first100=0.0000 drift_wrong_last100=0.0000 drift_cos_end_min=0.9583 drift_pair_cos_end=0.5285

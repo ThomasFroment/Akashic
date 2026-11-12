@@ -1,0 +1,40 @@
+.venv/
+__pycache__/
+*.pyc
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.uv-cache/
+dist/
+build/
+# Spike outputs may contain real captured data (window titles, URLs, OCR text). Never commit.
+spikes/out/
+.test-tmp/
+
+# Invent scratch (skill frogg:invent)
+/_dev/invent/
+/_resources/references/
+/_resources/papers/
+
+# Study data rebuilt from public sources by the eval/ scripts (eval/README.md). Never committed.
+/eval/.venv/
+/eval/.onnx_venv/
+/eval/**/data/raw/
+/eval/**/data/models/
+/eval/**/data/models_extra/
+/eval/**/data/models_derived/
+/eval/**/data/sources/
+/eval/**/data/librispeech/
+/eval/**/data/mls_french/
+/eval/**/data/fixture/clips/
+/eval/**/data/fixture/segments.bin
+/eval/**/data/cache/audio/
+/eval/**/cache/*.db
+/eval/**/*.pkl
+/eval/**/*.log
+/eval/**/model/
+/eval/**/key.txt
+/eval/**/port.txt
+/eval/**/verify-*/

@@ -1,0 +1,61 @@
+
+Earlier: "What music did I listen to yesterday?"
+New: "And this morning?"
+kinds: earlier ["music"] | new []
+topic: earlier ["music"] | new []
+time: earlier Mon 09 Nov | new Tue 10 Nov 06:00-12:00
+-> {"kinds":"carry","topic":"carry","time":"drop"}
+
+Earlier: "Qu'est-ce que j'ai regardé ce matin ?"
+New: "Et samedi soir ?"
+kinds: earlier ["video"] | new []
+topic: earlier [] | new ["samedi"]
+time: earlier Tue 10 Nov 06:00-12:00 | new Sat 07 Nov 18:00-23:00
+-> {"kinds":"carry","topic":"carry","time":"drop"}
+
+Earlier: "Qu'est-ce que Minlo a dit sur le raid hier ?"
+New: "Et à propos du festival ?"
+people: earlier ["Minlo"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["raid"] | new ["festival", "propos"]
+time: earlier Mon 09 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"drop","time":"carry"}
+
+Earlier: "What did Sacha say about the tournament yesterday?"
+New: "Et about the prize ?"
+people: earlier ["Sacha"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["tournament"] | new ["prize"]
+time: earlier Mon 09 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"drop","time":"carry"}
+
+Earlier: "Quelle série j'ai regardée hier soir ?"
+New: "Qui a réalisé cette série ?"
+kinds: earlier ["video"] | new []
+topic: earlier ["serie"] | new ["realise", "serie"]
+time: earlier Mon 09 Nov 18:00-23:00 | new none
+-> {"kinds":"carry","topic":"carry","time":"carry"}
+
+Earlier: "What did Minlo say about the invoice on Friday?"
+New: "Did he share the spreadsheet with me?"
+people: earlier ["Minlo"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["friday", "invoice"] | new ["share", "spreadsheet"]
+time: earlier Fri 06 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"drop","time":"carry"}
+
+Earlier: "Qu'est-ce que Léa a dit sur la série mercredi ?"
+New: "Et elle, elle en pensait quoi du dernier épisode ?"
+people: earlier ["Léa"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["mercredi", "serie"] | new ["episode", "pensait"]
+time: earlier Wed 04 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"drop","time":"carry"}
+
+Earlier: "Qu'est-ce que Sacha a dit sur son exam ce matin ?"
+New: "Juste après, je faisais quoi ?"
+people: earlier ["Sacha"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["exam"] | new ["faisais", "juste"]
+time: earlier Tue 10 Nov 06:00-12:00 | new none
+-> {"people":"drop","kinds":"drop","topic":"drop","time":"carry"}

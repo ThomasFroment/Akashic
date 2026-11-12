@@ -1,0 +1,1 @@
+cand=C1_linked solo_auth=0.7157 solo10k_auth=0.7895 solo10_0_auth=1.0000 cont2_auth=0.3889 wrong=0.0333 wrong_mixed=0.1304 wrong_impostor=0.0000 p50_ms=489.2 p95_ms=961.0

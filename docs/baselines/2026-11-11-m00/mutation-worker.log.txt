@@ -1,0 +1,62 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___________ test_worker_loop_waits_while_paused_and_survives_errors ___________
+
+paths = Paths(root=WindowsPath('C:/Users/thoma/Documents/Akashic/.test-tmp/m00-mut-worker/test_worker_loop_waits_while_p0/data'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002BE0F187950>
+
+    def test_worker_loop_waits_while_paused_and_survives_errors(
+        paths: Paths, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(worker, "IDLE_WAIT_S", 0.01)
+        key = DataKey.generate()
+        with closing(db.connect(paths.db_file, key.subkey("db"))) as conn:
+            db.migrate(conn)
+            failing = threading.Event()
+            failing.set()
+            housekeeping_calls: list[int] = []
+            loop_errors: list[int] = []
+            real_gaming_now = worker.gaming_now
+    
+            def broken_housekeeping(*_args: object) -> None:
+                housekeeping_calls.append(1)
+                if failing.is_set():
+                    raise sqlite3.OperationalError("database is locked")
+    
+            def flaky_gaming_now(c: Connection, now_ms: int) -> bool:
+                if failing.is_set():
+                    loop_errors.append(1)
+                    raise sqlite3.OperationalError("database is locked")
+                return real_gaming_now(c, now_ms)
+    
+            monkeypatch.setattr(worker, "housekeeping", broken_housekeeping)
+            monkeypatch.setattr(worker, "gaming_now", flaky_gaming_now)
+            handler = Handler()
+            runner, queue = make_runner(conn, FakeLoad(), handler)
+            queue.enqueue(NewJob("work", "after-resume", 1), NOW)
+            ctx = RecordingContext(paths, conn, key)
+            ctx.paused.set()
+            thread = threading.Thread(target=worker.run_worker, args=(ctx, runner, queue))
+            thread.start()
+            try:
+>               wait_for(lambda: len(loop_errors) >= 3)  # paused passes, each failing
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_runner_and_scheduler.py:379: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+predicate = <function test_worker_loop_waits_while_paused_and_survives_errors.<locals>.<lambda> at 0x000002BE0F3237F0>
+timeout = 15.0
+
+    def wait_for(predicate: Callable[[], bool], timeout: float = 15.0) -> None:
+        """Poll ``predicate`` until it holds; fail (not hang) when it never does."""
+        deadline = time.monotonic() + timeout
+        while not predicate():
+            if time.monotonic() >= deadline:
+>               pytest.fail("condition not reached in time")
+E               Failed: condition not reached in time
+
+tests\test_runner_and_scheduler.py:40: Failed
+=========================== short test summary info ===========================
+FAILED tests/test_runner_and_scheduler.py::test_worker_loop_waits_while_paused_and_survives_errors
+1 failed in 15.36s

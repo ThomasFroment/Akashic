@@ -1,0 +1,1 @@
+name=C3fix_heldout3 rules_pass=0.7533 rules_heldout3=0.7533 model_pass=0.7533 future_rules=0 future_model=0 false_filter_rules=85 false_filter_model=85 errors=0 p50_us=54.2 p99_us=126.7 cases=1070

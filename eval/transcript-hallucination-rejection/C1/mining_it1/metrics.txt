@@ -1,0 +1,1 @@
+C1_mining_it1 recall=0.811 (n=169) reject_recall=0.491 ns_recall=0.811 tail_recall=nan (n=0) FRR=0.0147 (ub95=0.0256, n=814) short=0.0383/0.0673 names=0.0000/0.0356 opus=0.0160/0.0345 fr=0.0171/0.0393 en=0.0134/0.0275 unclear=0.183 extra_dec/suspect=0.00 max=0 extra_time=0.001x

@@ -1,0 +1,39 @@
+{
+ "db": "eval\\windowed-episode-vector-scan\\cache\\episodes40k.db",
+ "key_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+ "model": "qwen3-embedding-0.6b-q8",
+ "seed": 20261110,
+ "t0": 1731196800000,
+ "t_end": 1794268800000,
+ "episodes": 40000,
+ "embedded_main_model": 39700,
+ "damaged_main_model": 5,
+ "other_model_rows": 300,
+ "query_rows": 30,
+ "reembedded": 1191,
+ "duplicate_groups": 700,
+ "equal_start_vector_pairs": 373,
+ "equal_start_episodes": 1240,
+ "tail_ge_1day": 168,
+ "ge_2h": 1388,
+ "forced_60day_ids": [
+  14149,
+  26169,
+  36122
+ ],
+ "forced_60day_spans": [
+  [
+   1748523600000,
+   1753707600000
+  ],
+  [
+   1767531600000,
+   1772715600000
+  ],
+  [
+   1783083600000,
+   1788267600000
+  ]
+ ],
+ "max_duration_ms": 5184000000
+}

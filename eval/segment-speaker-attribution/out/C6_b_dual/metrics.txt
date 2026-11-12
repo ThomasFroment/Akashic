@@ -1,0 +1,1 @@
+cand=C6_b_dual solo_auth=0.7119 solo10k_auth=0.5000 solo10_0_auth=0.9821 cont2_auth=0.4310 wrong=0.0804 wrong_mixed=0.3295 wrong_impostor=0.1250 p50_ms=461.0 p95_ms=848.1 drift_wrong_first100=0.0000 drift_wrong_last100=0.0000 drift_cos_end_min=0.9569 drift_pair_cos_end=0.5207

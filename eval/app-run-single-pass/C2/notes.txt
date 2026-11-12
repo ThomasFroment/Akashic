@@ -1,0 +1,37 @@
+C2 fused single pass with threshold-triggered accumulation (2026-11-10, Python 3.14.7)
+
+Harness (harness.py C2\cand.py C2), final run; CPU load from other processes was 45-57 %
+during this run (83 % during an earlier run that gave realistic 19.82 / fragmented 28.17 ms):
+  mismatches 0 on all 4 seeds x 10,002 cases (int/real/pyonly/medium/full all 0)
+  realistic  V=50k G=500: p50 16.53 ms  (budget 20)   today 1856.86 ms
+  fragmented V=50k G=500: p50 26.73 ms  (OVER budget) today 1726.97 ms
+  V 25k/50k/100k: 8.68/16.53/36.15 ms (ratios 1.91, 2.19 -> linear)
+  G 50/500/5000: 16.35/16.53/19.82 ms (ratios 1.01, 1.20; the G log G sort + games' own setup)
+
+Cost split (no-op add_episode vs harness recorder vs no emit, min of 25, same machine load):
+  realistic : loop+fold 12.5 ms, emit 3.0 ms (492 episodes), harness recorder 1.8 ms
+  fragmented: loop+fold 12.3 ms (18,207 runs), emit 9.6 ms (4,014 episodes, ~2.4 us each),
+              harness recorder 5.7 ms (~1.4 us per episode)
+  Fragmented is over budget mostly from per-episode fixed cost (emit + the recorder stub),
+  which today's code pays too; the loop itself is ~12 ms on both shapes.
+
+Open long run at the horizon (C2\bench_open_run.py; realistic 10k prefix with G=500 over the
+prefix, then one chained work run of 40k visits; harness recorder; 15 reps):
+  equivalence vs ref_today on the same shape with a 10k long run, open and closed: True
+  C2 open   (40k visits folded then discarded): p50 13.23 ms, min 12.33 ms
+  C2 closed (40k-visit run emitted)           : p50 14.76 ms, min 13.92 ms
+  split_only open (filter+split+stop, no accumulation): p50 7.34 ms, min 6.58 ms
+  -> wasted folding on the open run ~6 ms (~150 ns per visit); still inside 20 ms.
+
+Fixes found while building (beyond the candidate block):
+  - game pointer with s = +inf at the sentinel: advancing unconditionally ran past the end
+    (IndexError on "real" fuzz cases); the advance loop is now bounded by G.
+  - URL: a strict ">" scan equals today's stable reverse sort only when durations are totally
+    ordered. A NaN duration (s = e = +-inf) is always alone in its run when rows are in start
+    order, but with unsorted rows it can sit inside a run; C2 detects a NaN process sum and
+    recomputes the URL exactly as today. Without that fallback: 280/5000 mismatches on
+    shuffled rows with +-inf visits; with it: 0. Shuffled-row fuzz (10k cases, games): 0.
+  - exception-based dict updates (try/except KeyError) were slower on the fragmented shape
+    (many misses); dict.get is used.
+Contract caveat: rows are unpacked as exactly 6 columns (the SQL's select list); today only
+indexes r[0..5]. Rows of another width would raise in C2 but not today.

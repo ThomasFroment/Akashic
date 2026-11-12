@@ -1,0 +1,7 @@
+# Files frozen by sha256 in eval/ (frozen.sha256 next to them) were hashed with CRLF line endings.
+# Keep their bytes exactly as committed so the recorded hashes keep matching.
+eval/conversational-time-windows/R2rules/candidate.py -text
+eval/conversational-time-windows/R2rules/captured_titles.py -text
+eval/conversational-time-windows/R2rules/verify_variants.py -text
+eval/conversational-time-windows/R2slots/model_cache_heldout2.jsonl -text
+eval/conversational-time-windows/R2slots/model_cache_phrases.jsonl -text

@@ -1,0 +1,1 @@
+cand=C6_ref_rerun solo_auth=0.7008 solo10k_auth=0.4643 solo10_0_auth=0.9821 cont2_auth=0.4224 wrong=0.0794 wrong_mixed=0.3239 wrong_impostor=0.1250 p50_ms=233.6 p95_ms=455.8

@@ -1,0 +1,1 @@
+cand=R2seam_C1_linked_t0_norule solo_auth=0.8324 solo10k_auth=0.8750 solo10_0_auth=0.9643 cont2_auth=0.4569 wrong=0.0476 wrong_mixed=0.1761 wrong_impostor=0.0750 p50_ms=834.9 p95_ms=1673.9

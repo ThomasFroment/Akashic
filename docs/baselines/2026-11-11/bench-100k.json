@@ -1,0 +1,110 @@
+{
+  "params": {
+    "rows": 100000,
+    "episodes": 40000,
+    "segments": 20000,
+    "visits": 50000,
+    "repeats": 5,
+    "seed": 0,
+    "output": ".test-tmp\\baseline-local-20261111\\bench-100k.json"
+  },
+  "environment": {
+    "python": "3.14.10",
+    "numpy": "2.5.4",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "chunk_rows": 4000,
+    "dims": 256,
+    "store_build_s": 6.55
+  },
+  "results": {
+    "passages_top": {
+      "median_ms": 506.484,
+      "runs_ms": [
+        548.145,
+        506.484,
+        486.911,
+        468.322,
+        520.083
+      ],
+      "rows": 100000,
+      "ns_per_row": 5064.8
+    },
+    "embeddings_top": {
+      "median_ms": 184.529,
+      "runs_ms": [
+        188.08,
+        183.498,
+        182.189,
+        205.78,
+        184.529
+      ],
+      "rows": 40000,
+      "ns_per_row": 4613.2
+    },
+    "windowed_episode_vectors": {
+      "median_ms": 89.595,
+      "runs_ms": [
+        88.01,
+        89.893,
+        90.105,
+        87.738,
+        89.595
+      ],
+      "rows": 40000,
+      "ns_per_row": 2239.9,
+      "candidates": 51
+    },
+    "windowed_ranked_episodes": {
+      "median_ms": 98.062,
+      "runs_ms": [
+        86.836,
+        98.062,
+        109.752,
+        99.306,
+        91.361
+      ],
+      "rows": 40000,
+      "ns_per_row": 2451.6
+    },
+    "conversation_clusters": {
+      "median_ms": 5746.526,
+      "runs_ms": [
+        5760.497,
+        5673.032,
+        5746.526,
+        5754.851,
+        5718.627
+      ],
+      "rows": 20000,
+      "ns_per_row": 287326.3,
+      "final_clusters": 3,
+      "growing": true
+    },
+    "app_runs": {
+      "median_ms": 1399.471,
+      "runs_ms": [
+        1394.544,
+        1402.897,
+        1399.471,
+        1398.981,
+        1431.634
+      ],
+      "rows": 50000,
+      "ns_per_row": 27989.4,
+      "episodes_built": 2726
+    },
+    "passage_publish": {
+      "median_ms": 49.061,
+      "runs_ms": [
+        47.601,
+        53.802,
+        49.712,
+        42.711,
+        49.061
+      ],
+      "rows": 1400,
+      "ns_per_row": 35043.5,
+      "owners": 200
+    }
+  }
+}

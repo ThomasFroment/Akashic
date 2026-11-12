@@ -1,0 +1,23 @@
+## day: window [1747353600000, 1747440000000), 50 candidates
+# today (traced)
+SQL: SELECT owner_id, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 0 AND start_ms < 4611686018427387904
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+# cand (traced)
+SQL: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 1746109543950 AND start_ms < 1747437975208
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+## straddle: window [1770076800000, 1770163200000), 60 candidates
+# today (traced)
+SQL: SELECT owner_id, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 0 AND start_ms < 4611686018427387904
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+# cand (traced)
+SQL: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 1767531600000 AND start_ms < 1770160429437
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+## unwindowed: window [0, 4611686018427387904), 40000 candidates
+# today (traced)
+SQL: SELECT owner_id, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 0 AND start_ms < 4611686018427387904
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+# cand (traced)
+SQL: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 0 AND start_ms < 4611686018427387904
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+# PLANS: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = 'episode' AND model = ? AND start_ms >= ? AND start_ms < ?
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)

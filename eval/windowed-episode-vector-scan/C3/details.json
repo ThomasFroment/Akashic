@@ -1,0 +1,232 @@
+{
+ "candidate": "eval\\windowed-episode-vector-scan\\C3\\cand.py",
+ "db": "eval\\windowed-episode-vector-scan\\cache\\episodes40k.db",
+ "trials": 1200,
+ "vector_depth": 100,
+ "breakdown": {
+  "ok": 1200,
+  "hard": 0,
+  "near_tie": 0,
+  "tie_order": 0,
+  "error": 0
+ },
+ "by_window_type": {
+  "1day": {
+   "trials": 215,
+   "mismatches": 0,
+   "mean_candidates": 52.9953488372093
+  },
+  "1h": {
+   "trials": 234,
+   "mismatches": 0,
+   "mean_candidates": 6.594017094017094
+  },
+  "1month": {
+   "trials": 107,
+   "mismatches": 0,
+   "mean_candidates": 1415.1401869158879
+  },
+  "1week": {
+   "trials": 146,
+   "mismatches": 0,
+   "mean_candidates": 339.6027397260274
+  },
+  "edge": {
+   "trials": 99,
+   "mismatches": 0,
+   "mean_candidates": 31.949494949494948
+  },
+  "empty": {
+   "trials": 20,
+   "mismatches": 0,
+   "mean_candidates": 0.0
+  },
+  "equal_start": {
+   "trials": 84,
+   "mismatches": 0,
+   "mean_candidates": 31.476190476190474
+  },
+  "inside_long": {
+   "trials": 189,
+   "mismatches": 0,
+   "mean_candidates": 134.4814814814815
+  },
+  "unwindowed": {
+   "trials": 106,
+   "mismatches": 0,
+   "mean_candidates": 36298.40566037736
+  }
+ },
+ "compared_owners": 62852,
+ "dscore_zero": 62852,
+ "max_abs_dscore": 0.0,
+ "prepare_ms": null,
+ "scenarios": {
+  "day": {
+   "window": [
+    1747353600000,
+    1747440000000
+   ],
+   "candidates": 50,
+   "today": {
+    "p50": 101.3,
+    "p95": 105.8051,
+    "min": 86.827,
+    "cold": [
+     98.3323,
+     101.0828,
+     94.528
+    ],
+    "cold_p50": 98.3323
+   },
+   "candidate": {
+    "p50": 0.6152,
+    "p95": 0.8199,
+    "min": 0.4345,
+    "cold": [
+     3.1644,
+     2.0325,
+     2.0095
+    ],
+    "cold_p50": 2.0325
+   }
+  },
+  "month": {
+   "window": [
+    1762732800000,
+    1765324800000
+   ],
+   "candidates": 1660,
+   "today": {
+    "p50": 99.2399,
+    "p95": 103.7062,
+    "min": 93.5279,
+    "cold": [
+     103.9778,
+     99.2231,
+     100.2244
+    ],
+    "cold_p50": 100.2244
+   },
+   "candidate": {
+    "p50": 5.8758,
+    "p95": 7.563,
+    "min": 4.745,
+    "cold": [
+     13.3938,
+     11.9246,
+     13.0549
+    ],
+    "cold_p50": 13.0549
+   }
+  },
+  "straddle": {
+   "window": [
+    1770076800000,
+    1770163200000
+   ],
+   "candidates": 60,
+   "today": {
+    "p50": 91.6815,
+    "p95": 97.9985,
+    "min": 82.8206,
+    "cold": [
+     94.4879,
+     95.413,
+     97.7663
+    ],
+    "cold_p50": 95.413
+   },
+   "candidate": {
+    "p50": 1.082,
+    "p95": 1.685,
+    "min": 0.8591,
+    "cold": [
+     5.9883,
+     5.5031,
+     4.9644
+    ],
+    "cold_p50": 5.5031
+   }
+  },
+  "unwindowed": {
+   "window": [
+    0,
+    4611686018427387904
+   ],
+   "candidates": 40000,
+   "today": {
+    "p50": 167.4793,
+    "p95": 214.8882,
+    "min": 150.7938,
+    "cold": [
+     172.924,
+     176.7632,
+     182.0315
+    ],
+    "cold_p50": 176.7632
+   },
+   "candidate": {
+    "p50": 144.3873,
+    "p95": 155.6278,
+    "min": 135.4474,
+    "cold": [
+     136.9587,
+     148.3265,
+     158.3896
+    ],
+    "cold_p50": 148.3265
+   }
+  }
+ },
+ "failures": [],
+ "metrics": {
+  "mismatches": 0,
+  "max_abs_dscore": 0.0,
+  "day_p50_ms": 0.6152,
+  "day_p95_ms": 0.8199,
+  "month_p50_ms": 5.8758,
+  "straddle_p50_ms": 1.082,
+  "unwindowed_p50_ms": 144.3873,
+  "today_unwindowed_p50_ms": 167.4793
+ },
+ "db_meta": {
+  "db": "eval\\windowed-episode-vector-scan\\cache\\episodes40k.db",
+  "key_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "model": "qwen3-embedding-0.6b-q8",
+  "seed": 20261110,
+  "t0": 1731196800000,
+  "t_end": 1794268800000,
+  "episodes": 40000,
+  "embedded_main_model": 39700,
+  "damaged_main_model": 5,
+  "other_model_rows": 300,
+  "query_rows": 30,
+  "reembedded": 1191,
+  "duplicate_groups": 700,
+  "equal_start_vector_pairs": 373,
+  "equal_start_episodes": 1240,
+  "tail_ge_1day": 168,
+  "ge_2h": 1388,
+  "forced_60day_ids": [
+   14149,
+   26169,
+   36122
+  ],
+  "forced_60day_spans": [
+   [
+    1748523600000,
+    1753707600000
+   ],
+   [
+    1767531600000,
+    1772715600000
+   ],
+   [
+    1783083600000,
+    1788267600000
+   ]
+  ],
+  "max_duration_ms": 5184000000
+ }
+}

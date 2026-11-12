@@ -1,0 +1,27 @@
+# transcript-hallucination-rejection: files not copied from the study folder (18979 files, 9840.4 MB)
+#
+# Models, raw downloads, generated audio, vector stores, pickles, logs, local shell
+# scripts and keys. The study README says how each one is rebuilt.
+
+C3/  4 files  0.7 MB
+C5/  2 files  0.0 MB
+__pycache__/  12 files  0.2 MB
+data/cache/audio/  2382 files  711.8 MB
+data/fixture/clips/  6864 files  1559.9 MB
+data/models/faster-whisper-large-v3/  5 files  2947.7 MB
+data/models_extra/xlsr53-english/  4 files  1203.5 MB
+data/models_extra/xlsr53-french/  4 files  1203.7 MB
+data/raw/demand/  6 files  522.6 MB
+data/raw/esc50/  2 files  615.8 MB
+data/raw/fleurs/  1 files  0.0 MB
+data/raw/fleurs/en_us/  2 files  163.5 MB
+data/raw/fleurs/fr_fr/  2 files  136.2 MB
+data/raw/fsd50k/  5 files  5.3 MB
+data/raw/fsd50k/clips/  720 files  559.8 MB
+data/raw/fsd50k_dev/  256 files  104.4 MB
+data/raw/mswc/  1 files  0.0 MB
+data/raw/mswc/en/  993 files  5.7 MB
+data/raw/mswc/fr/  694 files  3.9 MB
+data/raw/oga/  9 files  84.4 MB
+data/raw/speechcommands/  141 files  4.3 MB
+logs/  6 files  0.0 MB

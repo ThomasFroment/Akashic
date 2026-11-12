@@ -1,0 +1,112 @@
+{
+ "shapes": {
+  "realistic": {
+   "shape": "realistic",
+   "V": 50000,
+   "G": 500,
+   "V_measured": 50000,
+   "G_actual": 500,
+   "rows_measured": 50000,
+   "p50_ms": 1856.860600004438,
+   "measured_p50_ms": 1856.8606000044383,
+   "min_ms": 1778.6299000144936,
+   "max_ms": 1921.7699999862816,
+   "extrapolated": false
+  },
+  "fragmented": {
+   "shape": "fragmented",
+   "V": 50000,
+   "G": 500,
+   "V_measured": 50000,
+   "G_actual": 500,
+   "rows_measured": 50000,
+   "p50_ms": 1726.9690000102853,
+   "measured_p50_ms": 1726.9690000102855,
+   "min_ms": 1574.8212000180501,
+   "max_ms": 1913.851599994814,
+   "extrapolated": false
+  }
+ },
+ "V": {
+  "25000": {
+   "shape": "realistic",
+   "V": 25000,
+   "G": 500,
+   "V_measured": 25000,
+   "G_actual": 500,
+   "rows_measured": 25000,
+   "p50_ms": 912.0391000178643,
+   "measured_p50_ms": 912.0391000178643,
+   "min_ms": 892.6325000065845,
+   "max_ms": 981.0528999951202,
+   "extrapolated": false
+  },
+  "50000": {
+   "shape": "realistic",
+   "V": 50000,
+   "G": 500,
+   "V_measured": 50000,
+   "G_actual": 500,
+   "rows_measured": 50000,
+   "p50_ms": 1856.860600004438,
+   "measured_p50_ms": 1856.8606000044383,
+   "min_ms": 1778.6299000144936,
+   "max_ms": 1921.7699999862816,
+   "extrapolated": false
+  },
+  "100000": {
+   "shape": "realistic",
+   "V": 100000,
+   "G": 500,
+   "V_measured": 100000,
+   "G_actual": 500,
+   "rows_measured": 100000,
+   "p50_ms": 4061.644699977478,
+   "measured_p50_ms": 4061.644699977478,
+   "min_ms": 3630.933600012213,
+   "max_ms": 4160.488900000928,
+   "extrapolated": false
+  }
+ },
+ "G": {
+  "50": {
+   "shape": "realistic",
+   "V": 50000,
+   "G": 50,
+   "V_measured": 50000,
+   "G_actual": 50,
+   "rows_measured": 50000,
+   "p50_ms": 321.8324999907054,
+   "measured_p50_ms": 321.8324999907054,
+   "min_ms": 289.9401999893598,
+   "max_ms": 374.416900012875,
+   "extrapolated": false
+  },
+  "500": {
+   "shape": "realistic",
+   "V": 50000,
+   "G": 500,
+   "V_measured": 50000,
+   "G_actual": 500,
+   "rows_measured": 50000,
+   "p50_ms": 1856.860600004438,
+   "measured_p50_ms": 1856.8606000044383,
+   "min_ms": 1778.6299000144936,
+   "max_ms": 1921.7699999862816,
+   "extrapolated": false
+  },
+  "5000": {
+   "shape": "realistic",
+   "V": 50000,
+   "G": 5000,
+   "V_measured": 12500,
+   "G_actual": 5000,
+   "rows_measured": 12500,
+   "p50_ms": 11739.835200016387,
+   "measured_p50_ms": 2934.9588000040967,
+   "min_ms": 2900.077300000703,
+   "max_ms": 2988.9724000240676,
+   "extrapolated": true
+  }
+ }
+}

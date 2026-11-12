@@ -1,0 +1,19 @@
+plateau                limit= 30 C3_runlevel=  17.6 ns/row  survivor_lexsort=  10.3 ns/row  ratio= 0.6x  identical=True all rows survive
+plateau                limit=100 C3_runlevel=  17.9 ns/row  survivor_lexsort=  10.7 ns/row  ratio= 0.6x  identical=True all rows survive
+plateau                limit=200 C3_runlevel=  18.2 ns/row  survivor_lexsort=  11.1 ns/row  ratio= 0.6x  identical=True all rows survive
+plateau_shuffled       limit= 30 C3_runlevel=  17.6 ns/row  survivor_lexsort=  19.1 ns/row  ratio= 1.1x  identical=True all rows survive
+plateau_shuffled       limit=100 C3_runlevel=  18.8 ns/row  survivor_lexsort=  22.1 ns/row  ratio= 1.2x  identical=True all rows survive
+plateau_shuffled       limit=200 C3_runlevel=  20.4 ns/row  survivor_lexsort=  23.1 ns/row  ratio= 1.1x  identical=True all rows survive
+plateau_runs           limit= 30 C3_runlevel=  12.8 ns/row  survivor_lexsort=  10.2 ns/row  ratio= 0.8x  identical=True 
+plateau_runs           limit=100 C3_runlevel=  13.3 ns/row  survivor_lexsort=  10.5 ns/row  ratio= 0.8x  identical=True 
+plateau_runs           limit=200 C3_runlevel=  12.3 ns/row  survivor_lexsort=   9.6 ns/row  ratio= 0.8x  identical=True 
+plateau_runs_shuffled  limit= 30 C3_runlevel=  13.1 ns/row  survivor_lexsort=  14.1 ns/row  ratio= 1.1x  identical=True 
+plateau_runs_shuffled  limit=100 C3_runlevel=  14.3 ns/row  survivor_lexsort=  16.1 ns/row  ratio= 1.1x  identical=True 
+plateau_runs_shuffled  limit=200 C3_runlevel=  13.1 ns/row  survivor_lexsort=  15.0 ns/row  ratio= 1.1x  identical=True 
+continuous             limit= 30 C3_runlevel=   5.6 ns/row  survivor_lexsort=   6.8 ns/row  ratio= 1.2x  identical=True 
+continuous             limit=100 C3_runlevel=   7.4 ns/row  survivor_lexsort=   8.4 ns/row  ratio= 1.1x  identical=True 
+continuous             limit=200 C3_runlevel=   9.7 ns/row  survivor_lexsort=  10.8 ns/row  ratio= 1.1x  identical=True 
+continuous_shuffled    limit= 30 C3_runlevel=   5.5 ns/row  survivor_lexsort=   7.0 ns/row  ratio= 1.3x  identical=True 
+continuous_shuffled    limit=100 C3_runlevel=   7.3 ns/row  survivor_lexsort=   8.4 ns/row  ratio= 1.1x  identical=True 
+continuous_shuffled    limit=200 C3_runlevel=   9.8 ns/row  survivor_lexsort=  10.7 ns/row  ratio= 1.1x  identical=True 
+plateau, owners re-ordered so runs repeat (fallback lexsort path) limit=100: C3=  24.5 ns/row lexsort=  20.7 ns/row identical=True

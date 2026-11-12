@@ -1,0 +1,59 @@
+﻿| subset | metric | reference | C2_calib | R2span_C1 | R2span_C2 |
+| :- | :- | -: | -: | -: | -: |
+| ALL | authorship | 0.701 | 0.906 | 0.927 | 0.733 |
+| ALL | wrong | 0.0794 | 0.0377 | 0.0317 | 0.0119 |
+| solo | authorship | 0.752 (453/602) | 0.912 (549/602) | 0.930 (560/602) | 0.718 (432/602) |
+| solo_10k | authorship | 0.464 (78/168) | 0.923 (155/168) | 0.940 (158/168) | 0.720 (121/168) |
+| solo_10_0 | authorship | 0.982 (55/56) | 0.911 (51/56) | 0.946 (53/56) | 0.821 (46/56) |
+| similar | authorship | 0.906 (58/64) | 0.859 (55/64) | 0.922 (59/64) | 0.828 (53/64) |
+| cont_first | authorship | 0.800 (72/90) | 0.878 (79/90) | 0.889 (80/90) | 0.667 (60/90) |
+| cont_second | authorship | 0.422 (49/116) | 0.879 (102/116) | 0.905 (105/116) | 0.802 (93/116) |
+| cont_same | authorship | 0.850 (34/40) | 0.925 (37/40) | 0.950 (38/40) | 0.825 (33/40) |
+| cont_switch | authorship | 0.170 (8/47) | 0.830 (39/47) | 0.830 (39/47) | 0.745 (35/47) |
+| cont_switch_early | authorship | 0.241 (7/29) | 0.897 (26/29) | 0.966 (28/29) | 0.862 (25/29) |
+| mixed | wrong | 0.324 (57/176) | 0.136 (24/176) | 0.085 (15/176) | 0.034 (6/176) |
+| mixed_alt | wrong | 0.083 (5/60) | 0.050 (3/60) | 0.033 (2/60) | 0.000 (0/60) |
+| mixed_backchannel | wrong | 0.683 (41/60) | 0.150 (9/60) | 0.183 (11/60) | 0.083 (5/60) |
+| mixed_lastwin | wrong | 0.357 (25/70) | 0.200 (14/70) | 0.100 (7/70) | 0.043 (3/70) |
+| mixed_reply | wrong | 0.075 (3/40) | 0.200 (8/40) | 0.000 (0/40) | 0.000 (0/40) |
+| impostor | wrong | 0.125 (10/80) | 0.025 (2/80) | 0.087 (7/80) | 0.013 (1/80) |
+| cont_first | wrong | 0.092 (11/120) | 0.100 (12/120) | 0.083 (10/120) | 0.042 (5/120) |
+| similar | wrong | 0.100 (8/80) | 0.050 (4/80) | 0.025 (2/80) | 0.013 (1/80) |
+| switch_early first | wrong | 0.367 (11/30) | 0.400 (12/30) | 0.333 (10/30) | 0.167 (5/30) |
+reference: p50 99 p95 173 profiles_end 96 drift wrong_all 0.0
+C2_calib: p50 348 p95 581 profiles_end 71 drift wrong_all 0.0
+R2span_C1: p50 384 p95 762 profiles_end 70 drift wrong_all 0.0
+R2span_C2: p50 404 p95 787 profiles_end 56 drift wrong_all 0.0
+
+R2span_C1 wrong-author classes (32):
+   11  mixed mixed_backchannel, other voice <1 s
+   10  switch_early first (mixed lead-out)
+    7  impostor->enrolled
+    2  mixed mixed_alt, other voice >=1 s
+    2  mixed similar, other voice <1 s
+R2span_C1 lost authorship classes (53):
+   17  ('seg_veto', 'solo')
+    9  ('seg_veto', 'cont_first')
+    7  ('low_sum', 'solo')
+    6  ('overlap_veto', 'solo')
+    4  ('margin', 'cont_second/switch')
+    3  ('low_sum', 'cont_second/switch')
+    1  ('low_sum', 'cont_second/switch_early')
+    1  ('loo', 'solo')
+    1  ('margin', 'solo')
+    1  ('seg_veto', 'cont_second/same')
+    1  ('low_sum', 'cont_second/same')
+    1  ('overlap_veto', 'cont_first')
+    1  ('seg_veto', 'cont_second/switch')
+
+R2span_C2 wrong-author classes (12):
+    5  mixed mixed_backchannel, other voice <1 s
+    5  switch_early first (mixed lead-out)
+    1  mixed similar, other voice <1 s
+    1  impostor->enrolled
+R2span_C2 lost authorship classes (193):
+  140  ('gate', 'solo')
+   30  ('gate', 'cont_first')
+   12  ('gate', 'cont_second/switch')
+    7  ('gate', 'cont_second/same')
+    4  ('gate', 'cont_second/switch_early')

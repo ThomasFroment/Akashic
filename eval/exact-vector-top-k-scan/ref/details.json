@@ -1,0 +1,583 @@
+{
+ "candidate": "ref_today.py",
+ "sizes": {
+  "100k": {
+   "per_class": {
+    "ok": 306,
+    "today_noise": 0,
+    "near_tie": 0,
+    "tie_order": 0,
+    "hard": 0,
+    "error": 0
+   },
+   "by_tag": {
+    "pseg": {
+     "ok": 85
+    },
+    "near_copy": {
+     "ok": 29
+    },
+    "month": {
+     "ok": 55
+    },
+    "limit1": {
+     "ok": 85
+    },
+    "only_subset": {
+     "ok": 83
+    },
+    "apps0": {
+     "ok": 112
+    },
+    "pframe": {
+     "ok": 63
+    },
+    "only_none": {
+     "ok": 176
+    },
+    "apps1": {
+     "ok": 12
+    },
+    "eseg": {
+     "ok": 100
+    },
+    "topic": {
+     "ok": 135
+    },
+    "all": {
+     "ok": 55
+    },
+    "limit100": {
+     "ok": 79
+    },
+    "exclude_none": {
+     "ok": 96
+    },
+    "eep": {
+     "ok": 52
+    },
+    "week": {
+     "ok": 50
+    },
+    "tie_copy": {
+     "ok": 105
+    },
+    "edge": {
+     "ok": 30
+    },
+    "day": {
+     "ok": 57
+    },
+    "exclude_subset": {
+     "ok": 56
+    },
+    "limit30": {
+     "ok": 66
+    },
+    "only_small+absent": {
+     "ok": 27
+    },
+    "limit200": {
+     "ok": 76
+    },
+    "apps2": {
+     "ok": 24
+    },
+    "random": {
+     "ok": 31
+    },
+    "only_empty": {
+     "ok": 14
+    },
+    "empty": {
+     "ok": 8
+    },
+    "1h": {
+     "ok": 44
+    },
+    "special_row": {
+     "ok": 1
+    },
+    "extra_tie_all": {
+     "ok": 6
+    }
+   },
+   "failures": [],
+   "nan_scope": [
+    {
+     "i": 2,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 8,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 13,
+     "today_equals_nan_dropped_oracle": false,
+     "class": "ok"
+    },
+    {
+     "i": 15,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 28,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 32,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 60,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 71,
+     "today_equals_nan_dropped_oracle": false,
+     "class": "ok"
+    },
+    {
+     "i": 84,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 88,
+     "today_equals_nan_dropped_oracle": false,
+     "class": "ok"
+    },
+    {
+     "i": 170,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 173,
+     "today_equals_nan_dropped_oracle": false,
+     "class": "ok"
+    },
+    {
+     "i": 247,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 292,
+     "today_equals_nan_dropped_oracle": false,
+     "class": "ok"
+    },
+    {
+     "i": 304,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 305,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    }
+   ],
+   "timing": {
+    "passages/segment_all": {
+     "rows": 99041,
+     "runs": 9,
+     "median_s": {
+      "cand": 0.3566712999891024,
+      "fetch": 0.1937554000178352,
+      "decode": 0.1459235000074841,
+      "today": 0.3404669000010472
+     },
+     "fetch_ns": 1956.3150616192806,
+     "decode_ns": 1473.3645662653255,
+     "cand_total_ns": 3601.2489775860745,
+     "cand_after_fetch_ns": 1644.9339159667936,
+     "today_total_ns": 3437.6359285654144,
+     "today_after_fetch_ns": 1481.3208669461333
+    },
+    "passages/segment_only50": {
+     "rows": 99041,
+     "runs": 9,
+     "median_s": {
+      "cand": 0.2774373000138439,
+      "fetch": 0.19318440000643022,
+      "decode": 0.140682299999753,
+      "today": 0.2929112999991048
+     },
+     "fetch_ns": 1950.5497723814406,
+     "decode_ns": 1420.4450682015834,
+     "cand_total_ns": 2801.236861641582,
+     "cand_after_fetch_ns": 850.6870892601418,
+     "today_total_ns": 2957.475187034711,
+     "today_after_fetch_ns": 1006.9254146532706
+    },
+    "passages/frame_apps": {
+     "rows": 40245,
+     "runs": 9,
+     "median_s": {
+      "cand": 0.1790803999756463,
+      "fetch": 0.12171530001796782,
+      "decode": 0.09201379999285564,
+      "today": 0.1756669000023976
+     },
+     "fetch_ns": 3024.3583058260115,
+     "decode_ns": 2286.3411602150736,
+     "cand_total_ns": 4449.755248494131,
+     "cand_after_fetch_ns": 1425.3969426681194,
+     "today_total_ns": 4364.937259346443,
+     "today_after_fetch_ns": 1340.5789535204317
+    },
+    "embeddings/segment_all": {
+     "rows": 90011,
+     "runs": 9,
+     "median_s": {
+      "cand": 0.3259607999934815,
+      "fetch": 0.1985800999973435,
+      "decode": 0.1672145000193268,
+      "today": 0.3351812000037171
+     },
+     "fetch_ns": 2206.175911803485,
+     "decode_ns": 1857.7118354348559,
+     "cand_total_ns": 3621.344057876054,
+     "cand_after_fetch_ns": 1415.1681460725688,
+     "today_total_ns": 3723.780426878016,
+     "today_after_fetch_ns": 1517.6045150745308
+    },
+    "embeddings/segment_only60_excl20": {
+     "rows": 90011,
+     "runs": 9,
+     "median_s": {
+      "cand": 0.2775936999823898,
+      "fetch": 0.20299619997967966,
+      "decode": 0.17341809999197721,
+      "today": 0.28088690000004135
+     },
+     "fetch_ns": 2255.2376929450807,
+     "decode_ns": 1926.6323004074748,
+     "cand_total_ns": 3083.9975112196266,
+     "cand_after_fetch_ns": 828.7598182745459,
+     "today_total_ns": 3120.58415082647,
+     "today_after_fetch_ns": 865.3464578813889
+    }
+   },
+   "plans": {
+    "passages_segment": [
+     "SEARCH p USING INDEX segment_passages_model (model=?)",
+     "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)"
+    ],
+    "passages_frame": [
+     "SEARCH p USING INDEX frame_passages_model (model=?)",
+     "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)"
+    ],
+    "embeddings": [
+     "SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)"
+    ]
+   }
+  },
+  "1m": {
+   "per_class": {
+    "ok": 306,
+    "today_noise": 0,
+    "near_tie": 0,
+    "tie_order": 0,
+    "hard": 0,
+    "error": 0
+   },
+   "by_tag": {
+    "pseg": {
+     "ok": 78
+    },
+    "topic": {
+     "ok": 117
+    },
+    "day": {
+     "ok": 53
+    },
+    "limit200": {
+     "ok": 86
+    },
+    "only_subset": {
+     "ok": 92
+    },
+    "apps0": {
+     "ok": 102
+    },
+    "pframe": {
+     "ok": 79
+    },
+    "random": {
+     "ok": 49
+    },
+    "all": {
+     "ok": 38
+    },
+    "only_none": {
+     "ok": 163
+    },
+    "eseg": {
+     "ok": 99
+    },
+    "1h": {
+     "ok": 44
+    },
+    "limit30": {
+     "ok": 74
+    },
+    "exclude_none": {
+     "ok": 94
+    },
+    "eep": {
+     "ok": 44
+    },
+    "tie_copy": {
+     "ok": 100
+    },
+    "month": {
+     "ok": 53
+    },
+    "week": {
+     "ok": 71
+    },
+    "limit100": {
+     "ok": 70
+    },
+    "apps1": {
+     "ok": 28
+    },
+    "edge": {
+     "ok": 33
+    },
+    "limit1": {
+     "ok": 76
+    },
+    "apps2": {
+     "ok": 27
+    },
+    "near_copy": {
+     "ok": 34
+    },
+    "only_empty": {
+     "ok": 23
+    },
+    "empty": {
+     "ok": 8
+    },
+    "exclude_subset": {
+     "ok": 49
+    },
+    "only_small+absent": {
+     "ok": 22
+    },
+    "extra_tie_all": {
+     "ok": 6
+    }
+   },
+   "failures": [],
+   "nan_scope": [
+    {
+     "i": 120,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 137,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 149,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 174,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 176,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 179,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 193,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 211,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 241,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 243,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 270,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 304,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    },
+    {
+     "i": 305,
+     "today_equals_nan_dropped_oracle": true,
+     "class": "ok"
+    }
+   ],
+   "timing": {
+    "passages/segment_all": {
+     "rows": 991914,
+     "runs": 9,
+     "median_s": {
+      "cand": 3.465343699994264,
+      "fetch": 1.8823965000046883,
+      "decode": 1.37641519997851,
+      "today": 3.4130053000117186
+     },
+     "fetch_ns": 1897.741638896808,
+     "decode_ns": 1387.635621614888,
+     "cand_total_ns": 3493.592892119946,
+     "cand_after_fetch_ns": 1595.8512532231382,
+     "today_total_ns": 3440.8278338764435,
+     "today_after_fetch_ns": 1543.0861949796358
+    },
+    "passages/segment_only50": {
+     "rows": 991914,
+     "runs": 9,
+     "median_s": {
+      "cand": 2.767901499988511,
+      "fetch": 1.897858999989694,
+      "decode": 1.377679299999727,
+      "today": 2.764886699995259
+     },
+     "fetch_ns": 1913.3301878889642,
+     "decode_ns": 1388.9100264737942,
+     "cand_total_ns": 2790.4652016087193,
+     "cand_after_fetch_ns": 877.1350137197551,
+     "today_total_ns": 2787.4258252179716,
+     "today_after_fetch_ns": 874.0956373290071
+    },
+    "passages/frame_apps": {
+     "rows": 399746,
+     "runs": 9,
+     "median_s": {
+      "cand": 1.7834710000024643,
+      "fetch": 1.115278799989028,
+      "decode": 0.9261617000156548,
+      "today": 1.7871553000004496
+     },
+     "fetch_ns": 2789.968630052653,
+     "decode_ns": 2316.8754659600218,
+     "cand_total_ns": 4461.5105592112595,
+     "cand_after_fetch_ns": 1671.5419291586068,
+     "today_total_ns": 4470.727161748835,
+     "today_after_fetch_ns": 1680.7585316961813
+    },
+    "embeddings/segment_all": {
+     "rows": 900011,
+     "runs": 9,
+     "median_s": {
+      "cand": 3.929250699991826,
+      "fetch": 2.0793629999971017,
+      "decode": 1.7563469000160694,
+      "today": 3.9014850000094157
+     },
+     "fetch_ns": 2310.37509541228,
+     "decode_ns": 1951.4727042403588,
+     "cand_total_ns": 4365.7807515595105,
+     "cand_after_fetch_ns": 2055.40565614723,
+     "today_total_ns": 4334.930350861729,
+     "today_after_fetch_ns": 2024.5552554494489
+    },
+    "embeddings/segment_only60_excl20": {
+     "rows": 900011,
+     "runs": 9,
+     "median_s": {
+      "cand": 3.036181299976306,
+      "fetch": 2.0605348000244703,
+      "decode": 1.723801900021499,
+      "today": 3.027749100001529
+     },
+     "fetch_ns": 2289.455128908947,
+     "decode_ns": 1915.312035099014,
+     "cand_total_ns": 3373.4935461636646,
+     "cand_after_fetch_ns": 1084.0384172547176,
+     "today_total_ns": 3364.1245495905373,
+     "today_after_fetch_ns": 1074.66942068159
+    }
+   },
+   "plans": {
+    "passages_segment": [
+     "SEARCH p USING INDEX segment_passages_model (model=?)",
+     "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)"
+    ],
+    "passages_frame": [
+     "SEARCH p USING INDEX frame_passages_model (model=?)",
+     "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)"
+    ],
+    "embeddings": [
+     "SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)"
+    ]
+   }
+  }
+ },
+ "totals": {
+  "mismatches": 0,
+  "hard": 0,
+  "tie_order": 0,
+  "near_tie": 0,
+  "today_noise": 0,
+  "errors": 0,
+  "type_errors": 0,
+  "nan_scope_mismatches": 0,
+  "queries": 612,
+  "today_err_vs_exact": 1.3411977306532208e-07,
+  "cand_err_vs_exact": 1.3411977306532208e-07
+ },
+ "worst": {
+  "d": 0.0,
+  "size": "100k",
+  "query": 0,
+  "tags": [
+   "pseg",
+   "near_copy",
+   "month",
+   "limit1",
+   "only_subset",
+   "apps0"
+  ],
+  "owner": 4496,
+  "cand": 0.4163965582847595,
+  "today": 0.4163965582847595
+ },
+ "peaks_MB": {
+  "passages/segment_all": 12.751242637634277,
+  "today:passages/segment_all": 12.751242637634277,
+  "embeddings/segment_all": 12.423083305358887,
+  "today:embeddings/segment_all": 12.423129081726074
+ },
+ "metrics": "mismatches=0 hard=0 tie_order=0 near_tie=0 today_noise=0 errors=0 type_errors=0 nan_scope_mismatches=0 max_abs_dscore=0 cand_err_vs_exact=1.34e-07 today_err_vs_exact=1.34e-07 passages_after_fetch_ns_100k=1645 passages_today_after_fetch_ns_100k=1481 passages_fetch_floor_ns_100k=1956 passages_decode_ns_100k=1473 embeddings_after_fetch_ns_100k=1415 embeddings_today_after_fetch_ns_100k=1518 embeddings_fetch_floor_ns_100k=2206 embeddings_decode_ns_100k=1858 passages_after_fetch_ns_1m=1672 passages_today_after_fetch_ns_1m=1681 passages_fetch_floor_ns_1m=2790 passages_decode_ns_1m=2317 embeddings_after_fetch_ns_1m=2055 embeddings_today_after_fetch_ns_1m=2025 embeddings_fetch_floor_ns_1m=2310 embeddings_decode_ns_1m=1951 peak_MB=12.8 today_peak_MB=12.8"
+}

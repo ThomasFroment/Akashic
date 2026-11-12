@@ -1,0 +1,1 @@
+cand=reference solo_auth=0.7008 solo10k_auth=0.4643 solo10_0_auth=0.9821 cont2_auth=0.4224 wrong=0.0794 wrong_mixed=0.3239 wrong_impostor=0.1250 p50_ms=99.2 p95_ms=173.1 drift_wrong_first100=0.0000 drift_wrong_last100=0.0000 drift_cos_end_min=0.9566 drift_pair_cos_end=0.5199

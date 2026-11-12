@@ -1,0 +1,1 @@
+cand=R2span_C1 solo_auth=0.8947 solo10k_auth=0.9226 solo10_0_auth=0.9464 cont2_auth=0.8879 wrong=0.0317 wrong_mixed=0.1023 wrong_impostor=0.0750 p50_ms=920.9 p95_ms=2153.3 drift_wrong_first100=0.0000 drift_wrong_last100=0.0000 drift_cos_end_min=0.9566 drift_pair_cos_end=0.5193

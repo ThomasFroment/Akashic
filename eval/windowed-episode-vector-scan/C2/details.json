@@ -1,0 +1,284 @@
+{
+ "candidate": "eval\\windowed-episode-vector-scan\\C2\\cand.py",
+ "db": "eval\\windowed-episode-vector-scan\\cache\\episodes40k.db",
+ "trials": 1200,
+ "vector_depth": 100,
+ "breakdown": {
+  "ok": 1197,
+  "hard": 0,
+  "near_tie": 3,
+  "tie_order": 0,
+  "error": 0
+ },
+ "by_window_type": {
+  "1day": {
+   "trials": 215,
+   "mismatches": 0,
+   "mean_candidates": 52.9953488372093
+  },
+  "1h": {
+   "trials": 234,
+   "mismatches": 0,
+   "mean_candidates": 6.594017094017094
+  },
+  "1month": {
+   "trials": 107,
+   "mismatches": 0,
+   "mean_candidates": 1415.1401869158879
+  },
+  "1week": {
+   "trials": 146,
+   "mismatches": 1,
+   "mean_candidates": 339.6027397260274
+  },
+  "edge": {
+   "trials": 99,
+   "mismatches": 0,
+   "mean_candidates": 31.949494949494948
+  },
+  "empty": {
+   "trials": 20,
+   "mismatches": 0,
+   "mean_candidates": 0.0
+  },
+  "equal_start": {
+   "trials": 84,
+   "mismatches": 0,
+   "mean_candidates": 31.476190476190474
+  },
+  "inside_long": {
+   "trials": 189,
+   "mismatches": 0,
+   "mean_candidates": 134.4814814814815
+  },
+  "unwindowed": {
+   "trials": 106,
+   "mismatches": 2,
+   "mean_candidates": 36298.40566037736
+  }
+ },
+ "compared_owners": 62852,
+ "dscore_zero": 4,
+ "max_abs_dscore": 1.8089049547143077e-07,
+ "prepare_ms": null,
+ "scenarios": {
+  "day": {
+   "window": [
+    1747353600000,
+    1747440000000
+   ],
+   "candidates": 50,
+   "today": {
+    "p50": 85.1055,
+    "p95": 104.6714,
+    "min": 81.2538,
+    "cold": [
+     90.4189,
+     108.1488,
+     90.3795
+    ],
+    "cold_p50": 90.4189
+   },
+   "candidate": {
+    "p50": 0.089,
+    "p95": 0.1227,
+    "min": 0.0861,
+    "cold": [
+     0.5357,
+     0.4352,
+     0.5009
+    ],
+    "cold_p50": 0.5009
+   }
+  },
+  "month": {
+   "window": [
+    1762732800000,
+    1765324800000
+   ],
+   "candidates": 1660,
+   "today": {
+    "p50": 84.1426,
+    "p95": 91.4844,
+    "min": 81.4701,
+    "cold": [
+     86.8001,
+     90.7245,
+     87.4885
+    ],
+    "cold_p50": 87.4885
+   },
+   "candidate": {
+    "p50": 2.8546,
+    "p95": 3.3632,
+    "min": 2.6504,
+    "cold": [
+     6.3627,
+     6.1295,
+     6.0314
+    ],
+    "cold_p50": 6.1295
+   }
+  },
+  "straddle": {
+   "window": [
+    1770076800000,
+    1770163200000
+   ],
+   "candidates": 60,
+   "today": {
+    "p50": 82.6148,
+    "p95": 83.7875,
+    "min": 79.658,
+    "cold": [
+     84.2122,
+     87.473,
+     83.1965
+    ],
+    "cold_p50": 84.2122
+   },
+   "candidate": {
+    "p50": 0.1018,
+    "p95": 0.1296,
+    "min": 0.0973,
+    "cold": [
+     0.4893,
+     0.5241,
+     0.5471
+    ],
+    "cold_p50": 0.5241
+   }
+  },
+  "unwindowed": {
+   "window": [
+    0,
+    4611686018427387904
+   ],
+   "candidates": 40000,
+   "today": {
+    "p50": 151.0632,
+    "p95": 195.7766,
+    "min": 141.521,
+    "cold": [
+     159.4075,
+     179.5639,
+     173.6064
+    ],
+    "cold_p50": 173.6064
+   },
+   "candidate": {
+    "p50": 150.2558,
+    "p95": 162.4734,
+    "min": 145.0498,
+    "cold": [
+     151.8966,
+     152.2245,
+     157.5844
+    ],
+    "cold_p50": 152.2245
+   }
+  }
+ },
+ "failures": [
+  {
+   "trial": 182,
+   "type": "unwindowed",
+   "start": 0,
+   "end": 4611686018427387904,
+   "filter": {},
+   "qtype": "random",
+   "kind": "near_tie",
+   "info": {
+    "why": "order of exact scores differs",
+    "first_pos": 82,
+    "today": 3978,
+    "cand": 33069,
+    "max_exact_gap": 1.993866582949977e-08,
+    "positions": 2
+   }
+  },
+  {
+   "trial": 765,
+   "type": "1week",
+   "start": 1746748800000,
+   "end": 1747353600000,
+   "filter": {},
+   "qtype": "topic",
+   "kind": "near_tie",
+   "info": {
+    "why": "order of exact scores differs",
+    "first_pos": 82,
+    "today": 10080,
+    "cand": 9971,
+    "max_exact_gap": 1.2893339396136128e-08,
+    "positions": 2
+   }
+  },
+  {
+   "trial": 1176,
+   "type": "unwindowed",
+   "start": 0,
+   "end": 4611686018427387904,
+   "filter": {},
+   "qtype": "exact_dup",
+   "kind": "near_tie",
+   "info": {
+    "why": "order of exact scores differs",
+    "first_pos": 57,
+    "today": 18545,
+    "cand": 23528,
+    "max_exact_gap": 4.806918241229141e-08,
+    "positions": 2
+   }
+  }
+ ],
+ "metrics": {
+  "mismatches": 3,
+  "max_abs_dscore": 1.8089049547143077e-07,
+  "day_p50_ms": 0.089,
+  "day_p95_ms": 0.1227,
+  "month_p50_ms": 2.8546,
+  "straddle_p50_ms": 0.1018,
+  "unwindowed_p50_ms": 150.2558,
+  "today_unwindowed_p50_ms": 151.0632
+ },
+ "db_meta": {
+  "db": "eval\\windowed-episode-vector-scan\\cache\\episodes40k.db",
+  "key_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "model": "qwen3-embedding-0.6b-q8",
+  "seed": 20261110,
+  "t0": 1731196800000,
+  "t_end": 1794268800000,
+  "episodes": 40000,
+  "embedded_main_model": 39700,
+  "damaged_main_model": 5,
+  "other_model_rows": 300,
+  "query_rows": 30,
+  "reembedded": 1191,
+  "duplicate_groups": 700,
+  "equal_start_vector_pairs": 373,
+  "equal_start_episodes": 1240,
+  "tail_ge_1day": 168,
+  "ge_2h": 1388,
+  "forced_60day_ids": [
+   14149,
+   26169,
+   36122
+  ],
+  "forced_60day_spans": [
+   [
+    1748523600000,
+    1753707600000
+   ],
+   [
+    1767531600000,
+    1772715600000
+   ],
+   [
+    1783083600000,
+    1788267600000
+   ]
+  ],
+  "max_duration_ms": 5184000000
+ }
+}

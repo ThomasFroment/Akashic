@@ -1,0 +1,44 @@
+﻿"Samedi, j'ai regardé quoi vers 22h ?"
+   -> ('Sat 07 21:30', 'Sat 07 22:30')
+"J'ai regardé Le Journal de 20h hier ?"
+   -> ('Mon 09 05:00', 'Tue 10 05:00')
+"Qu'est-ce que j'ai regardé pendant la pause de midi ?"
+   -> ('Tue 10 11:30', 'Tue 10 14:00')
+"Les 2 vidéos de ce matin, c'était quoi ?"
+   -> ('Tue 10 06:00', 'Tue 10 12:00')
+"Qu'est-ce que Léa a dit sur les 2 vidéos de ce matin ?"
+   -> ('Tue 10 06:00', 'Tue 10 12:00')
+'What did I watch over lunch?'
+   -> ('Tue 10 11:30', 'Tue 10 14:00')
+'The game I played over the weekend, did Sacha mention it yesterday?'
+   -> ('Mon 09 05:00', 'Tue 10 05:00')
+'Did I watch the video from last night that Minlo sent?'
+   -> ('Mon 09 18:00', 'Tue 10 06:00')
+"Qu'est-ce que Léa a dit hier soir, quand on jouait à Valorant ce matin ?"
+   -> ('Mon 09 18:00', 'Tue 10 02:00')
+"Hier, vers 22h, qu'est-ce que j'ai regardé ?"
+   -> ('Mon 09 21:30', 'Mon 09 22:30')
+'What did Minlo say about "Monday morning" yesterday?'
+   -> ('Mon 09 05:00', 'Tue 10 05:00')
+"C'était quoi la vidéo d'hier soir dont Minlo parlait ce matin ?"
+   -> ('Mon 09 18:00', 'Tue 10 02:00')
+'Which video from this morning did Léa mention last night?'
+   -> ('Mon 09 18:00', 'Tue 10 06:00')
+"Le podcast d'hier, Minlo l'a cité ce matin, c'était lequel ?"
+   -> ('Mon 09 05:00', 'Tue 10 05:00')
+'The clip Sacha sent yesterday, what was it called?'
+   -> ('Mon 09 05:00', 'Tue 10 05:00')
+"Ce soir, Minlo a parlé de la vidéo d'hier, laquelle ?"
+   -> ('Mon 09 18:00', 'Tue 10 02:00')
+"Qu'est-ce que j'ai regardé sur la chaîne de Léa hier soir ?"
+   -> ('Mon 09 18:00', 'Tue 10 02:00')
+'What did Minlo say about the Late Show from yesterday?'
+   -> ('Mon 09 05:00', 'Tue 10 05:00')
+"Hier soir j'ai regardé Le Grand Journal du matin, c'était sur quoi ?"
+   -> ('Mon 09 18:00', 'Tue 10 02:00')
+'What video did I watch during the afternoon yesterday?'
+   -> ('Mon 09 12:00', 'Mon 09 18:00')
+'Over the weekend, what did Léa say?'
+   -> ('Fri 06 18:00', 'Mon 09 05:00')
+"Qu'est-ce que j'ai regardé hier, et Minlo ce matin ?"
+   -> ('Tue 10 06:00', 'Tue 10 12:00')

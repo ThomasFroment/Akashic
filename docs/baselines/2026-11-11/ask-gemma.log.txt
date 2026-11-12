@@ -1,0 +1,1091 @@
+held-out set sha256 c5f78af04799cafa0e2f94fd10cf82fc0aeb83761df6f07861d1e3fa7eda912f
+memory at (-1, 0, 40): 24 episodes, {'episode_vectors': 24, 'segment_vectors': 0, 'segment_passages': 41, 'frame_passages': 16}
+memory at (0, 9, 0): 18 episodes, {'episode_vectors': 18, 'segment_vectors': 0, 'segment_passages': 32, 'frame_passages': 12}
+memory at (0, 18, 0): 22 episodes, {'episode_vectors': 22, 'segment_vectors': 0, 'segment_passages': 38, 'frame_passages': 15}
+
+gemma-4-12b-qat-q4
+  FAIL  h7   6.3s  Quelle vidéo j'ai regardée cet après-midi ?
+  FAIL  h8   1.2s  What video did I watch tonight?
+  FAIL  h9   1.6s  Minlo a dit quoi tonight sur la carte canyon ?
+  FAIL  h7   1.4s  Quelle vidéo j'ai regardée cet après-midi ?
+  FAIL  h8   1.0s  What video did I watch tonight?
+  FAIL  h9   1.4s  Minlo a dit quoi tonight sur la carte canyon ?
+  FAIL  h7   1.2s  Quelle vidéo j'ai regardée cet après-midi ?
+  FAIL  h8   1.0s  What video did I watch tonight?
+  FAIL  h9   1.3s  Minlo a dit quoi tonight sur la carte canyon ?
+  ok    h5   3.2s  What did Minlo say during our conversation this morning, something about a game?
+  ok    h6   2.2s  Ce matin Minlo m'a parlé d'un jeu de ferme, il sort quand ?
+  ok    h5   3.2s  What did Minlo say during our conversation this morning, something about a game?
+  ok    h6   3.6s  Ce matin Minlo m'a parlé d'un jeu de ferme, il sort quand ?
+  ok    h5   4.6s  What did Minlo say during our conversation this morning, something about a game?
+  ok    h6   3.3s  Ce matin Minlo m'a parlé d'un jeu de ferme, il sort quand ?
+  ok     1   3.4s  What video did I watch yesterday afternoon?
+  ok     2   3.6s  Quelle vidéo j'ai regardée hier après-midi ?
+  ok     3   3.3s  What did Minlo say yesterday morning, something about a game?
+  ok     4   4.4s  Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+  ok     5   2.7s  When does Ashfall Frontier come out?
+  ok     6   3.2s  Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+  ok     7   3.6s  What was wrong with Minlo's cat?
+  ok     8   2.8s  How much flour did the sourdough video say to use?
+  ok     9   3.1s  Combien de temps faut-il laisser reposer la pâte ?
+  ok    10   3.3s  Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+  ok    11   2.9s  Who is the channel of the Rust video I watched two days ago?
+  ok    12   3.1s  What does the Rust video say about owners?
+  ok    13   3.1s  Qu'est-ce qu'Élodie a proposé ce matin ?
+  ok    14   3.1s  How much are the plane tickets to Lisbon?
+  ok    15   3.5s  What did Minlo say about the Rust project?
+  ok    16   2.1s  Where is the bug in the Rust project?
+  ok    17   2.4s  Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+  ok    18   3.0s  What present did I plan to buy for Dad's birthday?
+  ok    19   2.3s  What was I working on this morning in my editor?
+  ok    20   2.4s  What did I read on Wikipedia today?
+  ok    21   2.0s  What game did I play yesterday evening?
+  ok    22   1.9s  Who did I talk to while playing yesterday evening?
+  ok    23   2.4s  Comment battre le boss du niveau trois ?
+  ok    24   1.9s  What music did I listen to yesterday morning?
+  ok    25   2.6s  What headphones was I looking at yesterday?
+  ok    26   2.2s  What did Minlo say about his holidays in Japan?
+  ok    27   1.3s  Quel film ai-je regardé sur Netflix hier soir ?
+  ok    28   1.4s  What did Élodie say yesterday morning?
+  ok    29   7.1s  Summarize what I did today.
+  ok    h1   3.0s  What did Minlo tell me yesterday morning about a game?
+  FAIL  h2   1.3s  Which video did I watch yesterday afternoon?
+  ok    h3   2.6s  Minlo m'a parlé de quel jeu hier matin ?
+  FAIL  h4   1.4s  Et hier après-midi, j'ai regardé quelle vidéo ?
+  FAIL h10   3.0s  How many videos did I watch the day before yesterday in the afternoon?
+  FAIL h11   4.7s  Combien de vidéos j'ai regardées avant-hier après-midi ?
+  ok   h12   2.4s  Avant-hier après-midi, j'ai regardé une vidéo sur un oiseau en papier, elle s'appelait comment ?
+  ok   h13   2.5s  C'était quoi l'angle dans la vidéo about knife sharpening, combien de degrés ?
+  ok   h14   2.3s  How long does Élodie's pear tart need to bake?
+  ok   h15   2.5s  What did Élodie propose ce matin pour le voyage, et c'est combien les billets ?
+  FAIL h16   2.1s  Where is Dad's birthday party going to be?
+  FAIL h17   2.8s  Selon Minlo, le patch de Hollow Depths sort quel jour ?
+  FAIL h18   2.6s  Qui a parlé de la bêta de Starfall Tactics ce matin, et elle ouvre quand ?
+  ok   h19   2.3s  What did Élodie say about the Starfall Tactics beta?
+  ok   h20   1.2s  Quelle vidéo de cuisine j'ai regardée hier soir ?
+  ok   h21   2.0s  Ce matin, Minlo m'a dit when he's leaving for Japan ?
+  ok   h22   2.1s  What does the Rust video say happens when an owner goes out of scope?
+  ok     1   2.6s  What video did I watch yesterday afternoon?
+  ok     2   2.7s  Quelle vidéo j'ai regardée hier après-midi ?
+  ok     3   2.4s  What did Minlo say yesterday morning, something about a game?
+  ok     4   3.2s  Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+  ok     5   2.6s  When does Ashfall Frontier come out?
+  ok     6   2.5s  Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+  ok     7   2.6s  What was wrong with Minlo's cat?
+  ok     8   2.1s  How much flour did the sourdough video say to use?
+  ok     9   2.3s  Combien de temps faut-il laisser reposer la pâte ?
+  ok    10   2.5s  Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+  ok    11   2.1s  Who is the channel of the Rust video I watched two days ago?
+  ok    12   2.8s  What does the Rust video say about owners?
+  ok    13   2.3s  Qu'est-ce qu'Élodie a proposé ce matin ?
+  ok    14   2.4s  How much are the plane tickets to Lisbon?
+  ok    15   2.6s  What did Minlo say about the Rust project?
+  ok    16   1.9s  Where is the bug in the Rust project?
+  ok    17   2.3s  Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+  ok    18   2.4s  What present did I plan to buy for Dad's birthday?
+  ok    19   2.3s  What was I working on this morning in my editor?
+  ok    20   2.4s  What did I read on Wikipedia today?
+  ok    21   1.9s  What game did I play yesterday evening?
+  ok    22   1.9s  Who did I talk to while playing yesterday evening?
+  ok    23   2.3s  Comment battre le boss du niveau trois ?
+  ok    24   1.7s  What music did I listen to yesterday morning?
+  ok    25   2.6s  What headphones was I looking at yesterday?
+  ok    26   2.3s  What did Minlo say about his holidays in Japan?
+  ok    27   1.2s  Quel film ai-je regardé sur Netflix hier soir ?
+  ok    28   1.4s  What did Élodie say yesterday morning?
+  ok    29   7.4s  Summarize what I did today.
+  ok    h1   3.0s  What did Minlo tell me yesterday morning about a game?
+  FAIL  h2   1.3s  Which video did I watch yesterday afternoon?
+  ok    h3   2.5s  Minlo m'a parlé de quel jeu hier matin ?
+  FAIL  h4   1.4s  Et hier après-midi, j'ai regardé quelle vidéo ?
+  FAIL h10   2.6s  How many videos did I watch the day before yesterday in the afternoon?
+  FAIL h11   4.5s  Combien de vidéos j'ai regardées avant-hier après-midi ?
+  ok   h12   2.2s  Avant-hier après-midi, j'ai regardé une vidéo sur un oiseau en papier, elle s'appelait comment ?
+  ok   h13   2.3s  C'était quoi l'angle dans la vidéo about knife sharpening, combien de degrés ?
+  ok   h14   2.3s  How long does Élodie's pear tart need to bake?
+  ok   h15   2.4s  What did Élodie propose ce matin pour le voyage, et c'est combien les billets ?
+  FAIL h16   2.1s  Where is Dad's birthday party going to be?
+  FAIL h17   2.7s  Selon Minlo, le patch de Hollow Depths sort quel jour ?
+  FAIL h18   2.4s  Qui a parlé de la bêta de Starfall Tactics ce matin, et elle ouvre quand ?
+  ok   h19   2.1s  What did Élodie say about the Starfall Tactics beta?
+  ok   h20   1.2s  Quelle vidéo de cuisine j'ai regardée hier soir ?
+  ok   h21   1.9s  Ce matin, Minlo m'a dit when he's leaving for Japan ?
+  ok   h22   2.2s  What does the Rust video say happens when an owner goes out of scope?
+  ok     1   2.5s  What video did I watch yesterday afternoon?
+  ok     2   2.7s  Quelle vidéo j'ai regardée hier après-midi ?
+  ok     3   2.6s  What did Minlo say yesterday morning, something about a game?
+  ok     4   3.2s  Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+  ok     5   2.1s  When does Ashfall Frontier come out?
+  ok     6   2.4s  Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+  ok     7   2.5s  What was wrong with Minlo's cat?
+  ok     8   2.1s  How much flour did the sourdough video say to use?
+  ok     9   2.3s  Combien de temps faut-il laisser reposer la pâte ?
+  ok    10   2.4s  Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+  ok    11   1.9s  Who is the channel of the Rust video I watched two days ago?
+  ok    12   2.2s  What does the Rust video say about owners?
+  ok    13   2.3s  Qu'est-ce qu'Élodie a proposé ce matin ?
+  ok    14   2.2s  How much are the plane tickets to Lisbon?
+  ok    15   2.6s  What did Minlo say about the Rust project?
+  ok    16   2.0s  Where is the bug in the Rust project?
+  ok    17   2.4s  Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+  ok    18   2.4s  What present did I plan to buy for Dad's birthday?
+  ok    19   2.4s  What was I working on this morning in my editor?
+  ok    20   2.4s  What did I read on Wikipedia today?
+  ok    21   1.8s  What game did I play yesterday evening?
+  ok    22   2.0s  Who did I talk to while playing yesterday evening?
+  ok    23   2.3s  Comment battre le boss du niveau trois ?
+  ok    24   1.7s  What music did I listen to yesterday morning?
+  ok    25   2.6s  What headphones was I looking at yesterday?
+  ok    26   2.1s  What did Minlo say about his holidays in Japan?
+  ok    27   1.3s  Quel film ai-je regardé sur Netflix hier soir ?
+  ok    28   1.4s  What did Élodie say yesterday morning?
+  ok    29   7.1s  Summarize what I did today.
+  ok    h1   2.8s  What did Minlo tell me yesterday morning about a game?
+  FAIL  h2   1.2s  Which video did I watch yesterday afternoon?
+  ok    h3   2.5s  Minlo m'a parlé de quel jeu hier matin ?
+  FAIL  h4   1.4s  Et hier après-midi, j'ai regardé quelle vidéo ?
+  FAIL h10   2.4s  How many videos did I watch the day before yesterday in the afternoon?
+  FAIL h11   4.5s  Combien de vidéos j'ai regardées avant-hier après-midi ?
+  ok   h12   2.3s  Avant-hier après-midi, j'ai regardé une vidéo sur un oiseau en papier, elle s'appelait comment ?
+  ok   h13   2.5s  C'était quoi l'angle dans la vidéo about knife sharpening, combien de degrés ?
+  ok   h14   2.2s  How long does Élodie's pear tart need to bake?
+  ok   h15   2.6s  What did Élodie propose ce matin pour le voyage, et c'est combien les billets ?
+  FAIL h16   2.1s  Where is Dad's birthday party going to be?
+  FAIL h17   2.8s  Selon Minlo, le patch de Hollow Depths sort quel jour ?
+  FAIL h18   2.5s  Qui a parlé de la bêta de Starfall Tactics ce matin, et elle ouvre quand ?
+  ok   h19   2.2s  What did Élodie say about the Starfall Tactics beta?
+  ok   h20   1.1s  Quelle vidéo de cuisine j'ai regardée hier soir ?
+  ok   h21   2.0s  Ce matin, Minlo m'a dit when he's leaving for Japan ?
+  ok   h22   2.1s  What does the Rust video say happens when an owner goes out of scope?
+
+== gemma-4-12b-qat-q4: 123/153 correct (plan reported apart)
+   dev     all   ok 87/87  ok+plan 87/87  facts 87/87  cites 87/87  grounded 87/87  plan 87/87  abstain 9/9  hedge -  count -  precision 1.00  false-cites 0
+   dev     en    ok 60/60  ok+plan 60/60  facts 60/60  cites 60/60  grounded 60/60  plan 60/60  abstain 6/6  hedge -  count -  precision 1.00  false-cites 0
+   dev     fr    ok 27/27  ok+plan 27/27  facts 27/27  cites 27/27  grounded 27/27  plan 27/27  abstain 3/3  hedge -  count -  precision 1.00  false-cites 0
+   heldout all   ok 36/66  ok+plan 36/66  facts 51/66  cites 45/66  grounded 57/66  plan 57/66  abstain 9/9  hedge 0/9  count 0/6  precision 1.00  false-cites 0
+   heldout en    ok 15/27  ok+plan 15/27  facts 21/27  cites 18/27  grounded 24/27  plan 24/27  abstain 3/3  hedge 0/3  count 0/3  precision 1.00  false-cites 0
+   heldout fr    ok 12/27  ok+plan 12/27  facts 21/27  cites 18/27  grounded 21/27  plan 21/27  abstain 3/3  hedge 0/6  count 0/3  precision 1.00  false-cites 0
+   heldout mixed ok 9/12  ok+plan 9/12  facts 9/12  cites 9/12  grounded 12/12  plan 12/12  abstain 3/3  hedge -  count -  precision 1.00  false-cites 0
+   seconds per question: median 2.4, slowest 7.4 (first includes loading the model)
+
+   [h7 #0] Quelle vidéo j'ai regardée cet après-midi ?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo regardée'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h8 #0] What video did I watch tonight?
+       facts=False cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'video watched'
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [h9 #0] Minlo a dit quoi tonight sur la carte canyon ?
+       facts=False cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'ce que Minlo a dit sur la carte canyon'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h7 #1] Quelle vidéo j'ai regardée cet après-midi ?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo regardée'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h8 #1] What video did I watch tonight?
+       facts=False cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'video watched'
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [h9 #1] Minlo a dit quoi tonight sur la carte canyon ?
+       facts=False cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'ce que Minlo a dit sur la carte canyon'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h7 #2] Quelle vidéo j'ai regardée cet après-midi ?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo regardée'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h8 #2] What video did I watch tonight?
+       facts=False cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'video watched'
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [h9 #2] Minlo a dit quoi tonight sur la carte canyon ?
+       facts=False cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'ce que Minlo a dit sur la carte canyon'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h5 #0] What did Minlo say during our conversation this morning, something about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call']
+       topic: 'Minlo said something about a game'
+       answer: 'During your conversation this morning, Minlo mentioned the following regarding games:\n\n* **Brambleheart**: Minlo stated that they started playing it last night and described it as a farming game where you raise bees [1][2].\n* **Platform and Release**: When asked if it runs on Switch, Minlo clarified that it is currently PC only, with a full release planned for April [1][4].\n* **Starfall Tactics**: Minlo mentioned that you had pre-ordered *Starfall Tactics* and noted that the beta opens this Friday [1][4].'
+
+   [h6 #0] Ce matin Minlo m'a parlé d'un jeu de ferme, il sort quand ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call']
+       topic: 'jeu de ferme'
+       answer: "Minlo a mentionné le jeu de ferme *Brambleheart* [1][2]. La version complète est prévue pour le mois d'avril [1][4]."
+
+   [h5 #1] What did Minlo say during our conversation this morning, something about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call']
+       topic: 'What did Minlo say about a game?'
+       answer: 'During your conversation this morning, Minlo mentioned the following regarding games:\n\n* **Brambleheart**: Minlo stated that they started playing it last night and described it as a farming game where you raise bees [1][2].\n* **Platform and Release**: When asked if it runs on Switch, Minlo clarified that it is currently PC only, with a full release planned for April [1][4].\n* **Starfall Tactics**: Minlo mentioned that you pre-ordered *Starfall Tactics* and that the beta opens this Friday [1][4].'
+
+   [h6 #1] Ce matin Minlo m'a parlé d'un jeu de ferme, il sort quand ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call']
+       topic: 'jeu de ferme'
+       answer: "Minlo a mentionné le jeu de ferme *Brambleheart*, qui est actuellement disponible uniquement sur PC [1][2]. Sa sortie complète est prévue pour le mois d'avril [1][4]."
+
+   [h5 #2] What did Minlo say during our conversation this morning, something about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call']
+       topic: 'What did Minlo say about a game?'
+       answer: 'During your conversation this morning, Minlo mentioned the following regarding games:\n\n* **Brambleheart**: Minlo stated that they started playing it last night and described it as a farming game where you raise bees [1][2].\n* **Platform/Release**: When asked if it runs on Switch, Minlo clarified that it is currently PC only, with a full release planned for April [1][4].\n* **Starfall Tactics**: Minlo mentioned that you (the user) pre-ordered *Starfall Tactics* and that the beta opens this Friday [1][4].'
+
+   [h6 #2] Ce matin Minlo m'a parlé d'un jeu de ferme, il sort quand ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call']
+       topic: 'jeu de ferme'
+       answer: "Minlo a mentionné le jeu de ferme *Brambleheart*, qui est actuellement disponible uniquement sur PC [1][2]. La version complète est prévue pour le mois d'avril [1][4]."
+
+   [1 #0] What video did I watch yesterday afternoon?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video', 'storm_video']  sourced: ['bread_video', 'storm_video']
+       topic: 'video watched'
+       answer: 'Yesterday afternoon, you watched the following videos:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** at 14:10 [1].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** at 15:05 [2].'
+
+   [2 #0] Quelle vidéo j'ai regardée hier après-midi ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video', 'storm_video']  sourced: ['bread_video', 'storm_video']
+       topic: 'vidéo regardée'
+       answer: 'Hier après-midi, vous avez regardé les vidéos suivantes:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** à 14:10 [2].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** à 15:05 [1].'
+
+   [3 #0] What did Minlo say yesterday morning, something about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'What did Minlo say about a game?'
+       answer: 'Yesterday morning, Minlo asked if you had seen the trailer for *Ashfall Frontier* [1][3]. He mentioned that it is a survival game scheduled for release on December 12th [1][3].'
+
+   [4 #0] Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: "ce que Minlo a dit à propos d'un jeu"
+       answer: "Hier matin à 10h05, Minlo vous a parlé du jeu *Ashfall Frontier* [1][2]. Il a précisé qu'il s'agit d'un jeu de survie dont la sortie est prévue pour le 12 décembre [1][2]. Il a également mentionné que le jeu propose un mode coopératif pouvant accueillir jusqu'à quatre joueurs et permet de construire des bases [1][3]."
+
+   [5 #0] When does Ashfall Frontier come out?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['balloon_video', 'brambleheart_call', 'game', 'game_chat', 'indie_video', 'knife_video', 'lisbon_call', 'minlo_call', 'music']
+       topic: 'Ashfall Frontier release date'
+       answer: 'Ashfall Frontier comes out on December 12 [1][6].'
+
+   [6 #0] Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'nombre de joueurs en coop dans le jeu dont Minlo parlait'
+       answer: "Le jeu dont Minlo parlait (Ashfall Frontier) permet de jouer en coopération jusqu'à quatre joueurs [1][5]."
+
+   [7 #0] What was wrong with Minlo's cat?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: "Minlo's cat problem"
+       answer: "I did not find any specific information regarding what was wrong with Minlo's cat, other than the fact that it was sick and needed to go to the veterinarian [1][5]."
+
+   [8 #0] How much flour did the sourdough video say to use?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video']  sourced: ['bread_video', 'hummus_video', 'knife_video', 'origami_video', 'storm_video']
+       topic: 'amount of flour in sourdough video'
+       answer: 'The sourdough video stated that you need five hundred grams of flour [1][6].'
+
+   [9 #0] Combien de temps faut-il laisser reposer la pâte ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video']  sourced: ['birthday_call', 'brambleheart_call', 'bread_video', 'game_chat', 'hummus_video', 'lisbon_call', 'minlo_call', 'origami_video']
+       topic: 'temps de repos de la pâte'
+       answer: 'Il faut laisser reposer la pâte pendant douze heures avant de la cuire à deux cent trente degrés [1][6].'
+
+   [10 #0] Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['storm_video']  sourced: ['balloon_video', 'game_chat', 'music', 'sky_video', 'storm_video']
+       topic: "pourquoi voit-on l'éclair avant d'entendre le tonnerre"
+       answer: "On voit l'éclair avant d'entendre le tonnerre parce que la lumière voyage plus vite que le son [1][6]."
+
+   [11 #0] Who is the channel of the Rust video I watched two days ago?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'channel of the Rust video'
+       answer: 'The channel for the Rust video you watched on 2026-11-09 is Code Lab (Zen) [1].'
+
+   [12 #0] What does the Rust video say about owners?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bread_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'What does the Rust video say about owners?'
+       answer: 'The Rust video ("Rust ownership and borrowing explained - Code Lab") states that every value in Rust has a single owner [1]. When that owner goes out of scope, the value is dropped [1][6].'
+
+   [13 #0] Qu'est-ce qu'Élodie a proposé ce matin ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['lisbon_call']
+       topic: "ce qu'Élodie a proposé"
+       answer: "Élodie a proposé d'aller à Lisbonne en mars, en précisant que les billets d'avion sont à quatre-vingts euros [1][2]."
+
+   [14 #0] How much are the plane tickets to Lisbon?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['bicycle_video', 'birthday_call', 'brambleheart_call', 'game_chat', 'lisbon_call', 'origami_video', 'work_today']
+       topic: 'plane tickets to Lisbon'
+       answer: 'The plane tickets to Lisbon are eighty euros [1][6].'
+
+   [15 #0] What did Minlo say about the Rust project?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'What did Minlo say about the Rust project?'
+       answer: 'Minlo stated that he cannot go in March because he has a deadline for the Rust project [1][5]. He also mentioned that the bug is in the parser and that it panics on empty input [1][5][6].'
+
+   [16 #0] Where is the bug in the Rust project?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['bicycle_video', 'brambleheart_call', 'game', 'game_chat', 'indie_video', 'lisbon_call', 'rust_video']
+       topic: 'bug in the Rust project'
+       answer: 'The bug in the Rust project is in the parser, and it panics on empty input [1][6][7].'
+
+   [17 #0] Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Quel gâteau Élodie veut-elle faire pour l'anniversaire"
+       answer: "Élodie pense faire une tarte aux poires pour l'anniversaire de Papa [1][3]."
+
+   [18 #0] What present did I plan to buy for Dad's birthday?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'brambleheart_call', 'game_chat', 'hummus_video', 'knife_video', 'lisbon_call', 'minlo_call', 'music', 'origami_video']
+       topic: "cadeau pour l'anniversaire de papa"
+       answer: "You planned to buy a watch as a gift for your father's birthday [1][6][7]."
+
+   [19 #0] What was I working on this morning in my editor?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['work_today']  sourced: ['work_today']
+       topic: 'working on in editor'
+       answer: 'This morning at 11:00, you were working on a file named `akashic - ask.py` within `Code.exe` [1]. The code included a `run` function that retrieves a `question_id` from a job payload [1].'
+
+   [20 #0] What did I read on Wikipedia today?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['aurora']  sourced: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']
+       topic: 'What did I read on Wikipedia?'
+       answer: 'You read about "Aurora" on Wikipedia today [1]. The page describes an aurora as a natural light display in Earth\'s sky that is predominantly seen in high-latitude regions [1][13].'
+
+   [21 #0] What game did I play yesterday evening?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game']  sourced: ['game']
+       topic: 'game played'
+       answer: 'Yesterday evening, you played the game Hollow Depths (hollowdepths.exe) at 20:00 [1].'
+
+   [22 #0] Who did I talk to while playing yesterday evening?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game_chat']  sourced: ['game', 'game_chat']
+       topic: 'Who did I talk to while playing?'
+       answer: 'Yesterday evening, you were in a Discord call with Minlo [1].'
+
+   [23 #0] Comment battre le boss du niveau trois ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game_chat']  sourced: ['balloon_video', 'brambleheart_call', 'game', 'game_chat', 'knife_video', 'minlo_call', 'origami_video']
+       topic: 'comment battre le boss du niveau trois'
+       answer: 'Pour battre le boss du niveau trois, il faut esquiver à gauche puis frapper [1][6].'
+
+   [24 #0] What music did I listen to yesterday morning?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['music']  sourced: ['music']
+       topic: 'music listened to'
+       answer: 'Yesterday morning, you listened to "Clair de Lune" [1].'
+
+   [25 #0] What headphones was I looking at yesterday?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['shopping']  sourced: ['bread_video', 'game', 'game_chat', 'minlo_call', 'shopping', 'storm_video']
+       topic: 'headphones'
+       answer: 'Yesterday, you were looking at the Sony WH-1000XM5 wireless noise-canceling headphones (Casque Sony WH-1000XM5 sans fil à réduction de bruit) priced at 349 euros [1][12].'
+
+   [26 #0] What did Minlo say about his holidays in Japan?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: "Minlo's holidays in Japan"
+       answer: "I did not find any information regarding Minlo's holidays in Japan in the provided sources."
+
+   [27 #0] Quel film ai-je regardé sur Netflix hier soir ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: 'film regardé sur Netflix'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [28 #0] What did Élodie say yesterday morning?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: "ce qu'Élodie a dit"
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [29 #0] Summarize what I did today.
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']  sourced: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']
+       topic: 'summary of activities'
+       answer: 'On Wednesday, November 11, 2026, your activities included the following:\n\n**Communications and Planning**\n* **Discord Call with Minlo (07:30):** You discussed video games. Minlo mentioned starting *Brambleheart*, a farming game about raising bees, which is currently PC-only with a full release planned for April [1][6][10]. You also discussed *Starfall Tactics*, which Minlo pre-ordered for a beta opening this Friday [1][9][10]. You agreed to play together around 21:00 [1][9].\n* **Discord Call with Minlo and Élodie (09:00):** Élodie suggested a trip to Lisbon in March for 80 euros, but Minlo declined due to a deadline for the Rust project [2][7]. Minlo identified a bug in the parser that panics on empty input, and you stated you would look at it that afternoon [2][7][8].\n\n**Work and Research**\n* **Coding (11:00):** You worked on a file named `akashic - ask.py` in Code.exe, specifically involving a `run` function that retrieves a `question_id` from a job payload [3][13].\n* **Web Browsing (13:00):** You viewed the Wikipedia page for "Aurora," noting that they are natural light displays predominantly seen in high-latitude regions [4][14].\n\n**Media Consumption**\n* **Video (15:00):** You watched a video titled "Comment fonctionne une montgolfière" on Zen, which explained how a burner heats the air in a balloon\'s envelope to make it rise [5][11][12].'
+
+   [h1 #0] What did Minlo tell me yesterday morning about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'What did Minlo tell me about a game?'
+       answer: 'Yesterday morning, Minlo told you about the game *Ashfall Frontier* [1][2]. He mentioned the following details:\n* It is a survival game [1][2].\n* It is scheduled to be released on December 12th [1][2].\n* It features co-op for up to four players and allows for base building [1][3].'
+
+   [h2 #0] Which video did I watch yesterday afternoon?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'video watched'
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [h3 #0] Minlo m'a parlé de quel jeu hier matin ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'quel jeu'
+       answer: "Hier matin, Minlo vous a parlé du jeu de survie *Ashfall Frontier* [1][2]. Il a précisé que le jeu sortira le 12 décembre et qu'il permet de jouer en coopération jusqu'à quatre joueurs avec la possibilité de construire des bases [1][3]."
+
+   [h4 #0] Et hier après-midi, j'ai regardé quelle vidéo ?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo regardée'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h10 #0] How many videos did I watch the day before yesterday in the afternoon?
+       facts=True cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=False
+       cited: []  sourced: ['hummus_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'videos watched'
+       answer: 'I did not find any information regarding videos watched on Monday, November 9, 2026, in the afternoon. The sources provided for that date only cover the period from 13:00 to 16:15.'
+
+   [h11 #0] Combien de vidéos j'ai regardées avant-hier après-midi ?
+       facts=True cites=False grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=False
+       cited: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']  sourced: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'vidéos regardées'
+       answer: "Vous avez regardé 6 vidéos avant-hier après-midi (le 09/11/2026 entre 12:00 et 18:00):\n\n1. **Knife sharpening for beginners - Edge Craft** à 13:00 [4]\n2. **Pourquoi le ciel est bleu - Science Claire** à 13:30 [2]\n3. **Lantern Keeper (Pixel Digest)** à 14:00 [1]\n4. **Origami crane in five minutes - Paper Hands** à 14:30 [5]\n5. **The history of the bicycle - Past Forward** à 15:30 [3]\n6. Une vidéo non nommée où l'on entend des instructions pour mélanger des pois chiches à 16:15 [11]"
+
+   [h12 #0] Avant-hier après-midi, j'ai regardé une vidéo sur un oiseau en papier, elle s'appelait comment ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['origami_video']  sourced: ['hummus_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'vidéo sur un oiseau en papier'
+       answer: 'La vidéo que vous avez regardée s\'appelait "Origami crane in five minutes - Paper Hands (Zen)" [1].'
+
+   [h13 #0] C'était quoi l'angle dans la vidéo about knife sharpening, combien de degrés ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['knife_video']  sourced: ['hummus_video', 'knife_video', 'orchid_video', 'origami_video', 'rust_video']
+       topic: 'angle dans la vidéo about knife sharpening'
+       answer: 'L\'angle à maintenir pour le tranchant du couteau dans la vidéo "Knife sharpening for beginners - Edge Craft" est de quinze degrés [1][6].'
+
+   [h14 #0] How long does Élodie's pear tart need to bake?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Élodie's pear tart baking time"
+       answer: "Élodie's pear tart requires one hour of baking [1][3]."
+
+   [h15 #0] What did Élodie propose ce matin pour le voyage, et c'est combien les billets ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['lisbon_call']
+       topic: 'proposition voyage et prix des billets'
+       answer: "Élodie a proposé d'aller à Lisbonne en mars [1][2]. Les billets d'avion sont à quatre-vingts euros [1][2]."
+
+   [h16 #0] Where is Dad's birthday party going to be?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'brambleheart_call', 'bread_video', 'game_chat', 'hummus_video', 'knife_video', 'lisbon_call', 'music']
+       topic: "Dad's birthday party location"
+       answer: 'The party for Dad\'s birthday is expected to be at "tata Odile\'s" house on Saturday evening [1][6].'
+
+   [h17 #0] Selon Minlo, le patch de Hollow Depths sort quel jour ?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['game_chat']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'date de sortie du patch de Hollow Depths'
+       answer: 'Je n\'ai pas trouvé d\'information indiquant que le patch concerne spécifiquement le jeu "Hollow Depths". Cependant, Minlo a mentionné que le patch 2.1 arrive jeudi [1][5].'
+
+   [h18 #0] Qui a parlé de la bêta de Starfall Tactics ce matin, et elle ouvre quand ?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call', 'lisbon_call']
+       topic: 'qui a parlé de la bêta de Starfall Tactics et quand elle ouvre'
+       answer: "C'est vous qui avez parlé de la bêta de Starfall Tactics ce matin [1][3]. Elle ouvre vendredi [1][3]."
+
+   [h19 #0] What did Élodie say about the Starfall Tactics beta?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Élodie's comments on the Starfall Tactics beta"
+       answer: 'I did not find any information regarding the Starfall Tactics beta in the provided sources.'
+
+   [h20 #0] Quelle vidéo de cuisine j'ai regardée hier soir ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo de cuisine'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h21 #0] Ce matin, Minlo m'a dit when he's leaving for Japan ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['brambleheart_call', 'lisbon_call']
+       topic: 'Minlo leaving for Japan'
+       answer: 'I did not find any information in the sources regarding Minlo leaving for Japan.'
+
+   [h22 #0] What does the Rust video say happens when an owner goes out of scope?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bread_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'what happens when an owner goes out of scope in the Rust video'
+       answer: 'When the owner goes out of scope, the value is dropped [1][6].'
+
+   [1 #1] What video did I watch yesterday afternoon?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video', 'storm_video']  sourced: ['bread_video', 'storm_video']
+       topic: 'video watched'
+       answer: 'Yesterday afternoon, you watched the following videos:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** at 14:10 [1].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** at 15:05 [2].'
+
+   [2 #1] Quelle vidéo j'ai regardée hier après-midi ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video', 'storm_video']  sourced: ['bread_video', 'storm_video']
+       topic: 'vidéo regardée'
+       answer: 'Hier après-midi, vous avez regardé les vidéos suivantes:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** à 14:10 [2].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** à 15:05 [1].'
+
+   [3 #1] What did Minlo say yesterday morning, something about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'What did Minlo say about a game?'
+       answer: 'Yesterday morning, Minlo asked if you had seen the trailer for *Ashfall Frontier* [1][3]. He mentioned that it is a survival game scheduled for release on December 12th [1][3].'
+
+   [4 #1] Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: "ce que Minlo a dit à propos d'un jeu"
+       answer: "Hier matin à 10h05, Minlo vous a parlé du jeu *Ashfall Frontier* [1][2]. Il a précisé qu'il s'agit d'un jeu de survie dont la sortie est prévue pour le 12 décembre [1][2]. Il a également mentionné que le jeu propose un mode coopératif pouvant accueillir jusqu'à quatre joueurs et permet de construire des bases [1][3]."
+
+   [5 #1] When does Ashfall Frontier come out?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['balloon_video', 'brambleheart_call', 'game', 'game_chat', 'indie_video', 'knife_video', 'lisbon_call', 'minlo_call', 'music']
+       topic: 'Ashfall Frontier release date'
+       answer: 'Ashfall Frontier comes out on December 12 [1][6].'
+
+   [6 #1] Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'nombre de joueurs en coop dans le jeu dont Minlo parlait'
+       answer: "Le jeu dont Minlo parlait (Ashfall Frontier) permet de jouer en coopération jusqu'à quatre joueurs [1][5]."
+
+   [7 #1] What was wrong with Minlo's cat?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: "Minlo's cat problem"
+       answer: "I did not find information regarding what was specifically wrong with Minlo's cat; the sources only state that the cat was sick [1][5]."
+
+   [8 #1] How much flour did the sourdough video say to use?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video']  sourced: ['bread_video', 'hummus_video', 'knife_video', 'origami_video', 'storm_video']
+       topic: 'amount of flour in sourdough video'
+       answer: 'The sourdough video stated that you need five hundred grams of flour [1][6].'
+
+   [9 #1] Combien de temps faut-il laisser reposer la pâte ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video']  sourced: ['birthday_call', 'brambleheart_call', 'bread_video', 'game_chat', 'hummus_video', 'lisbon_call', 'minlo_call', 'origami_video']
+       topic: 'temps de repos de la pâte'
+       answer: 'Il faut laisser reposer la pâte pendant douze heures avant de la cuire à deux cent trente degrés [1][6].'
+
+   [10 #1] Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['storm_video']  sourced: ['balloon_video', 'game_chat', 'music', 'sky_video', 'storm_video']
+       topic: "pourquoi voit-on l'éclair avant d'entendre le tonnerre"
+       answer: "On voit l'éclair avant d'entendre le tonnerre parce que la lumière se déplace plus vite que le son [1][6]."
+
+   [11 #1] Who is the channel of the Rust video I watched two days ago?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'channel of the Rust video'
+       answer: 'The channel for the Rust video you watched on 2026-11-09 is Code Lab (Zen) [1].'
+
+   [12 #1] What does the Rust video say about owners?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bread_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'What does the Rust video say about owners?'
+       answer: 'The Rust video ("Rust ownership and borrowing explained - Code Lab") states that every value in Rust has a single owner [1]. When that owner goes out of scope, the value is dropped [1][6].'
+
+   [13 #1] Qu'est-ce qu'Élodie a proposé ce matin ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['lisbon_call']
+       topic: "ce qu'Élodie a proposé"
+       answer: "Élodie a proposé d'aller à Lisbonne en mars, en précisant que les billets d'avion coûtent quatre-vingts euros [1][2]."
+
+   [14 #1] How much are the plane tickets to Lisbon?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['bicycle_video', 'birthday_call', 'brambleheart_call', 'game_chat', 'lisbon_call', 'origami_video', 'work_today']
+       topic: 'plane tickets to Lisbon'
+       answer: 'The plane tickets to Lisbon are eighty euros [1][6].'
+
+   [15 #1] What did Minlo say about the Rust project?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'What did Minlo say about the Rust project?'
+       answer: 'Minlo mentioned that he cannot go in March because he has a deadline for the Rust project [1][5]. He also stated that the bug is in the parser and that it panics on empty input [1][5][6].'
+
+   [16 #1] Where is the bug in the Rust project?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['bicycle_video', 'brambleheart_call', 'game', 'game_chat', 'indie_video', 'lisbon_call', 'rust_video']
+       topic: 'bug in the Rust project'
+       answer: 'The bug in the Rust project is in the parser, where it panics on empty input [1][6][7].'
+
+   [17 #1] Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Quel gâteau Élodie veut-elle faire pour l'anniversaire"
+       answer: "Élodie pense faire une tarte aux poires pour l'anniversaire de Papa [1][3]."
+
+   [18 #1] What present did I plan to buy for Dad's birthday?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'brambleheart_call', 'game_chat', 'hummus_video', 'knife_video', 'lisbon_call', 'minlo_call', 'music', 'origami_video']
+       topic: "cadeau pour l'anniversaire de papa"
+       answer: "You planned to buy a watch as a gift for your father's birthday [1][6][7]."
+
+   [19 #1] What was I working on this morning in my editor?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['work_today']  sourced: ['work_today']
+       topic: 'working on in editor'
+       answer: 'This morning, you were working on a file named `akashic - ask.py` (Code.exe) at 11:00 [1]. The code included a `run` function that retrieves a `question_id` from a job payload [1].'
+
+   [20 #1] What did I read on Wikipedia today?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['aurora']  sourced: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']
+       topic: 'What did I read on Wikipedia?'
+       answer: 'You read about "Aurora" on Wikipedia today [1]. The page describes an aurora as a natural light display in Earth\'s sky that is predominantly seen in high-latitude regions [1][13].'
+
+   [21 #1] What game did I play yesterday evening?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game']  sourced: ['game']
+       topic: 'game played'
+       answer: 'Yesterday evening, you played the game Hollow Depths (hollowdepths.exe) at 20:00 [1].'
+
+   [22 #1] Who did I talk to while playing yesterday evening?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game_chat']  sourced: ['game', 'game_chat']
+       topic: 'Who did I talk to while playing?'
+       answer: 'Yesterday evening, you were in a Discord call with Minlo [1].'
+
+   [23 #1] Comment battre le boss du niveau trois ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game_chat']  sourced: ['balloon_video', 'brambleheart_call', 'game', 'game_chat', 'knife_video', 'minlo_call', 'origami_video']
+       topic: 'comment battre le boss du niveau trois'
+       answer: 'Pour battre le boss du niveau trois, il faut esquiver à gauche puis frapper [1][6].'
+
+   [24 #1] What music did I listen to yesterday morning?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['music']  sourced: ['music']
+       topic: 'music listened to'
+       answer: 'Yesterday morning, you listened to "Clair de Lune" [1].'
+
+   [25 #1] What headphones was I looking at yesterday?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['shopping']  sourced: ['bread_video', 'game', 'game_chat', 'minlo_call', 'shopping', 'storm_video']
+       topic: 'headphones'
+       answer: 'Yesterday, you were looking at the Sony WH-1000XM5 wireless noise-canceling headphones (Casque Sony WH-1000XM5 sans fil à réduction de bruit) priced at 349 euros on the Boulanger website [1][12].'
+
+   [26 #1] What did Minlo say about his holidays in Japan?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: "Minlo's holidays in Japan"
+       answer: "I did not find any information regarding Minlo's holidays in Japan in the provided sources."
+
+   [27 #1] Quel film ai-je regardé sur Netflix hier soir ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: 'film regardé sur Netflix'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [28 #1] What did Élodie say yesterday morning?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: "ce qu'Élodie a dit"
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [29 #1] Summarize what I did today.
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']  sourced: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']
+       topic: 'summary of activities'
+       answer: 'On Wednesday, November 11, 2026, your activities included the following:\n\n**Communications and Planning**\n* **Discord Call with Minlo (07:30):** You discussed video games. Minlo mentioned starting *Brambleheart*, a farming game involving beekeeping, which is currently only on PC with a full release planned for April [1][6][10]. You also discussed *Starfall Tactics*, which Minlo pre-ordered for a beta opening this Friday [1][9][10]. You agreed to play together around 21:00 [1][9].\n* **Discord Call with Minlo and Élodie (09:00):** Élodie suggested a trip to Lisbon in March for 80 euros, but Minlo declined due to a deadline for the Rust project [2][7]. Minlo identified a bug in the parser that panics on empty input, and you committed to looking at it that afternoon [2][7][8].\n\n**Work and Research**\n* **Coding (11:00):** You worked on a file named `akashic - ask.py` in Code.exe, which includes a `run` function that retrieves a `question_id` from a job payload [3][13].\n* **Web Browsing (13:00):** You viewed the Wikipedia page for "Aurora," noting that they are natural light displays predominantly seen in high-latitude regions [4][14].\n\n**Media Consumption**\n* **Video (15:00):** You watched a video titled "Comment fonctionne une montgolfière" on Zen, which explains how a burner heats the air in a balloon\'s envelope to make it rise [5][11][12].'
+
+   [h1 #1] What did Minlo tell me yesterday morning about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'What did Minlo tell me about a game?'
+       answer: 'Yesterday morning, Minlo told you about the game *Ashfall Frontier* [1][2]. He mentioned the following details:\n* It is a survival game [1][2].\n* It is scheduled to be released on December 12th [1][2].\n* It features co-op for up to four players and allows for base building [1][3].'
+
+   [h2 #1] Which video did I watch yesterday afternoon?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'video watched'
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [h3 #1] Minlo m'a parlé de quel jeu hier matin ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'quel jeu'
+       answer: "Hier matin, Minlo vous a parlé du jeu de survie *Ashfall Frontier* [1][2]. Il a précisé que le jeu sortira le 12 décembre et qu'il permet de jouer en coopération jusqu'à quatre joueurs avec la possibilité de construire des bases [1][3]."
+
+   [h4 #1] Et hier après-midi, j'ai regardé quelle vidéo ?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo regardée'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h10 #1] How many videos did I watch the day before yesterday in the afternoon?
+       facts=True cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=False
+       cited: []  sourced: ['hummus_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'videos watched'
+       answer: 'I did not find any information regarding videos watched on Monday, November 9, 2026, in the afternoon. The sources provided only cover the period from 13:00 to 16:15 on that day.'
+
+   [h11 #1] Combien de vidéos j'ai regardées avant-hier après-midi ?
+       facts=True cites=False grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=False
+       cited: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']  sourced: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'vidéos regardées'
+       answer: "Vous avez regardé 6 vidéos avant-hier après-midi (le 09/11/2026 entre 12h00 et 18h00):\n\n1. **Knife sharpening for beginners - Edge Craft** à 13h00 [4]\n2. **Pourquoi le ciel est bleu - Science Claire** à 13h30 [2]\n3. **Lantern Keeper (Pixel Digest)** à 14h00 [1]\n4. **Origami crane in five minutes - Paper Hands** à 14h30 [5]\n5. **The history of the bicycle - Past Forward** à 15h30 [3]\n6. Une vidéo non nommée où l'on entend des instructions pour mélanger des pois chiches à 16h15 [11]"
+
+   [h12 #1] Avant-hier après-midi, j'ai regardé une vidéo sur un oiseau en papier, elle s'appelait comment ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['origami_video']  sourced: ['hummus_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'vidéo sur un oiseau en papier'
+       answer: 'La vidéo que vous avez regardée s\'appelait "Origami crane in five minutes - Paper Hands (Zen)" [1].'
+
+   [h13 #1] C'était quoi l'angle dans la vidéo about knife sharpening, combien de degrés ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['knife_video']  sourced: ['hummus_video', 'knife_video', 'orchid_video', 'origami_video', 'rust_video']
+       topic: 'angle dans la vidéo about knife sharpening'
+       answer: "L'angle à maintenir pour le tranchant du couteau était de quinze degrés [1][6]."
+
+   [h14 #1] How long does Élodie's pear tart need to bake?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Élodie's pear tart baking time"
+       answer: "Élodie's pear tart requires one hour of baking [1][3]."
+
+   [h15 #1] What did Élodie propose ce matin pour le voyage, et c'est combien les billets ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['lisbon_call']
+       topic: 'proposition voyage et prix des billets'
+       answer: "Élodie a proposé d'aller à Lisbonne en mars [1][2]. Les billets d'avion sont à quatre-vingts euros [1][2]."
+
+   [h16 #1] Where is Dad's birthday party going to be?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'brambleheart_call', 'bread_video', 'game_chat', 'hummus_video', 'knife_video', 'lisbon_call', 'music']
+       topic: "Dad's birthday party location"
+       answer: 'The party for Dad\'s birthday is expected to be at "tata Odile\'s" house on Saturday evening [1][6].'
+
+   [h17 #1] Selon Minlo, le patch de Hollow Depths sort quel jour ?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['game_chat']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'date de sortie du patch de Hollow Depths'
+       answer: 'Je n\'ai pas trouvé d\'information indiquant que le patch concerne spécifiquement le jeu "Hollow Depths". Cependant, Minlo a mentionné que le patch 2.1 arrive jeudi [1][5].'
+
+   [h18 #1] Qui a parlé de la bêta de Starfall Tactics ce matin, et elle ouvre quand ?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call', 'lisbon_call']
+       topic: 'qui a parlé de la bêta de Starfall Tactics et quand elle ouvre'
+       answer: "C'est vous qui avez parlé de la bêta de Starfall Tactics ce matin [1][3]. Elle ouvre vendredi [1][3]."
+
+   [h19 #1] What did Élodie say about the Starfall Tactics beta?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Élodie's comments on the Starfall Tactics beta"
+       answer: 'I did not find any information regarding the Starfall Tactics beta in the provided sources.'
+
+   [h20 #1] Quelle vidéo de cuisine j'ai regardée hier soir ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo de cuisine'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h21 #1] Ce matin, Minlo m'a dit when he's leaving for Japan ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['brambleheart_call', 'lisbon_call']
+       topic: 'Minlo leaving for Japan'
+       answer: 'I did not find any information in the sources regarding Minlo leaving for Japan.'
+
+   [h22 #1] What does the Rust video say happens when an owner goes out of scope?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bread_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'what happens when an owner goes out of scope in the Rust video'
+       answer: 'When the owner goes out of scope, the value is dropped [1][6].'
+
+   [1 #2] What video did I watch yesterday afternoon?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video', 'storm_video']  sourced: ['bread_video', 'storm_video']
+       topic: 'video watched'
+       answer: 'Yesterday afternoon, you watched the following videos:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** at 14:10 [1].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** at 15:05 [2].'
+
+   [2 #2] Quelle vidéo j'ai regardée hier après-midi ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video', 'storm_video']  sourced: ['bread_video', 'storm_video']
+       topic: 'vidéo regardée'
+       answer: 'Hier après-midi, vous avez regardé les vidéos suivantes:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** à 14:10 [2].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** à 15:05 [1].'
+
+   [3 #2] What did Minlo say yesterday morning, something about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'What did Minlo say about a game?'
+       answer: 'Yesterday morning at 10:05, Minlo asked if you had seen the trailer for *Ashfall Frontier* [1][3]. He mentioned that it is a survival game scheduled for release on December 12th [1][3].'
+
+   [4 #2] Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: "ce que Minlo a dit à propos d'un jeu"
+       answer: "Hier matin à 10h05, Minlo vous a parlé du jeu *Ashfall Frontier* [1][2]. Il a précisé qu'il s'agit d'un jeu de survie dont la sortie est prévue pour le 12 décembre [1][2]. Il a également mentionné que le jeu propose un mode coopératif pour jusqu'à quatre joueurs et permet de construire des bases [1][3]."
+
+   [5 #2] When does Ashfall Frontier come out?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['balloon_video', 'brambleheart_call', 'game', 'game_chat', 'indie_video', 'knife_video', 'lisbon_call', 'minlo_call', 'music']
+       topic: 'Ashfall Frontier release date'
+       answer: 'Ashfall Frontier comes out on December 12 [1][6].'
+
+   [6 #2] Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'nombre de joueurs en coop dans le jeu dont Minlo parlait'
+       answer: "Le jeu dont Minlo parlait (Ashfall Frontier) permet jusqu'à quatre joueurs en coopération [1][5]."
+
+   [7 #2] What was wrong with Minlo's cat?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: "Minlo's cat problem"
+       answer: "I did not find specific information regarding what was wrong with Minlo's cat, other than that it was sick [1][5]."
+
+   [8 #2] How much flour did the sourdough video say to use?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video']  sourced: ['bread_video', 'hummus_video', 'knife_video', 'origami_video', 'storm_video']
+       topic: 'amount of flour in sourdough video'
+       answer: 'The sourdough video stated that you need five hundred grams of flour [1][6].'
+
+   [9 #2] Combien de temps faut-il laisser reposer la pâte ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['bread_video']  sourced: ['birthday_call', 'brambleheart_call', 'bread_video', 'game_chat', 'hummus_video', 'lisbon_call', 'minlo_call', 'origami_video']
+       topic: 'temps de repos de la pâte'
+       answer: 'Il faut laisser reposer la pâte pendant douze heures avant de la cuire à deux cent trente degrés [1][6].'
+
+   [10 #2] Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['storm_video']  sourced: ['balloon_video', 'game_chat', 'music', 'sky_video', 'storm_video']
+       topic: "pourquoi voit-on l'éclair avant d'entendre le tonnerre"
+       answer: "On voit l'éclair avant d'entendre le tonnerre parce que la lumière se déplace plus vite que le son [1][6]."
+
+   [11 #2] Who is the channel of the Rust video I watched two days ago?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'channel of the Rust video'
+       answer: 'The channel for the Rust video you watched is Code Lab (Zen) [1].'
+
+   [12 #2] What does the Rust video say about owners?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bread_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'What does the Rust video say about owners?'
+       answer: 'The Rust video states that every value in Rust has a single owner [1][6]. When the owner goes out of scope, the value is dropped [1][6].'
+
+   [13 #2] Qu'est-ce qu'Élodie a proposé ce matin ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['lisbon_call']
+       topic: "ce qu'Élodie a proposé"
+       answer: "Élodie a proposé d'aller à Lisbonne en mars, en précisant que les billets d'avion coûtent quatre-vingts euros [1][2]."
+
+   [14 #2] How much are the plane tickets to Lisbon?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['bicycle_video', 'birthday_call', 'brambleheart_call', 'game_chat', 'lisbon_call', 'origami_video', 'work_today']
+       topic: 'plane tickets to Lisbon'
+       answer: 'The plane tickets to Lisbon are eighty euros [1][6].'
+
+   [15 #2] What did Minlo say about the Rust project?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'What did Minlo say about the Rust project?'
+       answer: 'Minlo stated that he cannot go in March because he has a deadline for the Rust project [1][5]. He also mentioned that the bug is in the parser and that it panics on empty input [1][5][6].'
+
+   [16 #2] Where is the bug in the Rust project?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['bicycle_video', 'brambleheart_call', 'game', 'game_chat', 'indie_video', 'lisbon_call', 'rust_video']
+       topic: 'bug in the Rust project'
+       answer: 'The bug in the Rust project is in the parser, where it panics on empty input [1][6][7].'
+
+   [17 #2] Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Quel gâteau Élodie veut-elle faire pour l'anniversaire"
+       answer: "Élodie pense faire une tarte aux poires pour l'anniversaire de Papa [1][3]."
+
+   [18 #2] What present did I plan to buy for Dad's birthday?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'brambleheart_call', 'game_chat', 'hummus_video', 'knife_video', 'lisbon_call', 'minlo_call', 'music', 'origami_video']
+       topic: "cadeau pour l'anniversaire de papa"
+       answer: "You planned to buy a watch as a gift for your father's birthday [1][6][7]."
+
+   [19 #2] What was I working on this morning in my editor?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['work_today']  sourced: ['work_today']
+       topic: 'working on in editor'
+       answer: 'This morning at 11:00, you were working on a file named `akashic - ask.py` (Code.exe) [1]. The code includes a `run` function that retrieves a `question_id` from a job payload [1].'
+
+   [20 #2] What did I read on Wikipedia today?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['aurora']  sourced: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']
+       topic: 'What did I read on Wikipedia?'
+       answer: 'You read about "Aurora" on Wikipedia today [1]. The page describes an aurora as a natural light display in Earth\'s sky that is predominantly seen in high-latitude regions [1][13].'
+
+   [21 #2] What game did I play yesterday evening?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game']  sourced: ['game']
+       topic: 'game played'
+       answer: 'Yesterday evening, you played the game Hollow Depths (hollowdepths.exe) [1].'
+
+   [22 #2] Who did I talk to while playing yesterday evening?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game', 'game_chat']  sourced: ['game', 'game_chat']
+       topic: 'Who did I talk to while playing?'
+       answer: 'You talked to Minlo during a Discord call while playing Hollow Depths yesterday evening [1][2].'
+
+   [23 #2] Comment battre le boss du niveau trois ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['game_chat']  sourced: ['balloon_video', 'brambleheart_call', 'game', 'game_chat', 'knife_video', 'minlo_call', 'origami_video']
+       topic: 'comment battre le boss du niveau trois'
+       answer: 'Pour battre le boss du niveau trois, il faut esquiver à gauche puis frapper [1][6].'
+
+   [24 #2] What music did I listen to yesterday morning?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['music']  sourced: ['music']
+       topic: 'music listened to'
+       answer: 'Yesterday morning, you listened to "Clair de Lune" [1].'
+
+   [25 #2] What headphones was I looking at yesterday?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['shopping']  sourced: ['bread_video', 'game', 'game_chat', 'minlo_call', 'shopping', 'storm_video']
+       topic: 'headphones'
+       answer: 'Yesterday, you were looking at Sony WH-1000XM5 wireless noise-canceling headphones (Casque Sony WH-1000XM5 sans fil à réduction de bruit) priced at 349 euros on the Boulanger website [1][12].'
+
+   [26 #2] What did Minlo say about his holidays in Japan?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: "Minlo's holidays in Japan"
+       answer: "I did not find any information regarding Minlo's holidays in Japan in the provided sources."
+
+   [27 #2] Quel film ai-je regardé sur Netflix hier soir ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: 'film regardé sur Netflix'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [28 #2] What did Élodie say yesterday morning?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: "ce qu'Élodie a dit"
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [29 #2] Summarize what I did today.
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']  sourced: ['aurora', 'balloon_video', 'brambleheart_call', 'lisbon_call', 'work_today']
+       topic: 'summary of activities'
+       answer: 'On Wednesday, November 11, 2026, your activities included the following:\n\n**Communications and Planning**\n* **Discord Call with Minlo (07:30):** You discussed video games. Minlo mentioned starting *Brambleheart*, a farming game involving bees, which is currently only on PC with a full release planned for April [1][6][10]. You also discussed *Starfall Tactics*, which you pre-ordered; the beta is scheduled to open this Friday [1][9][10]. Minlo mentioned needing to finish a report by 11:00, and you both agreed to play together around 21:00 [1][9].\n* **Discord Call with Minlo and Élodie (09:00):** Élodie suggested a trip to Lisbon in March for 80 euros, but Minlo declined due to a deadline for the Rust project [2][7]. Minlo identified a bug in the parser that panics on empty input, and you stated you would look at it that afternoon [2][7][8].\n\n**Work and Research**\n* **Coding (11:00):** You worked on a file named `akashic - ask.py` in Code.exe, which contains a `run` function that retrieves a `question_id` from a job payload [3][13].\n* **Web Browsing (13:00):** You viewed the Wikipedia page for "Aurora," noting that they are natural light displays predominantly seen in high-latitude regions [4][14].\n\n**Media Consumption**\n* **Video (15:00):** You watched a video titled "Comment fonctionne une montgolfière" on Zen, which explains how a burner heats the air in a balloon\'s envelope to make it rise [5][11][12].'
+
+   [h1 #2] What did Minlo tell me yesterday morning about a game?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'What did Minlo tell me about a game?'
+       answer: 'Yesterday morning at 10:05, Minlo told you about the game *Ashfall Frontier* [1][2]. He mentioned that it is a survival game scheduled for release on December 12th [1][2]. He also explained that the game features co-op for up to four players and allows for base building [1][3].'
+
+   [h2 #2] Which video did I watch yesterday afternoon?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'video watched'
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [h3 #2] Minlo m'a parlé de quel jeu hier matin ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['minlo_call']  sourced: ['minlo_call']
+       topic: 'quel jeu'
+       answer: "Hier matin, Minlo vous a parlé du jeu de survie *Ashfall Frontier* [1][2]. Il a précisé que le jeu sortira le 12 décembre et qu'il permet de jouer en coopération jusqu'à quatre joueurs avec la possibilité de construire des bases [1][3]."
+
+   [h4 #2] Et hier après-midi, j'ai regardé quelle vidéo ?
+       facts=False cites=False grounded=True plan=False precision=None false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo regardée'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h10 #2] How many videos did I watch the day before yesterday in the afternoon?
+       facts=True cites=False grounded=True plan=True precision=None false=[] forbidden=[] abstained=None hedged=None count=False
+       cited: []  sourced: ['hummus_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'videos watched'
+       answer: 'I did not find any information regarding videos watched on Monday, November 9, 2026, in the afternoon. The sources provided only cover the period from 13:00 to 16:15 on that day.'
+
+   [h11 #2] Combien de vidéos j'ai regardées avant-hier après-midi ?
+       facts=True cites=False grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=False
+       cited: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']  sourced: ['bicycle_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'vidéos regardées'
+       answer: "Vous avez regardé 6 vidéos avant-hier après-midi (le 09/11/2026 entre 12h00 et 18h00):\n\n1. **Knife sharpening for beginners - Edge Craft** à 13:00 [4]\n2. **Pourquoi le ciel est bleu - Science Claire** à 13:30 [2]\n3. **Lantern Keeper (Pixel Digest)** à 14:00 [1]\n4. **Origami crane in five minutes - Paper Hands** à 14:30 [5]\n5. **The history of the bicycle - Past Forward** à 15:30 [3]\n6. Une vidéo non nommée où l'on entend des instructions pour mélanger des pois chiches à 16:15 [11]"
+
+   [h12 #2] Avant-hier après-midi, j'ai regardé une vidéo sur un oiseau en papier, elle s'appelait comment ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['origami_video']  sourced: ['hummus_video', 'indie_video', 'knife_video', 'origami_video', 'sky_video']
+       topic: 'vidéo sur un oiseau en papier'
+       answer: 'La vidéo que vous avez regardée s\'appelait "Origami crane in five minutes - Paper Hands (Zen)" [1].'
+
+   [h13 #2] C'était quoi l'angle dans la vidéo about knife sharpening, combien de degrés ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['knife_video']  sourced: ['hummus_video', 'knife_video', 'orchid_video', 'origami_video', 'rust_video']
+       topic: 'angle dans la vidéo about knife sharpening'
+       answer: 'L\'angle à maintenir pour le tranchant du couteau dans la vidéo "Knife sharpening for beginners - Edge Craft" est de quinze degrés [1][6].'
+
+   [h14 #2] How long does Élodie's pear tart need to bake?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Élodie's pear tart baking time"
+       answer: "Élodie's pear tart requires one hour of baking [1][3]."
+
+   [h15 #2] What did Élodie propose ce matin pour le voyage, et c'est combien les billets ?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['lisbon_call']  sourced: ['lisbon_call']
+       topic: 'proposition voyage et prix des billets'
+       answer: "Élodie a proposé d'aller à Lisbonne en mars [1][2]. Les billets d'avion sont à quatre-vingts euros [1][2]."
+
+   [h16 #2] Where is Dad's birthday party going to be?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['birthday_call']  sourced: ['birthday_call', 'brambleheart_call', 'bread_video', 'game_chat', 'hummus_video', 'knife_video', 'lisbon_call', 'music']
+       topic: "Dad's birthday party location"
+       answer: 'The party for Dad\'s birthday is expected to be at "tata Odile\'s" house on Saturday evening [1][6].'
+
+   [h17 #2] Selon Minlo, le patch de Hollow Depths sort quel jour ?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['game_chat']  sourced: ['brambleheart_call', 'game_chat', 'lisbon_call', 'minlo_call']
+       topic: 'date de sortie du patch de Hollow Depths'
+       answer: 'Je n\'ai pas trouvé d\'information indiquant que le patch concerne spécifiquement le jeu "Hollow Depths". Cependant, Minlo a mentionné que le patch 2.1 arrive jeudi [1][5].'
+
+   [h18 #2] Qui a parlé de la bêta de Starfall Tactics ce matin, et elle ouvre quand ?
+       facts=True cites=True grounded=False plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=False count=None
+       cited: ['brambleheart_call']  sourced: ['brambleheart_call', 'lisbon_call']
+       topic: 'qui a parlé de la bêta de Starfall Tactics et quand elle ouvre'
+       answer: "C'est vous qui avez parlé de la bêta de Starfall Tactics ce matin [1][3]. Elle ouvre vendredi [1][3]."
+
+   [h19 #2] What did Élodie say about the Starfall Tactics beta?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['birthday_call', 'lisbon_call']
+       topic: "Élodie's comments on the Starfall Tactics beta"
+       answer: 'I did not find any information regarding the Starfall Tactics beta in the provided sources.'
+
+   [h20 #2] Quelle vidéo de cuisine j'ai regardée hier soir ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: []
+       topic: 'vidéo de cuisine'
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [h21 #2] Ce matin, Minlo m'a dit when he's leaving for Japan ?
+       facts=True cites=True grounded=True plan=True precision=None false=[] forbidden=[] abstained=True hedged=None count=None
+       cited: []  sourced: ['brambleheart_call', 'lisbon_call']
+       topic: 'Minlo leaving for Japan'
+       answer: 'I did not find any information in the sources regarding Minlo leaving for Japan.'
+
+   [h22 #2] What does the Rust video say happens when an owner goes out of scope?
+       facts=True cites=True grounded=True plan=True precision=1.0 false=[] forbidden=[] abstained=None hedged=None count=None
+       cited: ['rust_video']  sourced: ['bread_video', 'indie_video', 'knife_video', 'origami_video', 'rust_video']
+       topic: 'what happens when an owner goes out of scope in the Rust video'
+       answer: 'When the owner goes out of scope, the value is dropped [1][6].'
+
+Summary
+  gemma-4-12b-qat-q4: 123/153
+exit 0

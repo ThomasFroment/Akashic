@@ -1,0 +1,131 @@
+follow_ups_dev: people=139/170 (81.8%)  kinds=158/170 (92.9%)  keywords=119/170 (70.0%)  time=164/170 (96.5%)  pair=99/170 (58.2%)
+  lowest field accuracy (the study's headline): 0.700
+  split:dev                    n=107   people  77.6%  kinds  93.5%  keywords  65.4%  time  95.3%  pair  54.2%
+  split:heldout                n=63    people  88.9%  kinds  92.1%  keywords  77.8%  time  98.4%  pair  65.1%
+  lang:en                      n=70    people  81.4%  kinds  94.3%  keywords  68.6%  time  97.1%  pair  58.6%
+  lang:fr                      n=62    people  82.3%  kinds  91.9%  keywords  71.0%  time  96.8%  pair  58.1%
+  lang:mixed                   n=38    people  81.6%  kinds  92.1%  keywords  71.1%  time  94.7%  pair  57.9%
+  category:target              n=2     people  50.0%  kinds 100.0%  keywords  50.0%  time 100.0%  pair  50.0%
+  category:repo_tests          n=3     people 100.0%  kinds 100.0%  keywords  66.7%  time 100.0%  pair  66.7%
+  category:topic_switch        n=31    people  61.3%  kinds 100.0%  keywords  93.5%  time  80.6%  pair  51.6%
+  category:short_selfcontained n=27    people  66.7%  kinds  81.5%  keywords  33.3%  time 100.0%  pair  29.6%
+  category:pronoun             n=16    people 100.0%  kinds 100.0%  keywords  87.5%  time 100.0%  pair  87.5%
+  category:deictic             n=15    people  86.7%  kinds  93.3%  keywords  40.0%  time 100.0%  pair  33.3%
+  category:time_link           n=14    people  71.4%  kinds  85.7%  keywords  85.7%  time 100.0%  pair  64.3%
+  category:conjunction         n=18    people 100.0%  kinds 100.0%  keywords  77.8%  time 100.0%  pair  77.8%
+  category:continuation        n=16    people 100.0%  kinds  75.0%  keywords  37.5%  time 100.0%  pair  31.2%
+  category:exclusion           n=14    people 100.0%  kinds 100.0%  keywords 100.0%  time 100.0%  pair 100.0%
+  category:partial_shift       n=14    people  78.6%  kinds 100.0%  keywords  85.7%  time 100.0%  pair  78.6%
+follow_ups_heldout2: people=99/110 (90.0%)  kinds=106/110 (96.4%)  keywords=61/110 (55.5%)  time=105/110 (95.5%)  pair=51/110 (46.4%)
+  lowest field accuracy (the study's headline): 0.555
+  split:heldout2               n=110   people  90.0%  kinds  96.4%  keywords  55.5%  time  95.5%  pair  46.4%
+  lang:en                      n=46    people  91.3%  kinds  95.7%  keywords  45.7%  time  95.7%  pair  41.3%
+  lang:fr                      n=41    people  87.8%  kinds  95.1%  keywords  61.0%  time  97.6%  pair  51.2%
+  lang:mixed                   n=23    people  91.3%  kinds 100.0%  keywords  65.2%  time  91.3%  pair  47.8%
+  category:topic_switch        n=17    people  70.6%  kinds  88.2%  keywords  88.2%  time  70.6%  pair  41.2%
+  category:short_selfcontained n=13    people  84.6%  kinds  92.3%  keywords  53.8%  time 100.0%  pair  53.8%
+  category:pronoun             n=11    people 100.0%  kinds 100.0%  keywords  72.7%  time 100.0%  pair  72.7%
+  category:deictic             n=11    people 100.0%  kinds  90.9%  keywords   9.1%  time 100.0%  pair   9.1%
+  category:time_link           n=11    people 100.0%  kinds 100.0%  keywords  36.4%  time 100.0%  pair  36.4%
+  category:conjunction         n=12    people 100.0%  kinds 100.0%  keywords  75.0%  time 100.0%  pair  75.0%
+  category:continuation        n=12    people 100.0%  kinds 100.0%  keywords   8.3%  time 100.0%  pair   8.3%
+  category:exclusion           n=11    people 100.0%  kinds 100.0%  keywords 100.0%  time 100.0%  pair 100.0%
+  category:partial_shift       n=12    people  66.7%  kinds 100.0%  keywords  41.7%  time 100.0%  pair  25.0%
+follow_ups_heldout3: people=137/165 (83.0%)  kinds=157/165 (95.2%)  keywords=102/165 (61.8%)  time=153/165 (92.7%)  pair=64/165 (38.8%)
+  lowest field accuracy (the study's headline): 0.618
+  split:heldout3               n=165   people  83.0%  kinds  95.2%  keywords  61.8%  time  92.7%  pair  38.8%
+  lang:en                      n=57    people  84.2%  kinds  93.0%  keywords  64.9%  time  93.0%  pair  38.6%
+  lang:fr                      n=56    people  82.1%  kinds  94.6%  keywords  53.6%  time  94.6%  pair  37.5%
+  lang:mixed                   n=52    people  82.7%  kinds  98.1%  keywords  67.3%  time  90.4%  pair  40.4%
+  category:topic_switch        n=22    people  72.7%  kinds  86.4%  keywords  95.5%  time  63.6%  pair  36.4%
+  category:short_selfcontained n=20    people  70.0%  kinds  85.0%  keywords  75.0%  time  80.0%  pair  25.0%
+  category:pronoun             n=18    people 100.0%  kinds 100.0%  keywords  66.7%  time 100.0%  pair  66.7%
+  category:deictic             n=18    people 100.0%  kinds 100.0%  keywords   5.6%  time 100.0%  pair   5.6%
+  category:time_link           n=17    people  58.8%  kinds 100.0%  keywords  64.7%  time 100.0%  pair  23.5%
+  category:conjunction         n=18    people 100.0%  kinds 100.0%  keywords  72.2%  time 100.0%  pair  72.2%
+  category:continuation        n=17    people 100.0%  kinds  88.2%  keywords  11.8%  time 100.0%  pair   5.9%
+  category:exclusion           n=17    people 100.0%  kinds 100.0%  keywords 100.0%  time 100.0%  pair 100.0%
+  category:partial_shift       n=18    people  50.0%  kinds 100.0%  keywords  55.6%  time 100.0%  pair  16.7%
+time_windows_dev: rules=207/1290 (16.0%)  model=229/1290 (17.8%)
+  future_rules=163 false_filter_rules=100 errors_rules=0 future_model=202 false_filter_model=100 errors_model=0
+  split:dev                    n=780   rules  16.5%  model  18.5%
+  split:heldout                n=510   rules  15.3%  model  16.7%
+  lang:fr                      n=640   rules  16.4%  model  17.3%
+  lang:en                      n=535   rules  15.7%  model  18.5%
+  lang:mixed                   n=115   rules  15.7%  model  16.5%
+  now:09:00                    n=258   rules  15.9%  model  18.6%
+  now:14:00                    n=258   rules  15.9%  model  19.0%
+  now:23:30                    n=258   rules  29.1%  model  35.7%
+  now:00:40                    n=258   rules   9.7%  model   7.8%
+  now:03:00                    n=258   rules   9.7%  model   7.8%
+  category:today               n=50    rules  20.0%  model  20.0%
+  category:morning             n=50    rules  60.0%  model  60.0%
+  category:afternoon           n=50    rules  14.0%  model  14.0%
+  category:noon                n=50    rules   0.0%  model   0.0%
+  category:evening             n=60    rules  20.0%  model  20.0%
+  category:night               n=60    rules   0.0%  model   0.0%
+  category:yesterday           n=80    rules  15.0%  model  15.0%
+  category:daybefore           n=30    rules   0.0%  model   0.0%
+  category:midnight            n=40    rules   0.0%  model   0.0%
+  category:earlier             n=45    rules   0.0%  model   0.0%
+  category:weekend             n=150   rules   0.0%  model   0.0%
+  category:weekday             n=60    rules  16.7%  model  16.7%
+  category:clock               n=65    rules  24.6%  model  24.6%
+  category:relative            n=60    rules  63.3%  model  63.3%
+  category:two_anchor          n=290   rules   7.6%  model  15.2%
+  category:time_free           n=150   rules  33.3%  model  33.3%
+time_windows_heldout2: rules=142/795 (17.9%)  model=163/795 (20.5%)
+  future_rules=112 false_filter_rules=35 errors_rules=0 future_model=128 false_filter_model=35 errors_model=0
+  split:heldout2               n=795   rules  17.9%  model  20.5%
+  lang:fr                      n=315   rules  13.7%  model  17.1%
+  lang:en                      n=305   rules  22.6%  model  24.6%
+  lang:mixed                   n=175   rules  17.1%  model  19.4%
+  now:09:00                    n=159   rules  17.6%  model  21.4%
+  now:14:00                    n=159   rules  17.6%  model  21.4%
+  now:23:30                    n=159   rules  27.7%  model  34.0%
+  now:00:40                    n=159   rules  12.6%  model  11.9%
+  now:03:00                    n=159   rules  13.8%  model  13.8%
+  category:today               n=20    rules  15.0%  model  15.0%
+  category:morning             n=20    rules  45.0%  model  45.0%
+  category:afternoon           n=20    rules   5.0%  model   5.0%
+  category:noon                n=20    rules   0.0%  model   0.0%
+  category:evening             n=20    rules  20.0%  model  20.0%
+  category:night               n=35    rules   0.0%  model   0.0%
+  category:yesterday           n=30    rules  10.0%  model  10.0%
+  category:daybefore           n=15    rules  20.0%  model  20.0%
+  category:midnight            n=20    rules   0.0%  model   0.0%
+  category:earlier             n=20    rules   0.0%  model   0.0%
+  category:weekend             n=75    rules   0.0%  model   0.0%
+  category:weekday             n=40    rules  12.5%  model  12.5%
+  category:clock               n=40    rules  40.0%  model  40.0%
+  category:relative            n=45    rules  28.9%  model  28.9%
+  category:two_anchor          n=280   rules   8.9%  model  16.4%
+  category:time_free           n=95    rules  63.2%  model  63.2%
+time_windows_heldout3: rules=203/1070 (19.0%)  model=218/1070 (20.4%)
+  future_rules=172 false_filter_rules=145 errors_rules=0 future_model=201 false_filter_model=145 errors_model=0
+  split:heldout3               n=1070  rules  19.0%  model  20.4%
+  lang:fr                      n=395   rules  14.7%  model  14.9%
+  lang:en                      n=365   rules  23.8%  model  26.6%
+  lang:mixed                   n=310   rules  18.7%  model  20.0%
+  now:09:00                    n=214   rules  19.2%  model  20.6%
+  now:14:00                    n=214   rules  18.2%  model  20.1%
+  now:23:30                    n=214   rules  29.0%  model  34.1%
+  now:00:40                    n=214   rules  14.0%  model  13.1%
+  now:03:00                    n=214   rules  14.5%  model  14.0%
+  category:today               n=35    rules  14.3%  model  14.3%
+  category:morning             n=35    rules  42.9%  model  42.9%
+  category:afternoon           n=30    rules  13.3%  model  13.3%
+  category:noon                n=25    rules   0.0%  model   0.0%
+  category:evening             n=40    rules  17.5%  model  17.5%
+  category:night               n=40    rules   0.0%  model   0.0%
+  category:yesterday           n=50    rules  12.0%  model  12.0%
+  category:daybefore           n=20    rules   0.0%  model   0.0%
+  category:midnight            n=25    rules   0.0%  model   0.0%
+  category:earlier             n=30    rules   0.0%  model   0.0%
+  category:weekend             n=105   rules   0.0%  model   0.0%
+  category:weekday             n=40    rules  12.5%  model  12.5%
+  category:clock               n=50    rules  28.0%  model  28.0%
+  category:relative            n=50    rules  46.0%  model  46.0%
+  category:two_anchor          n=235   rules   3.8%  model  10.2%
+  category:time_free           n=260   rules  44.2%  model  44.2%
+-> docs\baselines\2026-11-11-m00\planner.json

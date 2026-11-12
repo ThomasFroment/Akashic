@@ -1,0 +1,91 @@
+
+Earlier: "What did Minlo say about the camping trip on Sunday?"
+New: "What did he say about the tent?"
+people: earlier ["Minlo"] | new []
+topic: earlier ["camping", "sunday", "trip"] | new ["tent"]
+time: earlier Sun 08 Nov | new none
+-> {"people":"carry","topic":"drop","time":"carry"}
+
+Earlier: "What did Léa tell me about the project yesterday?"
+New: "Did she mention the deadline too?"
+people: earlier ["Léa"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["project"] | new ["deadline", "mention", "she", "too"]
+time: earlier Mon 09 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"drop","time":"carry"}
+
+Earlier: "Qu'est-ce que Minlo a dit sur le boulot vendredi ?"
+New: "Et au sujet des vacances ?"
+people: earlier ["Minlo"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["boulot", "vendredi"] | new ["sujet", "vacances"]
+time: earlier Fri 06 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"drop","time":"carry"}
+
+Earlier: "What did Sacha say about the raid yesterday evening?"
+New: "Il a dit quoi about the new map ?"
+people: earlier ["Sacha"] | new []
+topic: earlier ["raid"] | new ["map", "new"]
+time: earlier Mon 09 Nov 18:00-23:00 | new none
+-> {"people":"carry","topic":"drop","time":"carry"}
+
+Earlier: "What did Sacha say about the festival on Saturday?"
+New: "Where is it happening?"
+people: earlier ["Sacha"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["festival", "saturday"] | new ["happening"]
+time: earlier Sat 07 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"carry","time":"carry"}
+
+Earlier: "Qu'est-ce que Minlo a dit sur le tournoi d'échecs hier ?"
+New: "Ça commence à quelle heure, ce truc ?"
+people: earlier ["Minlo"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["echecs", "tournoi"] | new ["commence", "heure", "truc"]
+time: earlier Mon 09 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"carry","time":"carry"}
+
+Earlier: "Qu'est-ce que Sacha a dit sur le speedrun lundi ?"
+New: "Il l'a regardé quand ?"
+people: earlier ["Sacha"] | new []
+kinds: earlier ["conversation"] | new ["video"]
+topic: earlier ["lundi", "speedrun"] | new []
+time: earlier Mon 09 Nov | new none
+-> {"people":"carry","kinds":"carry","topic":"carry","time":"carry"}
+
+Earlier: "Which sites did I browse about headphones yesterday?"
+New: "Did I order them in the end?"
+kinds: earlier ["browsing"] | new []
+topic: earlier ["headphones", "sites"] | new ["end", "order"]
+time: earlier Mon 09 Nov | new none
+-> {"kinds":"carry","topic":"carry","time":"carry"}
+
+Earlier: "What did I play yesterday evening?"
+New: "Something else?"
+kinds: earlier ["game"] | new []
+topic: earlier [] | new ["else"]
+time: earlier Mon 09 Nov 18:00-23:00 | new none
+-> {"kinds":"carry","topic":"drop","time":"carry"}
+
+Earlier: "What did Sacha tell me about his exam this morning?"
+New: "What did I do next?"
+people: earlier ["Sacha"] | new []
+kinds: earlier ["conversation"] | new []
+topic: earlier ["exam"] | new ["next"]
+time: earlier Tue 10 Nov 06:00-12:00 | new none
+-> {"people":"drop","kinds":"drop","topic":"drop","time":"carry"}
+
+Earlier: "Qu'est-ce que Sacha a dit pendant l'appel vendredi ?"
+New: "Et Minlo, il a dit quoi ce jour-là ?"
+people: earlier ["Sacha"] | new ["Minlo"]
+topic: earlier ["vendredi"] | new ["jour"]
+time: earlier Fri 06 Nov | new none
+-> {"people":"drop","topic":"drop","time":"carry"}
+
+Earlier: "What did Minlo say about the outage on Monday?"
+New: "Did Léa hear about it too?"
+people: earlier ["Minlo"] | new ["Léa"]
+kinds: earlier ["conversation"] | new []
+topic: earlier ["monday", "outage"] | new ["hear", "too"]
+time: earlier Mon 09 Nov | new none
+-> {"people":"drop","kinds":"carry","topic":"carry","time":"carry"}

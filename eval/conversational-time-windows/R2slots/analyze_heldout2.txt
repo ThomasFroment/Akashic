@@ -1,0 +1,32 @@
+h2_099 two_anchor | What did Léa say around lunchtime while I was watching the trailer Minlo sent yesterday? | M={'span': 'yesterday', 'day': 'yesterday', 'part': 'noon', 'clock': '12:00'}
+      09:00 rules_span - Mon 05:00-Tue 05:00 Mon 12:00-Mon 14:00
+      14:00 rules_span - Mon 05:00-Tue 05:00 Tue 12:00-Tue 14:00
+      23:30 rules_span - Mon 05:00-Tue 05:00 Tue 12:00-Tue 14:00
+      00:40 rules_span - Sun 05:00-Mon 05:00 Mon 12:00-Mon 14:00
+      03:00 rules_span - Sun 05:00-Mon 05:00 Mon 12:00-Mon 14:00
+h2_106 two_anchor | That podcast from yesterday morning, Léa brought it up tonight, what was it called? | M={'span': 'yesterday morning', 'day': 'yesterday', 'part': 'morning'}
+      09:00 rules_span+tier_other - Mon 18:00-Tue 02:00 Mon 06:00-Mon 12:00
+      14:00 rules_span+tier_other - Mon 18:00-Tue 02:00 Mon 06:00-Mon 12:00
+      23:30 rules_span+tier_other - Tue 18:00-Tue 23:30 Mon 06:00-Mon 12:00
+      00:40 rules_span+tier_other - Mon 18:00-Tue 00:40 Sun 06:00-Sun 12:00
+      03:00 rules_span+tier_other - Mon 18:00-Tue 02:00 Sun 06:00-Sun 12:00
+h2_123 two_anchor | Quand Minlo a parlé du patch this afternoon, j'avais déjà lu les notes ce mat' ? | M={'span': 'this afternoon', 'day': 'today', 'part': 'afternoon', 'special': 'recent'}
+      09:00 rules_span - Mon 12:00-Mon 18:00 Tue 06:00-Tue 09:00
+      14:00 rules_span - Tue 12:00-Tue 14:00 Tue 06:00-Tue 12:00
+      23:30 rules_span - Tue 12:00-Tue 18:00 Tue 06:00-Tue 12:00
+      00:40 rules_span - Mon 12:00-Mon 18:00 Mon 06:00-Mon 12:00
+      03:00 rules_span - Mon 12:00-Mon 18:00 Mon 06:00-Mon 12:00
+h2_125 two_anchor | The vidéo que Léa a postée hier, je l'ai watch around lunchtime ? | M={'span': 'hier', 'day': 'yesterday', 'part': 'noon', 'clock': '12:00', 'special': 'recent'}
+      09:00 rules_span - Mon 05:00-Tue 05:00 Mon 12:00-Mon 14:00
+      14:00 rules_span - Mon 05:00-Tue 05:00 Tue 12:00-Tue 14:00
+      23:30 rules_span - Mon 05:00-Tue 05:00 Tue 12:00-Tue 14:00
+      00:40 rules_span - Sun 05:00-Mon 05:00 Mon 12:00-Mon 14:00
+      03:00 rules_span - Sun 05:00-Mon 05:00 Mon 12:00-Mon 14:00
+h2_133 time_free | Did Minlo send me a clip from the tonight show? | M={'day': 'today', 'part': 'evening', 'special': 'recent'}
+      09:00 rules_strong - Mon 18:00-Tue 02:00 None
+      14:00 rules_strong - Mon 18:00-Tue 02:00 None
+      23:30 rules_strong - Tue 18:00-Tue 23:30 None
+      00:40 rules_strong - Mon 18:00-Tue 00:40 None
+      03:00 rules_strong - Mon 18:00-Tue 02:00 None
+cases=795 skipped_questions=0 model_pass=0.9686 rules_pass=0.8302 regressions=0 gains=110
+{'model_only': 35, 'rules_span': 500, 'model_longer': 45, 'rules_span+tier_other': 105, 'model_new': 15, 'veto': 25, 'both_none': 65, 'rules_strong': 5}

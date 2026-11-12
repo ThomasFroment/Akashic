@@ -1,0 +1,1 @@
+name=R2rules_gazset_heldout3 rules_pass=0.9262 rules_heldout3=0.9262 model_pass=0.9262 future_rules=0 future_model=0 false_filter_rules=30 false_filter_model=30 errors=0 p50_us=67.7 p99_us=150.1 cases=1070

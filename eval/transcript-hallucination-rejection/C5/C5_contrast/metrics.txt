@@ -1,0 +1,1 @@
+C5_contrast recall=0.881 (n=253) reject_recall=0.344 ns_recall=0.885 tail_recall=0.000 (n=1) FRR=0.0086 (ub95=0.0158, n=1157) short=0.0156/0.0336 names=0.0000/0.0190 opus=0.0038/0.0138 fr=0.0118/0.0274 en=0.0068/0.0158 unclear=0.713 extra_dec/suspect=0.00 max=0 extra_time=0.212x

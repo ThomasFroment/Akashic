@@ -1,0 +1,44 @@
+{
+ "base": {
+  "first_sum": 77678.87350014644,
+  "second_sum": 29118.520499992883,
+  "pair_sum": 106797.39400013932,
+  "second_p50": 217.94609999051318,
+  "seg_forwards": 947,
+  "emb_forwards": 1022
+ },
+ "pairs": 120,
+ "ctl_t0": {
+  "first_sum": 79555.46500018681,
+  "second_sum": 30734.757300058845,
+  "pair_sum": 110290.22230024566,
+  "second_p50": 253.57120000990108,
+  "seg_forwards": 947,
+  "emb_forwards": 1034,
+  "ratio_vs_base_pair": 1.0327051828633738,
+  "ratio_vs_base_second": 1.0555054574309968,
+  "ratio_vs_ctl_pair": 1.0
+ },
+ "seam_t0": {
+  "first_sum": 79413.81469983025,
+  "second_sum": 43059.69039979391,
+  "pair_sum": 122473.50509962416,
+  "second_p50": 362.2171499882825,
+  "seg_forwards": 1033,
+  "emb_forwards": 1126,
+  "ratio_vs_base_pair": 1.1467836481053497,
+  "ratio_vs_base_second": 1.4787732913766836,
+  "ratio_vs_ctl_pair": 1.1104656654532046
+ },
+ "seam_t1": {
+  "first_sum": 80659.70020004897,
+  "second_sum": 43220.144699997036,
+  "pair_sum": 123879.84490004601,
+  "second_p50": 352.4189500021748,
+  "seg_forwards": 1034,
+  "emb_forwards": 1115,
+  "ratio_vs_base_pair": 1.1599519450810232,
+  "ratio_vs_base_second": 1.484283677805938,
+  "ratio_vs_ctl_pair": 1.1232169299904482
+ }
+}

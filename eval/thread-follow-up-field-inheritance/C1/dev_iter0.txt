@@ -1,0 +1,45 @@
+dev {'people': 0.9813084112149533, 'kinds': 0.9813084112149533, 'keywords': 0.897196261682243, 'time': 0.9813084112149533, 'min': 0.897196261682243, 'n': 107} exceptions 0
+  en 0.891
+  fr 0.897
+  mixed 0.909
+  conjunction {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 10
+  continuation {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 10
+  deictic {'people': 1.0, 'kinds': 1.0, 'keywords': 0.3, 'time': 1.0} 10
+  exclusion {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 9
+  partial_shift {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 0.78} 9
+  pronoun {'people': 1.0, 'kinds': 1.0, 'keywords': 0.8, 'time': 1.0} 10
+  repo_tests {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 2
+  short_selfcontained {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 17
+  target {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 2
+  time_link {'people': 0.78, 'kinds': 0.78, 'keywords': 0.78, 'time': 1.0} 9
+  topic_switch {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 19
+[pronoun-en-05] 'What did Sacha tell me about Minecraft yesterday?' -> 'What did I answer him?' 
+    keywords: gold=inherit got=own C=['answer', 'him'] S=['answer', 'him'] E=['minecraft']
+[pronoun-fr-05] "Qu'est-ce que Léa a dit sur le concert lundi ?" -> 'Je lui ai répondu quoi ?' 
+    keywords: gold=inherit got=own C=['repondu'] S=['repondu'] E=['concert', 'lundi']
+[deictic-en-03] 'What did Sacha say about Hollow Knight yesterday?' -> 'Did I watch a video about that the same day?' 
+    keywords: gold=inherit got=own C=['day', 'same'] S=['day', 'same'] E=['hollow', 'knight']
+[deictic-en-05] 'Which stream did I watch last night?' -> 'How long was it?' 
+    keywords: gold=inherit got=own C=['long'] S=['long'] E=[]
+[deictic-en-06] "What did Minlo say about the new Baldur's Gate patch yesterday?" -> 'Is that out already?' 
+    keywords: gold=inherit got=own C=['already', 'out'] S=['already', 'out'] E=['baldur', 'gate', 'new', 'patch']
+[deictic-fr-05] "Quel stream j'ai regardé hier soir ?" -> 'Ça a duré combien de temps ?' 
+    keywords: gold=inherit got=own C=['combien', 'dure', 'temps'] S=['combien', 'dure', 'temps'] E=[]
+[deictic-fr-06] "Qu'est-ce que Sacha a dit sur le nouveau patch de Baldur's Gate hier ?" -> 'Celui-là, il est déjà sorti ?' 
+    keywords: gold=inherit got=own C=['celui', 'deja', 'sorti'] S=['celui', 'deja', 'sorti'] E=['baldur', 'gate', 'nouveau', 'patch']
+[deictic-mixed-01] 'What video did I watch hier après-midi ?' -> "C'était qui le créateur de cette vidéo ?" 
+    keywords: gold=inherit got=own C=['createur'] S=['createur'] E=[]
+[deictic-mixed-03] 'Which stream did I watch hier soir ?' -> 'Ça a duré how long ?' 
+    keywords: gold=inherit got=own C=['dure', 'long'] S=['dure', 'long'] E=[]
+[time_link-en-01] 'What did Minlo say about the game this morning?' -> 'What did I do after that?' 
+    people: gold=none got=inherit C=['Minlo'] S=[] E=['Minlo']
+    kinds: gold=none got=inherit C=['conversation'] S=[] E=['conversation']
+    keywords: gold=none got=inherit C=['game'] S=[] E=['game']
+[time_link-fr-01] "Qu'est-ce que Minlo a dit sur le jeu ce matin ?" -> "Et ensuite, j'ai fait quoi ?" 
+    people: gold=none got=inherit C=['Minlo'] S=[] E=['Minlo']
+    kinds: gold=none got=inherit C=['conversation'] S=[] E=['conversation']
+    keywords: gold=none got=inherit C=['jeu'] S=['ensuite'] E=['jeu']
+[partial_shift-en-03] 'What video did I watch yesterday afternoon?' -> 'And what music did I listen to?' 
+    time: gold=inherit got=none C=None S=None E=(1794222000000, 1794243600000)
+[partial_shift-fr-03] "Quelle vidéo j'ai regardée hier après-midi ?" -> "Et j'ai écouté quelle musique ?" 
+    time: gold=inherit got=none C=None S=None E=(1794222000000, 1794243600000)

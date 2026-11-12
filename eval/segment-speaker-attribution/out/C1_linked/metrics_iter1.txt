@@ -1,0 +1,1 @@
+cand=C1_linked solo_auth=0.8795 solo10k_auth=0.8750 solo10_0_auth=0.9643 cont2_auth=0.7414 wrong=0.0456 wrong_mixed=0.1761 wrong_impostor=0.0625 p50_ms=315.4 p95_ms=803.0 drift_wrong_first100=0.0000 drift_wrong_last100=0.0000 drift_cos_end_min=0.9554 drift_pair_cos_end=0.5242

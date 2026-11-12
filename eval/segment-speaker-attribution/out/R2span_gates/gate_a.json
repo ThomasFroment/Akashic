@@ -1,0 +1,9 @@
+{
+ "n": 200,
+ "min_cos_closed_vs_app": 0.9999999178112517,
+ "mean": 0.9999999998252682,
+ "min_cos_derived_output_vs_app": 0.9999998211860657,
+ "min_steps": 4,
+ "min_speech_ms": 322,
+ "pass": true
+}

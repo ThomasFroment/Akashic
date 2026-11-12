@@ -1,0 +1,185 @@
+{
+  "app_name_listing": {
+    "installed_app_entries": 170,
+    "listing_reused_within_reload_interval": true,
+    "listing_succeeded": true,
+    "missing_id_resolves": false
+  },
+  "audio_endpoints": {
+    "active_render_endpoints": 6,
+    "after_forced_com_error": "None",
+    "audible_process_count": 0,
+    "enumeration_returned": "frozenset"
+  },
+  "browser_chrome": {
+    "app": {
+      "caption_is_private": false,
+      "check_browser": "own_ui",
+      "check_window": null,
+      "frame_caption": "Synthetic app window",
+      "is_private_title": false,
+      "omnibox_is_page_text": false,
+      "omnibox_readable": true,
+      "process": "chrome.exe",
+      "title": "Synthetic app window"
+    },
+    "named_incognito": {
+      "caption_is_private": false,
+      "check_browser": null,
+      "check_window": null,
+      "frame_caption": "Incognito - Google Chrome",
+      "is_private_title": false,
+      "omnibox_is_page_text": false,
+      "omnibox_readable": true,
+      "process": "chrome.exe",
+      "title": "Incognito - Google Chrome"
+    },
+    "normal": {
+      "caption_is_private": false,
+      "check_browser": null,
+      "check_window": null,
+      "frame_caption": "Bitwarden vs 1Password - Google Chrome",
+      "is_private_title": false,
+      "omnibox_is_page_text": false,
+      "omnibox_readable": true,
+      "process": "chrome.exe",
+      "title": "Bitwarden vs 1Password - Google Chrome"
+    },
+    "private": {
+      "caption_is_private": true,
+      "check_browser": null,
+      "check_window": null,
+      "frame_caption": "Plainpage - Google Chrome (Incognito)",
+      "is_private_title": false,
+      "omnibox_is_page_text": false,
+      "omnibox_readable": true,
+      "process": "chrome.exe",
+      "title": "Plainpage - Google Chrome"
+    }
+  },
+  "browser_edge": {
+    "app": {
+      "caption_is_private": false,
+      "check_browser": "own_ui",
+      "check_window": null,
+      "frame_caption": "Synthetic app window",
+      "is_private_title": false,
+      "omnibox_is_page_text": false,
+      "omnibox_readable": true,
+      "process": "msedge.exe",
+      "title": "Synthetic app window"
+    },
+    "named_incognito": {
+      "caption_is_private": false,
+      "check_browser": null,
+      "check_window": null,
+      "frame_caption": "Incognito - Microsoft Edge",
+      "is_private_title": false,
+      "omnibox_is_page_text": false,
+      "omnibox_readable": true,
+      "process": "msedge.exe",
+      "title": "Incognito - Personal - Microsoft\u200b Edge"
+    },
+    "normal": {
+      "caption_is_private": false,
+      "check_browser": null,
+      "check_window": null,
+      "frame_caption": "Bitwarden vs 1Password - Microsoft Edge",
+      "is_private_title": false,
+      "omnibox_is_page_text": false,
+      "omnibox_readable": true,
+      "process": "msedge.exe",
+      "title": "Bitwarden vs 1Password - Profile 1 - Microsoft\u200b Edge"
+    },
+    "private": {
+      "caption_is_private": true,
+      "check_browser": null,
+      "check_window": "private_window",
+      "frame_caption": "Plainpage - Microsoft Edge (InPrivate)",
+      "is_private_title": true,
+      "omnibox_is_page_text": false,
+      "omnibox_readable": true,
+      "process": "msedge.exe",
+      "title": "Plainpage - [InPrivate] - Microsoft\u200b Edge"
+    }
+  },
+  "hosted_app": {
+    "frame_host_process": "applicationframehost.exe",
+    "new_frame_host_windows": 1,
+    "resolved_processes": [
+      "calculatorapp.exe"
+    ]
+  },
+  "leaks_of_excluded_titles": [],
+  "monitor_transitions": {
+    "1_plain_window_on_negative_x_monitor": {
+      "files_total": 2,
+      "focus_acquired": true,
+      "frames_total": 2,
+      "outcomes": {
+        "no_window": 1,
+        "stored": 2
+      }
+    },
+    "2_password_window_spanning_monitors": {
+      "files_total": 2,
+      "focus_acquired": true,
+      "frames_total": 2,
+      "outcomes": {
+        "duplicate_window": 2,
+        "excluded:password_field": 1
+      }
+    },
+    "3_back_to_plain_window": {
+      "files_total": 2,
+      "focus_acquired": true,
+      "frames_total": 2,
+      "outcomes": {
+        "no_window": 1,
+        "unchanged": 2
+      }
+    },
+    "4_manager_titled_window": {
+      "files_total": 3,
+      "focus_acquired": true,
+      "frames_total": 3,
+      "outcomes": {
+        "excluded:password_manager": 1,
+        "no_window": 1,
+        "stored": 1
+      }
+    },
+    "5_password_window_again": {
+      "files_total": 3,
+      "focus_acquired": true,
+      "frames_total": 3,
+      "outcomes": {
+        "duplicate_window": 2,
+        "excluded:password_field": 1
+      }
+    }
+  },
+  "monitors": {
+    "count": 3,
+    "dpi_values": [
+      96,
+      120
+    ],
+    "negative_x": true
+  },
+  "uia_password_states": {
+    "no_focus_window": null,
+    "password": {
+      "focused_is_password": true,
+      "foreground": true
+    },
+    "plain": {
+      "focused_is_password": false,
+      "foreground": true
+    },
+    "window_without_focusable_child": {
+      "focused_is_password": false,
+      "foreground": true
+    }
+  }
+}

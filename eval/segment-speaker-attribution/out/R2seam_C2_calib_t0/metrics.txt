@@ -1,0 +1,1 @@
+cand=R2seam_C2_calib_t0 solo_auth=0.8366 solo10k_auth=0.9226 solo10_0_auth=0.9107 cont2_auth=0.4655 wrong=0.0308 wrong_mixed=0.1364 wrong_impostor=0.0500 p50_ms=1089.0 p95_ms=1948.6

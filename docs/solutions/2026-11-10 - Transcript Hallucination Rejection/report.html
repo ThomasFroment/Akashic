@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- No <title> on purpose: a fixed one overrides the publish title, so the artifact gallery would name every report "Invent report". The script sets the tab title from REPORT. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* frogg:invent report template v2. Copy unchanged: all content comes from report-data.js.
+   Single dark theme by choice. Layout: a bench notebook, verdict first, then measurements, captures, candidates, evidence. */
+:root {
+  color-scheme: dark;
+  --bg: #14171c;
+  --raised: #1b1f26;
+  --sunken: #101317;
+  --line: #2c323c;
+  --ink: #dde1e6;
+  --muted: #9aa4b0;
+  --accent: #8ab4f8;
+  --good: #4cb782;
+  --warn: #d9a13b;
+  --bad: #e5645f;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); scroll-behavior: smooth; scroll-padding-top: 56px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15.5px/1.55 var(--body); }
+#report { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.2; margin: 0; text-wrap: balance; }
+h1 { font-size: 34px; }
+h2 { font-size: 22px; }
+h3 { font-size: 16px; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font: 400 0.92em var(--mono); background: var(--sunken); padding: 1px 4px; border-radius: 3px; overflow-wrap: anywhere; }
+pre { font: 400 13.5px/1.5 var(--mono); background: var(--sunken); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; margin: 0; overflow-x: auto; }
+.cite { font-size: 0.85em; text-decoration: none; }
+.muted { color: var(--muted); }
+.small { font-size: 13.5px; }
+.mono { font-family: var(--mono); }
+section, header, .charts, .verdict, .panel, .card, .capture { grid-template-columns: minmax(0, 1fr); }
+section { display: grid; gap: 16px; }
+.intro { color: var(--muted); font-size: 14px; }
+
+/* Header */
+header { display: grid; gap: 12px; }
+.eyebrow { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 500 13px var(--mono); color: var(--muted); }
+.problem { font-size: 17px; }
+.terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.term { background: var(--raised); padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.term h3 { font: 500 12.5px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.term ul { font-size: 14.5px; }
+.banner { border: 1px solid var(--warn); border-left-width: 4px; border-radius: 4px; padding: 10px 14px; background: var(--raised); font-size: 14.5px; }
+.banner.error { border-color: var(--bad); margin: 32px 20px; }
+
+/* Section nav */
+nav { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); padding: 8px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13.5px; }
+nav a { color: var(--muted); text-decoration: none; }
+nav a:hover { color: var(--ink); }
+
+/* Status */
+.pill { display: inline-flex; align-items: center; gap: 5px; font: 500 12.5px var(--mono); white-space: nowrap; }
+.pill i { font-style: normal; width: 1em; text-align: center; }
+.s-best i { color: var(--accent); } .s-works i { color: var(--good); } .s-relaxes i { color: var(--warn); }
+.s-unbuilt i { color: var(--muted); } .s-fails i, .s-refuted i { color: var(--bad); }
+
+/* Verdict */
+.verdict { border: 1px solid var(--accent); border-radius: 4px; background: var(--raised); padding: 18px 20px; display: grid; gap: 14px; }
+.verdict.none { border-color: var(--bad); }
+.verdict h2 { font-size: 26px; }
+.verdict .label { font: 500 12.5px var(--mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+.verdict.none .label { color: var(--bad); }
+.tiles { display: flex; flex-wrap: wrap; gap: 12px 32px; }
+.tile b { display: block; font: 500 22px var(--mono); font-variant-numeric: tabular-nums; }
+.tile span { font-size: 13px; color: var(--muted); }
+.relaxed { border-top: 1px solid var(--line); padding-top: 12px; font-size: 14.5px; }
+
+/* Tables */
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { padding: 8px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+tr:last-child > td { border-bottom: 0; }
+thead th { font: 500 12.5px var(--mono); color: var(--muted); background: var(--raised); white-space: nowrap; }
+thead th small { display: block; font-weight: 400; font-size: 12px; }
+td.num { font: 400 13.5px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.num.top { font-weight: 500; color: #fff; }
+td.num.over { color: var(--bad); }
+.group th { font: 500 12.5px var(--body); color: var(--muted); background: var(--sunken); }
+tr.is-best td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.note { display: block; font-size: 13px; color: var(--muted); max-width: 44ch; }
+td.dot { text-align: center; color: var(--accent); }
+
+/* Charts */
+.charts { display: grid; gap: 16px; }
+.panel { background: var(--raised); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+.panel h3 span { font: 400 13px var(--body); color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 18px; height: 8px; border-radius: 2px; }
+.bars { display: grid; gap: 6px; }
+.bar-row { display: grid; grid-template-columns: minmax(70px, 210px) 1fr 104px; gap: 10px; align-items: center; font-size: 13.5px; }
+.bar-name { overflow-wrap: anywhere; }
+.bar-name b { font: 500 13px var(--mono); }
+.track { position: relative; height: 12px; background: var(--sunken); border-radius: 2px; }
+.fill { position: absolute; left: 0; top: 2px; bottom: 2px; border-radius: 0 4px 4px 0; min-width: 2px; }
+.fill.in { background: var(--good); }
+.fill.best { background: var(--accent); }
+.fill.over { background: var(--bad); }
+.fill.est { background-image: repeating-linear-gradient(135deg, transparent 0 3px, var(--sunken) 3px 5px); }
+.limit { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+.bar-val { font: 400 13px var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.plot { overflow-x: auto; }
+.scatter { width: 100%; min-width: 600px; height: auto; display: block; font-family: var(--mono); }
+.scatter text { fill: var(--muted); font-size: 12px; }
+.scatter text.lbl { fill: var(--ink); font-weight: 500; }
+.scatter .grid { stroke: var(--line); stroke-width: 1; }
+.scatter .lim { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.scatter .zone { fill: var(--good); opacity: 0.07; }
+#tip { position: fixed; z-index: 5; pointer-events: none; max-width: 300px; background: var(--sunken); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; font-size: 13px; display: none; }
+
+/* Captures */
+.capture { margin: 0; background: var(--raised); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+.capture.is-best { border-color: var(--accent); }
+.capture figcaption { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.capture figcaption b { font: 500 14px var(--mono); }
+.zoom { display: block; padding: 0; margin: 0; border: 0; width: 100%; background: var(--sunken); cursor: zoom-in; border-radius: 2px; }
+.zoom img { display: block; width: 100%; height: auto; border-radius: 2px; }
+.columns { display: flex; font: 500 12px var(--mono); color: var(--muted); }
+.columns span { flex: 1; }
+.missing { padding: 24px; color: var(--bad); font: 400 13px var(--mono); }
+dialog { background: var(--sunken); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 12px; max-width: 96vw; max-height: 96vh; }
+dialog::backdrop { background: rgba(5, 7, 10, 0.85); }
+dialog img { display: block; max-width: 100%; height: auto; }
+dialog button { background: var(--raised); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 4px 12px; font: 400 13px var(--body); cursor: pointer; margin-bottom: 8px; }
+
+/* A/B wipe */
+.ab { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+.ab-scroll { overflow-x: auto; border-radius: 2px; background: var(--sunken); }
+.ab-stage { position: relative; line-height: 0; }
+.ab-stage img { display: block; width: 100%; height: auto; }
+.ab-a { position: absolute; inset: 0; height: 100% !important; clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+.ab-line { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; margin-left: -1px; background: var(--ink); pointer-events: none; }
+.ab-line::after { content: "◂▸"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 6px 7px; border-radius: 12px; background: var(--ink); color: var(--bg); font: 500 12px/1 var(--mono); white-space: nowrap; }
+.ab-tag { position: absolute; top: 8px; left: 8px; padding: 3px 7px; border-radius: 3px; background: rgba(16, 19, 23, 0.86); font: 500 12px/1.3 var(--mono); pointer-events: none; }
+.ab-tag-b { left: auto; right: 8px; }
+.ab-stage input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; touch-action: pan-y; }
+.ab-stage:has(input:focus-visible) .ab-line { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ab-tools { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: space-between; font-size: 13.5px; }
+.ab-tools select, .ab-tools button { background: var(--sunken); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; font: 400 13px var(--body); cursor: pointer; max-width: 100%; }
+.ab-tools select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Candidates */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
+.card { background: var(--raised); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card.is-best { border-color: var(--accent); }
+.card .head { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: baseline; }
+.flow { display: flex; flex-wrap: wrap; gap: 6px 4px; align-items: stretch; }
+.step { background: var(--sunken); border: 1px solid var(--line); border-radius: 3px; padding: 4px 8px; font-size: 13px; display: grid; }
+.step small { font: 400 12px var(--mono); color: var(--muted); }
+.arrow { color: var(--muted); align-self: center; font-size: 13px; }
+dl { margin: 0; display: grid; grid-template-columns: 86px 1fr; gap: 4px 10px; font-size: 14px; }
+dt { color: var(--muted); font-size: 13px; }
+dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+/* Method */
+.steps { display: grid; gap: 8px; padding-left: 22px; }
+.assume { display: block; font-size: 13.5px; color: var(--muted); }
+
+footer { border-top: 1px solid var(--line); padding-top: 12px; font: 400 12.5px var(--mono); color: var(--muted); }
+@media (max-width: 560px) {
+  h1 { font-size: 28px; }
+  nav { position: static; }
+  .bar-row { grid-template-columns: 1fr auto; }
+  .bar-row .track { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div id="report"></div>
+<div id="tip" role="status"></div>
+<dialog id="lightbox"><form method="dialog"><button>Close</button></form><img id="lightbox-img" alt=""></dialog>
+<script src="report-data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var STATUS = {
+    best: { label: "Best fit", glyph: "●" },
+    works: { label: "Works", glyph: "●" },
+    relaxes: { label: "Works if relaxed", glyph: "◆" },
+    unbuilt: { label: "Not built", glyph: "○" },
+    fails: { label: "Fails", glyph: "✕" },
+    refuted: { label: "Refuted", glyph: "✕" }
+  };
+  var GROUPS = [
+    { title: "In contract", match: ["best", "works"] },
+    { title: "Needs a relaxation, ranked apart", match: ["relaxes"] },
+    { title: "Not built", match: ["unbuilt"] },
+    { title: "Dropped", match: ["fails", "refuted"] }
+  ];
+  var SVG = "http://www.w3.org/2000/svg";
+
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) { if (attrs[k] != null) el.setAttribute(k, attrs[k]); });
+    add(el, Array.prototype.slice.call(arguments, 2));
+    return el;
+  }
+  function add(el, kids) {
+    kids.forEach(function (c) {
+      if (c == null || c === false) return;
+      if (Array.isArray(c)) add(el, c);
+      else el.append(c);
+    });
+  }
+  function s(tag, attrs, text) {
+    var el = document.createElementNS(SVG, tag);
+    Object.keys(attrs || {}).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+    if (text != null) el.textContent = text;
+    return el;
+  }
+  // Minimal safe markup: `code`, **bold**, [n] citations. Everything else is text.
+  function rich(text) {
+    var f = document.createDocumentFragment(), re = /`([^`]+)`|\*\*([^*]+)\*\*|\[(\d+)\]/g, i = 0, m;
+    text = String(text == null ? "" : text);
+    while ((m = re.exec(text))) {
+      f.append(text.slice(i, m.index));
+      if (m[1]) f.append(h("code", {}, m[1]));
+      else if (m[2]) f.append(h("strong", {}, m[2]));
+      else f.append(h("a", { class: "cite", href: "#src-" + m[3] }, "[" + m[3] + "]"));
+      i = re.lastIndex;
+    }
+    f.append(text.slice(i));
+    return f;
+  }
+  function list(items) { return h("ul", {}, items.map(function (t) { return h("li", {}, rich(t)); })); }
+  function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : null; }
+  function safeSrc(u) { return /^[\w.-]+\.(png|jpe?g|webp|gif|svg)$|^data:image\/(png|jpeg|webp|gif);base64,/i.test(u || "") ? u : null; }
+  function fmt(v) {
+    if (v == null) return "–";
+    var a = Math.abs(v);
+    if (a !== 0 && (a < 1e-2 || a >= 1e5)) return v.toExponential(1).replace("e+", "e").replace(".0e", "e");
+    return String(Math.round(v * 1000) / 1000);
+  }
+  function withUnit(v, m) { return fmt(v) + (m.unit ? " " + m.unit : ""); }
+  function pill(st) {
+    var d = STATUS[st] || STATUS.unbuilt;
+    return h("span", { class: "pill s-" + st }, h("i", { "aria-hidden": "true" }, d.glyph), d.label);
+  }
+  function limitText(m) {
+    return m.limit == null ? "" : (m.better === "higher" ? "≥ " : "≤ ") + withUnit(m.limit, m);
+  }
+  function breaks(v, m) {
+    if (v == null || m.limit == null) return false;
+    return m.better === "higher" ? v < m.limit : v > m.limit;
+  }
+  function val(c, m) { return c.values ? c.values[m.key] : null; }
+  function shown(c, v, m) { return (c.estimated ? "~" : "") + withUnit(v, m); }
+  function section(id, title, intro, kids) {
+    return h("section", { id: id }, h("h2", {}, title), intro ? h("p", { class: "intro" }, intro) : null, kids);
+  }
+
+  function header(R) {
+    var terms = [
+      ["Goals", R.goals],
+      ["Must keep", R.contract && R.contract.must],
+      ["May fake", R.contract && R.contract.fake],
+      ["Budget", R.budget],
+      ["Hard limits", R.constraints],
+      ["Non-goals", R.nonGoals]
+    ].filter(function (t) { return t[1] && t[1].length; });
+    return h("header", {},
+      h("div", { class: "eyebrow" },
+        h("span", {}, "Invented method"),
+        h("span", {}, R.date),
+        R.revised ? h("span", {}, "revised " + R.revised) : null,
+        h("span", {}, R.depth === "light" ? "light run, unmeasured" : "full run, measured"),
+        R.context ? h("span", {}, R.context) : null),
+      h("h1", {}, R.title),
+      R.problem ? h("p", { class: "problem" }, rich(R.problem)) : null,
+      terms.length ? h("div", { class: "terms" }, terms.map(function (t) {
+        return h("div", { class: "term" }, h("h3", {}, t[0]), list(t[1]));
+      })) : null);
+  }
+
+  function verdict(R, byId) {
+    var best = R.bestFit && byId[R.bestFit];
+    var a = R.answer || {};
+    return h("section", { id: "answer", class: "verdict" + (best ? "" : " none") },
+      h("div", { class: "label" }, best ? "Best fit under this contract and budget" : "Nothing fits"),
+      best ? h("h2", {}, best.id + " " + best.name) : null,
+      a.text ? h("p", {}, rich(a.text)) : null,
+      best && (R.metrics || []).length ? h("div", { class: "tiles" }, R.metrics.map(function (m) {
+        var v = val(best, m);
+        if (v == null) return null;
+        return h("div", { class: "tile" }, h("b", {}, shown(best, v, m)), h("span", {}, m.label + (m.limit != null ? ", limit " + limitText(m) : "")));
+      })) : null,
+      a.relaxed ? h("p", { class: "relaxed" }, rich(a.relaxed)) : null);
+  }
+
+  function comparisonTable(R, cands) {
+    var metrics = R.metrics || [];
+    var top = {};
+    metrics.forEach(function (m) {
+      var vs = cands.filter(function (c) { return !c.estimated && val(c, m) != null; }).map(function (c) { return val(c, m); });
+      if (vs.length > 1) top[m.key] = m.better === "higher" ? Math.max.apply(null, vs) : Math.min.apply(null, vs);
+    });
+    var span = 3 + metrics.length;
+    var rows = [];
+    GROUPS.forEach(function (g) {
+      var inGroup = cands.filter(function (c) { return g.match.indexOf(c.status) >= 0; });
+      if (!inGroup.length) return;
+      rows.push(h("tr", { class: "group" }, h("th", { colspan: span }, g.title)));
+      inGroup.forEach(function (c) {
+        rows.push(h("tr", { class: c.status === "best" ? "is-best" : null },
+          h("td", {}, h("b", { class: "mono" }, c.id), " " + c.name, c.statusNote ? h("span", { class: "note" }, rich(c.statusNote)) : null),
+          h("td", {}, pill(c.status)),
+          metrics.map(function (m) {
+            var v = val(c, m), cls = "num";
+            if (breaks(v, m)) cls += " over";
+            else if (v != null && v === top[m.key] && !c.estimated) cls += " top";
+            return h("td", { class: cls }, v == null ? "–" : (breaks(v, m) ? "✕ " : "") + (c.estimated ? "~" : "") + fmt(v));
+          }),
+          h("td", {}, priorArt(c))));
+      });
+    });
+    return h("div", { class: "scroll" }, h("table", {},
+      h("thead", {}, h("tr", {},
+        h("th", {}, "Candidate"), h("th", {}, "Status"),
+        metrics.map(function (m) { return h("th", {}, m.label + (m.unit ? " (" + m.unit + ")" : ""), h("small", {}, limitText(m) || "no limit")); }),
+        h("th", {}, "Prior art"))),
+      h("tbody", {}, rows)));
+  }
+
+  function priorArt(c) {
+    var p = c.priorArt;
+    if (!p) return h("span", { class: "muted" }, "none found");
+    var u = safeUrl(p.url);
+    return u ? h("a", { href: u }, p.name) : rich(p.name);
+  }
+
+  function budgetBars(R, cands) {
+    var ms = (R.metrics || []).filter(function (m) { return m.budget && m.limit; });
+    if (!ms.length) return null;
+    var anyEst = cands.some(function (c) { return c.estimated; });
+    return ms.map(function (m) {
+      var rows = cands.filter(function (c) { return val(c, m) != null; });
+      if (!rows.length) return null;
+      var CAP = 2;
+      var maxRatio = Math.min(CAP, Math.max.apply(null, rows.map(function (c) { return val(c, m) / m.limit; }).concat([1])) * 1.05);
+      return h("div", { class: "panel" },
+        h("h3", {}, m.label + " against budget ", h("span", {}, "limit " + withUnit(m.limit, m) + ", shorter is more margin")),
+        h("div", { class: "bars" }, rows.map(function (c) {
+          var v = val(c, m), ratio = v / m.limit, over = ratio > 1;
+          var cls = "fill " + (over ? "over" : c.status === "best" ? "best" : "in") + (c.estimated ? " est" : "");
+          return h("div", { class: "bar-row" },
+            h("div", { class: "bar-name" }, h("b", {}, c.id), " " + c.name),
+            h("div", { class: "track" },
+              h("div", { class: cls, style: "width:" + (Math.min(ratio, maxRatio) / maxRatio * 100).toFixed(1) + "%" }),
+              h("div", { class: "limit", style: "left:" + (1 / maxRatio * 100).toFixed(1) + "%" })),
+            h("div", { class: "bar-val" }, (c.estimated ? "~" : "") + withUnit(v, m) + (ratio > CAP ? " (" + ratio.toFixed(1) + "×)" : "")));
+        })),
+        h("div", { class: "legend" },
+          h("span", {}, h("i", { class: "swatch", style: "background:var(--accent)" }), "best fit"),
+          h("span", {}, h("i", { class: "swatch", style: "background:var(--good)" }), "within budget"),
+          h("span", {}, h("i", { class: "swatch", style: "background:var(--bad)" }), "over budget"),
+          anyEst ? h("span", {}, h("i", { class: "swatch fill est", style: "position:static;background-color:var(--muted)" }), "estimate") : null,
+          h("span", {}, h("i", { class: "swatch", style: "width:2px;height:14px;background:var(--ink)" }), "limit")));
+    });
+  }
+
+  function axis(m, lo, hi, a, b) {
+    if (m.log) {
+      var l0 = Math.floor(Math.log10(lo)), l1 = Math.ceil(Math.log10(hi));
+      var pos = function (v) { return a + (Math.log10(v) - l0) / (l1 - l0) * (b - a); };
+      var ticks = [];
+      for (var e = l0; e <= l1; e++) ticks.push(Math.pow(10, e));
+      return { pos: pos, ticks: ticks };
+    }
+    var top = hi * 1.1, step = Math.pow(10, Math.floor(Math.log10(top)));
+    if (top / step < 2.5) step /= 4; else if (top / step < 5) step /= 2;
+    var t = [];
+    for (var v = 0; v <= top + 1e-12; v += step) t.push(Math.round(v * 1e9) / 1e9);
+    return { pos: function (x) { return a + x / t[t.length - 1] * (b - a); }, ticks: t };
+  }
+
+  function scatter(R, cands) {
+    var metrics = R.metrics || [], cfg = R.chart || {};
+    function find(k) { return metrics.filter(function (m) { return m.key === k; })[0]; }
+    var mx = find(cfg.x) || metrics.filter(function (m) { return m.budget; })[0];
+    var my = find(cfg.y) || metrics.filter(function (m) { return !m.budget; })[0];
+    if (!mx || !my) return null;
+    var pts = cands.filter(function (c) { return val(c, mx) != null && val(c, my) != null; });
+    if (pts.length < 2) return null;
+
+    var W = 960, H = 400, L = 72, Rt = 24, T = 18, B = 48;
+    function range(m, ps) {
+      var vs = ps.map(function (c) { return val(c, m); }).concat(m.limit != null ? [m.limit] : []);
+      return [Math.min.apply(null, vs), Math.max.apply(null, vs)];
+    }
+    var rx = range(mx, pts), ry = range(my, pts);
+    var ax = axis(mx, rx[0], rx[1], L, W - Rt), ay = axis(my, ry[0], ry[1], H - B, T);
+    var svg = s("svg", { class: "scatter", viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": mx.label + " against " + my.label + " for each candidate" });
+
+    if (mx.limit != null && my.limit != null) {
+      var x0 = L, x1 = ax.pos(mx.limit);
+      var yLim = ay.pos(my.limit), yA = my.better === "higher" ? T : yLim, yB = my.better === "higher" ? yLim : H - B;
+      if (mx.better === "higher") { x0 = x1; x1 = W - Rt; }
+      svg.append(s("rect", { class: "zone", x: x0, y: yA, width: x1 - x0, height: yB - yA }));
+    }
+    ay.ticks.forEach(function (t) {
+      var y = ay.pos(t);
+      svg.append(s("line", { class: "grid", x1: L, x2: W - Rt, y1: y, y2: y }));
+      svg.append(s("text", { x: L - 8, y: y + 4, "text-anchor": "end" }, fmt(t)));
+    });
+    ax.ticks.forEach(function (t) {
+      var x = ax.pos(t);
+      svg.append(s("line", { class: "grid", x1: x, x2: x, y1: T, y2: H - B }));
+      svg.append(s("text", { x: x, y: H - B + 18, "text-anchor": "middle" }, fmt(t)));
+    });
+    svg.append(s("text", { x: (L + W - Rt) / 2, y: H - 8, "text-anchor": "middle" }, mx.label + (mx.unit ? " (" + mx.unit + ")" : "")));
+    svg.append(s("text", { x: 14, y: (T + H - B) / 2, "text-anchor": "middle", transform: "rotate(-90 14 " + (T + H - B) / 2 + ")" }, my.label + (my.unit ? " (" + my.unit + ")" : "") + (my.log ? ", log" : "")));
+    if (mx.limit != null) svg.append(s("line", { class: "lim", x1: ax.pos(mx.limit), x2: ax.pos(mx.limit), y1: T, y2: H - B }));
+    if (my.limit != null) svg.append(s("line", { class: "lim", x1: L, x2: W - Rt, y1: ay.pos(my.limit), y2: ay.pos(my.limit) }));
+
+    var placed = [];
+    function fits(r) {
+      return r.x >= L && r.x + r.w <= W - Rt && r.y >= T && r.y + r.h <= H - B && !placed.some(function (p) {
+        return r.x < p.x + p.w && r.x + r.w > p.x && r.y < p.y + p.h && r.y + r.h > p.y;
+      });
+    }
+    pts.forEach(function (c) { var x = ax.pos(val(c, mx)), y = ay.pos(val(c, my)); placed.push({ x: x - 8, y: y - 8, w: 16, h: 16 }); });
+    pts.forEach(function (c) {
+      var mxv = val(c, mx), myv = val(c, my), x = ax.pos(mxv), y = ay.pos(myv), st = c.status;
+      var color = { best: "var(--accent)", works: "var(--good)", relaxes: "var(--warn)", unbuilt: "var(--muted)", fails: "var(--bad)", refuted: "var(--bad)" }[st] || "var(--muted)";
+      var g = s("g", { tabindex: "0", role: "img", "aria-label": c.id + " " + c.name + ": " + withUnit(mxv, mx) + ", " + withUnit(myv, my) });
+      g.append(s("circle", { cx: x, cy: y, r: 16, fill: "transparent" }));
+      if (st === "fails" || st === "refuted") {
+        g.append(s("path", { d: "M" + (x - 6) + " " + (y - 6) + "L" + (x + 6) + " " + (y + 6) + "M" + (x + 6) + " " + (y - 6) + "L" + (x - 6) + " " + (y + 6), stroke: color, "stroke-width": 2.5, "stroke-linecap": "round" }));
+      } else if (st === "relaxes") {
+        g.append(s("path", { d: "M" + x + " " + (y - 8) + "L" + (x + 8) + " " + y + "L" + x + " " + (y + 8) + "L" + (x - 8) + " " + y + "Z", fill: color, stroke: "var(--raised)", "stroke-width": 2 }));
+      } else {
+        var est = c.estimated || st === "unbuilt";
+        g.append(s("circle", { cx: x, cy: y, r: st === "best" ? 8 : 6.5, fill: est ? "none" : color, stroke: est ? color : "var(--raised)", "stroke-width": 2 }));
+      }
+      var w = c.id.length * 8 + 4, opts = [[12, -6], [-12 - w, -6], [-w / 2, -24], [-w / 2, 12]];
+      var pick = opts.map(function (o) { return { x: x + o[0], y: y + o[1], w: w, h: 16 }; }).filter(fits)[0] || { x: x + 12, y: y - 6, w: w, h: 16 };
+      placed.push(pick);
+      g.append(s("text", { class: "lbl", x: pick.x + 2, y: pick.y + 12 }, c.id));
+      function show(e) {
+        var tip = document.getElementById("tip");
+        tip.textContent = "";
+        tip.append(h("b", {}, c.id + " " + c.name), h("br"), mx.label + ": " + shown(c, mxv, mx), h("br"), my.label + ": " + shown(c, myv, my), h("br"), (STATUS[st] || STATUS.unbuilt).label);
+        tip.style.display = "block";
+        var box = g.getBoundingClientRect();
+        tip.style.left = Math.max(8, Math.min(window.innerWidth - 310, box.right + 8)) + "px";
+        tip.style.top = Math.max(8, box.top) + "px";
+      }
+      function hide() { document.getElementById("tip").style.display = "none"; }
+      g.addEventListener("mouseenter", show); g.addEventListener("mouseleave", hide);
+      g.addEventListener("focus", show); g.addEventListener("blur", hide);
+      svg.append(g);
+    });
+
+    return h("div", { class: "panel" },
+      h("h3", {}, my.label + " against " + mx.label.toLowerCase() + " ", h("span", {}, "dashed lines are the limits, the shaded area meets both")),
+      h("div", { class: "plot" }, svg),
+      h("div", { class: "legend" }, ["best", "works", "relaxes", "unbuilt", "fails"].filter(function (st) {
+        return pts.some(function (c) { return c.status === st || (st === "fails" && c.status === "refuted"); });
+      }).map(function (st) { return h("span", {}, pill(st)); })));
+  }
+
+  function zoomable(src, alt) {
+    var img = h("img", { src: src, alt: alt, loading: "lazy" });
+    var btn = h("button", { class: "zoom", type: "button", "aria-label": "Open " + alt + " at full size" }, img);
+    img.addEventListener("error", function () { btn.replaceWith(h("div", { class: "missing" }, "Image missing from the artifact: " + src)); });
+    btn.addEventListener("click", function () {
+      var box = document.getElementById("lightbox");
+      document.getElementById("lightbox-img").src = src;
+      document.getElementById("lightbox-img").alt = alt;
+      if (box.showModal) box.showModal();
+    });
+    return btn;
+  }
+
+  function captures(R, cands) {
+    var ref = R.reference && safeSrc(R.reference.src) ? R.reference : null;
+    var withShot = cands.filter(function (c) { return safeSrc(c.shot); });
+    var shown = cands.filter(function (c) { return safeSrc(c.capture) || (safeSrc(c.shot) && (ref || withShot.length > 1)); });
+    var figs = (R.figures || []).filter(function (f) { return safeSrc(f.src); });
+    if (!shown.length && !figs.length) return null;
+    var cols = R.captureColumns || [];
+    function columns() { return cols.length ? h("div", { class: "columns", "aria-hidden": "true" }, cols.map(function (t) { return h("span", {}, t); })) : null; }
+    var intro = withShot.length
+      ? "Drag a slider to wipe between a candidate and what it is compared with, or focus it and use the arrow keys. The menu under each slider changes the comparison. Harness captures keep the same layout and gain, so their columns line up."
+      : shown.length ? "Same layout and gain for every candidate, stacked so the columns line up. Select one to open it at full size." : null;
+    return section("captures", "Captures", intro, [
+      R.compareNote && withShot.length ? h("p", { class: "small" }, rich(R.compareNote)) : null,
+      figs.map(function (f) {
+        return h("figure", { class: "capture" },
+          h("figcaption", {}, h("b", {}, f.title), f.caption ? h("span", { class: "muted small" }, rich(f.caption)) : null),
+          zoomable(f.src, f.title));
+      }),
+      shown.map(function (c) {
+        return h("figure", { class: "capture" + (c.status === "best" ? " is-best" : "") },
+          h("figcaption", {}, h("b", {}, c.id + " " + c.name), pill(c.status), c.metricsLine ? h("span", { class: "muted small mono" }, c.metricsLine) : null),
+          safeSrc(c.shot) ? abSlider(c, ref, withShot) : null,
+          safeSrc(c.capture) ? columns() : null,
+          safeSrc(c.capture) ? zoomable(c.capture, c.id + " " + c.name + " capture") : null);
+      })
+    ]);
+  }
+
+  // A/B wipe: the candidate on the left of the line, the chosen comparison on the right.
+  function abSlider(c, ref, withShot) {
+    var others = [];
+    if (ref) others.push({ label: ref.label || "Reference", src: ref.src });
+    withShot.forEach(function (o) { if (o !== c) others.push({ label: o.id + " " + o.name, src: o.shot }); });
+    if (!others.length) return null;
+
+    var a = h("img", { class: "ab-a", src: c.shot, alt: c.id + " " + c.name + " output" });
+    var b = h("img", { class: "ab-b", src: others[0].src, alt: others[0].label });
+    var labelB = h("span", { class: "ab-tag ab-tag-b" }, others[0].label);
+    var range = h("input", { type: "range", min: "0", max: "100", step: "0.5", value: "50", "aria-label": "Wipe between " + c.id + " and the comparison image" });
+    var stage = h("div", { class: "ab-stage", style: "--pos:50%" }, b, a, h("div", { class: "ab-line" }), h("span", { class: "ab-tag" }, c.id), labelB, range);
+    var scroller = h("div", { class: "ab-scroll" }, stage);
+    var warn = h("div", { class: "missing", hidden: "hidden" });
+    function problem(text) { warn.textContent = text; warn.hidden = false; }
+    function checkSizes() {
+      if (a.naturalWidth && b.naturalWidth && (a.naturalWidth !== b.naturalWidth || a.naturalHeight !== b.naturalHeight)) {
+        problem("Sizes differ, so this wipe is misaligned: " + a.naturalWidth + "×" + a.naturalHeight + " against " + b.naturalWidth + "×" + b.naturalHeight + ".");
+      } else if (a.naturalWidth && b.naturalWidth) warn.hidden = true;
+    }
+    [a, b].forEach(function (img) {
+      img.addEventListener("load", checkSizes);
+      img.addEventListener("error", function () { problem("Image missing from the artifact: " + img.getAttribute("src")); });
+    });
+    range.addEventListener("input", function () { stage.style.setProperty("--pos", range.value + "%"); });
+
+    var menu = others.length > 1 ? h("select", { "aria-label": "Compare " + c.id + " with" }, others.map(function (o, i) { return h("option", { value: String(i) }, o.label); })) : null;
+    if (menu) menu.addEventListener("change", function () {
+      var o = others[Number(menu.value)];
+      warn.hidden = true;
+      b.src = o.src; b.alt = o.label; labelB.textContent = o.label;
+    });
+    var native = h("button", { type: "button", "aria-pressed": "false" }, "Actual pixels");
+    native.addEventListener("click", function () {
+      var on = native.getAttribute("aria-pressed") !== "true";
+      native.setAttribute("aria-pressed", String(on));
+      stage.style.width = on && a.naturalWidth ? a.naturalWidth + "px" : "";
+      native.textContent = on ? "Fit to width" : "Actual pixels";
+    });
+    return h("div", { class: "ab" }, scroller, warn,
+      h("div", { class: "ab-tools" },
+        menu ? h("label", {}, "Compare with ", menu) : h("span", { class: "muted" }, "Compared with " + others[0].label),
+        native));
+  }
+
+  function card(c) {
+    var rows = [
+      ["Uses", c.uses && c.uses.join(", ")],
+      ["Cost", c.cost],
+      ["Keeps", c.keeps],
+      ["Fakes", c.fakes],
+      ["Relaxes", c.relaxes],
+      ["Fails when", c.failsWhen],
+      ["Holds if", c.condition],
+      ["Test", c.test]
+    ].filter(function (r) { return r[1]; });
+    return h("article", { class: "card" + (c.status === "best" ? " is-best" : ""), id: "cand-" + c.id },
+      h("div", { class: "head" }, h("h3", {}, c.id + " " + c.name), pill(c.status)),
+      c.method ? h("p", {}, rich(c.method)) : null,
+      c.pipeline && c.pipeline.length ? h("div", { class: "flow", role: "list", "aria-label": "Method steps" }, c.pipeline.map(function (p, i) {
+        return [i ? h("span", { class: "arrow", "aria-hidden": "true" }, "→") : null,
+          h("div", { class: "step", role: "listitem" }, p.label, p.cost ? h("small", {}, p.cost) : null)];
+      })) : null,
+      rows.length ? h("dl", {}, rows.map(function (r) { return [h("dt", {}, r[0]), h("dd", {}, rich(r[1]))]; })) : null,
+      h("dl", {}, h("dt", {}, "Prior art"), h("dd", {}, priorArt(c))));
+  }
+
+  function method(R) {
+    var M = R.method;
+    if (!M) return null;
+    return section("method", "Method", null, [
+      M.summary ? h("p", {}, rich(M.summary)) : null,
+      M.equation ? h("pre", {}, M.equation) : null,
+      M.steps && M.steps.length ? h("ol", { class: "steps" }, M.steps.map(function (st) {
+        return h("li", {}, rich(st.text), st.assumes ? h("span", { class: "assume" }, "Costs the assumption: ", rich(st.assumes)) : null);
+      })) : null,
+      M.code ? h("pre", {}, M.code) : null,
+      M.cost ? h("p", {}, h("strong", {}, "Cost: "), rich(M.cost)) : null,
+      M.failsWhen ? h("p", {}, h("strong", {}, "Fails when: "), rich(M.failsWhen)) : null,
+      M.reproduce ? h("div", {}, h("p", { class: "small muted" }, "Reproduce"), h("pre", {}, M.reproduce)) : null
+    ]);
+  }
+
+  function mechanisms(R, cands) {
+    var Ms = R.mechanisms || [];
+    if (!Ms.length) return null;
+    return section("mechanisms", "Mechanisms", "The catalog the candidates were built from. A dot marks a mechanism that a candidate uses.", h("div", { class: "scroll" }, h("table", {},
+      h("thead", {}, h("tr", {}, h("th", {}, "Mechanism"), h("th", {}, "Assumes"), h("th", {}, "Breaks when"), cands.map(function (c) { return h("th", { title: c.name }, c.id); }))),
+      h("tbody", {}, Ms.map(function (m) {
+        return h("tr", {},
+          h("td", {}, h("b", { class: "mono" }, m.id), " " + m.name, m.core ? h("span", { class: "note" }, rich(m.core)) : null),
+          h("td", {}, rich(m.assumes)), h("td", {}, rich(m.breaks)),
+          cands.map(function (c) { return h("td", { class: "dot" }, (c.uses || []).some(function (u) { return String(u).split(" ")[0] === m.id; }) ? "●" : ""); }));
+      })))));
+  }
+
+  function render(R) {
+    var cands = (R.candidates || []).slice();
+    var rank = { best: 0, works: 1, relaxes: 2, unbuilt: 3, fails: 4, refuted: 5 };
+    cands.sort(function (a, b) { return (rank[a.status] - rank[b.status]) || 0; });
+    var byId = {};
+    cands.forEach(function (c) { byId[c.id] = c; });
+    document.title = R.title || "Invent report";
+
+    var charts = [].concat(budgetBars(R, cands) || [], scatter(R, cands) || []).filter(Boolean);
+    var parts = [
+      ["answer", "Answer", verdict(R, byId)],
+      ["compare", "Comparison", cands.length ? section("compare", "Comparison", null, [comparisonTable(R, cands), charts.length ? h("div", { class: "charts" }, charts) : null]) : null],
+      ["captures", "Captures", captures(R, cands)],
+      ["candidates", "Candidates", cands.length ? section("candidates", "Candidates", null, h("div", { class: "cards" }, cands.map(card))) : null],
+      ["method", "Method", method(R)],
+      ["findings", "Findings", R.findings && R.findings.length ? section("findings", "Findings", null, R.findings.map(function (f) {
+        return h("div", { style: "display:grid;gap:6px" }, h("h3", {}, f.question), list(f.claims || []));
+      })) : null],
+      ["mechanisms", "Mechanisms", mechanisms(R, cands)],
+      ["explored", "Explored", R.explored && R.explored.length ? section("explored", "Explored", "Rejected or failed, with the reason. A later run starts from this list.", list(R.explored.map(function (e) { return "**" + e.name + "**: " + e.reason; }))) : null],
+      ["caveats", "Caveats", R.caveats && R.caveats.length ? section("caveats", "Caveats", null, list(R.caveats)) : null],
+      ["sources", "Sources", R.sources && R.sources.length ? section("sources", "Sources", null, h("ol", { class: "small", style: "list-style:none;padding:0" }, R.sources.map(function (src) {
+        var u = safeUrl(src.url);
+        return h("li", { id: "src-" + src.n },
+          h("span", { class: "mono muted" }, "[" + src.n + "] "),
+          u ? h("a", { href: u }, src.title) : src.title,
+          src.path ? h("code", {}, src.path) : null,
+          h("span", { class: "muted" }, [src.tier ? " · tier " + src.tier : "", src.version ? " · " + src.version : ""].join("")));
+      }))) : null]
+    ].filter(function (p) { return p[2]; });
+
+    var root = document.getElementById("report");
+    root.append(header(R));
+    if (R.notice) root.append(h("div", { class: "banner" }, rich(R.notice)));
+    if (R.depth === "light") root.append(h("div", { class: "banner" }, "Unmeasured light run: every cost is an estimate and no prototype or reference check has run."));
+    root.append(h("nav", { "aria-label": "Sections" }, parts.map(function (p) { return h("a", { href: "#" + p[0] }, p[1]); })));
+    parts.forEach(function (p) { root.append(p[2]); });
+    root.append(h("footer", {}, "frogg:invent · report template v2"));
+  }
+
+  function fail(message) {
+    document.body.prepend(h("div", { class: "banner error" }, h("strong", {}, "This report could not be drawn. "), message));
+  }
+  if (!window.REPORT) fail("report-data.js is missing or has a syntax error.");
+  else {
+    try { render(window.REPORT); }
+    catch (e) { fail(String(e && e.message || e)); }
+  }
+})();
+</script>
+</body>
+</html>

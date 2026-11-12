@@ -1,0 +1,1 @@
+all_min=0.700 all_people=0.818 all_kinds=0.929 all_keywords=0.700 all_time=0.965 heldout_min=0.778 heldout_people=0.889 heldout_kinds=0.921 heldout_keywords=0.778 heldout_time=0.984 dev_min=0.654 en_min=0.686 fr_min=0.710 mixed_min=0.711 target_errors=2 exceptions=0 gate_p50_us=1.7 gate_p99_us=2.7 accuracy_budget_ok=no rule_cost_ok=yes n=170

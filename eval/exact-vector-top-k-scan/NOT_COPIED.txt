@@ -1,0 +1,15 @@
+# exact-vector-top-k-scan: files not copied from the study folder (25 files, 2344.6 MB)
+#
+# Models, raw downloads, generated audio, vector stores, pickles, logs, local shell
+# scripts and keys. The study README says how each one is rebuilt.
+
+./  1 files  0.0 MB
+C1/  2 files  0.0 MB
+C1/dev/round1/  1 files  0.0 MB
+C1_quiet/  1 files  0.0 MB
+C3/  3 files  0.0 MB
+C3/round1/  2 files  0.0 MB
+C4/  2 files  0.0 MB
+C4/round1/  2 files  0.0 MB
+cache/  10 files  2344.6 MB
+ref/  1 files  0.0 MB

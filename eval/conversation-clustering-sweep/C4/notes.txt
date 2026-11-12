@@ -1,0 +1,28 @@
+C4 two-pointer sweep + per-pass sources memo (stdlib only)
+
+Harness (harness.py C4\cand.py C4, defaults: 10,000 fuzz, 26 edges + realistic_8h, 1,000 replay, 9 reps):
+  mismatches_fuzz=0 mismatches_edges=0 mismatches_replay=0 median_ms=5.022 p95_ms=5.866
+  today (ref/metrics.txt): median 7,739.5 ms -> ~1,540x faster; 10x under the 50 ms budget.
+  Passed on the first run; no fix round needed.
+
+Side bench (C4\bench.py -> bench.txt; N = 20,000 realistic rows, 15 reps, two runs):
+  low cardinality (6 distinct sources strings):
+    memo     median 5.0 ms  (p95 6.1-6.6)
+    no memo  median 29-30 ms (p95 39-44)       -> json.loads per row is ~85% of a no-memo pass
+  high cardinality (every row's sources string distinct; one unique non-voice process appended,
+  so the voice classification and the expected output are unchanged; all equal the oracle):
+    memo     median 36.5-38.1 ms (p95 43-45)
+    no memo  median 31.8-32.7 ms (p95 35-36)
+    -> the memo costs about +4.5 ms (14%) when it never hits, more than the ~2 ms predicted
+       (dict insert of 20k keys plus 3-tuple and game-process tuple per row). Still within the
+       50 ms budget at the median, but p95 comes within ~5 ms of it.
+  Rows as _Segment slots dataclasses (sharing the memoised tuple) would add ~9.8 ms per pass
+  (p95 13): the candidate keeps the fetchall tuples and an owner array instead.
+
+Notes:
+  - Relies on rows arriving in (start_ms, id) order (as the SQL guarantees): the voice loop,
+    the monotone mic pointer and the member lists all assume it, the same assumption today's
+    voice loop makes.
+  - Nearest-cluster rule needs only clusters lo and lo+1: vs_{k+1} > ve_k + 300 s, so lo+1
+    starts after m.start and every later cluster is strictly farther.
+  - Memo is local to the call (no cross-pass state); json.loads errors raise as today.

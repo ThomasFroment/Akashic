@@ -1,0 +1,36 @@
+{
+  "revision": "M00 base",
+  "phase": "initial implementation only; independent review pending",
+  "final_static": {
+    "format": "203 files already formatted",
+    "ruff": "All checks passed",
+    "pyright": "0 errors, 0 warnings"
+  },
+  "final_full": {
+    "command": ".venv/Scripts/python.exe -m pytest -q -rx --basetemp=.test-tmp/m00-full-metadata-final",
+    "passed": 1206,
+    "xfailed": 181,
+    "hardware_deselected": 11,
+    "seconds": 160.65
+  },
+  "post_full_affected": {
+    "boundaries": "137 passed, 7 xfailed, 18.44 s",
+    "hard_index": "34 passed, 7 xfailed, 2.63 s",
+    "zero_independent_denominator": "48 passed, 15.89 s"
+  },
+  "native": {
+    "initial": "6 passed, 2 skipped, 1 fixture DPI configuration failure, 2 deselected",
+    "corrected_occlusion": "1 passed, 10 deselected, 0.54 s",
+    "missing": [
+      "French OCR pack",
+      "enabled French SAPI voice"
+    ],
+    "COM": "5-second hung-provider reader timeout; M07 open"
+  },
+  "restricted_fixture_failures": "Two restricted focused attempts failed creating an existing junction fixture with WinError 5; native full suite passes it.",
+  "real_corrected_samples": "unavailable; fake/native-generated speech is not quality evidence",
+  "fresh_labels": "none supplied or scored",
+  "production_algorithm_repairs": false,
+  "dependencies_added": false,
+  "network": "intentional development socket-guard removal preserved; runtime loopback/offline/static-asset checks retained"
+}

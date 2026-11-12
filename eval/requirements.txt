@@ -1,0 +1,24 @@
+# Separate environment for the eval/ studies, NOT an Akashic dependency list. These are the exact
+# versions the 2026-11-10 method studies ran with (Python 3.14.7, Windows 11). Every package is
+# used offline: the only downloads are the explicit fetch scripts of each study (public files).
+#
+#   py -3.14 -m venv eval\.venv
+#   eval\.venv\Scripts\python.exe -m pip install -r eval\requirements.txt
+#
+# Shared with the app (same pins as uv.lock):
+numpy==2.5.4
+sqlcipher3==0.6.5
+av==19.0.2
+faster-whisper==1.2.1
+ctranslate2==4.8.5
+nvidia-cublas-cu12==12.9.1.4
+tokenizers==0.23.3
+huggingface_hub==2.4.0
+# Study-only:
+onnxruntime==1.31.1      # CPU build: the speaker models run on the CPU provider in the app too
+matplotlib==3.11.2       # side.png / fig-*.png charts
+pyarrow==26.0.1          # reads the MLS French parquet files (speaker study)
+tzdata==2026.6           # Europe/Paris for the time-window and follow-up studies
+#
+# segment-speaker-attribution's model-derivation scripts (data/models_derived) also used a second
+# environment, eval\.onnx_venv, with: onnx==1.23.2 ml_dtypes==0.6.0 protobuf==7.36.2 numpy==2.5.4

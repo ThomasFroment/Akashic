@@ -1,0 +1,40 @@
+C3 midpoint cell table, closed form (cand.py)
+
+Harness (harness.py C3\cand.py C3, defaults: 10k fuzz, 26 edges + realistic_8h, 1k replay, 9 reps):
+  mismatches_fuzz=164 mismatches_edges=1 mismatches_replay=0 median_ms=4.261 p95_ms=4.689
+  edge mismatch: mic_spans_three_clusters (mic 657 s, d = 0 to all three clusters).
+  Timing N=20,000, whole post-fetchall pass (JSON parse memoized per distinct sources string,
+  voice sweep, bisect, member pass, finality): median 4.26 ms, p95 4.69 ms vs 50 ms budget
+  (today 7,740 ms, oracle 679 ms).
+
+Length breakdown (breakdown.py, breakdown.log). Bucket = longest NON-VOICE mic segment in the case.
+  set                  mic <= 300 s          mic > 300 s
+  fuzz 0..9999         0 / 6,035             164 / 3,965
+  edges (26)           0 / 23                1 / 3   (mic_spans_three_clusters)
+  realistic_8h         -                     0 / 1   (has 240-700 s mic segments; none spans a gap)
+  replay one-shot      0 / 733               16 / 267
+  fuzz 10k..210k       0 / 120,236           3,549 / 79,764
+  adversarial 50k      0 / 40,030            2,213 / 9,970
+  (adversarial: 2-4 voice clusters, gaps 300,001..330,000 ms, mic segments 1..300,000 ms
+   centred on the gap, on ve, on vs_next or random, +-1 ms jitter; 20 % control cases with
+   300,001..400,000 ms mics.)
+  => 0 mismatches over 207,057 cases whose mic segments are all <= 300 s. No fix round needed.
+
+Every mismatch is the known class: on fuzz 0..9999 all 265 differing mic segments are > 300 s
+and have d = 0 to both the oracle's cluster and C3's (later) cluster, i.e. the mic spans a whole
+voice gap and the tie-to-earlier rule is lost because sigma > S_k. Replay stays consistent
+(0/1000) even then, because the assignment is deterministic per input.
+
+Why <= 300 s is exact (matches the refuter): S is strictly increasing (vs_{k+1} > ve_k + 300 s).
+Attachable <=> d < 30 s, so the argmin of d is attachable iff any cluster is, and one overlap
+check suffices. Pairwise k vs k+1: unclamped d_k < d_{k+1} <=> sigma < S_k; equality -> k.
+Clamping only breaks it when d_k = d_{k+1} = 0, which needs m.start <= ve_k and
+m.end >= vs_{k+1}, i.e. length >= 300,001 ms. Non-adjacent clusters are strictly farther.
+
+FAILS WHEN: a non-voice mic segment > 300 s spans an entire >300 s voice gap (goes to the later
+cluster instead of the earlier). Capture caps mic segments at 30 s (src/akashic/capture/audio.py:79,
+per the candidate brief; not re-read here). If that cap is ever lifted, a cheap fix is: after
+bisect, if j > 0 and m.start <= ve[j-1] (d = 0 to j-1 too), take j-1 (and walk left while true). Untested here.
+
+Assumes rows arrive sorted by (start_ms, id) (the SQL ORDER BY); members are emitted in row order.
+Stdlib only (json, bisect).

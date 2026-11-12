@@ -1,0 +1,1 @@
+name=baseline_heldout3 rules_pass=0.1897 rules_heldout3=0.1897 model_pass=0.2037 future_rules=172 future_model=201 false_filter_rules=145 false_filter_model=145 errors=0 p50_us=466.8 p99_us=1492.9 cases=1070

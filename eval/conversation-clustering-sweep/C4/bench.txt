@@ -1,0 +1,5 @@
+low_card distinct_sources=6 variant=memo median_ms=4.971 p95_ms=6.063 equals_oracle=True
+low_card distinct_sources=6 variant=nomemo median_ms=29.099 p95_ms=44.366 equals_oracle=True
+high_card distinct_sources=20000 variant=memo median_ms=36.466 p95_ms=45.337 equals_oracle=True
+high_card distinct_sources=20000 variant=nomemo median_ms=31.842 p95_ms=35.464 equals_oracle=True
+extra_cost_if_rows_become_Segment_objects median_ms=9.851 p95_ms=13.156 (low_card, shared tuples)

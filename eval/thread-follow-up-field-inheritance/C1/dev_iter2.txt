@@ -1,0 +1,15 @@
+dev {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0, 'min': 1.0, 'n': 107} exceptions 0
+  en 1.0
+  fr 1.0
+  mixed 1.0
+  conjunction {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 10
+  continuation {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 10
+  deictic {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 10
+  exclusion {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 9
+  partial_shift {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 9
+  pronoun {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 10
+  repo_tests {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 2
+  short_selfcontained {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 17
+  target {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 2
+  time_link {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 9
+  topic_switch {'people': 1.0, 'kinds': 1.0, 'keywords': 1.0, 'time': 1.0} 19

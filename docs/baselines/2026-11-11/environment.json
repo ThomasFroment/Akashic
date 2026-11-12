@@ -1,0 +1,622 @@
+{
+  "measured_at": "2026-11-11T04:46:44.625490+01:00",
+  "revision": "2026-11-11 baseline",
+  "hardware": {
+    "OS": "Microsoft Windows 11 Pro",
+    "Version": "10.0.26200",
+    "Build": "26200",
+    "RAMBytes": 34078343168,
+    "CPU": "AMD Ryzen 7 7800X3D 8-Core Processor",
+    "Cores": 8,
+    "Threads": 16,
+    "TimeZone": "Romance Standard Time"
+  },
+  "gpu": "NVIDIA GeForce RTX 4080 SUPER, 16376, 621.01",
+  "python": "3.14.10 (main, Oct 26 2026, 14:10:46) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "packages": {
+    "numpy": "2.5.4",
+    "sqlcipher3": "0.6.5",
+    "cryptography": "50.0.2",
+    "pytest": "9.2.0",
+    "pytest-cov": "7.1.0",
+    "comtypes": "1.4.17"
+  },
+  "models": {
+    "gemma-4-12b-qat-q4": {
+      "base_url": "https://huggingface.co/google/gemma-4-12B-it-qat-q4_0-gguf/resolve/29d097773436b69ff9feafd636ab4cf873786537",
+      "files": [
+        {
+          "name": "gemma-4-12b-it-qat-q4_0.gguf",
+          "size": 6975879296,
+          "sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+          "staging": "hardlink"
+        }
+      ],
+      "pins_verified": true
+    },
+    "qwen3-embedding-0.6b-q8": {
+      "base_url": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/370f27d7550e0def9b39c1f16d3fbaa13aa67728",
+      "files": [
+        {
+          "name": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+          "size": 639150592,
+          "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+          "staging": "hardlink"
+        }
+      ],
+      "pins_verified": true
+    }
+  },
+  "runtime": {
+    "key": "llama-b12209",
+    "files": [
+      {
+        "name": "cublas64_13.dll",
+        "size": 55212656,
+        "sha256": "db5a1d5a0ed0ef126e005fc7449d3584353aaeb8739a18d716fe74be1254a3da",
+        "staging": "hardlink"
+      },
+      {
+        "name": "cublasLt64_13.dll",
+        "size": 499102832,
+        "sha256": "ca478e1ea932f883ef4fc284f8f33d910079df4e77f9a2ec38d9b4387795f96f",
+        "staging": "hardlink"
+      },
+      {
+        "name": "cudart64_13.dll",
+        "size": 551024,
+        "sha256": "16ab35d8150b6105b7e49da264d360db4ece090157ad48d226c1dc7254136008",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-base.dll",
+        "size": 834048,
+        "sha256": "2b1e82f135ebf0f38b3fdf82f24a95f827c6b357b2ce7719f2ec066b3f32fcb4",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-alderlake.dll",
+        "size": 1460736,
+        "sha256": "f5d8d0b25a2f7ee8bca0cba08181e6abd9132eebb729b972b1b407fd7118fe4d",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-cannonlake.dll",
+        "size": 1694208,
+        "sha256": "438897934ce3f51c1acc492c4f2e7a80c4775bc32ef466616d75700ff529a5da",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-cascadelake.dll",
+        "size": 1667072,
+        "sha256": "33ab560adf39512884e59c4205c4411b78f2d49c16aaa9f702304a593f004f2a",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-cooperlake.dll",
+        "size": 1676800,
+        "sha256": "69f73b9d9432f3c1d88cd4622d708b7aa2e485a7193245ebb8c9b6895b8d8f8e",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-haswell.dll",
+        "size": 1465856,
+        "sha256": "e2beebf244dc057a0392f3a4f6cf7903b0c64c999b1827d4ab12aacfe20ac295",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-icelake.dll",
+        "size": 1673728,
+        "sha256": "57faa3ac566644c39019904c837d28f38a06bffbb71d7117cc9c69941449c0c4",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-ivybridge.dll",
+        "size": 1347072,
+        "sha256": "5ef8ebcc379b96f18aea1eec8681a78490c254c0cabfbaf2ebd03656ab507f32",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-piledriver.dll",
+        "size": 1340416,
+        "sha256": "1892b5e516145ec53f51ed58f62f677b55a47ba2b4c772c3292f54b6c7f6c0d0",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-sandybridge.dll",
+        "size": 1317376,
+        "sha256": "33ad7be0ed9abfbc67c9fb78c1f921075f627a2e9db861451d9ec7a6ba259935",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-sapphirerapids.dll",
+        "size": 1953280,
+        "sha256": "4f3b1b197f98b989eef3412b0c37914c1d8b42f986f3be2c8848e84f570d73b0",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-skylakex.dll",
+        "size": 1687552,
+        "sha256": "5e1298dc9179bfe4311afaabec452945b1956106358e7d8a3604128b807e2d23",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-sse42.dll",
+        "size": 941568,
+        "sha256": "52c3bc8658b251d8cef23166235c19543803d2a99436de61bd7892061504ce3c",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-x64.dll",
+        "size": 932352,
+        "sha256": "87779b901bd0250db991baa5ed30f1edd4b0b41f8a68969393c26e34b245d78c",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cpu-zen4.dll",
+        "size": 1683456,
+        "sha256": "73756b876c0e1e0b82c0c70ef8a54578ac3ba72148eb68169249ca3465a32592",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-cuda.dll",
+        "size": 160740864,
+        "sha256": "a9d654ccfa3b27af65565f9047927297f414d0235ad78361d6a3dafe95c64c4b",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-rpc-server.exe",
+        "size": 117248,
+        "sha256": "1c211708e387aeea9ed25da4b114eec16bd8f0ebe5015c924f7a44f242b693fe",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml-rpc.dll",
+        "size": 236032,
+        "sha256": "d588822a4c875827f9759601683b815baed51f63af3375e35b65986cf8dbef7d",
+        "staging": "hardlink"
+      },
+      {
+        "name": "ggml.dll",
+        "size": 78848,
+        "sha256": "622135bc34f68651a388fbfebb0cbdfd2ad4e1070248c9209d1157d106200942",
+        "staging": "hardlink"
+      },
+      {
+        "name": "libomp.dll",
+        "size": 768000,
+        "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
+        "staging": "hardlink"
+      },
+      {
+        "name": "LICENSE-LLVM-OpenMP",
+        "size": 19741,
+        "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-batched-bench-impl.dll",
+        "size": 61952,
+        "sha256": "e5d7d10016a8fdd17ff289683bca2bdcf9a5ea4c9599d82b5aab0b9de291d571",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-batched-bench.exe",
+        "size": 9728,
+        "sha256": "6b16768a94463ea3a40d37c532c19079955056f3d7d41a394029362fd0a8b486",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-bench-impl.dll",
+        "size": 404480,
+        "sha256": "6d99890decc3883d8e8ae260a740f41698e978f3c82ed39c2b6ef21f891205d4",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-bench.exe",
+        "size": 9728,
+        "sha256": "7c67c83299605b70f9ce70cfb53b4ae8630b8b3992d28c0aaf685473a14ec6ab",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-cli-impl.dll",
+        "size": 3396608,
+        "sha256": "7195a62e24f29ae0c66a5d3457d53671c9a64723a1e2c8daa413566085359eaf",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-cli.exe",
+        "size": 9728,
+        "sha256": "673b27881b29882666ae03572f6b760e47042486c4b3e3f060333ea39a352b25",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-common.dll",
+        "size": 8385024,
+        "sha256": "c2acf75750b4f8a91c5f81102530865a174ce4209f403a814bf855e4c0f4e705",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-completion-impl.dll",
+        "size": 138752,
+        "sha256": "f967f6b202b5ea428b401d0df0c5cb10744f7a7b18bdd40d8728cbd493381fcb",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-completion.exe",
+        "size": 9728,
+        "sha256": "5f0e6bb7e6a2a430a01c92f80b27288e3f4b1122351cdf7d1b101504af22cfb2",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-connect.exe",
+        "size": 11473920,
+        "sha256": "9f2bdd778f96971995a80add8d6b2478c156f799933337a19dbf80cdaad21b1d",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-fit-params-impl.dll",
+        "size": 43520,
+        "sha256": "6e582072a97249219199c2bf4eeda24247f28d655c19d89915a6d1a51ba88536",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-fit-params.exe",
+        "size": 9728,
+        "sha256": "6543e8f6dcd22509108d54626a1b9a9a35dc758b7de1fda93c4203bb45beff2e",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-gemma3-cli.exe",
+        "size": 27648,
+        "sha256": "d8c9d0a2d453058dc1f6012ff3eaa5227217fbe4a787b152b44000329e7ad540",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-gguf-split.exe",
+        "size": 61952,
+        "sha256": "73e7f94145585dcae641ee15de69fc6a2e440116b142f0e6fc7592ceb85a4b43",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-imatrix.exe",
+        "size": 253952,
+        "sha256": "d04d3106a6368e62111152eecb4c4106d0798a1813cc42ae1f571a2109ceebdf",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-llava-cli.exe",
+        "size": 27648,
+        "sha256": "d8c9d0a2d453058dc1f6012ff3eaa5227217fbe4a787b152b44000329e7ad540",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-minicpmv-cli.exe",
+        "size": 27648,
+        "sha256": "d8c9d0a2d453058dc1f6012ff3eaa5227217fbe4a787b152b44000329e7ad540",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-mtmd-cli.exe",
+        "size": 97280,
+        "sha256": "4a3908a73fcd6d6134f69213cf520c5708c3f6248c3258fd2b1cffdb29aa3f95",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-mtmd-debug.exe",
+        "size": 56832,
+        "sha256": "b5cd8321676976c77731678114df84ee1daac3014abc487a183bcff39d4eff42",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-perplexity-impl.dll",
+        "size": 198144,
+        "sha256": "bc4a2fc0467ec619403792ca3136795ee52823eb17553c2d8023c26946d48ad3",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-perplexity.exe",
+        "size": 9728,
+        "sha256": "8ea5b3aeb6ed41b21e4119fa91d75466b124d46c64cd57b6c1f8cde4b6b875a3",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-quantize-impl.dll",
+        "size": 137216,
+        "sha256": "2208244fca6b9e830ea33a376afbfc5d7ebe4102a9e87340a1d4cb2300e0f63a",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-quantize.exe",
+        "size": 9728,
+        "sha256": "f342ac102c3b6fd53c8235aeb147fefbcd4301955f54bd09152e9e2612eae983",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-qwen2vl-cli.exe",
+        "size": 27648,
+        "sha256": "d8c9d0a2d453058dc1f6012ff3eaa5227217fbe4a787b152b44000329e7ad540",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-results.exe",
+        "size": 47616,
+        "sha256": "2b78906e936e04ff657dca23daea737f33c47665fdf180b0892bd26c3d266294",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-server-impl.dll",
+        "size": 10124800,
+        "sha256": "0bd0de9259aa78e6980a5c953dc5e5883f61fc671999496e3c1a8764ae1a8660",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-server.exe",
+        "size": 9728,
+        "sha256": "a7851090de80cd76c7da127d6f0a1007b8e13a8d6c1c91a634a769264bed6e45",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-tokenize.exe",
+        "size": 59392,
+        "sha256": "e9cf951610b93cc107a9a0a5c63e8b697633366d98623f766cb207c29a765c90",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama-tts.exe",
+        "size": 46592,
+        "sha256": "ce4453f9dd0a96787183a4a4551add82a12ed55277ad956730d8689fe08dab1a",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama.dll",
+        "size": 3852800,
+        "sha256": "f89897613e22261a4b3d4e94e05e4cd7f026fe9a13e2cc9f541ff0e27e3c2937",
+        "staging": "hardlink"
+      },
+      {
+        "name": "llama.exe",
+        "size": 105472,
+        "sha256": "ae0e4c511703cb88e404b0b643d422d17bf4ad368ad026b8562e3b36544e2edf",
+        "staging": "hardlink"
+      },
+      {
+        "name": "mtmd.dll",
+        "size": 2216960,
+        "sha256": "a33867fe3421f02efdb6557f90778bb6e23e9b33959ed4328e283a3adbc4e59d",
+        "staging": "hardlink"
+      }
+    ],
+    "version_output": "version: 0.9.0-dev (build 12209, commit a3c7cf08f)\nbuilt with Clang 20.1.8 for Windows x86_64"
+  },
+  "source_files": {
+    "pyproject.toml": "741f2804d3164c866a37d2b36f992e20645c7f190c7667b3365a4f7e216fae44",
+    "scripts/bench_baseline.py": "6d8e6d546442ccf7835550dd504f62156c47aa1ae9229075fdfa34233e89a2c5",
+    "scripts/check.ps1": "dd5fcfab5baf99153a1de73797f4da32cca622b6b04671256a49ef4ae0a815e9",
+    "scripts/env.ps1": "b088376c9aef45b1b770e23cee96fffa7ba9e215eb182bfd068f3e12518a4c9f",
+    "scripts/eval_ask.py": "1fcabf7913edf73082b371e9562abb4115749700f3542a4a6735ab7bbb255e3c",
+    "scripts/eval_hard_memory.py": "f8cc4b8e0185c8a1089ffa7f235700a374aba43d8ea4f4376ab134aa90de4502",
+    "scripts/eval_long_evidence.py": "77fe5598580f7a379509cb74d596db39113978854970a0b87f2ade7c29d5f70e",
+    "scripts/eval_planner.py": "6ade7494d711890f148a4284f14883cd4bddfc69464eb8340b0275a927798a9c",
+    "scripts/eval_retrieval_scale.py": "28eeceb70b72c9f6becd73abeeeb517b08bcbb36750eb428d3cea9905847d7fe",
+    "scripts/eval_scoring.py": "39cb1dae9f4815fe72dc36f97f77c26bf32b713afe4c37b79ba2aa584acb6654",
+    "scripts/fetch_models.py": "54e76e18ecd56cb57abf10cc825d1ae4ad867035505b9ddc8718d2f19c7e32b6",
+    "scripts/selftest.ps1": "f803f74c45b5ac4293f3531ce20ebd90837ce900fac9feccb65095c6c922f31e",
+    "src/akashic/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/akashic/api/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/akashic/api/ask.py": "c117f3bf0816c8a35d70df5b7da25a3e28c8b11677b867440f42e6f1b0cc4cec",
+    "src/akashic/api/debug.py": "8edc3b4e533ac1be4f2b8dbb7f03a621b3173fc9bd594ed73dbca1f0bb13e17c",
+    "src/akashic/api/logview.py": "1f7169ef0f3999729bb26bd4a6fda560fe2183fe50fe56bdb8956816243c926c",
+    "src/akashic/api/memory.py": "83dfa81b0d70bb7d0a88abf401a882ed363567cb4f146d8eef5d6158ce2a5c80",
+    "src/akashic/api/models.py": "44db699778d1e91e3c35951abd53c947bbff45e38d6608f8e1d58ba805dea4ec",
+    "src/akashic/api/server.py": "dadd3c5f7d085982637dadbc8a266d0776f967fc62943c800e76da98b5968b1e",
+    "src/akashic/api/settings.py": "40b2f2312ace7e358c99bc0a660d7c6b99f1e5252b137f649108be521a3957fc",
+    "src/akashic/api/speakers.py": "8c871198b0de24d17bab28d59857772a6eded061c2b3651566ce471d364ee6da",
+    "src/akashic/api/stt.py": "d7064c212ea5081fd6bc86fe9ad5eb034595aa6c83648a17dda7d2ac45f2ea23",
+    "src/akashic/app.py": "97d8ae9619d4abf9b37a0f60be63e8217f696f46fe0c8d98fa298136150412a8",
+    "src/akashic/capture/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/akashic/capture/audio.py": "bff0471c2d0e4c133263fc25929b659997e984d626c71c6aa3da91757d46abed",
+    "src/akashic/capture/debounce.py": "00c879c0a195e358fec1ad2ffca6c52bb52eadfb8be338c9f73380ce52e32972",
+    "src/akashic/capture/exclusions.py": "4353c5864379c21861a755cda450430ae7f1003da0e18434656d8740f5d3e35b",
+    "src/akashic/capture/gaming.py": "879903cf9c24ab05b6ec4e7e28e1fb02f961aa3cff6323f1f220455e11948631",
+    "src/akashic/capture/imaging.py": "e8223e3a38d2c821efa25485e67bed92f243232a6dd3977fdaea24a75129f22d",
+    "src/akashic/capture/main.py": "2e5d3508c2a7d7ce17070142ff9d9b125309a2ca27e39bab4cd6abfefbbf3023",
+    "src/akashic/capture/media.py": "2993513ff876c170cf40d9eab94439c649c2f455328abe56e48e57f90930d240",
+    "src/akashic/capture/ocr_gate.py": "07647190169763ea9ebe3cf1d65f83fb1e3257dd13ef1429a43eec3b0e8dad70",
+    "src/akashic/capture/ports.py": "47eaafc44a2342320039afe504015561ef3ac37cf82dfbde76ffd807b26e60f7",
+    "src/akashic/capture/screen.py": "52cfdb941b12a0ffac852e97d287dcaa40548ecdd7e738dc20ad14187200a07d",
+    "src/akashic/capture/text.py": "7ba5e887803a31e6f6f24da6e3707a4fd04092b33846128321163ab5a029a4b7",
+    "src/akashic/capture/uia_budget.py": "d5a20df4d2e6187d1cdf455d07cd2101d2071ae1f0bd10919314085c834cfbec",
+    "src/akashic/capture/vad.py": "52948b58c4e19d76e21cb0df87582ffa786e8a7403da358e07d58a6c4be454ac",
+    "src/akashic/child.py": "81c0b355649ad687421d56836514ce571dd0efece59c6dc5dbfa1589531e7110",
+    "src/akashic/config.py": "160ba05133e16343a07085003c77f4545627e9150c456c223ce5cc0e216c40c1",
+    "src/akashic/config_edit.py": "a066e0ea414ddc849a1405d0d3f4c6af4ac1fb8e66974d09d1864a58397e6dfd",
+    "src/akashic/ipc.py": "013a13df097faa73160ddd9d8a989034c7125dc2d42e18ac2bc209fde9ce9b69",
+    "src/akashic/jsonish.py": "804240849e35483f389f6c28e4bf52da48d0ec37e2c269ec17bf5902c105749d",
+    "src/akashic/log.py": "729fa7ed61333e985de6f1c2af15c408abf0a859b04a7d9d5b441d26d0a3fd47",
+    "src/akashic/offline.py": "f13196da985f7a6c704560aff3c6c9d3cafc17c3852007e7e0fc0660b4dd2673",
+    "src/akashic/pipeline/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/akashic/pipeline/ask.py": "8b0b7334ee7e26b2b51fba0ed239a5b8fdfd1c092487915e3f038b98e3d44341",
+    "src/akashic/pipeline/embed.py": "8f214da829b9dc9c5291548b8637e3b901260218f40afee464ab430f3aa6dfda",
+    "src/akashic/pipeline/episodes.py": "2a67c04e59bd2b8db34e95d74682be12085a8ac7d7d107b3dd095cf1e7920d4a",
+    "src/akashic/pipeline/jobs.py": "aa5ab9bd40968558c36e191778d41e30e8098acd86e17f5f33f58307aa31b33e",
+    "src/akashic/pipeline/llm.py": "4128b227a57c782927aacee158ae41b92f393a84b4ba64d21642d254f564c751",
+    "src/akashic/pipeline/main.py": "d665e9c7fea182418e6f5821047772a8aaf162bbe83bd6b646fb9734a95dbece",
+    "src/akashic/pipeline/models.py": "b47c06ebc26591cdc0b321044dd12f30b237fe1a2ebccbe17074a725f0188d44",
+    "src/akashic/pipeline/ocr_frames.py": "031d251016f61e71b8c8fedb8cc924f883384d68b1865f6a26c306a57a9773cd",
+    "src/akashic/pipeline/retention.py": "85d8c9da9f7526937cb401d0afd9f6c1554e5b1cd52811b2923bd036abd2a8c6",
+    "src/akashic/pipeline/runner.py": "74a90ba0069646c9aef14dfa6469f389cf186f30d3f61ef81998ce4054a70390",
+    "src/akashic/pipeline/scheduler.py": "ebd3a9f22843e10ad9bf46ff5986bbd585acb7af65d44c9bb0bc0a11e550f541",
+    "src/akashic/pipeline/sessions.py": "301002d377f379151a09aee2fc97f90470359d5458e433c68d598eb950abd10d",
+    "src/akashic/pipeline/speakers.py": "df0db97b8623dd392316a1e4817f8523a1d6bd0c70b73d2c6d791bf5053e0b62",
+    "src/akashic/pipeline/speech.py": "d7f3e9ae01fa04d8b0ae26c5b61a6811fc1489a04f30030c4047094e18392f29",
+    "src/akashic/pipeline/stt_compare.py": "3cf360b0425e346162008db8ed8f92a514c34c501fa270baf61f8e7db246032f",
+    "src/akashic/pipeline/transcribe.py": "e2cc5ec7b9301cf7ad911129ef90d7789b6bd23262921abf34b3a7a4b81583bf",
+    "src/akashic/pipeline/whisper.py": "5bce1267efab86871f4cefa53df9ae8c82c0775e67fa351dfd5483f3558303e8",
+    "src/akashic/platform/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/akashic/platform/win/__init__.py": "a7fa5b99fda07078455006224ff9ae5436b14333b6f6092588e6df7bab010bb9",
+    "src/akashic/platform/win/audio.py": "9684350a9ea1c01515d5653ffc5ae6c17581864e27010f08eac7ecd8e33082f0",
+    "src/akashic/platform/win/autostart.py": "9613624b02591d70e87d3c1f11cace7b6a8f9b3046d8f1cc8391cfbbdec9d85f",
+    "src/akashic/platform/win/load.py": "5b56bfce7ed2cdc8556fa4b653446dba75bbd1dcd651dcdb415a63490b503d01",
+    "src/akashic/platform/win/media.py": "1c6a957cf069905371cacf1dcae04a80909b849598ae29513f3e3736a0689d14",
+    "src/akashic/platform/win/ocr.py": "e6137628e2c46b2381a64417e292f1fc84d36e2e97311336edc205761782cc69",
+    "src/akashic/platform/win/process.py": "66ab246fbb691aa1448f3db068e53896fd2f446e3c62b6b60516e516d0fbb78c",
+    "src/akashic/platform/win/screen.py": "db0c6163ba4b4fa05b35097cd7019d572ac15872a1458d87de59f4e18b7ad9e4",
+    "src/akashic/platform/win/uia.py": "0275872487a22ac648b27f55f7cc75324c60a7df02e0c99e0269b352a18e5f30",
+    "src/akashic/platform/win/windows.py": "af473aff3fd143fbb76e5d19c8b93274a3f93e3e15c83e87353fca6ba7c7fadb",
+    "src/akashic/search/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/akashic/search/answer.py": "2d5123a780346e30b31c54142aa1ed41fa3ef65997aebe903878c14f046e7447",
+    "src/akashic/search/hybrid.py": "7c995eb007b16916a5e80c023ef7ca23a8f09ddfc6edffaa8963e8b39c475fff",
+    "src/akashic/search/keyword.py": "c3637aec8fbe21f8935f7179faefdad7131522b292a44adb0464b4bc561d2202",
+    "src/akashic/search/planner.py": "c4693786ce76c52deca3206854ae117feac7e0a8a0cf5c8001ba68b887bbb1e2",
+    "src/akashic/search/semantic.py": "331e459e980dcec6dc3e23f2fa47fa078d56f3b6cb4049d1559a758e2355864a",
+    "src/akashic/search/timeparse.py": "218e77d0a11e37a38f2bb5a96ca0ee10d531c2ca541425ee923969928ab68372",
+    "src/akashic/search/transcripts.py": "c435351850e76f5db5d07df0071f1ba59db602fd75a0481860f17ba5693220e9",
+    "src/akashic/storage/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/akashic/storage/audio.py": "3505a23a52e9a0c9f0772766ba50e800e14467d5f92d12288afa07ba950d68a6",
+    "src/akashic/storage/crypto.py": "da7ee1a2a349ee231ceeb6ff915ae78b87483b50a9eb72e8d49b14d5b83a1ef8",
+    "src/akashic/storage/db.py": "c96a4f5100d447efdbaa50cddcea4e17ae1061933240c74b8cd314e4995b1f01",
+    "src/akashic/storage/debuginfo.py": "fbd8f72987846b2f74b5390476b85c5f07e2d2ed812b9537749e09c0358ab413",
+    "src/akashic/storage/embeddings.py": "9d94c74fd82bfacf42f37b626963e93ea8c50ff5601e8f4c575298060b1f35f9",
+    "src/akashic/storage/frames.py": "c76538a09fbfc6f71f4681773fbd796674ff8af70dda544f1bff812e685d0175",
+    "src/akashic/storage/media.py": "093bac6366e78f90dcb1404009dd6b3d3a1341dc06329bece76303f0126874f4",
+    "src/akashic/storage/migrations/0001_frames.sql": "ace1f25d055617347e1dc4fc24fb30fd09e4fa6e77e08f3fc9a005a648459a22",
+    "src/akashic/storage/migrations/0002_sessions.sql": "02ea66fd04de2a79b22e143806d1f2fa5f6e61e9f8b5c9076804a7c108e6015f",
+    "src/akashic/storage/migrations/0003_audio.sql": "8b2753305d56ac23130b8e4bb5079e0593b34c538eda5f6a2344fcfa67a164af",
+    "src/akashic/storage/migrations/0004_process_info.sql": "3217fe8be5533b30e0b9744e5ca6051c21d09fca37a00c2738d6c14769bb49cd",
+    "src/akashic/storage/migrations/0005_speakers.sql": "710b9d9cd414031086b64cd731786c91b31634e2bd52dbb34321a41ca1eaadb0",
+    "src/akashic/storage/migrations/0006_episodes.sql": "10f7a0d063204222057607b0c0c4ca29d8f11b2ec1367fe6cffe2e30ebf33543",
+    "src/akashic/storage/migrations/0007_questions.sql": "75ae4d7c345bdc2c2432b05a691add8a7b9cf7ce0986a543afa7bc47cf2bfdd0",
+    "src/akashic/storage/migrations/0008_state.sql": "03014fb7a0cbcb82e61ff810df3780a0ba50860f7c4c602f077878c7115c3eb2",
+    "src/akashic/storage/migrations/0009_confidence.sql": "e63891f3c38a63d76c6842cff4183cf17efd5fb11a9a55a239eee47705f6c47c",
+    "src/akashic/storage/migrations/0010_reset_embeddings.sql": "d6c314a7ac20b1f4a2554332ca03e95c112ce7c5c580746f502a2c061b558640",
+    "src/akashic/storage/migrations/0011_drop_episode_summary.sql": "e198ef8dfd259d993828377182d23cdd0d6996d889c3a008d447f92ec88a66dc",
+    "src/akashic/storage/migrations/0012_question_ids.sql": "b2e3886fc530eafc6fec0cef99b5700eacb2cd52c743603c0d1791625481b3aa",
+    "src/akashic/storage/migrations/0013_segment_passages.sql": "c6fcbdfb4c5c61b5abc369ea2ca9ce7d828f857ae22cdff99586186e98877a97",
+    "src/akashic/storage/migrations/0014_question_threads.sql": "536f3568929c3acac97b816bac1ed2ba2a3305404a4e26f34e79511b51f87b02",
+    "src/akashic/storage/migrations/0015_window_frames.sql": "9c8b0bd913796d1da577db473018f0bc6b9b212628a058f0e4ce91675379ed64",
+    "src/akashic/storage/migrations/0016_stt_comparison.sql": "f8406a6cc67617b4b3535fefe08a60bc0da76b223e980a6309bacbef30ed479b",
+    "src/akashic/storage/migrations/0017_transcript_copies.sql": "534133cb2aed96c72091b93866ffb91fb59f7c37e1fb3c7c228b075a7edf28d5",
+    "src/akashic/storage/migrations/0018_frame_passages.sql": "7008cd65bb08ef74ca89761ab1d8c67db9ea3e894c076c308c3921611d89fd18",
+    "src/akashic/storage/migrations/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/akashic/storage/opus.py": "f89935274234b487b3209791fac830f37349f9ec73ffc5e75dcc75d241ad1310",
+    "src/akashic/storage/passages.py": "1b332910bdcdd8fa622e8c718ff4876059cef45678713e66e14e3b31d0a44e00",
+    "src/akashic/storage/retention.py": "ab3d7e180623fda14df50947d95cb384f388eabfeee682394eb51413d84fd764",
+    "src/akashic/storage/sessions.py": "c6259aaf42e78c543214b5012b47972b61ad2bdf604c6889ff4f376962c6b3d2",
+    "src/akashic/storage/speakers.py": "ed7c217c58d5ceed1e388c6b852e3bffcc4f056fa9ab2f3528e45f55a8e74df7",
+    "src/akashic/storage/state.py": "e3c01ad9d956494cb405dca7bc188fdb522f18ad86e3691a70996aab7f8a152a",
+    "src/akashic/storage/usage.py": "f4bec8084d2e98c468f4e15a50f81f31aa592ca934b1e14beeb2605cb01fa689",
+    "src/akashic/supervisor.py": "21eedbc1bef109fa09bb34bf5dcf13df9c90545cb899f0b797e1a9d4a7c56b61",
+    "src/akashic/tray.py": "b7046fdc0009cca0479ea9cc2bd182673bbe60de34ec50a19f0c022601d1a483",
+    "src/akashic/ui/app.css": "d8362d25c98af9a5322bb9cf961df065a381787d301e529dd7c596b34ac6d8a0",
+    "src/akashic/ui/app.js": "caae8ce3b50b9e19f61ff84ef6ee9f1a84856dbddad5d8659a1882f01c001467",
+    "src/akashic/ui/debug.js": "f9f23e40da9472e8acf82fded2a0d56c15b134d585fc732f04b3a2891ef0eb59",
+    "src/akashic/ui/favicon.png": "f848f1133552e8c16feef37d9bc78f254800fb325c03b52b5742da93d90bc2be",
+    "src/akashic/ui/index.html": "17fb9420242188f5e8d41de1d3fa30339cf9161a60ea2433eef22fb56fa17150",
+    "src/akashic/ui/logo.png": "6fb70ce1dc7817498695e6c7e3ba05c842091e634b270115ed0698a2f896e49a",
+    "src/akashic/ui/memory.js": "4a05faf24498e8291b559cf8e6c2e55cbaa4cb39a3c5155e914d28780ed4c61a",
+    "src/akashic/ui/settings.js": "8c4113dd4688e28070d33a0ae3462ac6a31ebc1d9b650f916e5bee2d6ac54e1c",
+    "src/akashic/ui/speakers.js": "10bd4c2e8248c34fb5dc860bf6b9aa651bfdcca9643b0538d44fd523bb19b554",
+    "src/akashic/ui/stt.js": "424e6c5d00efeb69fcf95fc0d1846ec37d0ccdbc668be09734c1adae0775eab0",
+    "src/akashic/unlock.py": "549d48b81b391ba2bca02827c5516a222b2a7cf36cdf2ab92c76f63dd6bf1d2f",
+    "src/akashic/unlock_dialog.py": "d5e3c95328690dcb6fb96e9be4ad00b67404c9531ef6f8180a07315eb6004077",
+    "tests/audio_fakes.py": "3949f7ee894edc3bdade1156aa967042891865ff254e2ffd07be83b68648ae7b",
+    "tests/capture_fakes.py": "3e57eaa50393ca54c920981f2f8d958f337c5d1d2aae3861598c29602c9d9a12",
+    "tests/conftest.py": "8278f788c1ef2234aa0dc1d18c0cd86d6e5995f604b8a3cb804ee28f35bab85e",
+    "tests/data/planner/README.md": "a64af1547cd1690a5fcf56c34bb08fc60770a4612abb0cde2bb0b1ffc4229293",
+    "tests/data/planner/follow_ups_dev.jsonl": "1a1e961275934f4c3899f4fbe64937bcfc1991b8a3a320748b66268ff77bc8bf",
+    "tests/data/planner/follow_ups_heldout2.jsonl": "af7ec791649301882ce4e06b9750a2d2b3a8862f7915a9210a2e3f99076b47a1",
+    "tests/data/planner/follow_ups_heldout3.jsonl": "9f8b8f1061b9ff5a2a1849949e5ee4b6b70a1da29fbf051097363798a696c52e",
+    "tests/data/planner/time_windows_dev.jsonl": "dd2b2cb7a2321659c7a03cd1924f9c91b1f7cf3f8386337e87ae1665707a0caf",
+    "tests/data/planner/time_windows_heldout2.jsonl": "7d588a04730eebb34014eed2c56b21787e08dd92660be6b7b6b30f097785e464",
+    "tests/data/planner/time_windows_heldout3.jsonl": "e3ad80913f568ed57a0582f431fe7ba756da47667b26fe9d937f7bf7d563d114",
+    "tests/defects.py": "cfbd6ca631dd732da1127737ca74094a5f1f0806eacba2f68095d4163a2a1d62",
+    "tests/hardware/test_real_hardware.py": "631f9bc546217a8a7396f700eac2b0e351f61aa1fcdcb338cac8908baec1f3bc",
+    "tests/manual/CHECKLIST.md": "3c72aceb1eb0e0071a02d3e7c61dc9242c0c49bf2870fcd93948ef23b3783f5b",
+    "tests/memory_data.py": "df74f144cacf5d8133d93eba84f72d95e8bcc67af6650ad54893a35a3a8fd186",
+    "tests/oracles.py": "6c3c403592fdc25f88391c01f7060b268c0dc69b8f3e40d248338d7dd59c4e77",
+    "tests/test_answer.py": "e72ad47b861f6ed6e0fe0dc87f8260ab1f366cc18d3f6c7c80410a37dadf0f94",
+    "tests/test_api.py": "eda046a23146182ead9a0328da8145f704c01d6e6d61bd374fc4d182e4973535",
+    "tests/test_app_helpers.py": "513680954091b86c8c68738dd9f537d9ce2d7ea0481a25c92f74e56a9009ed63",
+    "tests/test_ask_api.py": "443d0d2b00f8c57ef5e9ab4f490b8b542cf5751742ffea976b630ecae477711b",
+    "tests/test_ask_job.py": "2844114cc7d43891b36773d2c96f377246ed01d2c6ac07647db6f6defd14d3a3",
+    "tests/test_audio_capture.py": "a6df803b2f06ca2814343c1352b04a1d70df73e0a1fd3c5fd914f2c424b92f42",
+    "tests/test_audio_wiring.py": "b9b99c51639d643e57c8709cd647937cd1df77e847c8635e8c5dfc5371bc612d",
+    "tests/test_capture_screen.py": "a1ad355862c6197bd1e3e4c524d5dc811335ef56edb525cc22cbfa626a21ae14",
+    "tests/test_capture_units.py": "7eeaaeba652a288864e29a0c2f62609c02ccb7782aac33a7f14302fea3ac6461",
+    "tests/test_config.py": "ff78803d6061efb5155769b542da636910aac5ad4c3d19e0cde78aca0506d210",
+    "tests/test_crypto.py": "c12fff9be24fff4774161192648929c95967173039a5189b0e2db93605dfbd37",
+    "tests/test_db.py": "ce64d7c4ea6eb5e383b4453aa96e1f28fa7221bf4f86c7fc029aaf53586863a4",
+    "tests/test_debug.py": "8a6d873602f236d469d73c3a524ca4b26e6ac7c4fa2aa5dfedbcc2827588ae16",
+    "tests/test_defects_app_shell.py": "6818a82564cb2d1c6dc35c4154cbfac94c4f4114feb344263fb93fc8b4e667d8",
+    "tests/test_defects_ask.py": "8d498bfe8b5eb2e3f031edc208dd93da026ab29cf6253cee6d185101737d7a02",
+    "tests/test_defects_episodes.py": "07be1b7468eab7074b6eee01e258e97cbb3e865550197207ea71d1268448cde1",
+    "tests/test_defects_jobs.py": "03d1d18daed778cb2006d0b87949b0ca81cda6b74c7aa4e803fddb3f73603354",
+    "tests/test_defects_privacy.py": "a1ae5d0c6ad1feac74a19aeb6d8f7679dd234cf7c16bdc85b483a6fa8d9ddffb",
+    "tests/test_defects_speech.py": "e15458817b13781e2698191155591c4abb5def9715d05e527d3e6413fd81885e",
+    "tests/test_delete_all.py": "a596a7113344fc14d096a15866be5920362236cd6d218cf2d4b86f331c2cc810",
+    "tests/test_delete_all_completeness.py": "de5b0db2bbdfec083bccafda5948329c8dc699ffc79af996c3b8bd531903bd16",
+    "tests/test_embed_jobs.py": "5be755f59ed8db02ecb576e30153314764590338cb4272b218c50ddd924cdbc6",
+    "tests/test_embeddings_store.py": "5e130fd279213aaba4af6c3be67c03d96f77fba6a40493cdded452f7280d7284",
+    "tests/test_end_to_end.py": "1c76d3dfb81af2be8c310fadc93ddd87c9b97decb66de5ae344758424a43d0e6",
+    "tests/test_episode_properties.py": "e4604bbdd978dec3aa9d400c0c19218a25784cbbe5ec494ca2853e5335e4b05c",
+    "tests/test_episodes.py": "ab337cf83a967e8754cbecb37284024335dc2b914e8ee8138974dfb2085d8dd4",
+    "tests/test_eval_fixtures.py": "85145dd9a3e1e6e8c6ba370eccffc0bea2168894eecc9c9b13650273460a0c1c",
+    "tests/test_eval_scoring.py": "7c233ae4b34ad95cc4f873ddb5cf7eb79b7d386a8aa12f7758c7e56a913db188",
+    "tests/test_frame_passages.py": "f2d9d95c7ecbd44eeb7f6ded26bead13eee462437c13df23422367e0ae26d695",
+    "tests/test_frames_storage.py": "7251490c69ff53180340d6a85222e01ae4c4c6bfa38f4ba16be10b5fedf5920f",
+    "tests/test_gaming_and_sessions.py": "b0ab560eb7053c91f1ed3be74e303cc80c3e7da5ffa6193dad045e1a0817dac2",
+    "tests/test_ipc.py": "1006056275bce336593534a41dbe3cfc2bae5f7278bc899a76f4337fb7af4653",
+    "tests/test_jobs_and_audio_store.py": "187266e5ac8a1f9cde2c1c363e24011de414af3798326a0e32f581bd7bcb9ab2",
+    "tests/test_keyword.py": "7b2522f518e79955a4118a341ad19ea2b3a73400ad17a2baa43a1689b1bc52c6",
+    "tests/test_layout.py": "60cfb66e6c129100d3214a88eba103477237b117d5d51f23d4dc26dac707bd36",
+    "tests/test_llm.py": "05c7ebca4dec1254e00a1371247c8614530ee5e740e0bc0693a288fae82ef96b",
+    "tests/test_log.py": "f5061d4b323467025c933e68356df9584571e27a488d8fbe888d418574e52d4a",
+    "tests/test_media_tracker.py": "3e26a8a80151579307056fdc6d29a5cf5ff91094f69ec6a2fcbdc01cb046e7b0",
+    "tests/test_memory_api.py": "b4fd717122d1c6ec851a0e344789ea4e28145c5f94a85ddd804fa6cba41ea874",
+    "tests/test_memory_search.py": "95b8939b014d980e9148f4ed8c9888ac457f8584ac8c8af34e06c0e705e3839f",
+    "tests/test_models.py": "17f9dd33e95650c375451e5ae8d12f689983722986120dbeabbb365bc4d0b520",
+    "tests/test_network_guard.py": "41cfc8a0efe69bc374194a0909dffff56a05909da24abc69f6a79aa7ece68268",
+    "tests/test_ocr_frames.py": "fee17ff5416190191d8458b5eae089ac0a4cfad4b14019db0ea11ed3a34fb63e",
+    "tests/test_passages.py": "e19e52b85b82f0f0018c73e34fa4f39da68c5b7a57dfb6392cd1d16343b54c54",
+    "tests/test_planner_baseline.py": "eca9adc7ce12e925a64da73cc374807cef6fff8f9543623578219908899ddd88",
+    "tests/test_planner_model.py": "a4d5e248c773425ef3bbdaba6744e24e7c0fa46f6e365e37b33e23a4f2c6d38c",
+    "tests/test_processes.py": "b5af319598e00b29d692021f7e5494610c4dc19968c9828bb7b0553f7f3ce75e",
+    "tests/test_retention.py": "29ba54d674f8d6ac81d6e8d6811f5a91779df585a870fcf8a037d94bc6a87aa2",
+    "tests/test_runner_and_scheduler.py": "7bc444852f4af83fea3ce885c8f57bd0baa9c87ce0ac75e76c61ffd339530fc9",
+    "tests/test_screen_text.py": "45d3da699c8f707663801d8a553cad6f3a8265b9416daef09f7a10697116f073",
+    "tests/test_search_oracles.py": "364efaa04cd03ebe484bc2854babf7b5f923dad4030b84bcc7e02784b91612c0",
+    "tests/test_segmenter.py": "a3de68c29afd1d0195bc1647b380ccc6b49aafc99902c5fca2de4a01306d704d",
+    "tests/test_settings.py": "eae2421dd72873dde45cd74f7f5202eb114769799a52cd404ce74787d3b4f8af",
+    "tests/test_speakers.py": "5bad10d3c7ee78563ff03ea6e8d67f60c73e62b9ed327f35f47e7adbbfbd36d6",
+    "tests/test_speakers_api.py": "08d2feda06b32cd19716ab7ff0386a14dad8a71be67c7821b835cf3707c08837",
+    "tests/test_speech_transcribers.py": "f5b82aeb4e2dc8e323652af816ec47474e21e8f98b5780047c800ef550d459f3",
+    "tests/test_stt_comparison.py": "877db27431c6e0585604743e5f629aa0dcd1d9a6242fc1b12deed89418fd2108",
+    "tests/test_timeparse.py": "91bddf7d3efcffa9a605dc764b2cd75787ee025f12a9522057c8c3347162d559",
+    "tests/test_transcribe.py": "dd22c7bd742b1af9a6a35b2dfa9b562b100413796a9723551efab4606e715ba1",
+    "tests/test_transcript_copies.py": "79a948814efdf2886b45eed56d23deaaedbe78ce20168f77212b99b694560936",
+    "tests/test_tray_icon.py": "dbe2eea1431d120d60e15e9ab6a37df2370e6c651ce331b6759152b25d8e47f1",
+    "tests/test_unlock.py": "beee08317573db583f34b9c53d8e83c58f616bd3b5036a022fcd1e4b44713bb1",
+    "tests/test_whisper_and_worker_body.py": "10751b60528433a62ffbf95a3fabd3a88bb95d478752a399743200acd6a20de8",
+    "tests/test_window_capture.py": "56543733b54033f1a016686bcf2f3e12e2006b3a83196a5e8fc40ea80549c512",
+    "uv.lock": "c19778a09497fedc6ce93ae9ab50f2b7fb8c520027d6dd4bd70ef7224cd02f7d"
+  },
+  "data_scope": "Invented encrypted fixtures only. Only the two named public model directories and the pinned runtime directory were read from installed app assets; no history, media, keyfile or config was opened.",
+  "network": "Existing test Python external-socket guard and offline environment flags; llama-server uses production offline/loopback flags.",
+  "completed_at": "2026-11-11T04:58:03.368495+01:00",
+  "measurement_method": {
+    "tests": "One regular native pytest run, strict xfails, hardware excluded; the one isolated failure recheck is reported separately.",
+    "planner": "All six unchanged labelled sets, fixed clock and gold conventions.",
+    "cpu": "Seed 0; 100000 passages, 40000 episodes, 20000 call segments, 50000 visits; one warm-up then five measured runs, medians.",
+    "ask": "51 unchanged questions (29 dev, 22 heldout), three repeats, models_max=2, production presets and default unseeded sampling.",
+    "scheduling": "Quantitative stages ran sequentially, with no artificial priority/memory/process/thread limits; ordinary desktop load is uncontrolled."
+  },
+  "guard_runner": "\"\"\"Run an unchanged evaluation script with the existing external-socket guard.\"\"\"\nimport os\nimport runpy\nimport sys\nfrom pathlib import Path\n\nroot = Path(__file__).resolve().parents[1]\nsys.path[:0] = [str(root / \"tests\"), str(root / \"scripts\")]\nfrom akashic.offline import apply_offline_env\nfrom conftest import install_network_guard\n\napply_offline_env(os.environ)\ninstall_network_guard()\nname = sys.argv[1]\nif name not in {\"eval_ask.py\", \"eval_planner.py\", \"bench_baseline.py\"}:\n    raise ValueError(\"unexpected baseline script\")\nsys.argv = [str(root / \"scripts\" / name), *sys.argv[2:]]\nrunpy.run_path(sys.argv[0], run_name=\"__main__\")\n",
+  "results_sha256": {
+    "ask-gemma.json": "b00b4a35a0f88fb7aa026086c7a2754338feacf665beb58f7c9b5e71fe321bed",
+    "bench-100k.json": "2ee03949aa16d38e6c31768a349c50950a2bb44456a6b1ec700543bb82c2e949",
+    "planner.json": "341b2c3419fed423ddd03f9f9ab15e48d1b3487c7907e7497b5799d315761e65",
+    "checks.json": "f08d278b50f6920cac177e59062a3556e2758aad2730b5a268bd4364b77654db"
+  }
+}

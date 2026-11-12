@@ -1,0 +1,353 @@
+"""C1: linked overlapped windows with pooled identity (with the QA refuter's corrections).
+
+Windows
+- One 10 s segmentation window when the segment is <= 10 s (as today). Otherwise
+  n = ceil((L - 10) / 5) + 1 windows, starts spread evenly over [0, L - 10]: hop <= 5 s, the
+  last window ends exactly at L (no short tail window). A 30.016 s segment gets 6 windows.
+- Every output frame is owned by the window whose centre is nearest (hard ownership), so the
+  owned frames partition the timeline and each second of speech is embedded once.
+
+Linking
+- Adjacent windows' local labels are compared on their shared span (10 ms grid, nearest frame of
+  each window), Jaccard of activity. A link needs >= 300 ms shared speech, J >= 0.5 and a margin
+  of >= 0.2 over the runner-up in both its row and its column. Links are applied in descending J
+  through union-find with cannot-link: two labels of one window never join.
+
+Pieces and pooled identity (no second embedding pass)
+- A piece = one global speaker's owned solo frames inside one window, body only (after the lead).
+  Pieces >= 1 s are embedded; the sub-1 s remainders of one global speaker are concatenated and
+  embedded as one more piece when they reach 1 s.
+- Pooled identity of a global speaker = duration-weighted mean of its unit piece embeddings.
+
+Author rule
+- Body global speakers = those with >= 300 ms of owned activity (overlap included, as the
+  fixture's labels) after the lead; only their solo frames are embedded.
+- Every body global speaker must identify (pooled, cosine >= 0.5) to the same profile P, and
+  every embedded piece (>= MIN_IDENTIFY_MS = 1 s) must best-match P at >= 0.5. Any piece
+  matching another profile or no profile, any body speaker with < 1 s embedded evidence, or two
+  different pooled identities -> NULL. (Two global speakers identifying to the same P are today's
+  "all turns identify one person".)
+
+Continuation lead (no transcript trim assumed)
+- The lead is used for linking only; lead frames are never embedded into a body piece.
+- The lead is checked against the previous segment's tail (32 ms log-energy envelope correlation);
+  unverified -> the lead counts as body (lead_ms = 0), which is the safe direction.
+- A lead voice (>= 300 ms solo in the lead) not linked to a body speaker -> NULL, unless the lead
+  is verified as prev's tail AND prev has an author (prev's whole audio, its tail included, was
+  then one voice) AND, if the lead voice has >= 1 s, its embedding does not best-match a different
+  profile at >= 0.5. The author is still decided from body evidence only, so a lead voice is
+  never credited.
+
+Profile updates: today's rule applied to the pooled identity: pooled evidence >= 2 s and best
+match >= 0.5 -> add the pooled unit vector to that profile; >= 2 s and no match -> new profile.
+One guard (noted deviation): a global speaker whose own embedded pieces best-match different
+profiles (a wrong-link symptom) updates or creates nothing.
+"""
+
+
+
+from dataclasses import dataclass, field
+
+import numpy as np
+
+from common import Attribution, Segment, SharedModels, unit
+from akashic.pipeline import speakers as pipe
+from akashic.storage.speakers import DEFAULT_THRESHOLD, MIN_IDENTIFY_MS, MIN_UPDATE_MS
+
+NAME = "C1_linked"
+
+SR = 16_000
+WIN = pipe.WINDOW  # 160_000 samples
+HOP_MAX = 5 * SR
+MIN_TURN_MS = pipe.MIN_TURN_MS  # 300
+LINK_MIN_MS = 300
+LINK_J = 0.5
+LINK_MARGIN = 0.2
+GRID = SR // 100  # 10 ms
+ENV = 512  # 32 ms
+LEAD_ENV_CORR = 0.8
+THR = DEFAULT_THRESHOLD
+
+
+@dataclass
+class Store:
+    profiles: dict[int, list] = field(default_factory=dict)  # id -> [vec_sum, n]
+    next_id: int = 1
+
+
+def make_store() -> Store:
+    return Store()
+
+
+def _new_profile(store: Store, v: np.ndarray) -> int:
+    pid = store.next_id
+    store.next_id += 1
+    store.profiles[pid] = [v.astype(np.float32).copy(), 1]
+    return pid
+
+
+def _add(store: Store, pid: int, v: np.ndarray) -> None:
+    store.profiles[pid][0] = store.profiles[pid][0] + v
+    store.profiles[pid][1] += 1
+
+
+def enroll(store: Store, models: SharedModels, clips: list[np.ndarray]) -> int:
+    """As the reference: every >= 2 s app turn of the clips summed into the profile."""
+    pid = _new_profile(store, np.zeros(256, np.float32))
+    store.profiles[pid][1] = 0
+    for clip in clips:
+        for t in models.turns(clip):
+            if t.speech_ms >= MIN_UPDATE_MS:
+                _add(store, pid, unit(models.embed(t.samples)))
+    return pid
+
+
+def centroid(store: Store, pid: int) -> np.ndarray | None:
+    p = store.profiles.get(pid)
+    return None if p is None or p[1] == 0 else unit(p[0])
+
+
+def _match(store: Store, v: np.ndarray) -> tuple[int | None, float]:
+    """Best profile and its cosine (profile None when below the threshold)."""
+    best, score = None, -1.0
+    for pid, (s, n) in store.profiles.items():
+        if n == 0:
+            continue
+        c = float(unit(v) @ unit(s))
+        if c > score:
+            best, score = pid, c
+    return (best if score >= THR else None), score
+
+
+# --- windows, frames, links ----------------------------------------------------------------
+
+
+def _starts(n_samples: int) -> list[int]:
+    if n_samples <= WIN:
+        return [0]
+    span = n_samples - WIN
+    n = int(np.ceil(span / HOP_MAX)) + 1
+    return [int(round(i * span / (n - 1))) for i in range(n)]
+
+
+@dataclass
+class Win:
+    start: int
+    active: np.ndarray  # (F, 3) bool, invalid frames cleared
+    centre_t: np.ndarray  # (F,) absolute centre sample of each frame
+    owned: np.ndarray  # (F,) bool
+    padded: np.ndarray
+    per_frame: float
+
+
+def _windows(models: SharedModels, x: np.ndarray) -> list[Win]:
+    starts = _starts(len(x))
+    centres = np.array([s + WIN / 2 for s in starts])
+    out = []
+    for s in starts:
+        chunk = x[s : s + WIN]
+        logits = models.segment_logits(chunk)
+        act = pipe.decode_window(logits)
+        f = len(act)
+        per = WIN / f
+        valid = int(len(chunk) / per)
+        act[valid:] = False
+        ct = s + (np.arange(f) + 0.5) * per
+        if len(starts) == 1:
+            owned = np.ones(f, bool)
+        else:
+            owned = np.argmin(np.abs(ct[:, None] - centres[None, :]), axis=1) == starts.index(s)
+        owned[valid:] = False
+        padded = np.zeros(WIN, np.float32)
+        padded[: len(chunk)] = chunk
+        out.append(Win(s, act, ct, owned, padded, per))
+    return out
+
+
+def _on_grid(w: Win, a: int, b: int) -> np.ndarray:
+    """(grid points, 3) activity of window w resampled on the 10 ms grid over [a, b)."""
+    g = np.arange(a, b, GRID) + GRID / 2
+    idx = np.clip(((g - w.start) / w.per_frame).astype(int), 0, len(w.active) - 1)
+    return w.active[idx]
+
+
+class _UF:
+    def __init__(self, keys: list[tuple[int, int]]) -> None:
+        self.parent = {k: k for k in keys}
+        self.wins = {k: {k[0]} for k in keys}
+
+    def find(self, k):
+        while self.parent[k] != k:
+            self.parent[k] = self.parent[self.parent[k]]
+            k = self.parent[k]
+        return k
+
+    def union(self, a, b) -> bool:
+        ra, rb = self.find(a), self.find(b)
+        if ra == rb:
+            return True
+        if self.wins[ra] & self.wins[rb]:
+            return False  # cannot-link: two labels of one window
+        self.parent[rb] = ra
+        self.wins[ra] |= self.wins.pop(rb)
+        return True
+
+
+def _link(wins: list[Win], n_samples: int) -> dict[tuple[int, int], tuple[int, int]]:
+    keys = [(i, k) for i, w in enumerate(wins) for k in range(3) if w.active[:, k].any()]
+    uf = _UF(keys)
+    cands = []
+    for i in range(len(wins) - 1):
+        a, b = wins[i + 1].start, min(wins[i].start + WIN, n_samples)
+        if b - a < GRID:
+            continue
+        p, q = _on_grid(wins[i], a, b), _on_grid(wins[i + 1], a, b)
+        inter = (p[:, :, None] & q[:, None, :]).sum(0)  # (3, 3)
+        union = (p[:, :, None] | q[:, None, :]).sum(0)
+        j = np.where(union > 0, inter / np.maximum(union, 1), 0.0)
+        for ka in range(3):
+            for kb in range(3):
+                if inter[ka, kb] * 10 < LINK_MIN_MS or j[ka, kb] < LINK_J:
+                    continue
+                row = max([j[ka, o] for o in range(3) if o != kb], default=0.0)
+                col = max([j[o, kb] for o in range(3) if o != ka], default=0.0)
+                if j[ka, kb] - max(row, col) >= LINK_MARGIN:
+                    cands.append((float(j[ka, kb]), (i, ka), (i + 1, kb)))
+    for _, u, v in sorted(cands, reverse=True):
+        uf.union(u, v)
+    return {k: uf.find(k) for k in keys}
+
+
+# --- lead check ------------------------------------------------------------------------------
+
+
+def _envelope(x: np.ndarray) -> np.ndarray:
+    n = len(x) // ENV
+    e = (x[: n * ENV].astype(np.float64) ** 2).reshape(n, ENV).mean(1)
+    return np.log(e + 1e-10)
+
+
+def _lead_verified(seg: Segment, lead: int) -> bool:
+    prev = seg.prev
+    if prev is None or lead <= 0 or len(prev.samples) < lead or len(seg.samples) < lead:
+        return False
+    a, b = _envelope(seg.samples[:lead]), _envelope(prev.samples[-lead:])
+    if a.std() < 1e-6 or b.std() < 1e-6:
+        return False
+    return float(np.corrcoef(a, b)[0, 1]) >= LEAD_ENV_CORR
+
+
+# --- the job ---------------------------------------------------------------------------------
+
+
+def _audio(w: Win, mask: np.ndarray) -> np.ndarray:
+    where = np.flatnonzero(mask)
+    runs = pipe._runs(where)  # noqa: SLF001 - the app's own run splitter
+    return np.concatenate(
+        [w.padded[int(a * w.per_frame) : int((b + 1) * w.per_frame)] for a, b in runs]
+    )
+
+
+def attribute(store: Store, models: SharedModels, seg: Segment) -> Attribution:
+    x = seg.samples
+    wins = _windows(models, x)
+    comp = _link(wins, len(x))
+    lead = min(max(seg.lead_ms, 0), len(x) * 1000 // SR) * SR // 1000
+    verified = _lead_verified(seg, lead)
+    if lead and seg.prev is None:
+        verified = False
+
+    # owned solo frames per global speaker, body and lead
+    # (an overlapped voice counts as present: its owned activity, overlap included, decides who
+    # is in the segment; only its solo frames are embedded)
+    body: dict = {}  # g -> list of (win index, solo mask)
+    lead_m: dict = {}
+    act_body: dict = {}  # g -> list of (win index, activity mask)
+    act_lead: dict = {}
+    for i, w in enumerate(wins):
+        alone = w.active.sum(1) == 1
+        in_body = w.centre_t >= lead
+        for k in range(3):
+            key = (i, k)
+            if key not in comp:
+                continue
+            g = comp[key]
+            act = w.active[:, k] & w.owned
+            solo = act & alone
+            if (act & in_body).any():
+                act_body.setdefault(g, []).append((i, act & in_body))
+            if (act & ~in_body).any():
+                act_lead.setdefault(g, []).append((i, act & ~in_body))
+            if (solo & in_body).any():
+                body.setdefault(g, []).append((i, solo & in_body))
+            if (solo & ~in_body).any():
+                lead_m.setdefault(g, []).append((i, solo & ~in_body))
+
+    def ms(pieces) -> float:
+        return sum(m.sum() * wins[i].per_frame for i, m in pieces) * 1000 / SR
+
+    speakers = {g: body.get(g, []) for g, p in act_body.items() if ms(p) >= MIN_TURN_MS}
+    attr_turns: list[tuple[int, int, int | None]] = []
+    updates: list[tuple[int, str, int, int]] = []
+    ok = len(speakers) > 0
+    identities: set[int | None] = set()
+
+    for g, pieces in speakers.items():
+        embs, rest = [], []  # (vector, ms)
+        for i, m in pieces:
+            d = m.sum() * wins[i].per_frame * 1000 / SR
+            if d >= MIN_IDENTIFY_MS:
+                embs.append((models.embed(_audio(wins[i], m)), d))
+            else:
+                rest.append(_audio(wins[i], m))
+        if rest:
+            r = np.concatenate(rest)
+            d = len(r) * 1000 / SR
+            if d >= MIN_IDENTIFY_MS:
+                embs.append((models.embed(r), d))
+        span = act_body[g]
+        t0 = min(int(wins[i].centre_t[np.flatnonzero(m)[0]] * 1000 / SR) for i, m in span)
+        t1 = max(int(wins[i].centre_t[np.flatnonzero(m)[-1]] * 1000 / SR) for i, m in span)
+        if not embs:
+            ok = False
+            identities.add(None)
+            attr_turns.append((t0, t1, None))
+            continue
+        piece_ids = {_match(store, v)[0] for v, _ in embs}
+        total = sum(d for _, d in embs)
+        pooled = unit(sum(v * d for v, d in embs) / total)
+        pid, _ = _match(store, pooled)
+        consistent = len(piece_ids) == 1 and pid in piece_ids
+        identities.add(pid if consistent else None)
+        if not consistent or pid is None:
+            ok = False
+        # profile update: today's rule on the pooled identity, skipped on inconsistent pieces
+        if total >= MIN_UPDATE_MS and len(piece_ids) == 1:
+            if pid is not None and pid in piece_ids:
+                _add(store, pid, pooled)
+                updates.append((pid, "update", t0, t1))
+            elif pid is None and piece_ids == {None}:
+                pid = _new_profile(store, pooled)
+                updates.append((pid, "create", t0, t1))
+        attr_turns.append((t0, t1, pid if consistent else None))
+
+    if len(identities) != 1:
+        ok = False
+    author = next(iter(identities)) if ok else None
+
+    # lead voices not linked to a body speaker
+    if author is not None:
+        for g, act in act_lead.items():
+            if g in speakers or ms(act) < MIN_TURN_MS:
+                continue
+            pieces = lead_m.get(g, [])
+            if not (verified and seg.prev is not None and seg.prev.author is not None):
+                author = None
+                break
+            r = np.concatenate([_audio(wins[i], m) for i, m in pieces] or [np.zeros(0, np.float32)])
+            if len(r) * 1000 / SR >= MIN_IDENTIFY_MS:
+                lp, _ = _match(store, models.embed(r))
+                if lp is not None and lp != seg.prev.author:
+                    author = None
+                    break
+    return Attribution(author, attr_turns, updates)

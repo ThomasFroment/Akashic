@@ -1,0 +1,10 @@
+# conversation-clustering-sweep: files not copied from the study folder (6 files, 0.0 MB)
+#
+# Models, raw downloads, generated audio, vector stores, pickles, logs, local shell
+# scripts and keys. The study README says how each one is rebuilt.
+
+C1/  1 files  0.0 MB
+C3/  2 files  0.0 MB
+C4/  1 files  0.0 MB
+oracle/  1 files  0.0 MB
+ref/  1 files  0.0 MB

@@ -1,0 +1,30 @@
+{
+ "runs": [
+  {
+   "write_today_p50_ms": 0.5206,
+   "write_today_p99_ms": 19.688745000000008,
+   "write_p50_ms": 0.5654,
+   "write_p99_ms": 21.664407000000043,
+   "write_add_p50_ms": 0.04480000000000006,
+   "write_add_p99_ms": 1.9756620000000353
+  },
+  {
+   "write_today_p50_ms": 0.5177,
+   "write_today_p99_ms": 19.404938,
+   "write_p50_ms": 0.55885,
+   "write_p99_ms": 20.380664000000014,
+   "write_add_p50_ms": 0.04114999999999991,
+   "write_add_p99_ms": 0.9757260000000123
+  },
+  {
+   "write_today_p50_ms": 0.473,
+   "write_today_p99_ms": 17.52616100000001,
+   "write_p50_ms": 0.50525,
+   "write_p99_ms": 26.255963000000122,
+   "write_add_p50_ms": 0.03225,
+   "write_add_p99_ms": 8.729802000000113
+  }
+ ],
+ "hmac_us_p50": 9.1,
+ "hmac_us_p99": 22.101000000000024
+}

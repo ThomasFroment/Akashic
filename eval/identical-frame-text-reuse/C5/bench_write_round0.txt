@@ -1,0 +1,8 @@
+harness phase_write run 1: add_p50=0.042 ms add_p99=1.621 ms (today p99 17.24, cand p99 18.87)
+harness phase_write run 2: add_p50=0.036 ms add_p99=0.091 ms (today p99 20.79, cand p99 20.88)
+harness phase_write run 3: add_p50=0.049 ms add_p99=1.833 ms (today p99 21.36, cand p99 23.19)
+no-checkpoint: p50: today=0.525 cand=0.564 add=+0.038 ms p90: today=0.891 cand=0.935 add=+0.044 ms p99: today=8.889 cand=9.708 add=+0.819 ms mean: today=0.891 cand=0.933 add=+0.043 ms
+HMAC-SHA256 alone: 5.0 us/frame (mean text 8.8 KB)
+today-vs-today 0.003 -0.642
+today-vs-today -0.006 0.789
+today-vs-today -0.002 -0.418

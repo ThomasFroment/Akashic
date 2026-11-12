@@ -1,0 +1,552 @@
+=== repeat 1
+
+gemma-4-12b-qat-q4
+  ok    1   7.3s  What video did I watch yesterday afternoon?
+  ok    2   2.8s  Quelle vidéo j'ai regardée hier après-midi ?
+  ok    3   2.5s  What did Minlo say yesterday morning, something about a game?
+  ok    4   3.2s  Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+  ok    5   2.0s  When does Ashfall Frontier come out?
+  ok    6   2.5s  Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+  ok    7   2.5s  What was wrong with Minlo's cat?
+  ok    8   2.1s  How much flour did the sourdough video say to use?
+  ok    9   2.3s  Combien de temps faut-il laisser reposer la pâte ?
+  ok   10   2.4s  Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+  ok   11   2.0s  Who is the channel of the Rust video I watched two days ago?
+  ok   12   2.1s  What does the Rust video say about owners?
+  ok   13   2.2s  Qu'est-ce qu'Élodie a proposé ce matin ?
+  ok   14   2.1s  How much are the plane tickets to Lisbon?
+  ok   15   2.5s  What did Minlo say about the Rust project?
+  ok   16   1.8s  Where is the bug in the Rust project?
+  ok   17   2.3s  Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+  ok   18   2.4s  What present did I plan to buy for Dad's birthday?
+  ok   19   2.2s  What was I working on this morning in my editor?
+  ok   20   2.2s  What did I read on Wikipedia today?
+  ok   21   1.9s  What game did I play yesterday evening?
+  ok   22   1.9s  Who did I talk to while playing yesterday evening?
+  ok   23   2.2s  Comment battre le boss du niveau trois ?
+  ok   24   1.8s  What music did I listen to yesterday morning?
+  ok   25   2.2s  What headphones was I looking at yesterday?
+  ok   26   2.1s  What did Minlo say about his holidays in Japan?
+  ok   27   1.2s  Quel film ai-je regardé sur Netflix hier soir ?
+  ok   28   1.4s  What did Élodie say yesterday morning?
+  ok   29   4.5s  Summarize what I did today.
+
+== gemma-4-12b-qat-q4: 29/29 correct
+   facts 29/29  sources 29/29  grounded 29/29  plan 29/29
+   seconds per question: median 2.2, slowest 7.3 (first includes loading the model)
+
+   [1] What video did I watch yesterday afternoon?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video', 'storm_video']
+       answer: 'Yesterday afternoon, you watched the following videos:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** at 14:10 [1].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** at 15:05 [2].'
+
+   [2] Quelle vidéo j'ai regardée hier après-midi ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video', 'storm_video']
+       answer: 'Hier après-midi, vous avez regardé les vidéos suivantes:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** à 14:10 [2].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** à 15:05 [1].'
+
+   [3] What did Minlo say yesterday morning, something about a game?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: 'Yesterday morning, Minlo asked if you had seen the trailer for *Ashfall Frontier* [1][3]. He mentioned that it is a survival game scheduled for release on December 12th [1][3].'
+
+   [4] Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: "Hier matin à 10h05, Minlo vous a parlé du jeu *Ashfall Frontier* [1][2]. Il a précisé qu'il s'agit d'un jeu de survie qui sortira le 12 décembre [1][2]. Il a également mentionné que le jeu propose du mode coopératif pour jusqu'à quatre joueurs et permet de construire des bases [1][3]."
+
+   [5] When does Ashfall Frontier come out?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: 'Ashfall Frontier comes out on December 12 [1][6].'
+
+   [6] Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: "Le jeu dont Minlo parlait (Ashfall Frontier) permet jusqu'à quatre joueurs en coopération [1][4]."
+
+   [7] What was wrong with Minlo's cat?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: "I did not find information regarding what was specifically wrong with Minlo's cat; the sources only state that the cat was sick [1][4]."
+
+   [8] How much flour did the sourdough video say to use?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video']
+       answer: 'The sourdough video stated that you need five hundred grams of flour [1][4].'
+
+   [9] Combien de temps faut-il laisser reposer la pâte ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video']
+       answer: 'Il faut laisser reposer la pâte pendant douze heures avant de la cuire à deux cent trente degrés [1][6].'
+
+   [10] Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['storm_video']
+       answer: "On voit l'éclair avant d'entendre le tonnerre parce que la lumière voyage plus vite que le son [1][6]."
+
+   [11] Who is the channel of the Rust video I watched two days ago?
+       facts=True sources=True grounded=True plan=True
+       cited: ['rust_video']
+       answer: 'The channel for the Rust video you watched on 2026-11-09 is Code Lab (Zen) [1].'
+
+   [12] What does the Rust video say about owners?
+       facts=True sources=True grounded=True plan=True
+       cited: ['rust_video']
+       answer: 'The Rust video states that every value in Rust has a single owner [1][4]. When the owner goes out of scope, the value is dropped [1][4].'
+
+   [13] Qu'est-ce qu'Élodie a proposé ce matin ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: "Élodie a proposé d'aller à Lisbonne en mars, en précisant que les billets d'avion coûtent quatre-vingts euros [1][2]."
+
+   [14] How much are the plane tickets to Lisbon?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'The plane tickets to Lisbon are eighty euros [1][6].'
+
+   [15] What did Minlo say about the Rust project?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'Minlo mentioned that he cannot go in March because he has a deadline for the Rust project [1][4]. He also specified that the bug is located in the parser and that it panics on empty input [1][4].'
+
+   [16] Where is the bug in the Rust project?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'The bug in the Rust project is in the parser, where it panics on empty input [1][6][11].'
+
+   [17] Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['birthday_call']
+       answer: "Élodie pense faire une tarte aux poires pour l'anniversaire de Papa [1][3]."
+
+   [18] What present did I plan to buy for Dad's birthday?
+       facts=True sources=True grounded=True plan=True
+       cited: ['birthday_call']
+       answer: "You planned to buy a watch as a gift for your father's birthday [1][6]."
+
+   [19] What was I working on this morning in my editor?
+       facts=True sources=True grounded=True plan=True
+       cited: ['work_today']
+       answer: 'This morning, you were working on a file named `akashic - ask.py` in your editor at 11:00 [1]. The code includes a `run` function that retrieves a `question_id` from a job payload [1].'
+
+   [20] What did I read on Wikipedia today?
+       facts=True sources=True grounded=True plan=True
+       cited: ['aurora']
+       answer: 'You read about "Aurora" on Wikipedia today at 13:00 [1]. The page describes an aurora as a natural light display in Earth\'s sky, primarily seen in high-latitude regions [1].'
+
+   [21] What game did I play yesterday evening?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game']
+       answer: 'Yesterday evening, you played the game Hollow Depths (hollowdepths.exe) at 20:00 [1].'
+
+   [22] Who did I talk to while playing yesterday evening?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game', 'game_chat']
+       answer: 'You talked to Minlo during a Discord call while playing Hollow Depths [1][2].'
+
+   [23] Comment battre le boss du niveau trois ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game_chat']
+       answer: 'Pour battre le boss du niveau trois, il faut esquiver à gauche puis frapper [1][6].'
+
+   [24] What music did I listen to yesterday morning?
+       facts=True sources=True grounded=True plan=True
+       cited: ['music']
+       answer: 'Yesterday morning, you listened to "Clair de Lune" [1].'
+
+   [25] What headphones was I looking at yesterday?
+       facts=True sources=True grounded=True plan=True
+       cited: ['shopping']
+       answer: 'Yesterday, you were looking at Sony WH-1000XM5 wireless noise-canceling headphones, which were priced at 349 euros [1].'
+
+   [26] What did Minlo say about his holidays in Japan?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: "I did not find any information regarding Minlo's holidays in Japan in the provided sources."
+
+   [27] Quel film ai-je regardé sur Netflix hier soir ?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [28] What did Élodie say yesterday morning?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [29] Summarize what I did today.
+       facts=True sources=True grounded=True plan=True
+       cited: ['aurora', 'lisbon_call', 'work_today']
+       answer: 'Based on the sources provided, here is a summary of your activities on November 11, 2026:\n\n**Discord Call with Minlo and Élodie (09:00)**\n* **Travel Discussion:** Élodie suggested going to Lisbon in March, noting that plane tickets are 80 euros [1][4].\n* **Work/Project Updates:** Minlo stated they cannot go in March due to a deadline for a Rust project [1][4]. Minlo identified a bug in the parser that panics on empty input [1][4].\n* **Action Item:** You stated that you would look at the bug this afternoon [1][5].\n\n**Work and Browsing**\n* **Coding:** You worked on a file named `akashic - ask.py` using Code.exe, which includes a `run` function that retrieves a `question_id` from a job payload [2].\n* **Web Browsing:** You visited the Wikipedia page for "Aurora," learning that they are natural light displays predominantly seen in high-latitude regions [3].'
+
+Summary
+  gemma-4-12b-qat-q4: 29/29
+=== repeat 2
+
+gemma-4-12b-qat-q4
+  ok    1   7.1s  What video did I watch yesterday afternoon?
+  ok    2   2.7s  Quelle vidéo j'ai regardée hier après-midi ?
+  ok    3   2.3s  What did Minlo say yesterday morning, something about a game?
+  ok    4   3.1s  Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+  ok    5   2.0s  When does Ashfall Frontier come out?
+  ok    6   2.3s  Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+  ok    7   2.5s  What was wrong with Minlo's cat?
+  ok    8   2.0s  How much flour did the sourdough video say to use?
+  ok    9   2.2s  Combien de temps faut-il laisser reposer la pâte ?
+  ok   10   2.3s  Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+  ok   11   1.9s  Who is the channel of the Rust video I watched two days ago?
+  ok   12   2.0s  What does the Rust video say about owners?
+  ok   13   2.1s  Qu'est-ce qu'Élodie a proposé ce matin ?
+  ok   14   2.0s  How much are the plane tickets to Lisbon?
+  ok   15   2.3s  What did Minlo say about the Rust project?
+  ok   16   1.8s  Where is the bug in the Rust project?
+  ok   17   2.2s  Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+  ok   18   2.2s  What present did I plan to buy for Dad's birthday?
+  ok   19   2.6s  What was I working on this morning in my editor?
+  ok   20   2.1s  What did I read on Wikipedia today?
+  ok   21   1.7s  What game did I play yesterday evening?
+  ok   22   1.9s  Who did I talk to while playing yesterday evening?
+  ok   23   2.2s  Comment battre le boss du niveau trois ?
+  ok   24   1.7s  What music did I listen to yesterday morning?
+  ok   25   2.2s  What headphones was I looking at yesterday?
+  ok   26   2.1s  What did Minlo say about his holidays in Japan?
+  ok   27   1.2s  Quel film ai-je regardé sur Netflix hier soir ?
+  ok   28   1.3s  What did Élodie say yesterday morning?
+  ok   29   4.5s  Summarize what I did today.
+
+== gemma-4-12b-qat-q4: 29/29 correct
+   facts 29/29  sources 29/29  grounded 29/29  plan 29/29
+   seconds per question: median 2.2, slowest 7.1 (first includes loading the model)
+
+   [1] What video did I watch yesterday afternoon?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video', 'storm_video']
+       answer: 'Yesterday afternoon, you watched the following videos:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** at 14:10 [1].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** at 15:05 [2].'
+
+   [2] Quelle vidéo j'ai regardée hier après-midi ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video', 'storm_video']
+       answer: 'Hier après-midi, vous avez regardé les vidéos suivantes:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** à 14:10 [2].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** à 15:05 [1].'
+
+   [3] What did Minlo say yesterday morning, something about a game?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: 'Yesterday morning, Minlo asked if you had seen the trailer for *Ashfall Frontier* [1][3]. He mentioned that it is a survival game scheduled for release on December 12th [1][3].'
+
+   [4] Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: "Hier matin à 10h05, Minlo vous a parlé du jeu *Ashfall Frontier* [1][2]. Il a précisé qu'il s'agit d'un jeu de survie qui sortira le 12 décembre [1][2]. Il a également mentionné que le jeu propose du mode coopératif pour jusqu'à quatre joueurs et permet de construire des bases [1][3]."
+
+   [5] When does Ashfall Frontier come out?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: 'Ashfall Frontier comes out on December 12 [1][6].'
+
+   [6] Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: "Le jeu dont Minlo parlait (Ashfall Frontier) permet jusqu'à quatre joueurs en coopération [1][4]."
+
+   [7] What was wrong with Minlo's cat?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: 'I did not find information regarding what was specifically wrong with Minlo\'s cat; the sources only state that the cat was sick ("malade") and needed to go to the veterinarian [1][4].'
+
+   [8] How much flour did the sourdough video say to use?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video']
+       answer: 'The sourdough video stated that you need five hundred grams of flour [1][4].'
+
+   [9] Combien de temps faut-il laisser reposer la pâte ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video']
+       answer: 'Il faut laisser reposer la pâte pendant douze heures avant de la cuire à deux cent trente degrés [1][6].'
+
+   [10] Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['storm_video']
+       answer: "On voit l'éclair avant d'entendre le tonnerre parce que la lumière voyage plus vite que le son [1][6]."
+
+   [11] Who is the channel of the Rust video I watched two days ago?
+       facts=True sources=True grounded=True plan=True
+       cited: ['rust_video']
+       answer: 'The channel of the Rust video you watched on 2026-11-09 is Code Lab (Zen) [1].'
+
+   [12] What does the Rust video say about owners?
+       facts=True sources=True grounded=True plan=True
+       cited: ['rust_video']
+       answer: 'The Rust video states that every value in Rust has a single owner [1][4]. When the owner goes out of scope, the value is dropped [1][4].'
+
+   [13] Qu'est-ce qu'Élodie a proposé ce matin ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: "Élodie a proposé d'aller à Lisbonne en mars, en précisant que les billets d'avion sont à quatre-vingts euros [1][2]."
+
+   [14] How much are the plane tickets to Lisbon?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'The plane tickets to Lisbon are eighty euros [1][6].'
+
+   [15] What did Minlo say about the Rust project?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'Minlo mentioned that he cannot go in March because he has a deadline for the Rust project [1][4]. He also stated that the bug is in the parser and that it panics on empty input [1][4].'
+
+   [16] Where is the bug in the Rust project?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'The bug in the Rust project is in the parser; it panics on empty input [1][6][11].'
+
+   [17] Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['birthday_call']
+       answer: "Élodie pense faire une tarte aux poires pour l'anniversaire de Papa [1][3]."
+
+   [18] What present did I plan to buy for Dad's birthday?
+       facts=True sources=True grounded=True plan=True
+       cited: ['birthday_call']
+       answer: "You planned to buy a watch as a gift for your father's birthday [1][6]."
+
+   [19] What was I working on this morning in my editor?
+       facts=True sources=True grounded=True plan=True
+       cited: ['work_today']
+       answer: 'This morning at 11:00, you were working on a file named `akashic - ask.py` (Code.exe) [1]. The code included a `run` function that retrieves a `question_id` from a job payload [1].'
+
+   [20] What did I read on Wikipedia today?
+       facts=True sources=True grounded=True plan=True
+       cited: ['aurora']
+       answer: 'You read about "Aurora" on Wikipedia today [1]. The page describes an aurora as a natural light display in Earth\'s sky, which is predominantly seen in high-latitude regions [1].'
+
+   [21] What game did I play yesterday evening?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game']
+       answer: 'Yesterday evening, you played the game Hollow Depths (hollowdepths.exe) [1].'
+
+   [22] Who did I talk to while playing yesterday evening?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game', 'game_chat']
+       answer: 'You talked to Minlo during a Discord call while playing Hollow Depths [1][2].'
+
+   [23] Comment battre le boss du niveau trois ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game_chat']
+       answer: 'Pour battre le boss du niveau trois, il faut esquiver à gauche puis frapper [1][6].'
+
+   [24] What music did I listen to yesterday morning?
+       facts=True sources=True grounded=True plan=True
+       cited: ['music']
+       answer: 'Yesterday morning, you listened to "Clair de Lune" [1].'
+
+   [25] What headphones was I looking at yesterday?
+       facts=True sources=True grounded=True plan=True
+       cited: ['shopping']
+       answer: 'Yesterday, you were looking at Sony WH-1000XM5 wireless noise-canceling headphones, which were priced at 349 euros [1].'
+
+   [26] What did Minlo say about his holidays in Japan?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: "I did not find any information regarding Minlo's holidays in Japan in the provided sources."
+
+   [27] Quel film ai-je regardé sur Netflix hier soir ?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [28] What did Élodie say yesterday morning?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [29] Summarize what I did today.
+       facts=True sources=True grounded=True plan=True
+       cited: ['aurora', 'lisbon_call', 'work_today']
+       answer: 'Based on the sources provided, here is a summary of your activities on November 11, 2026:\n\n**Communication and Planning**\n* **Discord Call:** During a call with Minlo and Élodie at 09:00, the group discussed a potential trip to Lisbon in March, noting that plane tickets are available for eighty euros [1].\n* **Project Coordination:** Minlo explained that they cannot go in March due to a deadline for a Rust project [1][4]. They identified a bug in the parser that panics on empty input, and you stated that you would look at it that afternoon [1][4][5].\n\n**Work and Research**\n* **Coding:** At 11:00, you worked on a file named `akashic - ask.py` using Code.exe, which includes a `run` function that retrieves a `question_id` from a job payload [2].\n* **Browsing:** At 13:00, you viewed the Wikipedia page for "Aurora," which describes them as natural light displays in Earth\'s sky, primarily in high-latitude regions [3].'
+
+Summary
+  gemma-4-12b-qat-q4: 29/29
+=== repeat 3
+
+gemma-4-12b-qat-q4
+  ok    1   7.3s  What video did I watch yesterday afternoon?
+  ok    2   2.8s  Quelle vidéo j'ai regardée hier après-midi ?
+  ok    3   2.4s  What did Minlo say yesterday morning, something about a game?
+  ok    4   3.0s  Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+  ok    5   2.0s  When does Ashfall Frontier come out?
+  ok    6   2.3s  Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+  ok    7   2.4s  What was wrong with Minlo's cat?
+  ok    8   1.9s  How much flour did the sourdough video say to use?
+  ok    9   2.2s  Combien de temps faut-il laisser reposer la pâte ?
+  ok   10   2.4s  Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+  ok   11   2.0s  Who is the channel of the Rust video I watched two days ago?
+  ok   12   2.0s  What does the Rust video say about owners?
+  ok   13   2.1s  Qu'est-ce qu'Élodie a proposé ce matin ?
+  ok   14   2.1s  How much are the plane tickets to Lisbon?
+  ok   15   2.5s  What did Minlo say about the Rust project?
+  ok   16   1.9s  Where is the bug in the Rust project?
+  ok   17   2.3s  Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+  ok   18   2.3s  What present did I plan to buy for Dad's birthday?
+  ok   19   2.3s  What was I working on this morning in my editor?
+  ok   20   2.2s  What did I read on Wikipedia today?
+  ok   21   1.8s  What game did I play yesterday evening?
+  ok   22   1.9s  Who did I talk to while playing yesterday evening?
+  ok   23   2.1s  Comment battre le boss du niveau trois ?
+  ok   24   1.7s  What music did I listen to yesterday morning?
+  ok   25   2.1s  What headphones was I looking at yesterday?
+  ok   26   2.0s  What did Minlo say about his holidays in Japan?
+  ok   27   1.3s  Quel film ai-je regardé sur Netflix hier soir ?
+  ok   28   1.4s  What did Élodie say yesterday morning?
+  ok   29   4.3s  Summarize what I did today.
+
+== gemma-4-12b-qat-q4: 29/29 correct
+   facts 29/29  sources 29/29  grounded 29/29  plan 29/29
+   seconds per question: median 2.1, slowest 7.3 (first includes loading the model)
+
+   [1] What video did I watch yesterday afternoon?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video', 'storm_video']
+       answer: 'Yesterday afternoon, you watched the following videos:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** at 14:10 [1].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** at 15:05 [2].'
+
+   [2] Quelle vidéo j'ai regardée hier après-midi ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video', 'storm_video']
+       answer: 'Hier après-midi, vous avez regardé les vidéos suivantes:\n\n* **How to bake sourdough bread at home - Bake Lab (Zen)** à 14:10 [2].\n* **Pourquoi les orages font-ils du bruit? - Science Claire (Zen)** à 15:05 [1].'
+
+   [3] What did Minlo say yesterday morning, something about a game?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: 'Yesterday morning, Minlo asked if you had seen the trailer for *Ashfall Frontier* [1][3]. He mentioned that it is a survival game scheduled for release on December 12th [1][3].'
+
+   [4] Qu'est-ce que Minlo m'a dit hier matin à propos d'un jeu ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: "Hier matin à 10h05, Minlo vous a parlé du jeu *Ashfall Frontier* [1][2]. Il a précisé qu'il s'agit d'un jeu de survie dont la sortie est prévue pour le 12 décembre [1][2]. Il a également mentionné que le jeu propose du mode coopératif pour jusqu'à quatre joueurs et permet de construire des bases [1][3]."
+
+   [5] When does Ashfall Frontier come out?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: 'Ashfall Frontier comes out on December 12 [1][6].'
+
+   [6] Combien de joueurs en coop dans le jeu dont Minlo parlait ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: "Le jeu dont Minlo parlait (Ashfall Frontier) permet jusqu'à quatre joueurs en coopération [1][4]."
+
+   [7] What was wrong with Minlo's cat?
+       facts=True sources=True grounded=True plan=True
+       cited: ['minlo_call']
+       answer: "I did not find any specific details regarding what was wrong with Minlo's cat, other than the fact that it was sick [1][4]."
+
+   [8] How much flour did the sourdough video say to use?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video']
+       answer: 'The sourdough video stated that you need five hundred grams of flour [1][4].'
+
+   [9] Combien de temps faut-il laisser reposer la pâte ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['bread_video']
+       answer: 'Il faut laisser reposer la pâte pendant douze heures avant de la cuire à deux cent trente degrés [1][6].'
+
+   [10] Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['storm_video']
+       answer: "On voit l'éclair avant d'entendre le tonnerre parce que la lumière voyage plus vite que le son [1][6]."
+
+   [11] Who is the channel of the Rust video I watched two days ago?
+       facts=True sources=True grounded=True plan=True
+       cited: ['rust_video']
+       answer: 'The channel for the Rust video you watched on 2026-11-09 is Code Lab (Zen) [1].'
+
+   [12] What does the Rust video say about owners?
+       facts=True sources=True grounded=True plan=True
+       cited: ['rust_video']
+       answer: 'The Rust video states that every value in Rust has a single owner [1][4]. When the owner goes out of scope, the value is dropped [1][4].'
+
+   [13] Qu'est-ce qu'Élodie a proposé ce matin ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: "Élodie a proposé d'aller à Lisbonne en mars, en précisant que les billets d'avion sont à quatre-vingts euros [1][2]."
+
+   [14] How much are the plane tickets to Lisbon?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'The plane tickets to Lisbon are eighty euros [1][6].'
+
+   [15] What did Minlo say about the Rust project?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'Minlo stated that he cannot go in March because he has a deadline for the Rust project [1][4]. He also mentioned that the bug is located in the parser and that it panics on empty input [1][4].'
+
+   [16] Where is the bug in the Rust project?
+       facts=True sources=True grounded=True plan=True
+       cited: ['lisbon_call']
+       answer: 'The bug in the Rust project is located in the parser; it panics on empty input [1][6][11].'
+
+   [17] Quel gâteau Élodie veut-elle faire pour l'anniversaire ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['birthday_call']
+       answer: "Élodie pense faire une tarte aux poires pour l'anniversaire de Papa [1][3]."
+
+   [18] What present did I plan to buy for Dad's birthday?
+       facts=True sources=True grounded=True plan=True
+       cited: ['birthday_call']
+       answer: "You planned to buy a watch as a gift for your father's birthday [1][6]."
+
+   [19] What was I working on this morning in my editor?
+       facts=True sources=True grounded=True plan=True
+       cited: ['work_today']
+       answer: 'This morning at 11:00, you were working on a file named `akashic - ask.py` (Code.exe) [1]. The code included a `run` function that retrieves a `question_id` from a `job.payload` [1].'
+
+   [20] What did I read on Wikipedia today?
+       facts=True sources=True grounded=True plan=True
+       cited: ['aurora']
+       answer: 'You read about "Aurora" on Wikipedia today [1]. The page describes an aurora as a natural light display in Earth\'s sky, which is predominantly seen in high-latitude regions [1].'
+
+   [21] What game did I play yesterday evening?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game']
+       answer: 'Yesterday evening, you played the game Hollow Depths (hollowdepths.exe) at 20:00 [1].'
+
+   [22] Who did I talk to while playing yesterday evening?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game', 'game_chat']
+       answer: 'You talked to Minlo during a Discord call while playing Hollow Depths [1][2].'
+
+   [23] Comment battre le boss du niveau trois ?
+       facts=True sources=True grounded=True plan=True
+       cited: ['game_chat']
+       answer: 'Pour battre le boss du niveau trois, il faut esquiver à gauche puis frapper [1][6].'
+
+   [24] What music did I listen to yesterday morning?
+       facts=True sources=True grounded=True plan=True
+       cited: ['music']
+       answer: 'Yesterday morning, you listened to "Clair de Lune" [1].'
+
+   [25] What headphones was I looking at yesterday?
+       facts=True sources=True grounded=True plan=True
+       cited: ['shopping']
+       answer: 'Yesterday, you were looking at Sony WH-1000XM5 wireless noise-canceling headphones, which were priced at 349 euros [1].'
+
+   [26] What did Minlo say about his holidays in Japan?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: "I did not find any information regarding Minlo's holidays in Japan in the provided sources."
+
+   [27] Quel film ai-je regardé sur Netflix hier soir ?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+
+   [28] What did Élodie say yesterday morning?
+       facts=True sources=True grounded=True plan=True
+       cited: []
+       answer: 'I found nothing in your memory that answers that question.'
+
+   [29] Summarize what I did today.
+       facts=True sources=True grounded=True plan=True
+       cited: ['aurora', 'lisbon_call', 'work_today']
+       answer: 'Based on the sources provided for November 11, 2026, your activities included the following:\n\n**Communication and Planning**\n* **Discord Call:** You spoke with Minlo and Élodie [1]. During this call, Élodie suggested a trip to Lisbon in March because plane tickets are 80 euros [1][4]. Minlo declined March due to a deadline for a Rust project, noting that a bug in the parser causes it to panic on empty input [1][4]. You stated that you would look at the bug that afternoon [1][5].\n\n**Work and Research**\n* **Coding:** You worked on a file named `akashic - ask.py` using Code.exe [2]. The code includes a `run` function that retrieves a `question_id` from a job payload [2].\n* **Web Browsing:** You visited the Wikipedia page for "Aurora," which describes them as natural light displays in Earth\'s sky, primarily seen in high-latitude regions [3].'
+
+Summary
+  gemma-4-12b-qat-q4: 29/29

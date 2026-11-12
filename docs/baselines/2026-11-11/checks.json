@@ -1,0 +1,57 @@
+{
+  "regular_run": {
+    "failed": 1,
+    "passed": 1189,
+    "deselected": 9,
+    "xfailed": 176,
+    "seconds": 146.19,
+    "summary": "1 failed, 1189 passed, 9 deselected, 176 xfailed in 146.19s (0:02:26)"
+  },
+  "isolated_runtime_recheck": {
+    "passed": 0,
+    "failed": 1,
+    "seconds": 0.39
+  },
+  "failure": {
+    "test": "tests/test_models.py::test_an_interrupted_runtime_download_keeps_the_archives_it_already_has",
+    "reason": "Windows WinError 5 (access denied) replacing the fake runtime-1.part directory with runtime-1; no external download is performed by this test.",
+    "cause": "Not established; no application code or test was changed to hide it."
+  },
+  "coverage": {
+    "covered_lines": 6764,
+    "num_statements": 6909,
+    "percent_covered": 97.10316989196248,
+    "percent_covered_display": "97",
+    "missing_lines": 145,
+    "excluded_lines": 483,
+    "percent_statements_covered": 97.90128817484441,
+    "percent_statements_covered_display": "98",
+    "num_branches": 1514,
+    "num_partial_branches": 95,
+    "covered_branches": 1415,
+    "missing_branches": 99,
+    "percent_branches_covered": 93.46103038309116,
+    "percent_branches_covered_display": "93"
+  },
+  "hardware_tests": "Deselected, matching the previous method; no hardware/speech-quality claim.",
+  "static_checks": [
+    {
+      "name": "format",
+      "command": ".venv\\Scripts\\ruff.exe format --check .",
+      "exit_code": 0,
+      "output": "200 files already formatted"
+    },
+    {
+      "name": "lint",
+      "command": ".venv\\Scripts\\ruff.exe check .",
+      "exit_code": 0,
+      "output": "All checks passed!"
+    },
+    {
+      "name": "typing",
+      "command": ".venv\\Scripts\\pyright.exe --pythonpath .venv\\Scripts\\python.exe",
+      "exit_code": 0,
+      "output": "0 errors, 0 warnings, 0 informations"
+    }
+  ]
+}

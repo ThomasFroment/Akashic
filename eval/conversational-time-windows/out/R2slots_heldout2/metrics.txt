@@ -1,0 +1,1 @@
+name=R2slots_heldout2 rules_pass=0.8302 rules_heldout2=0.8302 model_pass=0.9748 future_rules=0 future_model=0 false_filter_rules=30 false_filter_model=0 errors=0 p50_us=49.6 p99_us=109.6 cases=795

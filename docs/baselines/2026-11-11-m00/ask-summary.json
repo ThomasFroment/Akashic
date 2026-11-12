@@ -1,0 +1,133 @@
+{
+  "scorer_version": "m00-plan-d9-v1",
+  "heldout_sha256": "c5f78af04799cafa0e2f94fd10cf82fc0aeb83761df6f07861d1e3fa7eda912f",
+  "selected_definitions_sha256": "9b616626d26e4c7db3780ffcb53504922e846987bc3d4839fd3cc51482f84a91",
+  "groups": {
+    "original_dev": {
+      "passed": 87,
+      "total": 87,
+      "plan_correct": 87,
+      "per_language": {
+        "en": {
+          "passed": 60,
+          "total": 60
+        },
+        "fr": {
+          "passed": 27,
+          "total": 27
+        },
+        "mixed": {
+          "passed": 0,
+          "total": 0
+        }
+      },
+      "failed_ids": []
+    },
+    "heldout": {
+      "passed": 36,
+      "total": 66,
+      "plan_correct": 57,
+      "per_language": {
+        "en": {
+          "passed": 15,
+          "total": 27
+        },
+        "fr": {
+          "passed": 12,
+          "total": 27
+        },
+        "mixed": {
+          "passed": 9,
+          "total": 12
+        }
+      },
+      "failed_ids": [
+        "h10",
+        "h11",
+        "h16",
+        "h17",
+        "h18",
+        "h2",
+        "h4",
+        "h7",
+        "h8",
+        "h9"
+      ]
+    },
+    "target_matrix": {
+      "passed": 45,
+      "total": 54,
+      "plan_correct": 45,
+      "per_language": {
+        "en": {
+          "passed": 45,
+          "total": 54
+        },
+        "fr": {
+          "passed": 0,
+          "total": 0
+        },
+        "mixed": {
+          "passed": 0,
+          "total": 0
+        }
+      },
+      "failed_ids": [
+        "m0040-person-video-1",
+        "m0900-person-video-1",
+        "m1800-person-video-1"
+      ]
+    }
+  },
+  "measured_to_final_source_delta": {
+    "scripts/eval_ask.py": {
+      "measured_sha256": "59bf6964147ea32e000cc8d4e7318b7ec35fba071a9766edd95c6e3b77d50b0d",
+      "final_sha256": "a656904317617a302989162a179c20cce4b75a052333f3caea2d2edc8dea4dfe"
+    },
+    "scripts/eval_hard_memory.py": {
+      "measured_sha256": "e0932311cc489f77e66412a86b5688c0ee5fb0022cd9f9e377bb3af8916ed024",
+      "final_sha256": "eab4c51a90c0e70e3e4619e8ab6d32335b9d0ae54c4cd595868d4064fb31cc9e"
+    },
+    "src/akashic/api/stt.py": {
+      "measured_sha256": "a6adc8bf4fa51f295fd2bdaf1153cc08df7565ba4a3184303049373eb329faa5",
+      "final_sha256": "d7be9ff8a7a14abf4e5837056f9d1dffb497fac1e3c32021c1036bc452d9164d"
+    },
+    "src/akashic/pipeline/main.py": {
+      "measured_sha256": "d665e9c7fea182418e6f5821047772a8aaf162bbe83bd6b646fb9734a95dbece",
+      "final_sha256": "0a116b556fad7cdf5f1080f52024bf132ce1c32d7d005a55e6f904ee1e5cee7c"
+    },
+    "src/akashic/pipeline/transcribe.py": {
+      "measured_sha256": "6710945905786f85e16baef2176742223c260bb5d4f0a0710e88eb9e0027eb16",
+      "final_sha256": "da48381f7989a828810b818869614a0423fcdb1362e19e69127dfaf6c9808e5c"
+    },
+    "src/akashic/storage/audio.py": {
+      "measured_sha256": "3505a23a52e9a0c9f0772766ba50e800e14467d5f92d12288afa07ba950d68a6",
+      "final_sha256": "3b370de724e05ce5c67750b77966fcece7cdfd9a7b43e0ed29e5b8fb94214a23"
+    },
+    "src/akashic/storage/migrations/0019_comparison_conditions.sql": {
+      "measured_sha256": "bbc92e8a60d316e8091aa7770f5dfe2338fd28ab62fe0c7696df52d109f3d32f",
+      "final_sha256": "a1f0144784e985a932dc7e084190b9c063a819298bacef763b22b2966465eb15"
+    },
+    "src/akashic/ui/stt.js": {
+      "measured_sha256": "111ff00fe6d2efdae9301332b116059bea0012b0f32bb73bc81f010d63c7dadb",
+      "final_sha256": "21f30e56adde69a6d21b5f1a49c8b4ef5f02f9a48f9f748eef3db00ef92e6fd3"
+    },
+    "tests/hardware/test_real_hardware.py": {
+      "measured_sha256": "ac6747c154452589a6dc5e177b3e50e2e1a6de9803601b6f20a459879099e851",
+      "final_sha256": "1e68805c9982423184295638f6cef4edc75111caa564f7a69d0444d81ce2a4d7"
+    },
+    "tests/test_eval_fixtures.py": {
+      "measured_sha256": "0ab193f64eba1ddd18e094e5d851149d304b764c19e3081abf124a2f69f5b2ca",
+      "final_sha256": "cc7b917b100a4159c6ef1d28c57ea0c1dff368d5e636eda8d8aac8a9cd140eb9"
+    },
+    "tests/test_settings.py": {
+      "measured_sha256": "e67264956341e79b86ca151be289516a56eb3033e5060fc2a8f11c09ea670ed0",
+      "final_sha256": "f24c2cdc4ddde5cf51439510a4de21255418233aaf0b217974054b6245211096"
+    },
+    "tests/test_stt_comparison.py": {
+      "measured_sha256": "1e8802c10b61b15ccf44ba6c4782df038cfab44cd74a631eab6935f0199d3387",
+      "final_sha256": "cae701249c6264c63dd858ee3e43c955c7d0b9aadb28abfab312f64dc3fec1d0"
+    }
+  },
+  "limitation": "Production Ask/search/scorer implementation unchanged during inference. Exact later metadata/schema, hard-evaluation indexing, eval_ask documentation, subgroup reporting and test/logging deltas listed; whole-tree candidates are not identical."
+}

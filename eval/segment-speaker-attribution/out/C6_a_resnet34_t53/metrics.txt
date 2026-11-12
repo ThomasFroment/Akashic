@@ -1,0 +1,1 @@
+cand=C6_a_resnet34_t53 solo_auth=0.6967 solo10k_auth=0.4524 solo10_0_auth=0.9821 cont2_auth=0.4224 wrong=0.0784 wrong_mixed=0.3182 wrong_impostor=0.1250 p50_ms=232.8 p95_ms=469.8 drift_wrong_first100=0.0000 drift_wrong_last100=0.0000 drift_cos_end_min=na drift_pair_cos_end=na

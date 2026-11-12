@@ -1,0 +1,10 @@
+# conversational-time-windows: files not copied from the study folder (9 files, 0.6 MB)
+#
+# Models, raw downloads, generated audio, vector stores, pickles, logs, local shell
+# scripts and keys. The study README says how each one is rebuilt.
+
+C1/  1 files  0.0 MB
+C3/  1 files  0.0 MB
+C3fix/__pycache__/  1 files  0.0 MB
+R2slots/  5 files  0.5 MB
+out/baseline/  1 files  0.0 MB

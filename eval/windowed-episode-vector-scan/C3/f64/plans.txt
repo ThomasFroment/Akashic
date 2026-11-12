@@ -1,0 +1,31 @@
+## day: window [1747353600000, 1747440000000), 50 candidates
+# today (traced)
+SQL: SELECT owner_id, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 0 AND start_ms < 4611686018427387904
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+# cand (traced)
+SQL: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND owner_id IN (SELECT value FROM json_each('[10174, 10176, 10177, 10178, 10179, 10181, 10182, 10183, 10184, 10185, 10186, 10187, 10188, 10189, 10190, 10191, 10192, 10193, 10194, 10195, 10196, 10197, 10198, 10199, 10200, 10201, 10202, 10203, 10204, 10205, 10206, 10207, 10208, 10209, 10210, 10211, 10212, 10213, 10214, 10215, 10216, 10217, 10218, 10220, 10287, 10439, 10546, 11199, 11314, 12659]'))
+    3:0 SEARCH embeddings USING INDEX sqlite_autoindex_embeddings_1 (owner_kind=? AND owner_id=? AND model=?)
+    8:0 LIST SUBQUERY 1
+    10:8 SCAN json_each VIRTUAL TABLE INDEX 1:
+## straddle: window [1770076800000, 1770163200000), 60 candidates
+# today (traced)
+SQL: SELECT owner_id, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 0 AND start_ms < 4611686018427387904
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+# cand (traced)
+SQL: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND owner_id IN (SELECT value FROM json_each('[24487, 24488, 24489, 24490, 24491, 24492, 24493, 24494, 24495, 24496, 24497, 24498, 24499, 24500, 24501, 24502, 24503, 24504, 24505, 24506, 24507, 24508, 24509, 24510, 24511, 24512, 24513, 24514, 24515, 24516, 24517, 24518, 24519, 24520, 24521, 24522, 24523, 24524, 24525, 24526, 24527, 24528, 24529, 24530, 24531, 24532, 24533, 24534, 24535, 24536, 24537, 24538, 24539, 24540, 24541, 24681, 24758, 24950, 25835, 26169]'))
+    3:0 SEARCH embeddings USING INDEX sqlite_autoindex_embeddings_1 (owner_kind=? AND owner_id=? AND model=?)
+    8:0 LIST SUBQUERY 1
+    10:8 SCAN json_each VIRTUAL TABLE INDEX 1:
+## unwindowed: window [0, 4611686018427387904), 40000 candidates
+# today (traced)
+SQL: SELECT owner_id, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 0 AND start_ms < 4611686018427387904
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+# cand (traced)
+SQL: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = 'episode' AND model = 'qwen3-embedding-0.6b-q8' AND start_ms >= 0 AND start_ms < 4611686018427387904
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)
+# PLANS: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = 'episode' AND model = ? AND owner_id IN (SELECT value FROM json_each(?))
+    3:0 SEARCH embeddings USING INDEX sqlite_autoindex_embeddings_1 (owner_kind=? AND owner_id=? AND model=?)
+    8:0 LIST SUBQUERY 1
+    10:8 SCAN json_each VIRTUAL TABLE INDEX 1:
+# PLANS: SELECT rowid, owner_id, start_ms, vec FROM embeddings WHERE owner_kind = ? AND model = ? AND start_ms >= ? AND start_ms < ?
+    3:0 SEARCH embeddings USING INDEX embeddings_time (owner_kind=? AND model=? AND start_ms>? AND start_ms<?)

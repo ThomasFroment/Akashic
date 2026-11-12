@@ -1,0 +1,84 @@
+C5: shared passages per keyed text + per-sighting collapse (2026-11-10)
+
+Files
+  cand.py                 the candidate (final, after one fix round)
+  cand_round0.py          round 0 (frames_key_ts = (text_key, ts_ms) only), kept for comparison
+  metrics.txt/json, side.png         harness output, final
+  metrics_round0.txt/json            harness output, round 0
+  bench_sighting.py/.txt  sighting checks (A), run-expansion cost (B), FAILS-WHEN demos (C)
+  bench_write.py/.txt     write-path cost beyond the harness's single p99 (+ today-vs-today noise floor)
+  plan_check.py           smoke test + EXPLAIN QUERY PLAN of the hot statements
+
+Design as built
+  frames.text_key = HMAC-SHA256(ctx.hmac_key, utf-8 text)[:16], written in the same statement as the
+  text (insert_frame, set_text), nulled with it (expire_frame_text). text_passages WITHOUT ROWID,
+  PK(text_key, model, start_char). frame_vec_horizon(cutoff_ms, done_ms): single row, absent = no cutoff.
+  Triggers: AFTER DELETE / AFTER UPDATE OF text_key delete a key's passages when NOT EXISTS a frame with
+  that key at ts >= horizon (index seek). Guard triggers (installed after backfill) abort writes where
+  text and text_key disagree. Indexes: frames_key_ts(text_key, ts_ms, window_title, url);
+  frames_ts widened to (ts_ms, text_key) so window->keys is index-only.
+  embed_pending: one representative frame per missing key (ts >= horizon), publish checks a frame with the
+  key still exists at/after the horizon. expire_embeddings: raises the horizon first (old frames leave
+  vector search in that same transaction), then deletes passages of keys with no frame >= horizon, in
+  batches of 500 keys, scanning only [last completed cutoff, cutoff).
+  Query: FTS per frame (unchanged SQL + key/title/url), vectors per key over keys with a frame in
+  [max(start, horizon), end); both collapsed to groups (text_key, title, url), RRF on groups; slots = runs
+  (gap > 15 min), R = 2 per group, runs adjacent under the group score, within a group best-FTS-frame
+  first then recency; rep = best-bm25 frame of the run else its latest; extra = {snippet, first_ts,
+  last_ts, count}. Textless (expired) frames stay one group per frame.
+
+Harness (final)
+  cand=cand video:sent=2590/ideal=2590 rows=2590 MB=1.33 red=89.7% static:sent=32/ideal=32 rows=32 MB=0.02
+  red=99.2% mixed:sent=37330/ideal=37330 rows=37330 MB=19.11 red=21.0% twovid:sent=15/ideal=15 rows=15
+  MB=0.01 red=99.2% orphans=0 rollback=18/18 survivors=5/5 expired_returned=0 stale_sem=0
+  rows_after_delete_all=0 findable_kw=50/50 findable_sem=50/50 groups_ok=36/36 mean_groups=3.11
+  top1_agree=34/36 win_viol=0 ts_mismatch=0 write_add_p50=0.038ms write_add_p99=1.722ms
+  q_p50=6.6ms(today 62.8) q_p95=144.3ms(today 339.3) unkeyed_hash=0 raw_leak=0 upgrade=ok
+  (today: groups_ok=17/36 mean_groups=2.03)
+  upgrade_from_today: 0 orphans, 20/20 findable (kw and meaning), 0 texts re-embedded, 3561 vector rows kept.
+
+Vs budget
+  embedding ∝ distinct texts: PASS, sent == ideal on all four fixtures.
+  vector storage: video 12.90 -> 1.33 MB (-89.7 %), static 1.97 -> 0.016 MB (-99.2 %), mixed -21.0 %,
+    twovid -99.2 %. Whole DB file: video 29.6 -> 15.2 MB, static 4.77 -> 2.33 MB, mixed 56.3 -> 51.7 MB.
+  query: PASS, every one of the 20 timed queries faster than today (p50 6.6 vs 62.8 ms, p95 144 vs 339 ms).
+  write <= 1 ms added: p50 +0.04-0.06 ms, mean +0.05 ms, p90 +0.04 ms (HMAC alone 5-6 us on 8.8 KB);
+    p99 BORDERLINE: harness add_p99 over 4 final-index runs = 1.72, 1.59, 0.63, 1.76 ms, while today-vs-today
+    gives -0.64/+0.79/-0.42/+0.12 ms (noise floor ~ +-0.8 ms on a ~17-21 ms checkpoint-dominated tail).
+    With wal_autocheckpoint=0: p99 +0.54 ms. Likely cause: random-position inserts into frames_key_ts dirty
+    one extra leaf page per commit, so checkpoints are larger. Not fixed.
+  privacy: PASS (no unkeyed digest, raw DB/WAL encrypted, keys are HMAC with the DB subkey, 16 bytes).
+  deletion: PASS (orphans 0 on every path, rollback 18/18, delete_all leaves 0 rows incl. the horizon row).
+
+Sighting checks (bench_sighting.txt)
+  A. Page P 09:00-09:10 and 18:00-18:10 (121 frames each, 5 s) + 400 filler frames:
+     keyword      whole day -> 2 P slots (18:00-18:10 n=121, rep 18:10; 09:00-09:10 n=121, rep 09:10)  PASS
+     keyword      morning   -> 1 P slot  (09:00-09:10 n=121)                                          PASS
+     meaning-only whole day -> 2 P slots; morning -> 1 P slot                                          PASS
+     single frame window [09:05:00, +1 ms) returns that frame's own id/ts                              PASS
+  B. One key visible all day (17,280 frames) + 200 others, whole-day window:
+     round 0 (index (text_key, ts_ms)): runs_of 152.8 ms (title/url table lookups); query kw 637 ms,
+       meaning 315 ms (today 965 / 520 ms).
+     fix round (title/url appended to the index, covering): runs_of 13.6 ms (plain key range fetch 3.7 ms;
+       the rest is the window functions + temp sort); query kw 453 ms (dominated by the FTS match + frames
+       join on 17k matches, same as today's 965 ms), meaning 25 ms (today 529 ms).
+     Embedding: 4,003 texts vs 125,757 today (1.2 s vs 49.9 s with the fake embedder).
+     The all-day key takes exactly 1 slot (run 00:00-23:59:55, count 17,280).
+
+FAILS WHEN (demonstrated, C in bench_sighting.txt)
+  C1 revisits 1 min every 20 min all day: 72 runs, 2 slots shown, 70 sightings hidden in a whole-day window
+     (reachable only with a narrower window; extra has no "more sightings" count).
+  C2 one 1 h viewing captured every 16 min (throttled): 4 frames -> 4 runs, shown as 2 separate sightings.
+
+Failures / caveats
+  - Write p99 budget borderline (see above); p50/mean/p90 well inside.
+  - top1_agree 34/36: the top group differs from today in 2 queries (group-level RRF compresses ranks of
+    identical frames; not investigated further, groups_ok is 36/36).
+  - Runs of one group take adjacent slots (spec), so a 2-sighting group pushes one other group out of the
+    5 slots; harness groups_ok unaffected (no fixture group has 2 runs in a window).
+  - FTS depth 200 still counts frames: a long run of identical frames can use most of the FTS candidate
+    list (diversity of FTS candidates unchanged from today; vector side is per key).
+  - Upgrade cannot infer today's vector-retention cutoff: upgrade_from_today(ctx, vec_cutoff_ms) takes it;
+    without it, old frames sharing a key with a newer frame become semantically reachable again.
+  - text_key is tied to ctx.hmac_key: rotating the data key needs a re-key of frames + text_passages.
+  - Textless (expired) frames are not collapsed (title/url-only FTS hits, one group per frame).

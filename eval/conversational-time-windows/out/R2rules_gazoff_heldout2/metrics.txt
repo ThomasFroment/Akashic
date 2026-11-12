@@ -1,0 +1,1 @@
+name=R2rules_gazoff_heldout2 rules_pass=0.9874 rules_heldout2=0.9874 model_pass=0.9874 future_rules=0 future_model=0 false_filter_rules=10 false_filter_model=10 errors=0 p50_us=74.0 p99_us=166.2 cases=795

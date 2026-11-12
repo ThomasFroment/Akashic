@@ -1,0 +1,7 @@
+b8b906c471e475ec8647d9315ce02f00fe99ff1042307603b92e93d1c14ebe86 *candidate.py
+1b44f2a2192be05bcdac45124ac046e911f74ee74c875227cd64565b58fe32ab *plan_prompt.py
+cd5d37ff532703d05e71d5f155ff46339b0ccec8eaf3b23fdefd70f46979d10f *fill_cache.py
+5802aaa48eba1142a8c8e6c03c740108c0b9aa11a8085bf7d54c31f19cd74290 *model_cache_phrases.jsonl
+f59abca13551f558c5d830961ba1a499d3f2833a32f757172a4090ac0c5f7d96 *model_cache_heldout2.jsonl
+6380a8b01836d776bfb8c05dea663c3f1680422712c4e0544d171a691adc3062 *../C3fix/candidate.py
+# prompt_sha (PLAN_SYSTEM + PLAN_SCHEMA in plan_prompt.py) = 040f3b77fb3733bb

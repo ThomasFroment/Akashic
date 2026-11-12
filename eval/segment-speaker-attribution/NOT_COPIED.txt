@@ -1,0 +1,21 @@
+# segment-speaker-attribution: files not copied from the study folder (202 files, 4194.0 MB)
+#
+# Models, raw downloads, generated audio, vector stores, pickles, logs, local shell
+# scripts and keys. The study README says how each one is rebuilt.
+
+candidates/__pycache__/  5 files  0.1 MB
+data/fixture/  1 files  72.7 MB
+data/librispeech/  2 files  652.9 MB
+data/mls_french/  3 files  435.9 MB
+data/models/pyannote-segmentation-3.0/onnx/  1 files  5.7 MB
+data/models/wespeaker-voxceleb-resnet34-lm/  1 files  25.3 MB
+data/models_derived/  3 files  30.3 MB
+data/models_extra/wespeaker-voxceleb-campplus/  2 files  27.9 MB
+data/models_extra/wespeaker-voxceleb-resnet34/  2 files  25.3 MB
+data/sources/  147 files  2812.5 MB
+out/C2_calib/  8 files  24.4 MB
+out/R2seam_runs/  13 files  0.0 MB
+out/R2span_C1/  10 files  80.9 MB
+out/R2span_C1/iter1/  1 files  0.0 MB
+out/R2span_C2/  2 files  0.0 MB
+out/R2span_C2/iter1/  1 files  0.0 MB

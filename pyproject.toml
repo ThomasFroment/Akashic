@@ -1,0 +1,132 @@
+[project]
+name = "akashic"
+version = "0.1.0"
+description = "Personal, fully local memory of what you see, hear and say on your PC."
+readme = "README.md"
+# 3.14 is the newest CPython for which every approved dependency ships Windows wheels
+# (November 2026 wheel check: onnxruntime-gpu and av).
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "argon2-cffi>=25.1",
+    "av>=19.0.2",
+    "comtypes>=1.4.17",
+    "cryptography>=46",
+    "fastapi>=0.162.2",
+    "faster-whisper>=1.2.1",
+    "librosa>=0.11,<1",  # Canary's official feature extractor (local numeric audio processing)
+    "numpy>=2.5.4",
+    "nvidia-cublas-cu12==12.9.1.4",  # CTranslate2 (Whisper) loads cublas64_12.dll; newer builds have no Windows wheel
+    "onnxruntime-gpu[cuda,cudnn]>=1.31",
+    "pillow>=13.0.0",
+    "pystray>=0.19.5",
+    "sqlcipher3>=0.6.5",
+    "torch>=2.10,<3",
+    "transformers>=5.22.2,<6",
+    "uvicorn>=0.54.0",
+    "winrt-runtime>=4.1.0",
+    "winrt-windows-foundation>=4!10.0.28000.2957",  # needed at runtime by the projections: IAsyncOperation/Rect from recognize_async, request_async, bounding_rect
+    "winrt-windows-foundation-collections>=4!10.0.28000.2957",  # needed at runtime by the projections: IVectorView from OcrResult.lines, line.words, the media session lists
+    "winrt-windows-globalization>=4!10.0.28000.2957",
+    "winrt-windows-graphics-imaging>=4!10.0.28000.2957",
+    "winrt-windows-media-control>=4!10.0.28000.2957",
+    "winrt-windows-media-ocr>=4!10.0.28000.2957",
+    "winrt-windows-security-cryptography>=4!10.0.28000.2957",
+    "winrt-windows-storage-streams>=4!10.0.28000.2957",  # needed at runtime by the projections: IBuffer from CryptographicBuffer.create_from_byte_array, passed to SoftwareBitmap.create_copy_from_buffer
+]
+
+[project.scripts]
+akashic = "akashic.app:main"
+
+[dependency-groups]
+dev = [
+    "pyright[nodejs]>=1.1.400",
+    "pytest>=8.4",
+    "pytest-cov>=7",
+    "ruff>=0.14",
+]
+
+[build-system]
+requires = ["uv_build>=0.9,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+# eval/ holds frozen method-study prototypes and their data (eval/README.md), not maintained code.
+extend-exclude = ["eval"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",  # conflicts with the formatter
+    "CPY001",  # no copyright headers: personal project
+    "D",       # docstrings where they help, not on every function
+    "TD002",   # TODO author: single-developer project
+    "TD003",   # TODO issue link: no issue tracker
+    "FIX002",  # TODOs are allowed
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",    # assert is how pytest works
+    "PLR2004", # magic values are fine in tests
+    "SLF001",  # tests may poke at private members
+    "INP001",  # tests are not a package
+    "TRY003",  # inline exception messages are fine in tests
+    "EM101",
+    "EM102",
+]
+"scripts/**" = ["INP001", "T201"]
+"scripts/eval_ask.py" = ["E501"]  # the made-up memory and questions are data, one per line
+
+[tool.pyright]
+include = ["src", "tests", "scripts"]
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = "error"
+# Windows API glue in src/akashic/platform/win/ starts each file with `# pyright: basic`
+# (libraries ship poor stubs); signatures there stay fully typed. See docs/TOOLING.md.
+# A test enforces that no other file uses that comment.
+executionEnvironments = [
+    { root = "src" },
+    { root = "tests", extraPaths = ["src"], reportPrivateUsage = false },
+    { root = "scripts", extraPaths = ["src"] },
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "--strict-markers",
+    "-m",
+    "not hardware",  # real devices and GPU: scripts/selftest.ps1
+    "--cov=akashic",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-fail-under=80",
+]
+
+markers = ["hardware: needs the real audio devices, OCR, GPU and Whisper model (run with -m hardware)"]
+
+[tool.coverage.run]
+branch = true
+# Measure the real capture/worker subprocesses started by the supervisor tests too.
+patch = ["subprocess"]
+omit = [
+    "src/akashic/platform/win/*",
+    # Thin entry points and the tkinter dialog are exercised by manual smoke tests.
+    "src/akashic/app.py",
+    "src/akashic/unlock_dialog.py",
+    "src/akashic/tray.py",
+]
+
+[tool.uv]
+# faster-whisper depends on the CPU-only `onnxruntime`, which shares a module name with
+# onnxruntime-gpu; installing both corrupts the import. Only the GPU build (which also runs on CPU).
+override-dependencies = ["onnxruntime ; sys_platform == 'never'"]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }

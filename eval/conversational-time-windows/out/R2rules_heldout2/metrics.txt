@@ -1,0 +1,1 @@
+name=R2rules_heldout2 rules_pass=1.0000 rules_heldout2=1.0000 model_pass=1.0000 future_rules=0 future_model=0 false_filter_rules=0 false_filter_model=0 errors=0 p50_us=89.3 p99_us=212.5 cases=795

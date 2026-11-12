@@ -1,0 +1,12 @@
+# thread-follow-up-field-inheritance: files not copied from the study folder (75 files, 7966.8 MB)
+#
+# Models, raw downloads, generated audio, vector stores, pickles, logs, local shell
+# scripts and keys. The study README says how each one is rebuilt.
+
+C2/  1 files  0.0 MB
+C2/model/  6 files  0.1 MB
+C2/model/models/gemma-4-12b-qat-q4/  1 files  6652.7 MB
+C2/model/runtime/llama-b12209/  56 files  743.7 MB
+C2/model/zips/  2 files  569.6 MB
+R2C1/  5 files  0.3 MB
+R2C2/  4 files  0.4 MB

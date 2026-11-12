@@ -1,0 +1,1 @@
+mismatches=3 max_abs_dscore=1.809e-07 day_p50_ms=0.5856 day_p95_ms=0.8736 month_p50_ms=4.688 straddle_p50_ms=1.505 unwindowed_p50_ms=158.6 today_unwindowed_p50_ms=161.5
