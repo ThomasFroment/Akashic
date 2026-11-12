@@ -75,7 +75,7 @@ class _Child:
 
 
 class Supervisor:
-    def __init__(
+    def __init__(  # noqa: PLR0913 - injectable collaborators, all keyword-only after the specs
         self,
         data_dir: Path,
         key: DataKey,
@@ -83,11 +83,13 @@ class Supervisor:
         *,
         spawn: Spawn = spawn_module,
         clock: Callable[[], float] = time.monotonic,
+        remember_paused: Callable[[bool], None] = lambda _paused: None,
     ) -> None:
         self._data_dir = data_dir
         self._key = key
         self._spawn = spawn
         self._clock = clock
+        self._remember_paused = remember_paused
         self._children = {s.name: _Child(s) for s in specs}
         self._lock = threading.Lock()
         self._restart_lock = threading.RLock()
@@ -186,6 +188,7 @@ class Supervisor:
 
         Restore the previous running/paused state afterward, including on a failed deletion.
         Initial pause is a startup flag, so capture cannot run before a late pause command.
+        The remembered pause choice is unaffected.
         Raises ``OSError`` without running the action after ``shutdown``.
         """
         with self._restart_lock:
@@ -215,6 +218,8 @@ class Supervisor:
                     ipc.send_command(proc.stdin, command)
                 except OSError:
                     log.warning("could not send %s to %s", command, child.spec.name)
+        if command in {"pause", "resume"}:
+            self._remember_paused(self._paused)
 
     def stop(self, timeout: float = STOP_TIMEOUT_S) -> None:
         """Ask every child to stop, wait, and kill any that don't exit in time."""

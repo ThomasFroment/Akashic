@@ -1,4 +1,5 @@
-"""Named integers in the ``state`` table: watermarks and short-lived flags shared by processes."""
+"""Named integers in the ``state`` table: watermarks, short-lived flags, and the user's paused
+choice."""
 
 from __future__ import annotations
 
@@ -12,6 +13,10 @@ if TYPE_CHECKING:
 # Until when (ms) someone is watching the live microphone meter in Settings. The API sets it on
 # every meter poll; capture publishes its numbers every second only while it is in the future.
 LEVELS_WANTED_UNTIL: Final = "levels_wanted_until_ms"
+
+# The user's recording choice (1 = paused), read and written only by the app process and kept
+# across Lock, Quit and Delete all.
+CAPTURE_PAUSED: Final = "capture_paused"
 
 
 def get_int(conn: Connection, key: str, default: int) -> int:

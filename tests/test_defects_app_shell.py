@@ -159,8 +159,8 @@ def shell(monkeypatch: pytest.MonkeyPatch) -> Shell:
     def connect(path: Path, key: bytes) -> Any:  # noqa: ANN401 - a proxied Connection
         return ClosingConnection(real_connect(path, key), built)
 
-    def make_supervisor(root: Path, key: DataKey) -> supervisor.Supervisor:
-        return supervisor.Supervisor(root, key, spawn=built.spawn)
+    def make_supervisor(root: Path, key: DataKey, **kwargs: Any) -> supervisor.Supervisor:  # noqa: ANN401 - forwarded as is
+        return supervisor.Supervisor(root, key, spawn=built.spawn, **kwargs)
 
     def make_api(services: Services) -> FakeApi:
         return FakeApi(built, services)
@@ -402,3 +402,139 @@ def test_a_disk_error_during_download_marks_every_queued_model_failed(
     assert downloads.start(["first", "second"])
     assert [r["status"] for r in downloads.rows()] == ["failed", "failed"]
     assert downloads.start(["first"])  # the queue is usable again
+
+
+# --- the remembered pause (audit #163) -------------------------------------------------------
+
+
+def _recording_spawn(shell: Shell) -> list[supervisor.ChildSpec]:
+    specs: list[supervisor.ChildSpec] = []
+    plain = shell.spawn
+
+    def spawn(spec: supervisor.ChildSpec, data_dir: Path) -> subprocess.Popen[bytes]:
+        specs.append(spec)
+        return plain(spec, data_dir)
+
+    shell.spawn = spawn  # type: ignore[method-assign]
+    return specs
+
+
+def _stored_pause(paths: Paths, key: DataKey) -> int | None:
+    conn = db.connect(paths.db_file, key.subkey("db"))
+    try:
+        row = conn.execute("SELECT value FROM state WHERE key = 'capture_paused'").fetchone()
+        return None if row is None else row[0]
+    finally:
+        conn.close()
+
+
+def _seed_pause(paths: Paths, key: DataKey, value: int) -> None:
+    conn = db.connect(paths.db_file, key.subkey("db"))
+    try:
+        db.migrate(conn)
+        conn.execute(
+            "INSERT OR REPLACE INTO state (key, value) VALUES ('capture_paused', ?)", (value,)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _stored_pause_live(shell: Shell) -> int | None:
+    assert shell.services is not None
+    with shell.services.db() as conn:
+        row = conn.execute("SELECT value FROM state WHERE key = 'capture_paused'").fetchone()
+    return None if row is None else row[0]
+
+
+def _pause_then_lock(tray: FakeTray) -> None:
+    tray.toggle_pause()
+    tray.lock_app()
+
+
+def test_a_fresh_install_starts_recording(shell: Shell, paths: Paths, key: DataKey) -> None:
+    specs = _recording_spawn(shell)
+    app._run(paths, key)
+    assert [s.start_paused for s in specs] == [False, False]
+    assert _stored_pause(paths, key) is None
+
+
+def test_a_pause_survives_lock_and_unlock(shell: Shell, paths: Paths, key: DataKey) -> None:
+    specs = _recording_spawn(shell)
+    shell.on_tray_run = _pause_then_lock
+    assert app._run(paths, key) == "lock"
+    assert _stored_pause(paths, key) == 1
+    specs.clear()
+    shell.on_tray_run = lambda tray: tray.lock_app()
+    app._run(paths, key)
+    assert [s.start_paused for s in specs] == [True, True]
+    assert _stored_pause(paths, key) == 1  # a paused start does not change the choice
+
+
+def test_resuming_after_a_paused_start_records_next_time(
+    shell: Shell, paths: Paths, key: DataKey
+) -> None:
+    _seed_pause(paths, key, 1)
+    specs = _recording_spawn(shell)
+    shell.on_tray_run = lambda tray: (shell.controls.resume(), tray.lock_app())[1]
+    app._run(paths, key)
+    assert [s.start_paused for s in specs] == [True, True]
+    assert _stored_pause(paths, key) == 0
+    specs.clear()
+    shell.on_tray_run = lambda tray: tray.lock_app()
+    app._run(paths, key)
+    assert [s.start_paused for s in specs] == [False, False]
+
+
+def test_api_pause_and_resume_write_the_flag(shell: Shell, paths: Paths, key: DataKey) -> None:
+    seen: list[int | None] = []
+
+    def act(tray: FakeTray) -> None:
+        shell.controls.pause()
+        seen.append(_stored_pause_live(shell))
+        shell.controls.resume()
+        seen.append(_stored_pause_live(shell))
+        tray.lock_app()
+
+    shell.on_tray_run = act
+    app._run(paths, key)
+    assert seen == [1, 0]
+
+
+@pytest.mark.parametrize("error", ["OperationalError", "ProgrammingError"])
+def test_a_failed_flag_write_does_not_break_pause_or_resume(  # noqa: PLR0913, PLR0917
+    shell: Shell,
+    paths: Paths,
+    key: DataKey,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    error: str,
+) -> None:
+    import sqlcipher3  # noqa: PLC0415
+
+    exc = getattr(sqlcipher3, error)
+
+    def fail(conn: object, name: str, value: int) -> None:
+        del conn, name, value
+        msg = "captured text"
+        raise exc(msg)
+
+    monkeypatch.setattr(app.state, "set_int", fail)
+    specs = _recording_spawn(shell)
+    states: list[str] = []
+
+    def act(tray: FakeTray) -> None:
+        shell.controls.pause()
+        states.append("paused")
+        shell.controls.resume()
+        states.append("resumed")
+        tray.toggle_pause()  # the tray toggle must not raise either
+        tray.lock_app()
+
+    shell.on_tray_run = act
+    with caplog.at_level(logging.WARNING):
+        assert app._run(paths, key) == "lock"
+    assert specs
+    assert states == ["paused", "resumed"]
+    assert sum(error in r.getMessage() for r in caplog.records) == 3
+    assert "captured text" not in caplog.text

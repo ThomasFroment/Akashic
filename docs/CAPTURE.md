@@ -35,7 +35,8 @@ too. A browser window the screen loop never examined (minimized, covered) has no
 its media is logged: an accepted exception ([SECURITY.md](SECURITY.md)). A media title is not a
 window title.
 
-Pause stops all new capture. A locked Windows screen and an Akashic pause are different states:
+Pause stops all new capture. The pause is kept across Lock, Quit and restart until the user
+resumes. A locked Windows screen and an Akashic pause are different states:
 headset conversations can continue while Windows is locked.
 
 Media-session metadata and audible-process lists are correlations, not proof of which window

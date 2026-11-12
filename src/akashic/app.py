@@ -14,6 +14,8 @@ import webbrowser
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import sqlcipher3
+
 from akashic.api.debug import DebugSources
 from akashic.api.models import Downloads
 from akashic.api.server import ApiServer, Controls, Services, new_token
@@ -30,7 +32,7 @@ from akashic.log import enable_crash_log, setup_logging
 from akashic.offline import apply_offline_env
 from akashic.pipeline import models
 from akashic.platform.win import autostart
-from akashic.storage import db
+from akashic.storage import db, state
 from akashic.storage.audio import AudioStore
 from akashic.storage.crypto import KeyfileError
 from akashic.storage.frames import FrameStore
@@ -147,9 +149,24 @@ def _tear_down(api: ApiServer | None, supervisor: Supervisor, conn: sqlite3.Conn
             conn.close()
 
 
+def _remember_paused(services: Services | None, paused: bool) -> None:  # noqa: FBT001 - a setter
+    """Store the user's pause choice; a failed write is logged, never raised."""
+    if services is None:
+        return
+    try:
+        with services.db() as conn:
+            state.set_int(conn, state.CAPTURE_PAUSED, int(paused))
+    except sqlcipher3.Error as exc:
+        log.warning("could not remember pause: %s", type(exc).__name__)
+
+
 def _run(paths: Paths, key: DataKey) -> Outcome:
     """Everything that runs while the app is unlocked. Returns when the user quits or locks."""
-    supervisor = Supervisor(paths.root, key)
+    # No pause can arrive before `services` is assigned: nothing sends one before start().
+    services: Services | None = None
+    supervisor = Supervisor(
+        paths.root, key, remember_paused=lambda paused: _remember_paused(services, paused)
+    )
     quitting = threading.Event()
     locking = threading.Event()
 
@@ -161,6 +178,7 @@ def _run(paths: Paths, key: DataKey) -> Outcome:
     api: ApiServer | None = None
     try:
         log.info("schema v%d", db.migrate(conn))
+        start_paused = state.get_int(conn, state.CAPTURE_PAUSED, 0) == 1
         frames = FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media")))
         audio = AudioStore(conn, MediaStore(paths.media_dir, key.subkey("media")))
 
@@ -181,23 +199,22 @@ def _run(paths: Paths, key: DataKey) -> Outcome:
             logs_dir=paths.logs_dir,
             settings=lambda: _debug_settings(paths),
         )
-        server = api = ApiServer(
-            Services(
-                conn,
-                frames,
-                new_token(),
-                controls,
-                audio,
-                debug,
-                paths.config_file,
-                SpeakerStore(conn),
-                _embedding_model(paths),
-                _ask_blocker(paths),
-                Downloads(paths.models_dir, paths.runtime_dir, lambda: _required(paths)),
-            )
+        services = Services(
+            conn,
+            frames,
+            new_token(),
+            controls,
+            audio,
+            debug,
+            paths.config_file,
+            SpeakerStore(conn),
+            _embedding_model(paths),
+            _ask_blocker(paths),
+            Downloads(paths.models_dir, paths.runtime_dir, lambda: _required(paths)),
         )
+        server = api = ApiServer(services)
         supervisor.set_api_port(server.port)
-        supervisor.start()
+        supervisor.start(paused=start_paused)
         server.start()
 
         def open_ui() -> None:

@@ -36,7 +36,8 @@ category.
 
 Stop and join writers before clearing recorded data, including queued/open records, derived
 indexes, saved answers, orphaned media and caches. A new table or cache must not silently survive
-this boundary. Keep setup, keys, models/runtime and content-free logs; restore the prior
+this boundary. Keep setup, keys, models/runtime, content-free logs and the stored paused choice (the
+`capture_paused` state row); restore the prior
 recording/paused choice only after the deletion attempt ends.
 
 Report file or database failures rather than false success. Retry must remain possible, but

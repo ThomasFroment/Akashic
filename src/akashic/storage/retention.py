@@ -38,7 +38,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Final
 
-from akashic.storage import db
+from akashic.storage import db, state
 from akashic.storage.media import MediaPathError
 
 if TYPE_CHECKING:
@@ -377,6 +377,7 @@ def delete_all_recorded_data(conn: Connection, media: MediaStore) -> dict[str, i
     Unlike age-based retention, no pending-work, session or timestamp guard applies. Files go
     first, including orphaned ciphertext/temp files. A failure rolls back database changes and
     retains references for an idempotent retry; already removed files cannot be restored.
+    The paused choice is a setting, not recorded data, so it is kept.
     """
     with db.transaction(conn):
         removed = {
@@ -407,8 +408,10 @@ def delete_all_recorded_data(conn: Connection, media: MediaStore) -> dict[str, i
             "speakers",
             "embeddings",
             "jobs",
-            "state",
             "process_info",
         ):
             removed[table] = conn.execute(f"DELETE FROM {table}").rowcount  # noqa: S608 - fixed names
+        removed["state"] = conn.execute(
+            "DELETE FROM state WHERE key <> ?", (state.CAPTURE_PAUSED,)
+        ).rowcount
     return removed
