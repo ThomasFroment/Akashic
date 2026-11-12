@@ -23,8 +23,8 @@ and its tests to establish current behaviour before changing an area.
 
 ## Evidence and maintenance
 
-The [audit synthesis](audits/2026-11-11-synthesis/synthesis.md) explains the findings, and the
-[implementation handoff](audits/2026-11-11-implementation-handoff.md) assigns them to milestones.
+The [audit synthesis](audits/2026-11-11-synthesis/synthesis.md) explains the findings, and
+[TODO.md](../TODO.md) assigns them to milestones.
 [Audits](audits/), [method reports](solutions/) and [baselines](baselines/) are dated evidence,
 not specifications of today's code. Use them for rationale and comparisons; a proposed method or
 a passing synthetic evaluation does not establish daily-use quality.
@@ -33,7 +33,7 @@ Keep current guides focused on intent, important tradeoffs and boundaries a refa
 preserve. Leave module inventories, schemas, constants, model pins, algorithms and UI mechanics
 in code and tests. Keep measurements in dated evidence rather than repeating them across guides.
 Record each new user decision in [DECISIONS.md](DECISIONS.md) and state its rule in the guide for
-its area. Project status and open work belong to the handoff, not the guides.
+its area. Open work belongs to [TODO.md](../TODO.md), not the guides.
 
 ## Revision labels
 
