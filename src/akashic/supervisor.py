@@ -92,6 +92,7 @@ class Supervisor:
         self._lock = threading.Lock()
         self._restart_lock = threading.RLock()
         self._stopping = False
+        self._shut_down = threading.Event()
         self._paused = False
         self._api_port: int | None = None
 
@@ -101,6 +102,8 @@ class Supervisor:
 
     def start(self, *, paused: bool = False) -> None:
         with self._restart_lock:
+            if self._shut_down.is_set():
+                return
             self._stopping = False
             self._paused = paused
             for child in self._children.values():
@@ -139,12 +142,13 @@ class Supervisor:
             log.warning("%s status channel failed: %s", child.spec.name, type(exc).__name__)
 
     def poll(self) -> None:
-        """Restart crashed children when their backoff has elapsed. Call about once a second."""
+        """Restart crashed children when their backoff has elapsed. Call about once a second.
+        Does nothing after ``shutdown``."""
         with self._restart_lock:
             self._poll()
 
     def _poll(self) -> None:
-        if self._stopping:
+        if self._stopping or self._shut_down.is_set():
             return
         now = self._clock()
         for child in self._children.values():
@@ -170,7 +174,8 @@ class Supervisor:
 
     def restart(self) -> None:
         """Stop both children and start them again, so they re-read config.toml. Blocks for as
-        long as the stop takes (audio in flight is written first): call it from a thread."""
+        long as the stop takes (audio in flight is written first): call it from a thread.
+        After ``shutdown`` the children are stopped and not started again."""
         with self._restart_lock:
             was_paused = self._paused
             self.stop()
@@ -181,8 +186,12 @@ class Supervisor:
 
         Restore the previous running/paused state afterward, including on a failed deletion.
         Initial pause is a startup flag, so capture cannot run before a late pause command.
+        Raises ``OSError`` without running the action after ``shutdown``.
         """
         with self._restart_lock:
+            if self._shut_down.is_set():
+                msg = "supervisor is shut down"
+                raise OSError(msg)
             was_running = any(c.proc is not None for c in self._children.values())
             was_paused = self._paused
             self.stop()
@@ -209,6 +218,13 @@ class Supervisor:
 
     def stop(self, timeout: float = STOP_TIMEOUT_S) -> None:
         """Ask every child to stop, wait, and kill any that don't exit in time."""
+        with self._restart_lock:
+            self._stop(timeout)
+
+    def shutdown(self, timeout: float = STOP_TIMEOUT_S) -> None:
+        """Stop every child for good, on Lock and Quit. Terminal: later ``start``, ``restart``,
+        ``poll`` and ``while_stopped`` calls never launch a child again."""
+        self._shut_down.set()
         with self._restart_lock:
             self._stop(timeout)
 

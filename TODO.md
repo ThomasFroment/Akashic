@@ -49,7 +49,7 @@ Three parts:
 
 ### A2. Capture stops when asked
 
-- [ ] #60 Stop the API before the supervisor; a terminal `shutdown()` makes restart and poll no-ops
+- [x] #60 Stop the API before the supervisor; a terminal `shutdown()` makes restart and poll no-ops
 - [ ] #163 Keep the paused flag across lock/unlock and app restart
 
 ### A3. Capture keeps running and keeps what it recorded

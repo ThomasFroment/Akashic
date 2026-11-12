@@ -1,7 +1,7 @@
 """Entry point: unlock, migrate, supervise capture and worker, serve the UI, show the tray.
 
 The tray's message loop owns the main thread. A background thread polls the supervisor.
-Quit (tray menu) stops the children, the API server and wipes the key.
+Quit (tray menu) stops the API server first, then the children, then wipes the key.
 """
 
 from __future__ import annotations
@@ -42,6 +42,7 @@ from akashic.unlock import Outcome, UnlockError, run_until_quit, unlock
 from akashic.unlock_dialog import TkUnlockUI, show_error
 
 if TYPE_CHECKING:
+    import sqlite3
     from collections.abc import Callable
 
     from akashic.storage.crypto import DataKey
@@ -134,6 +135,18 @@ def _required(paths: Paths) -> list[models.Needed]:
     return models.required(config)
 
 
+def _tear_down(api: ApiServer | None, supervisor: Supervisor, conn: sqlite3.Connection) -> None:
+    """Stop the API first so no request can restart children, then the children, then the db."""
+    try:
+        if api is not None:
+            api.stop()
+    finally:
+        try:
+            supervisor.shutdown()
+        finally:
+            conn.close()
+
+
 def _run(paths: Paths, key: DataKey) -> Outcome:
     """Everything that runs while the app is unlocked. Returns when the user quits or locks."""
     supervisor = Supervisor(paths.root, key)
@@ -217,10 +230,7 @@ def _run(paths: Paths, key: DataKey) -> Outcome:
         log.info("interrupted")
     finally:
         quitting.set()
-        supervisor.stop()
-        if api is not None:
-            api.stop()
-        conn.close()
+        _tear_down(api, supervisor, conn)
     return "lock" if locking.is_set() else "quit"
 
 

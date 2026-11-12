@@ -282,6 +282,40 @@ def test_api_refuses_deletion_without_writer_shutdown_and_reports_file_failure(
         server.stop()
 
 
+def test_api_deletion_after_supervisor_shutdown_is_409_and_keeps_data(
+    conn: Connection, media: MediaStore, paths: Paths, key: DataKey
+) -> None:
+    seed_history(conn, media)
+    paths.config_file.write_text(DEFAULT_CONFIG_TOML, encoding="utf-8")
+    spawned: list[int] = []
+
+    def no_spawn(spec: object, data_dir: object) -> subprocess.Popen[bytes]:
+        del spec, data_dir
+        spawned.append(1)
+        raise AssertionError
+
+    sup = Supervisor(paths.root, key, (), spawn=no_spawn)
+    sup.shutdown()
+    token = new_token()
+    services = Services(
+        conn,
+        FrameStore(conn, media),
+        token,
+        Controls(sup.states, lambda: None, lambda: None, while_stopped=sup.while_stopped),
+        config_file=paths.config_file,
+    )
+    server = ApiServer(services)
+    server.start()
+    try:
+        status, body = call(server, token)
+        assert status == 409, body
+        assert body.get("deleted") != 0
+        assert conn.execute("SELECT count(*) FROM frames").fetchone() == (1,)
+        assert spawned == []
+    finally:
+        server.stop()
+
+
 def test_media_clear_does_not_follow_windows_directory_junctions(
     media: MediaStore, paths: Paths, tmp_path: Path
 ) -> None:

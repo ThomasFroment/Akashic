@@ -186,7 +186,6 @@ def test_lock_stops_the_children(shell: Shell, paths: Paths, key: DataKey) -> No
     assert shell.running() == 0
 
 
-@known_defect(60, "a restart request that lands during Lock/Quit relaunches both children")
 def test_a_restart_request_during_lock_never_leaves_children_recording(
     shell: Shell, paths: Paths, key: DataKey
 ) -> None:
