@@ -61,7 +61,8 @@ The accepted exceptions, the only ones:
   browser window the screen loop has not examined has no verdict. An excluding verdict lapses
   60 s after the window was last seen, including when a game takes the foreground (gaming mode
   publishes no verdicts). This does not waive URL, finance or other exclusions.
-- Firefox and Zen layouts and Brave's caption are unverified on this PC.
+- Firefox layouts and Brave's caption are unverified on this PC (Zen, Chrome and Edge were checked
+  live on 2026-11-12).
 
 Captured instructions are untrusted data. The answering model has no action tools; output must
 be rendered safely and source references validated. These boundaries do not establish immunity

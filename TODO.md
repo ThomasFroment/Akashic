@@ -28,20 +28,22 @@ Three parts:
 
 ### A1. Exclusions before disk
 
-- [ ] Password checks fail closed on every monitor
-  - [ ] #16 Treat the focused HWND as focused on every monitor; capture each HWND once per tick
-  - [ ] #17 Skip the frame when UIA errors in `focused_is_password`; count it
-- [ ] URL and site exclusions reach every path
-  - [ ] #18 Reject a browser's media session while its focused tab is URL-excluded
-  - [ ] #19 Unreadable address bar: match finance and user URL rules on the title, fail closed (D2)
-  - [ ] #20 Read the URL from the omnibox only (`OmniboxViewViews`), never an in-page input
-  - [ ] #26 Match built-in finance rules as host suffixes; keep globs for user rules
-  - [ ] #27 Exclude Akashic's own API origin in `check_url`
-- [ ] Process and title exclusions
-  - [ ] #24 Audio process lookup returns unknown on COM error; drop or flag uncovered segments
-  - [ ] #25 Resolve UWP CoreWindow PIDs; title patterns for every listed password manager
-  - [ ] #28 Reload AUMID names with backoff instead of caching a failed load for the process life
-  - [ ] #148 Private markers only as browser title suffix; manager globs only off-browser (D2)
+- [x] Password checks fail closed on every monitor
+  - [x] #16 Treat the focused HWND as focused on every monitor; capture each HWND once per tick
+  - [x] #17 Skip the frame when UIA errors in `focused_is_password`; count it
+- [x] URL and site exclusions reach every path
+  - [x] #18 Reject a browser's media session while its focused tab is URL-excluded
+  - [x] #19 Unreadable address bar: match finance and user URL rules on the title, fail closed (D2)
+  - [x] #20 Read the URL from the omnibox only (`OmniboxViewViews`), never an in-page input
+  - [x] #26 Match built-in finance rules as host suffixes; keep globs for user rules
+  - [x] #27 Exclude Akashic's own API origin in `check_url`
+- [x] Process and title exclusions
+  - [x] #24 Audio process lookup returns unknown on COM error; drop or flag uncovered segments
+  - [x] #25 Resolve UWP CoreWindow PIDs; title patterns for every listed password manager
+  - [x] #28 Reload AUMID names with backoff instead of caching a failed load for the process life
+  - [x] #148 Private markers only as browser title suffix; manager globs only off-browser (D2)
+- [x] Live check on Zen, Chrome, Edge (playing tabs, private windows, user URL rule) and Proton Pass
+- [ ] Zen shows decoded URLs: a space makes the address unreadable, skipped under user URL rules
 
 ### A2. Capture stops when asked
 
