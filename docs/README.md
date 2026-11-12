@@ -33,7 +33,8 @@ Keep current guides focused on intent, important tradeoffs and boundaries a refa
 preserve. Leave module inventories, schemas, constants, model pins, algorithms and UI mechanics
 in code and tests. Keep measurements in dated evidence rather than repeating them across guides.
 Record each new user decision in [DECISIONS.md](DECISIONS.md) and state its rule in the guide for
-its area. Open work belongs to [TODO.md](../TODO.md), not the guides.
+its area. Open work belongs to [TODO.md](../TODO.md), not the guides; what a finished item left
+open goes in [OPEN.md](../OPEN.md).
 
 ## Revision labels
 

@@ -6,6 +6,8 @@ Upcoming work. Rules:
 - List order inside a milestone = work order. `(after X)` names a dependency in another milestone.
 - Tick a box when the work is done and verified, in the same commit as the work.
 - Drop a milestone once every box in it is ticked and verified.
+- Anything a ticked item leaves open (unrun checks, missing tests, deferred findings) goes in
+  [OPEN.md](OPEN.md) under its milestone, in the same commit as the tick.
 
 Sources: `#1`–`#112` are findings of [audit 2026-11-10](docs/audits/2026-11-10.md), `#113`–`#186` of
 [audit 2026-11-10-2](docs/audits/2026-11-10-2.md). The [synthesis](docs/audits/2026-11-11-synthesis/synthesis.md)
