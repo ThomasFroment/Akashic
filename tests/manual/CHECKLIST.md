@@ -89,9 +89,9 @@ Images are selected-window renders; episode images require app/time/URL/title co
    active job. Observe response time, peak memory and unloading after returning to the worker
    loop; there is no guaranteed two-second bound. STT and chat must release one another between
    jobs; chat/embeddings may remain together, and the desktop uses additional memory.
-4. For a synthetic model comparison, run the "Local Ask baseline" command in
-   `docs/baselines/2026-11-11-m00.md` against a separate model/runtime folder, with `--repeats 3`,
-   `--output` and `--compare` against `docs/baselines/2026-11-11-m00/ask-gemma.json`. Inspect
+4. For a synthetic model comparison, run `scripts/eval_ask.py` against a separate model/runtime
+   folder, with `--repeats 3`, `--output` and `--compare` against the `--output` of the latest
+   baseline in `docs/baselines/`. Inspect
    per-question differences and keep the frozen split intact. Use
    `eval_hard_memory.py` for harder failures; neither script tests real OCR/ASR.
 

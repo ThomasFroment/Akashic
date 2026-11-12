@@ -1,6 +1,6 @@
 """Native exclusion checks: real monitors and DPI, real UI Automation, hosted apps, audio, browsers.
 
-Run on the target PC only (see docs/baselines/2026-11-11-m01.md):
+Run on the target PC only:
 
     uv run pytest tests/hardware/test_native_exclusions.py -m hardware --no-cov -s
 

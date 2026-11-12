@@ -1,9 +1,0 @@
-{
-  "timeout": true,
-  "limit_s": 5,
-  "conclusion": "Native UIA did not return within the observation bound; M07 remains open.",
-  "fixture_sha256": "55ed3b0a0013738beb1b1fcb7f321f4d3f367393b5fc3531832b2a9084eb709e",
-  "provider_source": "import tkinter as t,time,ctypes; r=t.Tk(); r.title('Akashic synthetic COM provider'); t.Label(r,text='Synthetic provider').pack(); r.update(); u=ctypes.windll.user32; u.GetAncestor.restype=ctypes.c_void_p; u.GetAncestor.argtypes=[ctypes.c_void_p,ctypes.c_uint]; print(u.GetAncestor(r.winfo_id(),2),flush=True); r.after(100,lambda:time.sleep(12)); r.after(14000,r.destroy); r.mainloop()",
-  "reader_source": "import sys,time,json; from akashic.platform.win.uia import WindowsUia; from akashic.capture.ports import WindowInfo,Rect; t=time.monotonic(); blocks=WindowsUia().read_text(WindowInfo(int(sys.argv[1]),'synthetic.exe','Synthetic',Rect(0,0,500,300)),100); print(json.dumps({'returned':True,'seconds':time.monotonic()-t,'blocks':None if blocks is None else len(blocks)}))",
-  "observation": "Launch provider, read its HWND from stdout, wait 0.5 s, launch reader with HWND argument and a 5-second subprocess timeout; terminate owned provider afterward."
-}
