@@ -44,6 +44,7 @@ Three parts:
   - [x] #148 Private markers only as browser title suffix; manager globs only off-browser (D2)
 - [x] Live check on Zen, Chrome, Edge (playing tabs, private windows, user URL rule) and Proton Pass
 - [x] Unexamined background browser media is logged: accepted and documented (DECISIONS, 2026-11-12)
+- [ ] Ask the user: drop browser audio while a private or excluded page is open? (process-only today)
 - [ ] Zen shows decoded URLs: a space makes the address unreadable, skipped under user URL rules
 
 ### A2. Capture stops when asked
@@ -85,6 +86,10 @@ Three parts:
 - [ ] #151 Attribute only the recorded endpoint's processes; log a gap when voice plays elsewhere
 - [ ] #152 Music-app audio: drop songs, keep segments with evidence of real speech (D7)
 - [ ] #110 Spike per-process loopback for the Discord process tree before building it
+- [ ] Explore per-app audio streams (process loopback, include and exclude modes) (after #110)
+  - [ ] Drop only an excluded app's sound, not the overlapping speech of other apps
+  - [ ] Browser as its own stream, dropped while a private or excluded page of it is open or unknown
+  - [ ] Per-stream source for attribution (voice-chat stream = other people, browser = video)
 
 ### A6. Media sessions
 
