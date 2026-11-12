@@ -14,6 +14,7 @@ already follows it. Change a decision only when the user says so, and update its
 | Decision | Date | Status |
 | --- | --- | --- |
 | Personal, non-commercial project (needed for ported screenpipe logic). The repository becomes **private**; the user changes the GitHub setting. | 2026-11-12 (reverses 2026-11-10 "stay public") | pending, user |
+| Background browser media: a minimized or covered browser window that the screen loop never examined has no exclusion verdict, and its media title is logged even on a private, bank or user-excluded page. Accepted and documented in SECURITY.md rather than failing closed, to keep background videos answerable. | 2026-11-12 | done |
 | Window screenshots: render the selected app window (HWND), never fall back to the monitor. | 2026-11-09 | done |
 | Transcription quality before speed: slower deferred STT is acceptable; a smaller/faster model needs FR/EN/mixed quality evidence. | by 2026-11-10 | rule |
 | Retention defaults to forever. Never delete recorded history automatically to free space, and show no storage-pressure warning: remove the existing low-disk warning (`disk_warning_free_gb`). | 2026-11-12 | pending, TODO B9 |

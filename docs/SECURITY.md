@@ -57,10 +57,13 @@ The accepted exceptions, the only ones:
 
 - A browser whose address cannot be read is kept when the user has no address rules and its
   title names no built-in host. Its title cannot prove anything either way.
-- Some background private-browser media cannot be identified as private: a playing tab in a
-  browser window the screen loop has not examined has no verdict. An excluding verdict lapses
-  60 s after the window was last seen, including when a game takes the foreground (gaming mode
-  publishes no verdicts). This does not waive URL, finance or other exclusions.
+- Background browser media can escape the browser-window rules: a playing tab in a browser
+  window the screen loop has not examined (minimized, fully covered) has no verdict, so its
+  media title and artist are logged even when the page is private, a bank, a password manager
+  or matches a user address rule. An excluding verdict lapses 60 s after the window was last
+  seen, including when a game takes the foreground (gaming mode publishes no verdicts). Process
+  and media-title rules still apply. Accepted by the user on 2026-11-12 to keep background
+  videos answerable; reproduced live with Edge and Zen.
 - Firefox layouts and Brave's caption are unverified on this PC (Zen, Chrome and Edge were checked
   live on 2026-11-12).
 

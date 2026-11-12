@@ -31,7 +31,9 @@ code (`capture/screen.py`, `capture/exclusions.py`, `capture/browser_state.py`,
 
 Media sessions follow the screen loop's per-window verdict: a browser's session is rejected while
 an excluding verdict is fresh, and a missing or stale verdict for the focused browser rejects it
-too. A media title is not a window title.
+too. A browser window the screen loop never examined (minimized, covered) has no verdict, and
+its media is logged: an accepted exception ([SECURITY.md](SECURITY.md)). A media title is not a
+window title.
 
 Pause stops all new capture. A locked Windows screen and an Akashic pause are different states:
 headset conversations can continue while Windows is locked.
