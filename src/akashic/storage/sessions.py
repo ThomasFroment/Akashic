@@ -22,7 +22,10 @@ class MediaLog:
     def __init__(self, conn: Connection) -> None:
         self._conn = conn
 
-    def open(self, *, app_id: str, app: str, title: str, artist: str | None, ts_ms: int) -> int:
+    def open(  # noqa: PLR0913 - one row's columns plus its first state
+        self, *, app_id: str, app: str, title: str, artist: str | None, ts_ms: int, state: str
+    ) -> int:
+        """Insert the row and its first event together, so no open row lacks its event."""
         with db.transaction(self._conn) as conn:
             cursor = conn.execute(
                 "INSERT INTO media_sessions (app_id, app, title, artist, start_ms, end_ms)"
@@ -30,9 +33,10 @@ class MediaLog:
                 (app_id, app, title, artist or None, ts_ms, ts_ms),
             )
             row_id = cursor.lastrowid
-        if row_id is None:  # pragma: no cover - INSERT always sets it
-            msg = "insert returned no row id"
-            raise RuntimeError(msg)
+            if row_id is None:  # pragma: no cover - INSERT always sets it
+                msg = "insert returned no row id"
+                raise RuntimeError(msg)
+            self._insert_event(conn, row_id, ts_ms, state)
         return row_id
 
     def touch(self, session_id: int, *, end_ms: int, played_ms: int) -> None:
@@ -44,21 +48,27 @@ class MediaLog:
 
     def add_event(self, session_id: int, ts_ms: int, state: str) -> None:
         with db.transaction(self._conn) as conn:
-            conn.execute(
-                "INSERT INTO media_events (media_session_id, ts_ms, state) VALUES (?, ?, ?)",
-                (session_id, ts_ms, state),
-            )
+            self._insert_event(conn, session_id, ts_ms, state)
+
+    @staticmethod
+    def _insert_event(conn: Connection, session_id: int, ts_ms: int, state: str) -> None:
+        conn.execute(
+            "INSERT INTO media_events (media_session_id, ts_ms, state) VALUES (?, ?, ?)",
+            (session_id, ts_ms, state),
+        )
 
     def set_url(self, session_id: int, url: str) -> None:
         with db.transaction(self._conn) as conn:
             conn.execute("UPDATE media_sessions SET url = ? WHERE id = ?", (url, session_id))
 
     def close(self, session_id: int, *, end_ms: int, played_ms: int) -> None:
+        """Set ``closed`` and write the ``stopped`` event in one transaction."""
         with db.transaction(self._conn) as conn:
             conn.execute(
                 "UPDATE media_sessions SET end_ms = ?, played_ms = ?, closed = 1 WHERE id = ?",
                 (end_ms, played_ms, session_id),
             )
+            self._insert_event(conn, session_id, end_ms, "stopped")
 
     def close_stale(self) -> int:
         """Close rows left open by a crash, at their last heartbeat."""

@@ -1,12 +1,14 @@
 """SQLCipher connection, WAL, transactions and migrations.
 
 All three processes open the same database. Writes are short ``BEGIN IMMEDIATE`` transactions;
-readers never block writers (WAL). ``busy_timeout`` absorbs brief lock contention.
+readers never block writers (WAL). ``busy_timeout`` absorbs brief lock contention; the audio
+writer and the media tracker retry beyond it.
 """
 
 from __future__ import annotations
 
 import re
+import sqlite3
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from importlib import resources
@@ -20,6 +22,9 @@ if TYPE_CHECKING:
     from sqlite3 import Connection
 
 BUSY_TIMEOUT_MS: Final = 5_000
+SQLITE_BUSY: Final = 5
+SQLITE_LOCKED: Final = 6
+_PRIMARY_CODE_MASK: Final = 0xFF
 _MIGRATION_NAME = re.compile(r"^(\d{4})_[a-z0-9_]+\.sql$")
 
 
@@ -80,6 +85,15 @@ def transaction(conn: Connection) -> Generator[Connection]:
     except BaseException:
         _rollback_if_open(conn)
         raise
+
+
+def is_busy(exc: BaseException) -> bool:
+    """True for a lock conflict that may clear on its own. An error without a code counts: older
+    drivers and test doubles don't set one."""
+    if not isinstance(exc, sqlcipher3.OperationalError | sqlite3.OperationalError):
+        return False
+    code: int | None = getattr(exc, "sqlite_errorcode", None)
+    return code is None or code & _PRIMARY_CODE_MASK in (SQLITE_BUSY, SQLITE_LOCKED)
 
 
 def _rollback_if_open(conn: Connection) -> None:

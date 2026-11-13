@@ -31,6 +31,7 @@ import numpy as np
 from akashic.capture.ports import AudioError
 from akashic.capture.vad import WINDOW
 from akashic.config import Audio
+from akashic.storage import db
 from akashic.storage.audio import NewSegment
 from akashic.storage.opus import SAMPLE_RATE, encode_opus
 
@@ -63,6 +64,7 @@ REANCHOR_MS: Final = 100  # clock error beyond which window timestamps are re-an
 SAMPLER_INTERVAL_S: Final = 1.0
 SAMPLER_KEEP_MS: Final = 300_000
 WRITER_QUEUE: Final = 64
+WRITE_RETRY_S: Final = (0.5, 1.0, 2.0, 4.0, 8.0)  # waits after a busy database, per segment
 # System sound made only by these is music, never worth transcribing. Browser music (YouTube
 # Music, Deezer web) cannot be told apart from a video by sound, so it is kept.
 MUSIC_PROCESSES: Final = frozenset(
@@ -316,6 +318,7 @@ class SegmentWriter:
         self._stats = stats
         self._queue: queue.Queue[tuple[AudioKind, Utterance]] = queue.Queue(WRITER_QUEUE)
         self._last_id: dict[str, int | None] = {}
+        self._stop = threading.Event()
 
     def submit(self, kind: AudioKind, utterance: Utterance) -> None:
         try:
@@ -326,6 +329,7 @@ class SegmentWriter:
 
     def run(self, stop: threading.Event) -> None:
         """Write until told to stop, then finish what is already queued."""
+        self._stop = stop
         while True:
             try:
                 kind, utterance = self._queue.get(timeout=0.2)
@@ -354,22 +358,32 @@ class SegmentWriter:
             self._stats["dropped_music"] += 1  # song lyrics: the media session logs the song
             self._last_id[kind] = None
             return None
-        continues = self._last_id.get(kind) if utterance.continues else None
-        segment_id = self._store.add(
-            NewSegment(
-                stream=kind,
-                start_ms=utterance.start_ms,
-                end_ms=utterance.end_ms,
-                speech_ms=utterance.speech_ms,
-                sources=sources,
-                continues_id=continues,
-            ),
-            encode_opus(utterance.samples),
-            self._clock_ms(),
+        segment = NewSegment(
+            stream=kind,
+            start_ms=utterance.start_ms,
+            end_ms=utterance.end_ms,
+            speech_ms=utterance.speech_ms,
+            sources=sources,
+            continues_id=self._last_id.get(kind) if utterance.continues else None,
         )
+        segment_id = self._add_with_retry(segment, encode_opus(utterance.samples))
         self._last_id[kind] = segment_id
         self._stats[f"segments_{kind}"] += 1
         return segment_id
+
+    def _add_with_retry(self, segment: NewSegment, opus: bytes) -> int:
+        """Store the segment, waiting out a busy database. Once stopping, the current attempt is
+        the last one."""
+        for delay in WRITE_RETRY_S:
+            try:
+                return self._store.add(segment, opus, self._clock_ms())
+            except Exception as exc:
+                if not db.is_busy(exc):
+                    raise
+                if self._stop.wait(delay):
+                    raise
+                self._stats["write_retried"] += 1
+        return self._store.add(segment, opus, self._clock_ms())
 
 
 class StreamRecorder:

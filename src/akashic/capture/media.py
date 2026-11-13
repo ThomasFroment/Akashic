@@ -4,7 +4,10 @@ The OS is polled every couple of seconds rather than subscribed to: one code pat
 sessions, title changes (YouTube autoplay), play/pause and sessions that vanish, and a missed
 event can't leave a row open forever. A media session becomes a row when it first plays; the
 row stays open across pauses (``played_ms`` counts only the time spent playing) and closes when
-the title changes, the source disappears or a pause lasts too long.
+the title changes, the source disappears or a pause lasts too long. A close that fails on a busy
+database stays pending and is retried at every poll; the session gets nothing else until it
+closes. Rows still open at the next start are closed at their last heartbeat. On stop, ``run``
+returns within one interval plus one busy timeout per attempt still in flight.
 
 Exclusions apply before anything is written. A media title is not a window title: for a browser
 the screen loop's verdict on the browser's windows decides (private window, password manager,
@@ -77,6 +80,7 @@ class _Open:
     paused_since_ms: int | None = None
     url_found: bool = False
     url_tried_ms: int = -URL_SEARCH_EVERY_MS
+    close_at: tuple[int, int] | None = None  # (end_ms, played_ms) once a close was attempted
 
 
 class MediaTracker:
@@ -107,24 +111,43 @@ class MediaTracker:
         self, stop: threading.Event, paused: threading.Event, locked: Callable[[], bool]
     ) -> None:
         """Poll until ``stop``. While paused or locked nothing is read and open rows are closed."""
-        self._store.close_stale()
+        stale_closed = False
         while not stop.is_set():
-            try:
-                if paused.is_set() or locked():
-                    self.close_all()
-                else:
-                    self.poll()
-            except Exception as exc:  # noqa: BLE001 - one bad poll must never stop the thread
-                log.warning("media poll failed: %s", type(exc).__name__)
+            stale_closed = stale_closed or self._close_stale()
+            if stale_closed:
+                self._tick(paused, locked)
             stop.wait(self._interval_s)
-        self.close_all()
+        try:
+            self.close_all()
+        except Exception as exc:  # noqa: BLE001 - open rows are closed by close_stale at next start
+            log.warning("closing media sessions at stop failed: %s", type(exc).__name__)
+
+    def _close_stale(self) -> bool:
+        try:
+            self._store.close_stale()
+        except Exception as exc:  # noqa: BLE001 - retried on the next iteration
+            self.stats["close_stale_failed"] = self.stats.get("close_stale_failed", 0) + 1
+            log.warning("closing stale media rows failed: %s", type(exc).__name__)
+            return False
+        return True
+
+    def _tick(self, paused: threading.Event, locked: Callable[[], bool]) -> None:
+        try:
+            if paused.is_set() or locked():
+                self.close_all()
+            else:
+                self.poll()
+        except Exception as exc:  # noqa: BLE001 - one bad poll must never stop the thread
+            log.warning("media poll failed: %s", type(exc).__name__)
 
     def close_all(self) -> None:
+        """One close attempt per session, pending ones included; a failure leaves the others be."""
         now = self._now_ms()
         for app_id in list(self._open):
-            self._close(app_id, now)
+            self._try_close(app_id, now)
 
     def poll(self) -> None:
+        self._retry_pending()
         now = self._now_ms()
         seen: set[str] = set()
         for state in self._source.sessions():
@@ -135,9 +158,9 @@ class MediaTracker:
                 continue
             seen.add(state.app_id)
             self._update(state, app, now)
-        for app_id in list(self._open):
-            if app_id not in seen:  # gone: it ended when we last saw it
-                self._close(app_id, self._open[app_id].last_poll_ms)
+        for app_id, current in list(self._open.items()):
+            if app_id not in seen and current.close_at is None:  # gone: it ended when last seen
+                self._try_close(app_id, current.last_poll_ms)
 
     # --- internals ---------------------------------------------------------------------------
 
@@ -189,8 +212,11 @@ class MediaTracker:
 
     def _update(self, state: MediaState, app: str, now: int) -> None:
         current = self._open.get(state.app_id)
+        if current is not None and current.close_at is not None:
+            return  # a pending close gets nothing but close attempts
         if current is not None and (current.title, current.artist) != (state.title, state.artist):
-            self._close(state.app_id, now)
+            if not self._try_close(state.app_id, now):
+                return
             current = None
         if current is None:
             if state.state != "playing":
@@ -207,7 +233,7 @@ class MediaTracker:
             current.paused_since_ms = now if state.state != "playing" else None
             self._store.add_event(current.session_id, now, state.state)
         if current.paused_since_ms is not None and now - current.paused_since_ms >= PAUSE_CLOSE_MS:
-            self._close(state.app_id, now)
+            self._try_close(state.app_id, now)
             return
         self._find_url(current, now)
         if changed or now - current.last_write_ms >= WRITE_INTERVAL_MS:
@@ -216,9 +242,13 @@ class MediaTracker:
 
     def _open_session(self, state: MediaState, app: str, now: int) -> None:
         session_id = self._store.open(
-            app_id=state.app_id, app=app, title=state.title, artist=state.artist, ts_ms=now
+            app_id=state.app_id,
+            app=app,
+            title=state.title,
+            artist=state.artist,
+            ts_ms=now,
+            state=state.state,
         )
-        self._store.add_event(session_id, now, state.state)
         opened = _Open(
             session_id=session_id,
             app=app,
@@ -249,10 +279,28 @@ class MediaTracker:
             current.url_found = True
             self._store.set_url(current.session_id, url)
 
+    def _try_close(self, app_id: str, end_ms: int) -> bool:
+        """Close the session; on a failure it stays open, pending, and is retried by the next
+        poll. Returns whether the row is closed."""
+        try:
+            self._close(app_id, end_ms)
+        except Exception as exc:  # noqa: BLE001 - the session is kept and retried
+            self.stats["close_failed"] = self.stats.get("close_failed", 0) + 1
+            log.warning("closing a media session failed: %s", type(exc).__name__)
+            return False
+        return True
+
+    def _retry_pending(self) -> None:
+        for app_id, current in list(self._open.items()):
+            if current.close_at is not None:
+                self._try_close(app_id, current.close_at[0])
+
     def _close(self, app_id: str, end_ms: int) -> None:
-        current = self._open.pop(app_id)
-        elapsed = min(max(end_ms - current.last_poll_ms, 0), MAX_POLL_GAP_MS)
-        played = current.played_ms + (elapsed if current.state == "playing" else 0)
-        end = max(end_ms, current.last_poll_ms)
-        self._store.add_event(current.session_id, end, "stopped")
+        current = self._open[app_id]
+        if current.close_at is None:  # fixed on the first attempt so a retry keeps the same row
+            elapsed = min(max(end_ms - current.last_poll_ms, 0), MAX_POLL_GAP_MS)
+            played = current.played_ms + (elapsed if current.state == "playing" else 0)
+            current.close_at = (max(end_ms, current.last_poll_ms), played)
+        end, played = current.close_at
         self._store.close(current.session_id, end_ms=end, played_ms=played)
+        del self._open[app_id]

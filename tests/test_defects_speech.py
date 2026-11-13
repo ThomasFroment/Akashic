@@ -795,10 +795,9 @@ class FlakyAudioStore(AudioStore):
         return super().add(segment, opus, now_ms)
 
 
-@known_defect(161, "a busy database loses the segment: audio writes are not retried")
 def test_a_segment_is_written_once_the_database_is_free(conn: Connection, paths: Paths) -> None:
     store = FlakyAudioStore(conn, MediaStore(paths.media_dir, DataKey.generate().subkey("media")))
-    clock = Clock(T0 + 3_000)
+    clock = Clock(T0 + 1_000)
     sampler = SourceSampler(FakeSessions(frozenset({"discord.exe"})), clock)
     sampler.sample()
     writer = SegmentWriter(store, sampler, Exclusions(UserExclusions()), clock, Counter())
@@ -828,7 +827,6 @@ class FlakyMediaLog(MediaLog):
         super().close(session_id, end_ms=end_ms, played_ms=played_ms)
 
 
-@known_defect(161, "_close pops the session before writing, so a failed close is never retried")
 def test_a_media_row_closes_once_the_database_is_free(conn: Connection) -> None:
     clock = [0]
     source = FakeMedia(names={"Z1": "Zen"})

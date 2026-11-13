@@ -14,6 +14,10 @@ work, move it to TODO.md as a task and delete it here. Drop a milestone heading 
 - #158 No check of a window over 16 MP spanning monitors
 - #22 A hung focused browser still costs several UIA timeouts per tick
 - #23 #160 Not checked on a real device unplug or default-device switch in the running app
+- #161 Not checked against a real long retention or Delete-all lock in the running app
+- #161 Frame and game-row writes are still not retried (one lost frame)
+- #161 Play/pause events of a live session are lost on a busy database (matters for #167)
+- #161 A database still busy at stop can exceed the supervisor's 10 s kill: queued audio is lost and an `.opus.enc` written before the kill may be orphaned; open media rows wait for close_stale
 
 ## A2. Capture stops when asked
 

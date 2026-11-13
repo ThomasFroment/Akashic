@@ -42,6 +42,9 @@ resumes. Pause drops the utterance being recorded. Stop, a device change and a d
 keep it; an unexpected fault drops it. A locked Windows screen and an Akashic pause are
 different states: headset conversations can continue while Windows is locked.
 
+Audio segment writes and media-session closes retry when the database is busy; screen frames
+and game rows do not.
+
 Media-session metadata and audible-process lists are correlations, not proof of which window
 or process produced a particular word. Endpoint loopback mixes sound and may miss audio routed
 elsewhere. Preserve that uncertainty in episode associations and answers.
