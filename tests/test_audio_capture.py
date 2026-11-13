@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 from collections import Counter
 from dataclasses import replace
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -20,20 +22,20 @@ from audio_fakes import (
     speech,
     wall_clock_ms,
 )
-from defects import known_defect
 from sink_spy import SECRET, SinkSpy
 from waits import wait_for
 
 from akashic.capture import audio as audio_module
 from akashic.capture.audio import (
     AudioCapture,
+    AudioSettings,
     SegmentWriter,
     SourceSampler,
     StreamRecorder,
     Utterance,
 )
 from akashic.capture.exclusions import Exclusions
-from akashic.capture.ports import AudioError
+from akashic.capture.ports import AudioDevice, AudioError
 from akashic.config import Exclusions as UserExclusions
 from akashic.storage.audio import AudioStore
 
@@ -44,7 +46,7 @@ if TYPE_CHECKING:
     import numpy as np
     from numpy.typing import NDArray
 
-    from akashic.capture.ports import AudioKind
+    from akashic.capture.ports import AudioInput, AudioKind
     from akashic.config import Paths
     from akashic.storage.media import MediaStore
 
@@ -433,7 +435,6 @@ class _FlakyDetector(FakeDetector):
         return super().probability(window)
 
 
-@known_defect(23, "a non-AudioError exception silently kills a stream's recorder thread")
 def test_audio_recorder_survives_a_detector_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(audio_module, "READ_TIMEOUT_S", 0.01)
     monkeypatch.setattr(audio_module, "RETRY_S", 0.01)
@@ -469,3 +470,456 @@ def test_audio_recorder_survives_a_detector_error(monkeypatch: pytest.MonkeyPatc
     finally:
         stop.set()
         thread.join(timeout=10)
+
+
+# --- #23: a fault in one iteration costs that iteration, not the thread ---------------------
+
+
+class _CountingStop(threading.Event):
+    """Records each wait without waiting; the loop ends after ``limit`` iterations."""
+
+    def __init__(self, limit: int) -> None:
+        super().__init__()
+        self.limit = limit
+        self.checks = 0
+        self.timeouts: list[float | None] = []
+
+    def is_set(self) -> bool:
+        self.checks += 1
+        return super().is_set() or self.checks > self.limit
+
+    def wait(self, timeout: float | None = None) -> bool:
+        self.timeouts.append(timeout)
+        return super().is_set()
+
+
+_PRIVATE = "private-title-https://secret.example/x"
+
+
+class _FaultyDevices(FakeDevices):
+    def __init__(self, fail_find: int = 0, fail_close: int = 0) -> None:
+        super().__init__()
+        self.fail_find = fail_find
+        self.fail_close = fail_close
+
+    def find(self, kind: AudioKind, name_contains: str) -> AudioDevice | None:
+        if self.fail_find:
+            self.fail_find -= 1
+            raise OSError(_PRIVATE)
+        return super().find(kind, name_contains)
+
+    def open(self, kind: AudioKind, device: AudioDevice) -> AudioInput:
+        stream = super().open(kind, device)
+        if self.fail_close:
+            self.fail_close -= 1
+            real_close = stream.close
+
+            def bad_close() -> None:
+                real_close()
+                raise OSError(_PRIVATE)
+
+            stream.close = bad_close  # type: ignore[method-assign]
+        return stream
+
+
+class _ResetFails(FakeDetector):
+    def __init__(self, failures: int = 1) -> None:
+        super().__init__()
+        self.failures = failures
+
+    def reset(self) -> None:
+        if self.failures:
+            self.failures -= 1
+            raise ValueError(_PRIVATE)
+        super().reset()
+
+
+def _recorder(
+    devices: FakeDevices,
+    detector: FakeDetector | None = None,
+    out: list[tuple[AudioKind, Utterance]] | None = None,
+    stats: Counter[str] | None = None,
+) -> StreamRecorder:
+    sink_to = out if out is not None else []
+    return StreamRecorder(
+        kind="mic",
+        devices=devices,
+        detector=detector or FakeDetector(),
+        settings=SETTINGS,
+        sink=lambda kind, u: sink_to.append((kind, u)),
+        clock_ms=wall_clock_ms,
+        stats=stats if stats is not None else Counter(),
+    )
+
+
+def _fault_warnings(caplog: pytest.LogCaptureFixture) -> list[str]:
+    return [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.parametrize("fault", ["find", "reset", "probability", "close", "follow"])
+def test_a_fault_is_counted_and_the_stream_records_again(
+    monkeypatch: pytest.MonkeyPatch, fault: str
+) -> None:
+    monkeypatch.setattr(audio_module, "READ_TIMEOUT_S", 0.01)
+    monkeypatch.setattr(audio_module, "RETRY_S", 0.01)
+    monkeypatch.setattr(audio_module, "DEVICE_CHECK_S", 0.0)
+    devices = _FaultyDevices()
+    detector: FakeDetector = FakeDetector()
+    if fault == "find":
+        devices.fail_find = 1
+    elif fault == "reset":
+        detector = _ResetFails()
+    elif fault == "probability":
+        detector = _FlakyDetector()
+    elif fault == "close":
+        devices.fail_close = 1
+    for _ in range(4):
+        devices.scripts["mic"].append([speech(20), silence(20)])
+    out: list[tuple[AudioKind, Utterance]] = []
+    stats: Counter[str] = Counter()
+    recorder = _recorder(devices, detector, out, stats)
+    stop, paused = threading.Event(), threading.Event()
+    thread = threading.Thread(target=recorder.run, args=(stop, paused), daemon=True)
+    thread.start()
+    try:
+        if fault == "close":
+            assert wait_for(lambda: bool(devices.opened), 5)
+            paused.set()  # the release closes the device, and close() raises
+            assert wait_for(lambda: stats["loop_error_mic"] == 1, 5)
+            paused.clear()
+        elif fault == "follow":
+            assert wait_for(lambda: bool(devices.opened), 5)
+            devices.fail_find = 1  # the lookup of the next device check raises
+        assert wait_for(lambda: stats["loop_error_mic"] == 1 and bool(out), 10)
+        assert thread.is_alive()
+    finally:
+        stop.set()
+        thread.join(timeout=10)
+    assert not thread.is_alive()
+    assert stats["loop_error_mic"] == 1
+    assert all(stream.closed for _, stream in devices.opened[:-1])
+
+
+def test_a_fault_waits_retry_s_stop_aware_then_reopens() -> None:
+    devices = _FaultyDevices(fail_find=1)
+    recorder = _recorder(devices)
+    stop = _CountingStop(2)
+    recorder.run(stop, threading.Event())
+    assert stop.timeouts[0] == audio_module.RETRY_S
+    assert len(devices.opened) == 1  # after the wait the device was opened again
+
+
+def test_stop_ends_a_recorder_waiting_out_a_fault_at_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(audio_module, "RETRY_S", 60.0)
+    devices = _FaultyDevices(fail_find=1)
+    stats: Counter[str] = Counter()
+    recorder = _recorder(devices, stats=stats)
+    stop = threading.Event()
+    thread = threading.Thread(target=recorder.run, args=(stop, threading.Event()), daemon=True)
+    thread.start()
+    assert wait_for(lambda: stats["loop_error_mic"] == 1, 5)
+    stop.set()
+    thread.join(timeout=3)
+    assert not thread.is_alive()
+
+
+def test_the_log_of_a_fault_holds_only_the_type_and_the_kind(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    recorder = _recorder(_FaultyDevices(fail_find=1))
+    with caplog.at_level(logging.DEBUG, logger="akashic.capture.audio"):
+        recorder.run(_CountingStop(3), threading.Event())
+    warnings = _fault_warnings(caplog)
+    assert len(warnings) == 1
+    assert "OSError" in warnings[0]
+    assert "mic" in warnings[0]
+    assert "secret" not in caplog.text
+    assert "private" not in caplog.text
+    assert all(r.exc_info is None for r in caplog.records)
+
+
+def test_a_repeating_fault_is_logged_once_per_interval(caplog: pytest.LogCaptureFixture) -> None:
+    stats: Counter[str] = Counter()
+    recorder = _recorder(_FaultyDevices(fail_find=1000), stats=stats)
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
+        recorder.run(_CountingStop(200), threading.Event())
+    assert stats["loop_error_mic"] == 200
+    assert len(_fault_warnings(caplog)) == 1
+
+
+def test_each_fault_type_has_its_own_log_budget(caplog: pytest.LogCaptureFixture) -> None:
+    recorder = _recorder(_FaultyDevices(fail_find=1), _ResetFails(failures=1))
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
+        recorder.run(_CountingStop(6), threading.Event())
+    warnings = _fault_warnings(caplog)
+    assert len(warnings) == 2
+    assert sum("OSError" in w for w in warnings) == 1
+    assert sum("ValueError" in w for w in warnings) == 1
+
+
+def test_a_fault_type_is_logged_again_after_the_interval(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    now = [0.0]
+    monkeypatch.setattr(audio_module, "time", SimpleNamespace(monotonic=lambda: now[0]))
+    recorder = _recorder(_FaultyDevices(fail_find=1000))
+
+    class Advancing(_CountingStop):
+        def wait(self, timeout: float | None = None) -> bool:
+            now[0] += audio_module.FAULT_LOG_S / 2
+            return super().wait(timeout)
+
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
+        recorder.run(Advancing(6), threading.Event())
+    assert len(_fault_warnings(caplog)) == 3  # at 0, 300 and 600 s
+
+
+def test_a_close_that_raises_still_clears_the_device_state() -> None:
+    devices = _FaultyDevices(fail_close=1)
+    recorder = _recorder(devices)
+    assert recorder._acquire()
+    with pytest.raises(OSError, match="private"):
+        recorder._release(keep=False)
+    assert recorder._input is None
+    assert recorder._device is None
+    assert recorder._acquire()  # the next iteration opens the device again
+    assert len(devices.opened) == 2
+
+
+def test_a_fault_while_paused_does_not_end_the_loop() -> None:
+    devices = _FaultyDevices(fail_close=1)
+    stats: Counter[str] = Counter()
+    recorder = _recorder(devices, stats=stats)
+    assert recorder._acquire()
+    paused = threading.Event()
+    paused.set()
+    recorder.run(_CountingStop(3), paused)
+    assert stats["loop_error_mic"] == 1
+    assert recorder._input is None
+
+
+def test_a_fault_drops_the_open_utterance_and_leaves_no_device_open() -> None:
+    devices = _FaultyDevices()
+    out: list[tuple[AudioKind, Utterance]] = []
+    recorder = _recorder(devices, out=out)
+    assert recorder._acquire()
+    recorder._consume(speech(30), wall_clock_ms())
+    recorder._recover_from_fault("RuntimeError", _CountingStop(1))
+    assert out == []
+    assert recorder._input is None
+    assert devices.opened[0][1].closed
+
+
+def test_base_exceptions_are_not_swallowed() -> None:
+    class Interrupting(_FaultyDevices):
+        def find(self, kind: AudioKind, name_contains: str) -> AudioDevice | None:
+            del kind, name_contains
+            raise KeyboardInterrupt
+
+    recorder = _recorder(Interrupting())
+    with pytest.raises(KeyboardInterrupt):
+        recorder.run(_CountingStop(3), threading.Event())
+
+
+# --- #160: stop, device change and device failure keep the utterance heard so far -----------
+
+
+def _open_recorder(settings: AudioSettings = SETTINGS) -> RecorderRig:
+    rig = RecorderRig(settings=settings)
+    assert rig.recorder._acquire()
+    return rig
+
+
+def _stop_now(rig: RecorderRig, *, paused: bool = False) -> None:
+    stop, pause = threading.Event(), threading.Event()
+    stop.set()
+    if paused:
+        pause.set()
+    rig.recorder.run(stop, pause)
+
+
+def test_stop_closes_the_open_utterance_at_once_and_hands_it_over_before_the_device_closes() -> (
+    None
+):
+    rig = _open_recorder()
+    closed_when_handed_over: list[bool] = []
+    handed_over = rig.out
+
+    def sink(kind: AudioKind, utterance: Utterance) -> None:
+        closed_when_handed_over.append(rig.devices.opened[0][1].closed)
+        handed_over.append((kind, utterance))
+
+    rig.recorder._sink = sink
+    rig.deliver(speech(30))  # no silence yet: the hangover has not elapsed
+    _stop_now(rig)
+    assert len(rig.out) == 1
+    assert closed_when_handed_over == [False]
+    assert rig.devices.opened[0][1].closed
+
+
+def test_a_flushed_utterance_that_is_too_short_is_dropped_as_short() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(2))  # 64 ms of speech against a 128 ms minimum
+    _stop_now(rig)
+    assert rig.out == []
+    assert rig.stats["dropped_short"] == 1
+
+
+def test_a_flushed_utterance_that_is_too_quiet_is_dropped_as_quiet() -> None:
+    rig = _open_recorder(replace(SETTINGS, energy_floor=0.9))
+    rig.deliver(speech(30))
+    _stop_now(rig)
+    assert rig.out == []
+    assert rig.stats["dropped_quiet"] == 1
+
+
+def test_stop_with_no_open_utterance_hands_nothing_over() -> None:
+    rig = _open_recorder()
+    rig.deliver(silence(30))
+    _stop_now(rig)
+    assert rig.out == []
+    assert rig.devices.opened[0][1].closed
+
+
+def test_stop_without_ever_opening_a_device_is_harmless() -> None:
+    rig = RecorderRig()
+    _stop_now(rig)
+    assert rig.out == []
+
+
+def test_stop_set_together_with_pause_flushes_nothing() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(30))
+    _stop_now(rig, paused=True)
+    assert rig.out == []
+    assert rig.devices.opened[0][1].closed
+    assert rig.stats["dropped_short"] == 0
+
+
+def test_pause_then_stop_flushes_nothing() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(30))
+    paused = threading.Event()
+    paused.set()
+    rig.recorder.run(_CountingStop(1), paused)  # one paused iteration, then the loop stops
+    _stop_now(rig, paused=True)
+    assert rig.out == []
+
+
+def test_a_device_change_hands_the_open_utterance_over_and_reopens_empty() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(30))
+    rig.devices.devices["mic"] = AudioDevice("mic-2", "Headset")
+    rig.recorder._follow_default_device()
+    assert len(rig.out) == 1
+    assert rig.devices.opened[0][1].closed
+    assert rig.recorder._input is None
+    assert rig.recorder._acquire()
+    assert len(rig.devices.opened) == 2
+    assert rig.recorder.segmenter.finish() == []  # the new device starts with an empty segmenter
+    assert len(rig.recorder._pending) == 0
+
+
+def test_an_unchanged_device_keeps_recording() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(30))
+    rig.recorder._follow_default_device()
+    assert rig.out == []
+    assert rig.recorder._input is not None
+
+
+def test_a_device_failure_hands_the_open_utterance_over_before_release() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(30))
+    rig.devices.opened[0][1].script.append(AudioError("unplugged"))
+    rig.recorder._step()
+    assert len(rig.out) == 1
+    assert rig.devices.opened[0][1].closed
+    assert rig.recorder._input is None
+
+
+def test_a_device_failure_with_a_too_short_utterance_hands_nothing_over() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(2))
+    rig.devices.opened[0][1].script.append(AudioError("unplugged"))
+    rig.recorder._step()
+    assert rig.out == []
+    assert rig.stats["dropped_short"] == 1
+
+
+def test_a_sink_that_raises_on_stop_still_closes_the_device() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(30))
+
+    def bad_sink(kind: AudioKind, utterance: Utterance) -> None:
+        del kind, utterance
+        raise RuntimeError(_PRIVATE)
+
+    rig.recorder._sink = bad_sink
+    _stop_now(rig)  # must not raise
+    assert rig.devices.opened[0][1].closed
+    assert rig.recorder._input is None
+
+
+def _capture(
+    store: AudioStore, devices: FakeDevices, sessions: FakeSessions, user: UserExclusions
+) -> AudioCapture:
+    return AudioCapture(
+        devices=devices,
+        sessions=sessions,
+        detector_factory=FakeDetector,
+        store=store,
+        exclusions=Exclusions(user),
+        settings=SETTINGS,
+    )
+
+
+def _run_until_speaking_then_stop(capture: AudioCapture, devices: FakeDevices) -> None:
+    stop, paused = threading.Event(), threading.Event()
+    thread = threading.Thread(target=capture.run, args=(stop, paused))
+    thread.start()
+    assert wait_for(
+        lambda: len(devices.opened) == 2 and all(not s.script for _, s in devices.opened), 30
+    )
+    stop.set()
+    thread.join(timeout=30)
+    assert not thread.is_alive()
+
+
+def _talking_devices() -> FakeDevices:
+    devices = FakeDevices()
+    devices.realtime = True
+    for kind in ("mic", "system"):
+        devices.scripts[kind].append([silence(10), speech(40)])  # still talking at stop
+    return devices
+
+
+def test_stopping_the_app_while_talking_writes_the_segment(
+    store: AudioStore, conn: Connection
+) -> None:
+    devices = _talking_devices()
+    capture = _capture(store, devices, FakeSessions(frozenset({"discord.exe"})), UserExclusions())
+    _run_until_speaking_then_stop(capture, devices)
+    rows = conn.execute("SELECT stream, sources FROM audio_segments ORDER BY stream").fetchall()
+    assert rows == [("mic", '["discord.exe"]'), ("system", '["discord.exe"]')]
+
+
+def test_an_excluded_process_still_blocks_the_flushed_utterance(audio: _Audio) -> None:
+    devices = _talking_devices()
+    capture = _capture(
+        audio.store,
+        devices,
+        FakeSessions(frozenset({SECRET_PROCESS, "discord.exe"})),
+        UserExclusions(processes=(SECRET_PROCESS,)),
+    )
+    _run_until_speaking_then_stop(capture, devices)
+    assert audio.spy.nothing_stored(audio.conn)
+    assert audio.spy.leaks(audio.conn, SECRET) == []
+    assert capture.stats["dropped_excluded"] == 2
+
+
+def test_unknown_sources_still_block_the_flushed_utterance(audio: _Audio) -> None:
+    devices = _talking_devices()
+    capture = _capture(audio.store, devices, FakeSessions(None), UserExclusions())
+    _run_until_speaking_then_stop(capture, devices)
+    assert audio.spy.nothing_stored(audio.conn)

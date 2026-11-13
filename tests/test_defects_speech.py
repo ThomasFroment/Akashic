@@ -737,7 +737,6 @@ class RecorderRig:
         return bool(self.devices.opened) and not self.devices.opened[0][1].script
 
 
-@known_defect(160, "stopping capture drops the open utterance (up to 30 s)")
 def test_stopping_capture_keeps_the_utterance_in_progress(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -751,7 +750,6 @@ def test_stopping_capture_keeps_the_utterance_in_progress(
     assert len(rig.out) == 1
 
 
-@known_defect(160, "a default-device change drops the open utterance")
 def test_a_device_change_keeps_the_utterance_in_progress(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -9,12 +9,15 @@ with ``overlap_ms`` of overlap into the next one so no word is split. Every segm
 wall-clock time its first sample was heard; nothing downstream may use processing time.
 
 Paused means nothing is captured: devices are closed (the microphone indicator goes off) and any
-half-recorded segment is dropped from memory. Process exclusions apply to the processes that were
-making sound: a segment during which an excluded process was audible is dropped, in memory.
+half-recorded segment is dropped from memory. Stopping capture or a device change or failure keeps
+the half-recorded segment by closing it early; an unexpected fault drops it. Process exclusions
+apply to the processes that were making sound: a segment during which an excluded process was
+audible is dropped, in memory.
 """
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import queue
 import threading
@@ -53,6 +56,7 @@ WINDOW_MS: Final = WINDOW * 1000 // SAMPLE_RATE  # 32
 TAIL_MS: Final = 200  # silence kept after the last speech window
 READ_TIMEOUT_S: Final = 0.1
 RETRY_S: Final = 5.0  # between attempts to open a missing device
+FAULT_LOG_S: Final = 300.0  # per exception type and stream, so a repeating fault cannot flood
 DEVICE_LIST_S: Final = 10.0  # how often the list of selectable devices is refreshed
 DEVICE_CHECK_S: Final = 5.0  # how often to ask whether the default device changed
 REANCHOR_MS: Final = 100  # clock error beyond which window timestamps are re-anchored
@@ -137,9 +141,13 @@ class Segmenter:
         self._last_speech_end_ms = 0
 
     def reset(self) -> None:
-        """Drop everything in memory (pause, device change)."""
+        """Drop everything in memory."""
         self._preroll.clear()
         self._reset_open()
+
+    def finish(self) -> list[Utterance]:
+        """Close an open utterance now, without waiting for the hangover."""
+        return self._close() if self._open else []
 
     def feed(self, ts_ms: int, window: NDArray[np.float32], probability: float) -> list[Utterance]:
         done: list[Utterance] = []
@@ -393,6 +401,7 @@ class StreamRecorder:
         self._pending_start_ms = 0
         self._next_device_check = 0.0
         self._warned = False
+        self._fault_logged: dict[str, float] = {}  # exception type -> monotonic time last logged
         self._level_max = 0.0  # loudest 32 ms window since the last snapshot()
         self._speech_sq = 0.0  # mean square of the windows the detector called speech
         self._speech_windows = 0
@@ -429,16 +438,38 @@ class StreamRecorder:
     def run(self, stop: threading.Event, paused: threading.Event) -> None:
         try:
             while not stop.is_set():
-                if paused.is_set():
-                    self._release()
-                    stop.wait(0.2)
-                elif self._input is None:
-                    if not self._acquire():
-                        stop.wait(RETRY_S)
-                else:
-                    self._step()
+                try:
+                    self._iterate(stop, paused)
+                except Exception as exc:  # noqa: BLE001 - a recorder must outlive any one fault
+                    self._recover_from_fault(type(exc).__name__, stop)
         finally:
-            self._release()
+            try:
+                self._release(keep=not paused.is_set())
+            except Exception as exc:  # noqa: BLE001 - shutdown must not print the message
+                self._log_fault(type(exc).__name__)
+
+    def _iterate(self, stop: threading.Event, paused: threading.Event) -> None:
+        if paused.is_set():
+            self._release(keep=False)
+            stop.wait(0.2)
+        elif self._input is None:
+            if not self._acquire():
+                stop.wait(RETRY_S)
+        else:
+            self._step()
+
+    def _recover_from_fault(self, name: str, stop: threading.Event) -> None:
+        self._stats[f"loop_error_{self.kind}"] += 1
+        self._log_fault(name)
+        with contextlib.suppress(Exception):  # _release clears its state even if close() raises
+            self._release(keep=False)
+        stop.wait(RETRY_S)
+
+    def _log_fault(self, name: str) -> None:
+        now = time.monotonic()
+        if now - self._fault_logged.get(name, float("-inf")) >= FAULT_LOG_S:
+            self._fault_logged[name] = now
+            log.warning("%s audio loop iteration failed: %s", self.kind, name)
 
     def _acquire(self) -> bool:
         device = self._devices.find(self.kind, self._wanted)
@@ -464,14 +495,22 @@ class StreamRecorder:
             log.warning(message)
             self._warned = True
 
-    def _release(self) -> None:
-        """Close the device and drop any half-recorded segment (nothing is kept on pause)."""
-        if self._input is not None:
-            self._input.close()
-            self._input = None
-        self._device = None
-        self._pending = np.zeros(0, dtype=np.float32)
-        self.segmenter.reset()
+    def _release(self, *, keep: bool) -> None:
+        """Close the device. The open utterance is handed to the sink when ``keep`` is set (stop,
+        device change, device failure) and dropped otherwise (pause, fault)."""
+        try:
+            if keep:
+                for utterance in self.segmenter.finish():
+                    self._sink(self.kind, utterance)
+        finally:
+            try:
+                if self._input is not None:
+                    self._input.close()
+            finally:
+                self._input = None
+                self._device = None
+                self._pending = np.zeros(0, dtype=np.float32)
+                self.segmenter.reset()
 
     def _step(self) -> None:
         assert self._input is not None  # noqa: S101 - narrowing for the type checker
@@ -479,7 +518,7 @@ class StreamRecorder:
             block = self._input.read(READ_TIMEOUT_S)
         except AudioError as exc:
             self._warn_once(f"{self.kind} audio device failed: {exc}")
-            self._release()
+            self._release(keep=True)
             return
         now = self._clock_ms()
         if block is None:
@@ -495,7 +534,7 @@ class StreamRecorder:
         current = self._devices.find(self.kind, self._wanted)
         if current is not None and self._device is not None and current != self._device:
             log.info("%s audio device changed; reopening", self.kind)
-            self._release()
+            self._release(keep=True)
 
     def _consume(self, block: NDArray[np.float32], now_ms: int) -> None:
         """Cut ``block`` into VAD windows stamped with the time they were heard."""

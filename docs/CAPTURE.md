@@ -38,8 +38,9 @@ its media is logged: an accepted exception ([SECURITY.md](SECURITY.md)). A media
 window title.
 
 Pause stops all new capture. The pause is kept across Lock, Quit and restart until the user
-resumes. A locked Windows screen and an Akashic pause are different states:
-headset conversations can continue while Windows is locked.
+resumes. Pause drops the utterance being recorded. Stop, a device change and a device failure
+keep it; an unexpected fault drops it. A locked Windows screen and an Akashic pause are
+different states: headset conversations can continue while Windows is locked.
 
 Media-session metadata and audible-process lists are correlations, not proof of which window
 or process produced a particular word. Endpoint loopback mixes sound and may miss audio routed

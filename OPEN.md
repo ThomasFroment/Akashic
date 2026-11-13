@@ -13,6 +13,7 @@ work, move it to TODO.md as a task and delete it here. Drop a milestone heading 
 - #158 PrintWindow not checked on a really hung window
 - #158 No check of a window over 16 MP spanning monitors
 - #22 A hung focused browser still costs several UIA timeouts per tick
+- #23 #160 Not checked on a real device unplug or default-device switch in the running app
 
 ## A2. Capture stops when asked
 

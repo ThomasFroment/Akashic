@@ -63,9 +63,9 @@ Three parts:
     - [x] `CUIAutomation8` + `IUIAutomation2`; 1 s connection, 3 s transaction (unmeasured)
     - [ ] Spike: time the unbudgeted readers on real browsers; set the transaction timeout from it
   - [x] #158 Skip only a hung HWND; store text-only rows on a None image; downscale > 16 MP
-- [ ] Audio loop survives faults
-  - [ ] #23 Catch any exception per recorder iteration: log the type, count, release, retry
-  - [ ] #160 Flush the open utterance on stop and device change; drop it only on pause
+- [x] Audio loop survives faults
+  - [x] #23 Catch any exception per recorder iteration: log the type, count, release, retry
+  - [x] #160 Flush the open utterance on stop and device change; drop it only on pause
 - [ ] Writes survive a busy database
   - [ ] #161 Retry capture writes with backoff; pop a media session only after its write
   - [ ] #44 Index `audio_segments(continues_id)` so deletions don't block capture inserts
