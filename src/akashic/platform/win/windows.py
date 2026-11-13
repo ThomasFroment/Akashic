@@ -13,6 +13,7 @@ user32 = ctypes.WinDLL("user32", use_last_error=True)
 dwmapi = ctypes.WinDLL("dwmapi", use_last_error=True)
 
 _GA_ROOT = 2
+_GA_ROOTOWNER = 3
 _GWL_STYLE = -16
 _WS_CAPTION = 0x00C00000  # title bar + border; borderless and fullscreen windows lack it
 _DWMWA_EXTENDED_FRAME_BOUNDS = 9
@@ -71,8 +72,14 @@ class Win32Windows:
         hwnd = user32.WindowFromPoint(wintypes.POINT(x, y))
         if not hwnd:
             return None
-        root = user32.GetAncestor(hwnd, _GA_ROOT)
-        return self._info(root or hwnd)
+        root = user32.GetAncestor(hwnd, _GA_ROOT) or hwnd
+        foreground = user32.GetForegroundWindow()
+        # Owned popups (menus, dropdowns, autofill) are part of the focused window: password check.
+        if foreground and user32.GetAncestor(root, _GA_ROOTOWNER) == user32.GetAncestor(
+            foreground, _GA_ROOTOWNER
+        ):
+            return self.focused_window()
+        return self._info(root)
 
     def cursor_pos(self) -> tuple[int, int]:
         point = wintypes.POINT()

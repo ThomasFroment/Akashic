@@ -991,7 +991,6 @@ def input_frames(conn: Connection) -> list[str]:
     ]
 
 
-@known_defect(144, "scrolling an off-centre window captures the window at the monitor's centre")
 def test_scrolling_a_side_window_captures_that_window(conn: Connection, paths: Paths) -> None:
     screen = FakeScreen(rects=[SCREEN, MON_B])
     windows = FakeWindows(focused=plain_window())
@@ -1007,7 +1006,6 @@ def test_scrolling_a_side_window_captures_that_window(conn: Connection, paths: P
     assert "discord.exe" in input_frames(conn)
 
 
-@known_defect(144, "on the focused monitor a scrolled unfocused window is never captured")
 def test_scrolling_a_window_beside_the_focused_one_captures_it(
     conn: Connection, paths: Paths
 ) -> None:

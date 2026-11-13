@@ -100,7 +100,8 @@ class WindowSource(Protocol):
         ...
 
     def window_at(self, x: int, y: int) -> WindowInfo | None:
-        """The top-level window under a screen point (used for non-focused monitors)."""
+        """The top-level window under a screen point (used for non-focused monitors and for the
+        window under the cursor on input). A window owned by the focused window resolves to it."""
         ...
 
     def cursor_pos(self) -> tuple[int, int]: ...

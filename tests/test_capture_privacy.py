@@ -146,6 +146,8 @@ def test_negative_control_the_old_behaviour_stores_the_form(
     privacy_rig: Callable[..., PrivacyRig], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(ScreenCapture, "_window_for", _old_window_for)
+    # the write-time check (an unfocused capture of the focused HWND) is also absent in the old code
+    monkeypatch.setattr(ScreenCapture, "_is_focused_hwnd", lambda _self, _hwnd: False)
     rig = spanning(privacy_rig, 2)
     rig.capture._tick_hwnds = _AnySet()
     rig.uia.password = True

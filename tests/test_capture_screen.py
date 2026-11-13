@@ -385,6 +385,7 @@ def test_input_captures_focus_and_cursor_monitors(make_rig: Callable[..., Rig]) 
     rig.screen.frames[0] = with_text_block(blank())
     rig.screen.frames[1] = with_text_block(blank())
     rig.windows.cursor = (900, 100)  # scrolling the unfocused monitor
+    rig.windows.at[(900, 100)] = window(hwnd=8, process="discord.exe", title="#g", rect=MON_B)
     rig.capture.note("input", 1.0)
     rig.capture.tick(1.5)
     assert [f[:2] for f in rig.frames()[-2:]] == [("input", 0), ("input", 1)]

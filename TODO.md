@@ -84,7 +84,7 @@ Three parts:
 
 ### A4. Screen coverage
 
-- [ ] #144 Scroll capture uses the window under the cursor, skipping the focused HWND
+- [x] #144 Scroll capture uses the window under the cursor, skipping the focused HWND
 - [ ] #147 Game mode: idle captures of other monitors without UIA, OCR deferred; measure the cost
 - [ ] #150 Game detection: add common players and RDP; require fullscreen D3D evidence
 - [ ] #21 UIA FindAll condition filters `IsOffscreen == False` before the 3000-node cut
@@ -92,6 +92,9 @@ Three parts:
 - [ ] #78 Test selected-window capture: 1 s bound, render thread, late pixels, bounds crop
 - [ ] #82 `FakeUia` returns `TextBlock`s; test the controls-only OCR fallback and `MAX_TEXT_CHARS`
 - [ ] Lead: spike Chrome 138+ native UIA as the cause of the blank Edge probe (§9)
+- [ ] Follow-ups found during A4
+  - [ ] Key screen rate state by target, not monitor index plus one cursor slot (helps #147, #149)
+  - [ ] Owned popups of unfocused apps (context menus): resolve to their owner window? Measure first
 
 ### A5. Audio recording
 

@@ -116,6 +116,7 @@ class ScreenCapture:
         self._debouncer = Debouncer()
         self._last_input: int | None = None
         self._states: dict[int, _MonitorState] = {}
+        self._pointed_state = _MonitorState()
         self._monitors: list[Rect] = []
         self._monitors_at = float("-inf")
         self._focus_key: tuple[int, str] | None = None
@@ -133,6 +134,7 @@ class ScreenCapture:
         """Forget pending triggers and what was last seen (used while paused or locked)."""
         self._debouncer.clear()
         self._states.clear()
+        self._pointed_state = _MonitorState()
         self._focus_key = None
         self._last_input = None
         self._browsers.clear()
@@ -213,11 +215,10 @@ class ScreenCapture:
         focus_monitor = _monitor_of(monitors, focused.rect.center) if focused else None
         for trigger in self._debouncer.pop_due(now):
             index = focus_monitor if focus_monitor is not None else 0
-            self._capture(trigger, index, monitors, now)
-            if trigger == "input":  # e.g. scrolling a window that does not have the focus
-                pointed = _monitor_of(monitors, self._windows.cursor_pos())
-                if pointed is not None and pointed != index:
-                    self._capture(trigger, pointed, monitors, now)
+            if trigger == "input":
+                self._capture_input(index, monitors, focused, now)
+            else:
+                self._capture(trigger, index, monitors, now)
         for index in range(len(monitors)):
             state = self._states.setdefault(index, _MonitorState())
             interval = (
@@ -362,28 +363,101 @@ class ScreenCapture:
         # too: it is the focused one there as well, so its password check applies.
         return window, window is not None and focused is not None and window.hwnd == focused.hwnd
 
+    def _is_focused_hwnd(self, hwnd: int) -> bool:
+        focused = self._windows.focused_window()
+        return focused is not None and focused.hwnd == hwnd
+
     def _capture(self, trigger: Trigger, index: int, monitors: list[Rect], now: float) -> None:
         state = self._states.setdefault(index, _MonitorState())
         if now - state.last_attempt < self._settings.min_gap_s:
             if trigger != "idle":
                 self._debouncer.defer(trigger, state.last_attempt + self._settings.min_gap_s)
             return
+        self._attempt(trigger, index, monitors, state, now)
+
+    def _pointed_target(self, monitors: list[Rect]) -> tuple[int, WindowInfo] | None:
+        """The monitor and window under the cursor, if there is one."""
+        point = self._windows.cursor_pos()
+        pointed = _monitor_of(monitors, point)
+        if pointed is None:
+            return None
+        window = self._windows.window_at(*point)
+        return None if window is None else (pointed, window)
+
+    def _capture_input(
+        self, index: int, monitors: list[Rect], focused: WindowInfo | None, now: float
+    ) -> None:
+        """Capture the focused monitor and the window under the cursor (e.g. one being scrolled
+        without focus). Both gates are checked first, so a trigger defers at most once."""
+        focus_state = self._states.setdefault(index, _MonitorState())
+        target = self._pointed_target(monitors)
+        on_focused = target is not None and focused is not None and target[1].hwnd == focused.hwnd
+        if on_focused:
+            target = None
+        focus_done = focus_state.last_attempt == now  # a focus trigger just captured it this tick
+        gates = [] if focus_done else [focus_state]
+        if target is not None:
+            gates.append(self._pointed_state)
+        min_gap = self._settings.min_gap_s
+        blocked = [s.last_attempt + min_gap for s in gates if now - s.last_attempt < min_gap]
+        if blocked:
+            self._debouncer.defer("input", max(blocked))
+            return
+        if on_focused:
+            self._note("pointed_focused")
+        if not focus_done:
+            self._attempt("input", index, monitors, focus_state, now)
+        if target is not None:
+            pointed_index, window = target
+            self._attempt(
+                "input", pointed_index, monitors, self._pointed_state, now, pointed=window
+            )
+
+    def _attempt(  # noqa: PLR0913 - the capture context travels together
+        self,
+        trigger: Trigger,
+        index: int,
+        monitors: list[Rect],
+        state: _MonitorState,
+        now: float,
+        *,
+        pointed: WindowInfo | None = None,
+    ) -> None:
         state.last_attempt = now
         try:
-            outcome = self._capture_monitor(trigger, index, monitors[index], state, now)
+            outcome = self._capture_monitor(
+                trigger, index, monitors[index], state, now, pointed=pointed
+            )
         except Exception as exc:  # noqa: BLE001 - one bad capture must never stop the loop
             log.warning("capture failed: %s", type(exc).__name__)
             outcome = "error"
         self._note(outcome)
 
-    def _capture_monitor(  # noqa: PLR0911 - a pipeline of early exits, one per rule
-        self, trigger: Trigger, index: int, monitor: Rect, state: _MonitorState, now: float
+    def _target_window(
+        self, monitor: Rect, pointed: WindowInfo | None
+    ) -> tuple[WindowInfo, bool] | str:
+        """The window to capture and whether it is focused, or the outcome that skips it."""
+        if pointed is not None:
+            return "pointed_focused" if self._is_focused_hwnd(pointed.hwnd) else (pointed, False)
+        window, is_focused = self._window_for(monitor)
+        return "no_window" if window is None else (window, is_focused)
+
+    def _capture_monitor(  # noqa: PLR0911, PLR0913 - a pipeline of early exits, one per rule
+        self,
+        trigger: Trigger,
+        index: int,
+        monitor: Rect,
+        state: _MonitorState,
+        now: float,
+        *,
+        pointed: WindowInfo | None = None,
     ) -> str:
         if self._windows.is_locked():
             return "locked"
-        window, is_focused = self._window_for(monitor)
-        if window is None:
-            return "no_window"
+        chosen = self._target_window(monitor, pointed)
+        if isinstance(chosen, str):
+            return chosen
+        window, is_focused = chosen
         if window.hwnd in self._tick_hwnds:
             return "duplicate_window"
         self._tick_hwnds.add(window.hwnd)  # before the rules: an excluded window stays excluded
@@ -550,9 +624,10 @@ class ScreenCapture:
     ) -> bool:
         if self._windows.is_locked() or self._windows.inspect_window(window.hwnd) != window:
             return False
-        if focused and (
-            self._windows.focused_window() != window or self._password_reason() is not None
-        ):
+        if focused:
+            if self._windows.focused_window() != window or self._password_reason() is not None:
+                return False
+        elif self._is_focused_hwnd(window.hwnd):
             return False
         return not read_url or self._read_url(window) == url
 

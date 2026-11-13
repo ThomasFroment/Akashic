@@ -6,6 +6,10 @@ Screenshots represent the selected app window, never a monitor fallback. Episode
 belong to the claimed app and moment; a nearby timestamp alone is insufficient.
 A window whose pixels cannot be rendered (hung app) is stored text-only, like black
 frames, and windows over 16 MP are downscaled to fit.
+Input also captures the unfocused window under the cursor, on any monitor, OCR only. A window
+that is focused, or owned by the focused window, is never captured as unfocused. Each target has
+its own rate gate; both are checked together, so a trigger defers at most once and then captures
+both.
 
 Screen text should preserve useful reading order, repeated messages and bilingual content while
 removing interface clutter. Prefer accessibility text with OCR as a fallback. Neither nonempty

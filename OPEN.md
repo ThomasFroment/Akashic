@@ -7,6 +7,11 @@ naming the item it came from.
 When a point is done, delete its line in the commit that does it. When it turns into planned
 work, move it to TODO.md as a task and delete it here. Drop a milestone heading once it is empty.
 
+## A4. Screen coverage
+
+- #144 `window_at`'s `GA_ROOTOWNER` rule not run on real Windows (focused browser dropdown or autofill list)
+- #144 Not checked in the running app: scroll a side Discord window, then the pane beside the focused one
+
 ## A3. Capture keeps running and keeps what it recorded
 
 - #22 UIA timeout not checked against a really hung app
