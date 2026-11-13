@@ -90,7 +90,7 @@ Three parts:
 - [x] #21 UIA FindAll condition filters `IsOffscreen == False` before the 3000-node cut
 - [ ] #153 Keep an encrypted full-resolution copy (or crop) for deferred game OCR until it runs
 - [ ] #78 Test selected-window capture: 1 s bound, render thread, late pixels, bounds crop
-- [ ] #82 `FakeUia` returns `TextBlock`s; test the controls-only OCR fallback and `MAX_TEXT_CHARS`
+- [x] #82 `FakeUia` returns `TextBlock`s; test the controls-only OCR fallback and `MAX_TEXT_CHARS`
 - [ ] Lead: spike Chrome 138+ native UIA as the cause of the blank Edge probe (§9)
 - [ ] Follow-ups found during A4
   - [ ] Key screen rate state by target, not monitor index plus one cursor slot (helps #147, #149)
