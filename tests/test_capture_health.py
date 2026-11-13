@@ -175,6 +175,43 @@ def test_only_a_change_in_the_problem_set_is_logged(caplog: pytest.LogCaptureFix
     ]
 
 
+def test_a_set_that_becomes_empty_is_logged_once_at_info(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    status, _ = make_status()
+    with caplog.at_level(logging.INFO, logger="akashic.capture.health"):
+        status.set_problems([SCREEN_IMAGES_FAILING], 0)
+        status.set_problems([], 0)
+        status.set_problems([], 0)
+    assert [(r.levelno, r.getMessage()) for r in caplog.records] == [
+        (logging.WARNING, f"capture problems: {SCREEN_IMAGES_FAILING}"),
+        (logging.INFO, "capture problems cleared"),
+    ]
+
+
+def test_a_non_empty_set_changing_to_another_is_logged_as_a_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    status, _ = make_status()
+    with caplog.at_level(logging.INFO, logger="akashic.capture.health"):
+        status.set_problems([SCREEN_IMAGES_FAILING], 0)
+        status.set_problems([SCREEN_IMAGES_FAILING, "other_problem"], 0)
+        status.set_problems(["other_problem"], 0)
+        status.set_problems(["other_problem"], 0)
+    assert [(r.levelno, r.getMessage()) for r in caplog.records] == [
+        (logging.WARNING, f"capture problems: {SCREEN_IMAGES_FAILING}"),
+        (logging.WARNING, f"capture problems: other_problem, {SCREEN_IMAGES_FAILING}"),
+        (logging.WARNING, "capture problems: other_problem"),
+    ]
+
+
+def test_an_empty_set_at_start_logs_nothing(caplog: pytest.LogCaptureFixture) -> None:
+    status, _ = make_status()
+    with caplog.at_level(logging.INFO, logger="akashic.capture.health"):
+        status.set_problems([], 0)
+    assert caplog.records == []
+
+
 def test_a_discarded_change_is_not_logged(caplog: pytest.LogCaptureFixture) -> None:
     ctx = make_context(io.BytesIO())
     status = CaptureStatus(ctx.set_active, lambda: ctx.pause_epoch, audio_failed=False)

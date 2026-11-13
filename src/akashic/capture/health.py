@@ -75,4 +75,7 @@ class CaptureStatus:
         state: ipc.State = "degraded" if active else "gaming" if self._gaming else "ready"
         if self._set_active(state, epoch=epoch) and active != self._logged:
             self._logged = active
-            log.warning("capture problems: %s", ", ".join(sorted(active)) or "none")
+            if active:
+                log.warning("capture problems: %s", ", ".join(sorted(active)))
+            else:
+                log.info("capture problems cleared")

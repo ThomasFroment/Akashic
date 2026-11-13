@@ -56,12 +56,12 @@ Three parts:
 
 ### A3. Capture keeps running and keeps what it recorded
 
-- [ ] Screen loop survives faults
+- [x] Screen loop survives faults
   - [x] #15 Game mode: clear due input triggers each tick; no busy-spin with no monitors
   - [x] #29 Per-iteration guard in screen `run`: log the type, count, continue
-  - [ ] #22 Short UIA connection and transaction timeouts (`IUIAutomation2`)
-    - [x] `CUIAutomation8` + `IUIAutomation2`; 1 s connection, 3 s transaction (unmeasured)
-    - [ ] Spike: time the unbudgeted readers on real browsers; set the transaction timeout from it
+  - [x] #22 Short UIA connection and transaction timeouts (`IUIAutomation2`)
+    - [x] `CUIAutomation8` + `IUIAutomation2`; 1 s connection, 2 s transaction
+    - [x] Spike: time the unbudgeted readers on real browsers; set the transaction timeout from it
   - [x] #158 Skip only a hung HWND; store text-only rows on a None image; downscale > 16 MP
 - [x] Audio loop survives faults
   - [x] #23 Catch any exception per recorder iteration: log the type, count, release, retry
@@ -79,6 +79,7 @@ Three parts:
   - [ ] Shorter `busy_timeout` once stop is set, so a busy database at stop fits the 10 s kill
   - [ ] One rate-limited, type-only fault log shared by the screen, audio and media loops
   - [ ] Report dropped audio segments and failed frame writes as capture problems (with #143)
+  - [ ] Keep UIA text on very large pages (read_text's FindAll exceeds the 2 s UIA timeout)
 
 ### A4. Screen coverage
 

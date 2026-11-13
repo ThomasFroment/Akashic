@@ -69,7 +69,7 @@ _CHROMIUM_FRAME_CLASS = "BrowserRootView"  # its accessible name carries the pri
 _MAX_OMNIBOX_CANDIDATES = 4
 _MAX_ANCESTORS = 40
 UIA_CONNECTION_TIMEOUT_MS = 1000
-UIA_TRANSACTION_TIMEOUT_MS = 3000
+UIA_TRANSACTION_TIMEOUT_MS = 2000
 _ERRORS = (comtypes.COMError, OSError, ValueError, AttributeError)
 
 

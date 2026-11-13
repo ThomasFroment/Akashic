@@ -73,8 +73,26 @@ Detection delay: the problems are evaluated by the publisher thread every 1 to 5
 shows up 3 failed grabs plus up to one publish interval later (about 15 s idle, up to about 3
 minutes in game mode). Priority is `paused` > `degraded` > `gaming` > `ready`. A pause clears
 every non-sticky problem; a resume reports `degraded` only for `audio_unavailable`, and the next
-publish catches up with the real state. Problem changes are logged once at warning level, codes
-only. The thresholds (`GRAB_FAILURE_RUN`, `DEVICE_DOWN_S` in `capture/health.py`) are not measured.
+publish catches up with the real state. Problem changes are logged once, codes only: warning level
+when problems are active, info level when the set becomes empty.
+The thresholds (`GRAB_FAILURE_RUN`, `DEVICE_DOWN_S` in `capture/health.py`) are not measured.
+
+## UI Automation timeouts
+
+`WindowsUia` sets `ConnectionTimeout` to 1000 ms and `TransactionTimeout` to 2000 ms
+(`platform/win/uia.py`), so a hung app fails a call instead of blocking the screen loop.
+Spike 2026-11-13, Edge and Chrome, a local page of about 30k elements with an autofocused
+password field, default UIA timeouts, 5 runs each. Worst times of the readers that run without
+a budget: `focused_is_password` 18 ms, `browser_caption` 20 ms, `read_url` 626 ms (Chrome; Edge
+554 ms). Zen (Gecko, throwaway profile, same page, about 20k UIA nodes, 5 runs): worst
+`focused_is_password` 34 ms, `browser_caption` 0 ms (returns at once for Firefox and Zen),
+`read_url` 14 ms (`_firefox_bar` finds the address bar early). The password field was not the
+focused element in the Zen run, so `focused_is_password` there did not read a Gecko password
+field. `read_text` took up to 4.5 s on the Chromium page and 3.1 s in Zen; its budget only
+records time after the call and `max_nodes` applies after the single `FindAll` call, so on pages
+that large `read_text` times out and the frame falls back to OCR.
+The transaction timeout is the next 500 ms step above 3x the worst legitimate call
+(1878 ms), with a 1000 ms floor.
 
 ## Validation boundaries
 
