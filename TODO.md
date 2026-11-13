@@ -46,8 +46,9 @@ Three parts:
   - [x] #148 Private markers only as browser title suffix; manager globs only off-browser (D2)
 - [x] Live check on Zen, Chrome, Edge (playing tabs, private windows, user URL rule) and Proton Pass
 - [x] Unexamined background browser media is logged: accepted and documented (DECISIONS, 2026-11-12)
-- [ ] Ask the user: drop browser audio while a private or excluded page is open? (process-only today)
-- [ ] Zen shows decoded URLs: a space makes the address unreadable, skipped under user URL rules
+- [ ] Follow-ups found during A1
+  - [ ] Ask the user: drop browser audio while a private or excluded page is open? (process-only)
+  - [ ] Zen shows decoded URLs: a space makes the address unreadable, skipped under user URL rules
 
 ### A2. Capture stops when asked
 
