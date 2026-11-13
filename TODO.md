@@ -92,6 +92,8 @@ Three parts:
 - [ ] #78 Test selected-window capture: 1 s bound, render thread, late pixels, bounds crop
 - [x] #82 `FakeUia` returns `TextBlock`s; test the controls-only OCR fallback and `MAX_TEXT_CHARS`
 - [ ] Lead: spike Chrome 138+ native UIA as the cause of the blank Edge probe (§9)
+  - [x] Locked PC (2026-11-13): occlusion, not lazy UIA, blanks page text; URL and caption still read
+  - [ ] Rerun unlocked, window foreground and covered (scratchpad `chrome-uia/run.py`, not kept)
 - [ ] Follow-ups found during A4
   - [ ] Key screen rate state by target, not monitor index plus one cursor slot (helps #147, #149)
   - [ ] Owned popups of unfocused apps (context menus): resolve to their owner window? Measure first

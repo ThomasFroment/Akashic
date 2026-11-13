@@ -123,6 +123,14 @@ that run.
 The transaction timeout is the next 500 ms step above 3x the worst legitimate call
 (1878 ms), with a 1000 ms floor.
 
+Spike 2026-11-13, Chrome 157 and Edge 157, throwaway profiles, PC locked: a flagless window
+returned only the browser's own interface text through UIA, never page text, even after 10 s.
+With Chromium's occlusion tracking turned off, the first read enabled web accessibility and the
+page was readable from the next read (0.5 s); with `--force-renderer-accessibility` at once.
+So a blank page tree means Chromium considers the window occluded, not that UIA is enabled
+lazily. Address bar and caption reads worked in every mode. Not yet run unlocked with the window
+in front.
+
 ## Validation boundaries
 
 Controlled Zen checks established window rendering, updates, a mixed-DPI move and occlusion
