@@ -9,6 +9,7 @@ work, move it to TODO.md as a task and delete it here. Drop a milestone heading 
 
 ## A4. Screen coverage
 
+- #21 Electron's `IsOffscreen` on a virtualized list (long Discord channel) not checked; Gecko (Zen) `IsOffscreen` on scrolled-away nodes not seen, the throwaway Zen page exposed no web content in the 2026-11-13 re-run
 - #150 Not spiked on the real PC: `SHQueryUserNotificationState` while a borderless game, an exclusive-fullscreen game, fullscreen mpv/MPC-BE, browser F11 and RDP run; the cost of the call (cached 1 s); and whether QUNS reports D3D fullscreen while another window is in front (alt-tab, side monitor). Microsoft documents only that an exclusive D3D app is running, so tying it to the focused window is an assumption, bounded by the covers-monitor check. `kmplayer64.exe` comes from a third-party listing, not the vendor.
 - #147 Cost not measured on the real PC with a fullscreen game (FPS/frame time, CPU, side-capture duration incl. up to 4 UIA reader calls per side browser, post-game `ocr_frame` backlog); the 15 s side interval is unmeasured
 - #147 Not checked in the running app: Discord and a video on side monitors during a fullscreen game

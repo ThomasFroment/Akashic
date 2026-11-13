@@ -80,14 +80,14 @@ Three parts:
   - [ ] Shorter `busy_timeout` once stop is set, so a busy database at stop fits the 10 s kill
   - [ ] One rate-limited, type-only fault log shared by the screen, audio and media loops
   - [ ] Report dropped audio segments and failed frame writes as capture problems (with #143)
-  - [ ] Keep UIA text on very large pages (read_text's FindAll exceeds the 2 s UIA timeout)
+  - [ ] Keep UIA text on very large pages (filtered `read_text` on the 30k-element page: worst 1.9 s Edge, 1.8 s Chrome, against the 2 s timeout; target <= 666 ms)
 
 ### A4. Screen coverage
 
 - [x] #144 Scroll capture uses the window under the cursor, skipping the focused HWND
 - [x] #147 Game mode: idle captures of other monitors without UIA, OCR deferred; measure the cost
 - [x] #150 Game detection: add common players, new Teams and RDP/Hyper-V clients; D3D exclusive fullscreen on a covered monitor marks a game
-- [ ] #21 UIA FindAll condition filters `IsOffscreen == False` before the 3000-node cut
+- [x] #21 UIA FindAll condition filters `IsOffscreen == False` before the 3000-node cut
 - [ ] #153 Keep an encrypted full-resolution copy (or crop) for deferred game OCR until it runs
 - [ ] #78 Test selected-window capture: 1 s bound, render thread, late pixels, bounds crop
 - [ ] #82 `FakeUia` returns `TextBlock`s; test the controls-only OCR fallback and `MAX_TEXT_CHARS`

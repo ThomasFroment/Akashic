@@ -1,9 +1,9 @@
 # pyright: basic
 """UI Automation: focused-window text, password-field flag and browser address bar.
 
-One ``FindAllBuildCache`` call per window fetches every descendant with its properties cached,
-instead of a cross-process round trip per property (spike: 237 nodes in 76 ms). The caller
-budgets and backs off per app (``capture/uia_budget.py``).
+One ``FindAllBuildCache`` call per window fetches the matching text descendants with their
+properties cached, instead of a cross-process round trip per property (spike: 237 nodes in
+76 ms). The caller budgets and backs off per app (``capture/uia_budget.py``).
 
 COM runs multithreaded (``coinit_flags = 0``) so it can share the process with WinRT (OCR).
 Use one instance from one thread only.
@@ -98,27 +98,21 @@ class WindowsUia:
     def read_text(self, window: WindowInfo, max_nodes: int) -> list[TextBlock] | None:
         try:
             root = self._auto.ElementFromHandle(window.hwnd)
+            condition = self._text_condition()
             cache = self._cache(
                 uia.UIA_NamePropertyId,
                 uia.UIA_ControlTypePropertyId,
-                uia.UIA_IsOffscreenPropertyId,
                 uia.UIA_IsPasswordPropertyId,
                 uia.UIA_ValueValuePropertyId,
                 uia.UIA_BoundingRectanglePropertyId,
             )
-            found = root.FindAllBuildCache(
-                uia.TreeScope_Descendants, self._auto.CreateTrueCondition(), cache
-            )
+            found = root.FindAllBuildCache(uia.TreeScope_Descendants, condition, cache)
             parts: list[TextBlock] = []
             for i in range(min(found.Length, max_nodes)):
                 element = found.GetElement(i)
-                control_type = element.CachedControlType
-                if (
-                    control_type not in _TEXT_TYPES
-                    or element.CachedIsOffscreen
-                    or element.CachedIsPassword
-                ):
+                if element.CachedIsPassword:  # fail closed: the condition already excludes them
                     continue
+                control_type = element.CachedControlType
                 bounds = element.CachedBoundingRectangle
                 rect = Rect(bounds.left, bounds.top, bounds.right, bounds.bottom)
                 rect = rect.intersect(window.rect)
@@ -135,6 +129,17 @@ class WindowsUia:
         except _ERRORS:
             return None
         return parts
+
+    def _text_condition(self):  # noqa: ANN202 - COM object
+        """Visible, non-password nodes of a text control type, so the node cut counts only them."""
+        auto = self._auto
+        text_type = None
+        for control_type in sorted(_TEXT_TYPES):
+            is_type = auto.CreatePropertyCondition(uia.UIA_ControlTypePropertyId, control_type)
+            text_type = is_type if text_type is None else auto.CreateOrCondition(text_type, is_type)
+        onscreen = auto.CreatePropertyCondition(uia.UIA_IsOffscreenPropertyId, False)  # noqa: FBT003
+        not_password = auto.CreatePropertyCondition(uia.UIA_IsPasswordPropertyId, False)  # noqa: FBT003
+        return auto.CreateAndCondition(text_type, auto.CreateAndCondition(onscreen, not_password))
 
     def browser_caption(self, window: WindowInfo, family: BrowserFamily) -> str | None:
         if family != "chromium":

@@ -108,9 +108,18 @@ a budget: `focused_is_password` 18 ms, `browser_caption` 20 ms, `read_url` 626 m
 `focused_is_password` 34 ms, `browser_caption` 0 ms (returns at once for Firefox and Zen),
 `read_url` 14 ms (`_firefox_bar` finds the address bar early). The password field was not the
 focused element in the Zen run, so `focused_is_password` there did not read a Gecko password
-field. `read_text` took up to 4.5 s on the Chromium page and 3.1 s in Zen; its budget only
-records time after the call and `max_nodes` applies after the single `FindAll` call, so on pages
-that large `read_text` times out and the frame falls back to OCR.
+field. `read_text` took up to 4.5 s on the Chromium page and 3.1 s in Zen, because it fetched
+every node. It now applies the text-type, visible and non-password condition inside the
+`FindAll`, so `max_nodes` cuts the matching nodes (Chromium marks scrolled-away nodes
+`IsOffscreen`), and visible text far down a long page is kept. Re-measured 2026-11-13 on a page
+rebuilt to the description above (30k elements, autofocused password field, scrolled to the
+end, throwaway profiles), 5 runs of the full path (filtered `FindAll` plus the loop with
+`max_nodes` 3000): Edge worst 1912 ms (median 1864), Chrome worst 1770 ms (median 1740). The
+old unfiltered path took 6029 ms (Edge) and 5910 ms (Chrome) and kept only 16 of 59 (Edge)
+and 12 of 54 (Chrome) visible text nodes. The call can still approach the 2 s transaction
+timeout on pages that large, and then the frame falls back to OCR; its budget only records
+time after the call. Zen was not re-measured: the throwaway page exposed no web content in
+that run.
 The transaction timeout is the next 500 ms step above 3x the worst legitimate call
 (1878 ms), with a 1000 ms floor.
 
