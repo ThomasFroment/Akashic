@@ -715,7 +715,7 @@ def test_repeated_no_image_captures_of_the_same_text_store_one_row(
     rig.capture.tick(14.0)
     assert len(latest_frames(rig.conn)) == 1
     assert rig.capture.stats["stored_no_image"] == 1
-    assert rig.capture.stats["unchanged"] >= 2
+    assert rig.capture.stats["unchanged_no_image"] >= 2
 
 
 def test_a_changed_title_or_text_stores_a_new_no_image_row(make_rig: Callable[..., Rig]) -> None:

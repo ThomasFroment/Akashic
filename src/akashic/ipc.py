@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 type Command = Literal["stop", "pause", "resume"]
-type State = Literal["starting", "ready", "gaming", "backlog", "paused", "stopping"]
+type State = Literal["starting", "ready", "gaming", "degraded", "backlog", "paused", "stopping"]
 COMMANDS: Final[tuple[str, ...]] = get_args(Command.__value__)
 STATES: Final[tuple[str, ...]] = get_args(State.__value__)
 MAX_LINE: Final = 4096

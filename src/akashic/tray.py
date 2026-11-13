@@ -27,9 +27,11 @@ LOGO: Final = Path(__file__).resolve().parent / "ui" / "logo.png"
 LABELS: Final = {
     "recording": "Recording",
     "gaming": "Recording (game mode)",
+    "degraded": "Recording (with problems)",
     "backlog": "Recording (catching up on transcripts)",
     "paused": "Paused",
     "starting": "Starting…",
+    "restarting": "Restarting…",
     "stopped": "Stopped",
 }
 
@@ -47,7 +49,7 @@ def make_icon(state: str) -> Image.Image:
     while starting or stopped."""
     alpha = _logo_alpha()
     colour = ACCENT if state != "paused" else GREY
-    if state not in {"recording", "gaming", "backlog", "paused"}:
+    if state not in {"recording", "gaming", "degraded", "backlog", "paused"}:
         alpha = alpha.point([v * 60 // 100 for v in range(256)])
     img = Image.new("RGBA", (SIZE, SIZE), colour)
     img.putalpha(alpha)

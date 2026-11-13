@@ -53,6 +53,29 @@ Music-app audio: drop songs, but keep segments with evidence of real speech, suc
 ([DECISIONS.md](DECISIONS.md), D7). Today the code still drops all system sound whose only
 sources are music apps.
 
+## Health
+
+Capture reports `degraded` (instead of `ready` or `gaming`) while it runs unpaused and a problem
+is active. The codes are fixed strings, also listed under `problems` in the `capture`
+process_info row and returned as `capture_problems` by `GET /api/status`.
+
+- `audio_unavailable`: audio is enabled but could not start (for example the VAD model is
+  missing). Sticky: a pause does not clear it. `[audio] enabled = false` is never a problem.
+- `mic_unavailable`, `system_audio_unavailable`: that recorder had no successful device read for
+  60 s, counted from the later of its last read and the last resume. A read that times out with
+  no data counts as a success.
+- `screen_images_failing`: the last 3 grabs all failed (`error`, `loop_error`,
+  `image_unavailable`, `stored_no_image`, `unchanged_no_image`), all after the last resume. Any
+  success or a pause clears the record. Locked, excluded, no-window and similar outcomes are
+  neutral.
+
+Detection delay: the problems are evaluated by the publisher thread every 1 to 5 s, so a problem
+shows up 3 failed grabs plus up to one publish interval later (about 15 s idle, up to about 3
+minutes in game mode). Priority is `paused` > `degraded` > `gaming` > `ready`. A pause clears
+every non-sticky problem; a resume reports `degraded` only for `audio_unavailable`, and the next
+publish catches up with the real state. Problem changes are logged once at warning level, codes
+only. The thresholds (`GRAB_FAILURE_RUN`, `DEVICE_DOWN_S` in `capture/health.py`) are not measured.
+
 ## Validation boundaries
 
 Controlled Zen checks established window rendering, updates, a mixed-DPI move and occlusion

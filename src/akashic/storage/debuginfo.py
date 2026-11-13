@@ -38,6 +38,12 @@ class ProcessInfo:
                 (name, now_ms, json.dumps(data, separators=(",", ":"))),
             )
 
+    def read(self, name: str) -> dict[str, object] | None:
+        row: tuple[str] | None = self._conn.execute(
+            "SELECT data FROM process_info WHERE name = ?", (name,)
+        ).fetchone()
+        return as_dict(json.loads(row[0])) if row is not None else None
+
     def read_all(self) -> list[Info]:
         rows: list[tuple[str, int, str]] = self._conn.execute(
             "SELECT name, updated_ms, data FROM process_info ORDER BY name"

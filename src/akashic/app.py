@@ -61,7 +61,9 @@ def _overall_state(supervisor: Supervisor) -> str:
     return {
         "ready": "recording",
         "gaming": "gaming",
+        "degraded": "degraded",
         "paused": "paused",
+        "crashed": "restarting",
         "starting": "starting",
     }.get(state, "stopped")
 

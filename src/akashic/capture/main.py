@@ -20,6 +20,7 @@ from akashic.capture.audio import VAD_CONTINUE_RATIO, AudioCapture, AudioSetting
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.gaming import GameSettings
+from akashic.capture.health import SCREEN_IMAGES_FAILING, CaptureStatus
 from akashic.capture.media import MediaTracker
 from akashic.capture.ocr_gate import OcrGate
 from akashic.capture.screen import ScreenCapture
@@ -96,31 +97,98 @@ def publish_interval(conn: Connection, now_ms: int) -> float:
     return FAST_PUBLISH_S if wanted else PUBLISH_INTERVAL_S
 
 
+def _active_problems(
+    status: CaptureStatus,
+    capture: ScreenCapture,
+    audio: AudioCapture | None,
+    *,
+    paused: bool,
+    since: float,
+) -> list[str]:
+    """Problems now: only the sticky ones while paused, because nothing is read then."""
+    problems = list(status.sticky)
+    if paused:
+        return problems
+    if audio is not None:
+        problems.extend(audio.problems(time.monotonic(), since))
+    if capture.images_failing(since):
+        problems.append(SCREEN_IMAGES_FAILING)
+    return problems
+
+
+def _report_problems(status: CaptureStatus, problems: list[str], epoch: int) -> None:
+    try:
+        status.set_problems(problems, epoch)
+    except Exception as exc:  # noqa: BLE001 - health reporting must never disturb capture
+        log.warning("reporting capture health failed: %s", type(exc).__name__)
+
+
+def _collect(
+    ctx: ChildContext,
+    status: CaptureStatus,
+    capture: ScreenCapture,
+    audio: AudioCapture | None,
+    tracker: MediaTracker,
+) -> tuple[int, list[str], dict[str, object]] | None:
+    """``(pause epoch, problems, debug data)``, or None (logged) when reading health failed."""
+    try:
+        epoch, paused, since = ctx.health_snapshot()  # before reading any health
+        problems = _active_problems(status, capture, audio, paused=paused, since=since)
+        data: dict[str, object] = {
+            "paused": paused,
+            "problems": problems,
+            "screen": dict(sorted(capture.stats.items())),
+            "media": dict(sorted(tracker.stats.items())),
+            "audio": audio.snapshot() if audio is not None else None,
+        }
+    except Exception as exc:  # noqa: BLE001 - health reporting must never disturb capture
+        log.warning("collecting capture health failed: %s", type(exc).__name__)
+        return None
+    return epoch, problems, data
+
+
 def _publish_info(
-    ctx: ChildContext, capture: ScreenCapture, audio: AudioCapture | None, tracker: MediaTracker
+    ctx: ChildContext,
+    capture: ScreenCapture,
+    audio: AudioCapture | None,
+    tracker: MediaTracker,
+    status: CaptureStatus,
 ) -> None:
-    """Tell the Debug page what this process is up to, every few seconds (numbers only)."""
+    """Tell the Debug page what this process is up to, every few seconds (numbers only), and
+    report the capture problems it found."""
     conn = db.connect(ctx.paths.db_file, ctx.key.subkey("db"))
     info = ProcessInfo(conn)
     try:
         while True:
-            data: dict[str, object] = {
-                "paused": ctx.paused.is_set(),
-                "screen": dict(sorted(capture.stats.items())),
-                "media": dict(sorted(tracker.stats.items())),
-                "audio": audio.snapshot() if audio is not None else None,
-            }
             wait = PUBLISH_INTERVAL_S
-            try:
-                now_ms = time.time_ns() // 1_000_000
-                info.publish("capture", data, now_ms)
-                wait = publish_interval(conn, now_ms)
-            except Exception as exc:  # noqa: BLE001 - debugging aid: never disturb capture
-                log.warning("publishing debug info failed: %s", type(exc).__name__)
+            collected = _collect(ctx, status, capture, audio, tracker)
+            if collected is not None:
+                epoch, problems, data = collected
+                try:
+                    now_ms = time.time_ns() // 1_000_000
+                    info.publish("capture", data, now_ms)
+                    wait = publish_interval(conn, now_ms)
+                except Exception as exc:  # noqa: BLE001 - debugging aid: never disturb capture
+                    log.warning("publishing debug info failed: %s", type(exc).__name__)
+                _report_problems(status, problems, epoch)
             if ctx.stop.wait(wait):
                 break
     finally:
         conn.close()
+
+
+def _publish_sticky_problems(ctx: ChildContext, status: CaptureStatus) -> None:
+    """Write the start-up problems before ``degraded`` is sent, so the row explains the state."""
+    if not status.sticky:
+        return
+    try:
+        ProcessInfo(ctx.conn).publish(
+            "capture",
+            {"paused": ctx.paused.is_set(), "problems": list(status.sticky)},
+            time.time_ns() // 1_000_000,
+        )
+    except Exception as exc:  # noqa: BLE001 - debugging aid: never disturb capture
+        log.warning("publishing debug info failed: %s", type(exc).__name__)
 
 
 def run_capture(
@@ -138,6 +206,18 @@ def run_capture(
     games = GameLog(ctx.conn)
     games.close_stale()  # a crash left rows open; their end is the last heartbeat
     gaming = ctx.config.gaming
+    audio = (
+        _start_audio(ctx, audio_platform, exclusions, detector_factory)
+        if audio_platform is not None and ctx.config.audio.enabled
+        else None
+    )
+    status = CaptureStatus(
+        ctx.set_active,
+        lambda: ctx.pause_epoch,
+        audio_failed=audio_platform is not None and ctx.config.audio.enabled and audio is None,
+    )
+    _publish_sticky_problems(ctx, status)
+    ctx.set_resume_state("degraded" if status.sticky else "ready")
     capture = ScreenCapture(
         screen=platform.screen,
         windows=platform.windows,
@@ -152,7 +232,7 @@ def run_capture(
             games=gaming.games,
             not_games=gaming.not_games,
         ),
-        on_game=lambda active: ctx.report("gaming" if active else "ready"),
+        on_game=status.set_gaming,
     )
     # The media poller runs in its own thread, so it gets its own connection: a sqlite
     # connection must not interleave transactions from two threads.
@@ -171,15 +251,10 @@ def run_capture(
         name="media",
         daemon=True,
     )
-    audio = (
-        _start_audio(ctx, audio_platform, exclusions, detector_factory)
-        if audio_platform is not None and ctx.config.audio.enabled
-        else None
-    )
     media_thread.start()
     threading.Thread(
         target=_publish_info,
-        args=(ctx, capture, audio[0] if audio is not None else None, tracker),
+        args=(ctx, capture, audio[0] if audio is not None else None, tracker, status),
         name="debug-info",
         daemon=True,
     ).start()

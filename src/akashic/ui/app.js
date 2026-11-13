@@ -429,6 +429,22 @@ const statusText = document.getElementById("status-text");
 const statusCount = document.getElementById("status-count");
 const pauseBtn = document.getElementById("pause-btn");
 let paused = false;
+const STATUS_LABELS = {
+  ready: "Recording", gaming: "Recording (game mode)", degraded: "Recording (with problems)",
+  starting: "Starting…", crashed: "Restarting…", paused: "Paused",
+};
+const DOT_CLASSES = { ready: "on", gaming: "on", degraded: "warn", paused: "paused" };
+const PROBLEM_WORDS = {
+  audio_unavailable: "audio recording could not start",
+  mic_unavailable: "the microphone could not be read for a minute",
+  system_audio_unavailable: "system audio could not be read for a minute",
+  screen_images_failing: "screenshots are failing",
+};
+function problemSentence(codes) {
+  const words = (codes || []).map((code) => PROBLEM_WORDS[code]).filter(Boolean);
+  const what = words.length ? words.join("; ") : "part of the recording is not working";
+  return `Recording has problems: ${what}. The Debug page has details.`;
+}
 
 let signedIn = true;  // until the server says otherwise (401)
 async function refreshStatus() {
@@ -439,13 +455,14 @@ async function refreshStatus() {
     paused = s.paused;
     appList = s.apps;
     applyTheme(s.theme);
-    const live = s.processes.capture === "ready" || s.processes.capture === "gaming";
-    dot.className = "dot " + (paused ? "paused" : live ? "on" : "");
-    statusText.textContent = paused ? "Paused" : s.processes.capture === "gaming" ? "Recording (game mode)" : live ? "Recording" : "Starting…";
+    const capture = s.processes.capture;
+    dot.className = "dot " + (DOT_CLASSES[capture] ?? "");
+    statusText.textContent = STATUS_LABELS[capture] ?? "Stopped";
     const gameReason = s.game_process ? `Game mode is on because ${appName(s.game_process)} is a fullscreen window. Check Settings › Capture to adjust game detection.`
       : "Game mode is on because a fullscreen window was detected. Check Settings › Capture to adjust game detection.";
-    statusText.title = s.processes.capture === "gaming" ? gameReason : "";
-    statusText.setAttribute("aria-label", s.processes.capture === "gaming" ? gameReason : statusText.textContent);
+    const detail = capture === "gaming" ? gameReason : capture === "degraded" ? problemSentence(s.capture_problems) : "";
+    statusText.title = detail;
+    statusText.setAttribute("aria-label", detail || statusText.textContent);
     statusCount.textContent = `${s.frames.toLocaleString()} moments` + (s.processes.capture === "gaming" ? ` · ${s.game_process ? appName(s.game_process) : "fullscreen app"} detected` : "");
     pauseBtn.hidden = false;
     pauseBtn.textContent = paused ? "Resume" : "Pause";

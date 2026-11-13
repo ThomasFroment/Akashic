@@ -52,7 +52,8 @@ def overall(**states: str) -> str:
         ("starting", "starting"),
         ("stopping", "stopped"),
         ("stopped", "stopped"),
-        ("crashed", "stopped"),
+        ("crashed", "restarting"),
+        ("degraded", "degraded"),
     ],
 )
 def test_the_tray_shows_what_capture_is_doing(capture: str, expected: str) -> None:
@@ -68,6 +69,7 @@ def test_a_worker_backlog_shows_only_while_recording() -> None:
     assert overall(capture="ready", worker="backlog") == "backlog"
     assert overall(capture="paused", worker="backlog") == "paused"  # the pause matters more
     assert overall(capture="gaming", worker="backlog") == "gaming"
+    assert overall(capture="degraded", worker="backlog") == "degraded"
 
 
 # --- why a question cannot be answered yet --------------------------------------------------

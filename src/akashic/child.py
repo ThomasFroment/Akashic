@@ -12,6 +12,7 @@ import logging
 import os
 import sys
 import threading
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import IO, TYPE_CHECKING, Final, cast
@@ -44,6 +45,11 @@ class ChildContext:
     api_port: int | None = None  # where the app's local server listens (capture excludes it)
     stop: threading.Event = field(default_factory=threading.Event)
     paused: threading.Event = field(default_factory=threading.Event)
+    pause_epoch: int = 0  # counts pause and resume flips; guards status computed before a flip
+    resumed_at: float = field(default_factory=time.monotonic)  # last resume, else process start
+    resume_state: ipc.State = "ready"  # what _active falls back to when a pause clears the problems
+    _active: ipc.State = "ready"  # what to report while not paused
+    _sent: ipc.State | None = None
     _status_out: IO[bytes] | None = None
     _status_lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -52,6 +58,7 @@ class ChildContext:
             self._send(state)
 
     def _send(self, state: ipc.State) -> None:
+        self._sent = state
         if self._status_out is None:
             return
         try:
@@ -59,19 +66,50 @@ class ChildContext:
         except OSError:
             self.stop.set()  # parent is gone
 
+    def health_snapshot(self) -> tuple[int, bool, float]:
+        """``(pause_epoch, paused, resumed_at)`` as one consistent reading."""
+        with self._status_lock:
+            return self.pause_epoch, self.paused.is_set(), self.resumed_at
+
+    def set_active(self, state: ipc.State, *, epoch: int | None = None) -> bool:
+        """Set the state to report while running; False when the change was discarded: computed
+        under an older ``epoch`` than the current one, or the process is shutting down."""
+        with self._status_lock:
+            if self.stop.is_set() or (epoch is not None and epoch != self.pause_epoch):
+                return False
+            self._active = state
+            if not self.paused.is_set() and state != self._sent:
+                self._send(state)
+            return True
+
+    def set_resume_state(self, state: ipc.State) -> None:
+        """Set what a pause falls back to. The state to report follows it too: sent now when
+        running, kept for the resume when already paused (a ``--paused`` start)."""
+        with self._status_lock:
+            self.resume_state = state
+            self._active = state
+            if not self.paused.is_set() and state != self._sent:
+                self._send(state)
+
     def set_paused(self, *, paused: bool) -> None:
         """Pause or resume and report it, as one step, so a late "ready" can't hide a pause."""
         with self._status_lock:
+            if paused == self.paused.is_set():
+                return
+            self.pause_epoch += 1
             if paused:
                 self.paused.set()
+                self._active = self.resume_state
+                self._send("paused")
             else:
+                self.resumed_at = time.monotonic()
                 self.paused.clear()
-            self._send("paused" if paused else "ready")
+                self._send(self._active)
 
     def announce_ready(self) -> None:
         """The start-up "ready", unless a pause command already arrived (a restart while paused)."""
         with self._status_lock:
-            self._send("paused" if self.paused.is_set() else "ready")
+            self._send("paused" if self.paused.is_set() else self._active)
 
 
 def _listen(ctx: ChildContext, stdin: ipc.LineReader, log: logging.Logger) -> None:

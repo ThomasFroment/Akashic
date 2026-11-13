@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from pathlib import Path
 from time import monotonic
-from typing import TYPE_CHECKING, Annotated, Final
+from typing import TYPE_CHECKING, Annotated, Final, cast
 
 import uvicorn
 from fastapi import APIRouter, Cookie, Depends, FastAPI, HTTPException, Query, Request, Response
@@ -40,9 +40,11 @@ from akashic.api.settings import settings_routes, theme_of
 from akashic.api.speakers import speaker_routes
 from akashic.api.stt import stt_routes
 from akashic.config import DEFAULT_EMBEDDING_MODEL
+from akashic.jsonish import as_list
 from akashic.search import keyword, transcripts
 from akashic.search.keyword import Filters, Hit
 from akashic.storage.crypto import CryptoError
+from akashic.storage.debuginfo import ProcessInfo
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Generator
@@ -235,6 +237,18 @@ def _utterance_json(u: transcripts.Utterance) -> Json:
     }
 
 
+def _capture_problems(conn: Connection) -> list[str]:
+    """The problem codes capture published, or none when the row or the value is unusable."""
+    try:
+        info = ProcessInfo(conn).read("capture")
+    except ValueError:
+        return []
+    problems = as_list(info.get("problems")) if info is not None else None
+    if problems is None or not all(isinstance(p, str) for p in problems):
+        return []
+    return cast("list[str]", problems)
+
+
 def _control_routes(services: Services) -> APIRouter:
     router = APIRouter()
 
@@ -252,8 +266,10 @@ def _control_routes(services: Services) -> APIRouter:
                 if states.get("capture") == "gaming"
                 else None
             )
+            problems = _capture_problems(conn) if states.get("capture") == "degraded" else []
         return {
             "processes": states,
+            "capture_problems": problems,
             "paused": states.get("capture") == "paused",
             "frames": frames,
             "apps": apps,

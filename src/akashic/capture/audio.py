@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from akashic.capture.health import DEVICE_DOWN_CODES, DEVICE_DOWN_S
 from akashic.capture.ports import AudioError
 from akashic.capture.vad import WINDOW
 from akashic.config import Audio
@@ -420,6 +421,11 @@ class StreamRecorder:
         self._speech_sq = 0.0  # mean square of the windows the detector called speech
         self._speech_windows = 0
         self._probability_max = 0.0
+        self._ok_at = float("-inf")  # monotonic time of the last completed device read
+
+    def down_s(self, now: float, since: float) -> float:
+        """Seconds without a successful read, counted from the later of that and ``since``."""
+        return now - max(self._ok_at, since)
 
     def snapshot(self) -> dict[str, object]:
         """Plain numbers for the Debug page; resets the since-last-time maxima."""
@@ -540,6 +546,7 @@ class StreamRecorder:
                 self._sink(self.kind, utterance)
         else:
             self._consume(block, now)
+        self._ok_at = time.monotonic()
         if time.monotonic() >= self._next_device_check:
             self._next_device_check = time.monotonic() + DEVICE_CHECK_S
             self._follow_default_device()
@@ -618,6 +625,14 @@ class AudioCapture:
             self._names_at = time.monotonic()
             self._names = {kind: self._devices.names(kind) for kind in ("mic", "system")}
         return self._names
+
+    def problems(self, now: float, since: float) -> tuple[str, ...]:
+        """The down code of each recorder that has read nothing for too long."""
+        return tuple(
+            DEVICE_DOWN_CODES[r.kind]
+            for r in self._recorders
+            if r.down_s(now, since) >= DEVICE_DOWN_S
+        )
 
     def snapshot(self) -> dict[str, object]:
         """Counters, device names, levels and recent drops, for the Debug page."""

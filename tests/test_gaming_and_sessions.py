@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -167,6 +168,23 @@ def test_game_session_is_logged_with_one_screenshot_per_interval(
     assert rig.reports == [True]
     assert rig.games()[0][:2] == ("game.exe", "The Game")
     assert rig.games()[0][4] == 0
+
+
+def test_locking_clears_gaming_even_when_the_end_row_cannot_be_written(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rig = make_rig()
+    rig.windows.focused = game()
+    rig.capture.tick(0.0)
+
+    def busy(*_args: object, **_kwargs: object) -> None:
+        msg = "database is locked"
+        raise sqlite3.OperationalError(msg)
+
+    monkeypatch.setattr(GameLog, "close", busy)
+    rig.windows.focused = window(process="lockapp.exe")
+    rig.capture.tick(6.0)  # past the grace period
+    assert rig.reports == [True, False]
 
 
 def test_input_triggers_and_other_monitors_are_ignored_in_game_mode(

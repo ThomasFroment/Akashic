@@ -70,7 +70,7 @@ Three parts:
   - [x] #161 Retry capture writes with backoff; pop a media session only after its write
   - [x] #44 Index `audio_segments(continues_id)` so deletions don't block capture inserts
   - [x] #52 Name media files by UTC `ts_ms` so the DST fall-back can't overwrite a capture
-- [ ] #162 Capture reports `degraded` (audio off, every grab failing); UI shows Stopped/Restarting
+- [x] #162 Capture reports `degraded` (audio off, every grab failing); UI shows Stopped/Restarting
 - [ ] #79 Test that an unpaused capture run writes a frame row and an `.enc` file
 
 ### A4. Screen coverage
