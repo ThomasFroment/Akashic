@@ -61,9 +61,10 @@ The accepted exceptions, the only ones:
   window the screen loop has not examined (minimized, fully covered) has no verdict, so its
   media title and artist are logged even when the page is private, a bank, a password manager
   or matches a user address rule. An excluding verdict lapses 60 s after the window was last
-  seen, including when a game takes the foreground (gaming mode publishes no verdicts). Process
-  and media-title rules still apply. Accepted by the user on 2026-11-12 to keep background
-  videos answerable; reproduced live with Edge and Zen.
+  seen, including when a game takes the foreground (gaming mode publishes verdicts only for the
+  browser windows it examines on other monitors; a browser covered by the game, or on the game's
+  monitor, still lapses after 60 s). Process and media-title rules still apply. Accepted by the
+  user on 2026-11-12 to keep background videos answerable; reproduced live with Edge and Zen.
 - Firefox layouts and Brave's caption are unverified on this PC (Zen, Chrome and Edge were checked
   live on 2026-11-12).
 

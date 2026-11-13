@@ -85,7 +85,7 @@ Three parts:
 ### A4. Screen coverage
 
 - [x] #144 Scroll capture uses the window under the cursor, skipping the focused HWND
-- [ ] #147 Game mode: idle captures of other monitors without UIA, OCR deferred; measure the cost
+- [x] #147 Game mode: idle captures of other monitors without UIA, OCR deferred; measure the cost
 - [ ] #150 Game detection: add common players and RDP; require fullscreen D3D evidence
 - [ ] #21 UIA FindAll condition filters `IsOffscreen == False` before the 3000-node cut
 - [ ] #153 Keep an encrypted full-resolution copy (or crop) for deferred game OCR until it runs

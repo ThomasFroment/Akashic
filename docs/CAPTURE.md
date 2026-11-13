@@ -11,6 +11,13 @@ that is focused, or owned by the focused window, is never captured as unfocused.
 its own rate gate; both are checked together, so a trigger defers at most once and then captures
 both.
 
+Game mode takes the game screenshot once per interval and drops input triggers. The unfocused
+window on each other monitor is captured every 15 s, with no UIA text and OCR deferred to the
+worker. The browser caption and URL readers still run on side browsers (each UIA request times
+out after 2 s, 1 s to connect; up to 4 reader calls per side browser). The game window and the
+focused window are never taken as side windows, and no side capture happens while the focus
+monitor is unknown.
+
 Screen text should preserve useful reading order, repeated messages and bilingual content while
 removing interface clutter. Prefer accessibility text with OCR as a fallback. Neither nonempty
 UIA text nor a nonblack image proves completeness, freshness or correct ownership.
@@ -75,7 +82,10 @@ process_info row and returned as `capture_problems` by `GET /api/status`.
 
 Detection delay: the problems are evaluated by the publisher thread every 1 to 5 s, so a problem
 shows up 3 failed grabs plus up to one publish interval later (about 15 s idle, up to about 3
-minutes in game mode). Priority is `paused` > `degraded` > `gaming` > `ready`. A pause clears
+minutes in game mode on one monitor, 3 game grabs at 60 s). With other monitors, side grabs
+every 15 s join the same failure run, so failures show sooner when the side grabs fail too. A
+good side grab also clears failed game grabs, so a failure limited to the game screenshot may
+not surface. Priority is `paused` > `degraded` > `gaming` > `ready`. A pause clears
 every non-sticky problem; a resume reports `degraded` only for `audio_unavailable`, and the next
 publish catches up with the real state. Problem changes are logged once, codes only: warning level
 when problems are active, info level when the set becomes empty.

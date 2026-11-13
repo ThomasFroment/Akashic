@@ -9,6 +9,9 @@ work, move it to TODO.md as a task and delete it here. Drop a milestone heading 
 
 ## A4. Screen coverage
 
+- #147 Cost not measured on the real PC with a fullscreen game (FPS/frame time, CPU, side-capture duration incl. up to 4 UIA reader calls per side browser, post-game `ocr_frame` backlog); the 15 s side interval is unmeasured
+- #147 Not checked in the running app: Discord and a video on side monitors during a fullscreen game
+- #147 No test asserts the `BrowserState` verdict a side browser publishes during a game
 - #144 `window_at`'s `GA_ROOTOWNER` rule not run on real Windows (focused browser dropdown or autofill list)
 - #144 Not checked in the running app: scroll a side Discord window, then the pane beside the focused one
 

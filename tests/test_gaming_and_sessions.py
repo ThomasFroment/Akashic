@@ -36,6 +36,12 @@ def game(process: str = "game.exe", title: str = "The Game", rect: Rect = SCREEN
     return WindowInfo(7, process, title, rect, has_frame=False)
 
 
+def side(
+    hwnd: int = 2, process: str = "discord.exe", title: str = "Discord", rect: Rect = SECOND
+) -> WindowInfo:
+    return window(hwnd=hwnd, process=process, title=title, rect=rect)
+
+
 # --- detector ------------------------------------------------------------------------------
 
 
@@ -187,18 +193,21 @@ def test_locking_clears_gaming_even_when_the_end_row_cannot_be_written(
     assert rig.reports == [True, False]
 
 
-def test_input_triggers_and_other_monitors_are_ignored_in_game_mode(
+def test_input_triggers_are_ignored_and_other_monitors_use_the_idle_rate_in_game_mode(
     make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     rig.screen.rects = [SCREEN, SECOND]
     rig.windows.focused = game()
+    rig.windows.at[SECOND.center] = side()
     rig.capture.tick(0.0)
     rig.capture.note("input", 1.0)
     rig.capture.tick(2.0)
-    rig.capture.tick(20.0)  # the idle fallback would capture monitor 2 here
-    assert [f[:2] for f in rig.frames()] == [("game", "game.exe")]
-    assert rig.screen.grabs == 1
+    assert [f[:2] for f in rig.frames()] == [("game", "game.exe"), ("game", "discord.exe")]
+    rig.windows.at[SECOND.center] = side(title="Discord 2")
+    rig.capture.tick(20.0)  # monitor 2 is due again at the idle rate; the input trigger is not
+    assert [f[1] for f in rig.frames()] == ["game.exe", "discord.exe", "discord.exe"]
+    assert {f[0] for f in rig.frames()} == {"game"}
 
 
 def test_game_ends_after_grace_and_normal_capture_resumes(make_rig: Callable[..., Rig]) -> None:
@@ -380,3 +389,267 @@ def test_a_gap_between_frames_splits_even_when_derived_in_one_pass(conn: Connect
 def test_no_frames_no_sessions(conn: Connection) -> None:
     assert derive_app_sessions(conn, 1) == 0
     assert sessions(conn) == []
+
+
+# --- game mode: windows on the other monitors ----------------------------------------------
+
+
+def side_rig(make_rig: Callable[..., Rig], **kw: object) -> Rig:
+    rig = make_rig(**kw)
+    rig.screen.rects = [SCREEN, SECOND]
+    rig.screen.frames[1] = blank("blue")
+    rig.windows.focused = game()
+    rig.windows.at[SECOND.center] = side()
+    return rig
+
+
+def side_frames(rig: Rig) -> list[tuple[object, ...]]:
+    return rig.conn.execute(
+        "SELECT trigger, monitor, focused, process, window_title, url, text, image_path IS NOT NULL"
+        " FROM frames WHERE process != 'game.exe' ORDER BY id"
+    ).fetchall()
+
+
+def job_keys(rig: Rig) -> list[str]:
+    return [r[0] for r in rig.conn.execute("SELECT key FROM jobs ORDER BY rowid")]
+
+
+def side_id(rig: Rig) -> int:
+    return rig.conn.execute("SELECT id FROM frames WHERE process='discord.exe'").fetchone()[0]
+
+
+def test_side_window_is_stored_as_a_game_frame_without_text_and_queues_ocr(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = side_rig(make_rig)
+    rig.uia.texts[2] = ["x" * 80]
+    rig.capture.tick(0.0)
+    assert side_frames(rig) == [("game", 1, 0, "discord.exe", "Discord", None, None, 1)]
+    assert job_keys(rig).count(f"ocr_frame:{side_id(rig)}") == 1
+    assert rig.uia.text_reads == []
+    assert rig.ocr.calls == 0
+
+
+def test_side_window_is_searchable_after_the_worker_ran(make_rig: Callable[..., Rig]) -> None:
+    from akashic.pipeline.jobs import Job  # noqa: PLC0415
+    from akashic.pipeline.ocr_frames import OcrFrameHandler  # noqa: PLC0415
+
+    rig = side_rig(make_rig)
+    rig.capture.tick(0.0)
+    fid = side_id(rig)
+    handler = OcrFrameHandler(rig.store, lambda: FakeOcr(text="zebrafish party"))
+    handler.run(Job(1, "ocr_frame", f"ocr_frame:{fid}", {"frame_id": fid}, 0, 1))
+    assert rig.conn.execute(
+        "SELECT rowid FROM frames_fts WHERE frames_fts MATCH 'zebrafish'"
+    ).fetchall() == [(fid,)]
+
+
+def test_side_captures_follow_the_15_second_interval_and_the_game_shot_the_60(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = side_rig(make_rig)
+    rig.capture.tick(0.0)
+    rig.windows.at[SECOND.center] = side(title="Discord 2")
+    rig.capture.tick(14.0)
+    assert len(side_frames(rig)) == 1
+    rig.capture.tick(15.5)
+    assert len(side_frames(rig)) == 2
+    assert [f[1] for f in rig.frames()].count("game.exe") == 1
+    rig.capture.tick(60.5)
+    assert [f[1] for f in rig.frames()].count("game.exe") == 2
+
+
+def test_unchanged_side_window_writes_nothing(make_rig: Callable[..., Rig]) -> None:
+    rig = side_rig(make_rig)
+    rig.capture.tick(0.0)
+    rig.capture.tick(16.0)
+    assert len(side_frames(rig)) == 1
+    assert rig.capture.stats["unchanged"] == 1
+
+
+def test_black_side_frame_stores_no_image_and_no_job(make_rig: Callable[..., Rig]) -> None:
+    rig = side_rig(make_rig)
+    rig.screen.frames[1] = blank("black")
+    rig.capture.tick(0.0)
+    rows = side_frames(rig)
+    assert len(rows) == 1
+    assert rows[0][7] == 0
+    assert len(job_keys(rig)) == 1  # the game screenshot only
+    assert rig.capture.stats["stored_black"] == 1
+
+
+def test_side_window_of_the_game_process_is_skipped(make_rig: Callable[..., Rig]) -> None:
+    rig = side_rig(make_rig)
+    rig.windows.at[SECOND.center] = side(hwnd=9, process="game.exe", title="The Game")
+    rig.capture.tick(0.0)
+    assert rig.capture.stats["game_window"] == 1
+    assert side_frames(rig) == []
+    assert rig.uia.text_reads == []
+
+
+def test_game_spanning_monitors_is_never_a_side_window(make_rig: Callable[..., Rig]) -> None:
+    rig = side_rig(make_rig)
+    wide = game(rect=Rect(0, 0, 1598, 600))
+    rig.windows.focused = wide
+    rig.windows.at[SECOND.center] = wide  # topmost at the second centre too
+    rig.capture.tick(0.0)
+    assert rig.capture.stats["game_focused"] == 1
+    assert side_frames(rig) == []
+    assert [f[1] for f in rig.frames()] == ["game.exe"]
+
+
+def test_side_capture_needs_a_focused_window_on_a_known_monitor(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = side_rig(make_rig)
+    rig.capture.tick(0.0)
+    rig.capture.tick(14.0)  # still a game; the side monitor is due again at 15
+    rig.capture.stats.clear()
+    before = rig.screen.grabs
+    rig.windows.focused = None  # in the grace period: no foreground window
+    rig.capture.tick(16.0)
+    rig.windows.focused = game(rect=Rect(5000, 5000, 5800, 5600))  # centre off every monitor
+    rig.capture.tick(17.0)
+    assert rig.capture.stats["game_started"] == 0
+    assert rig.capture.stats["stored"] == 0
+    assert rig.screen.grabs == before
+    assert "loop_error" not in rig.capture.stats
+    assert "error" not in rig.capture.stats
+
+
+def test_single_monitor_game_mode_is_unchanged(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.windows.focused = game()
+    for t in (0.0, 20.0, 40.0):
+        rig.capture.tick(t)
+    assert rig.screen.grabs == 1
+    assert set(rig.capture.stats) == {"game_started", "game_stored"}
+
+
+def test_side_browser_runs_readers_and_stores_the_url(make_rig: Callable[..., Rig]) -> None:
+    rig = side_rig(make_rig)
+    rig.windows.at[SECOND.center] = side(process="chrome.exe", title="Video - Google Chrome")
+    rig.uia.urls[2] = "youtube.com/watch?v=abc"
+    rig.capture.tick(0.0)
+    rows = side_frames(rig)
+    assert len(rows) == 1
+    assert rows[0][5] == "https://youtube.com/watch?v=abc"
+    assert rig.uia.text_reads == []
+
+
+@pytest.mark.parametrize("reason", ["url", "title"])
+def test_excluded_side_browser_writes_nothing(make_rig: Callable[..., Rig], reason: str) -> None:
+    user = (
+        UserExclusions(urls=("*mybank.example*",))
+        if reason == "url"
+        else UserExclusions(window_titles=("*secret*",))
+    )
+    rig = side_rig(make_rig, user=user)
+    rig.windows.at[SECOND.center] = side(process="chrome.exe", title="secret - Google Chrome")
+    rig.uia.urls[2] = "https://mybank.example/compte"
+    rig.capture.tick(0.0)
+    assert side_frames(rig) == []
+    assert any(k.startswith("excluded:") for k in rig.capture.stats)
+
+
+def test_locked_screen_stores_no_side_frame(make_rig: Callable[..., Rig]) -> None:
+    rig = side_rig(make_rig)
+    rig.windows.locked = True
+    rig.capture.tick(0.0)
+    assert side_frames(rig) == []
+    assert rig.capture.stats["locked"] >= 1
+
+
+@pytest.mark.parametrize("change", ["title", "focus", "lock"])
+def test_side_window_changed_during_the_grab_is_dropped(
+    make_rig: Callable[..., Rig], change: str
+) -> None:
+    rig = side_rig(make_rig)
+    del rig.windows.at[SECOND.center]
+    rig.capture.tick(0.0)  # game starts, no side window yet
+    rig.windows.at[SECOND.center] = side()
+
+    def switch() -> None:
+        if change == "title":
+            rig.windows.at[SECOND.center] = side(title="Other")
+        elif change == "focus":
+            rig.windows.focused = side()
+        else:
+            rig.windows.locked = True
+
+    rig.screen.on_grab = switch
+    rig.capture.tick(20.0)
+    assert side_frames(rig) == []
+    assert rig.capture.stats["window_changed"] == 1
+
+
+def test_hung_side_window_keeps_a_metadata_only_row(make_rig: Callable[..., Rig]) -> None:
+    rig = side_rig(make_rig)
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    assert side_frames(rig) == [("game", 1, 0, "discord.exe", "Discord", None, None, 0)]
+    assert f"ocr_frame:{side_id(rig)}" not in job_keys(rig)
+
+
+def test_input_noted_during_a_game_is_not_replayed_after_it(make_rig: Callable[..., Rig]) -> None:
+    rig = side_rig(make_rig)
+    rig.capture.tick(0.0)
+    rig.capture.note("input", 1.0)
+    rig.capture.note("focus", 1.0)
+    rig.capture.tick(2.0)
+    rig.windows.focused = window()
+    rig.capture.tick(6.0)  # grace over: normal mode
+    rig.capture.tick(7.0)
+    assert {"input", "focus"}.isdisjoint(f[0] for f in rig.frames())
+
+
+def test_a_fault_in_one_side_capture_does_not_stop_the_others_or_the_game_shot(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rig = make_rig()
+    third = Rect(1600, 0, 2400, 600)
+    rig.screen.rects = [SCREEN, SECOND, third]
+    rig.windows.focused = game()
+    rig.windows.at[SECOND.center] = side()
+    rig.windows.at[third.center] = side(hwnd=3, process="obs.exe", title="OBS", rect=third)
+    real = rig.screen.grab_window
+
+    def flaky(win: WindowInfo) -> object:
+        if win.hwnd == 2:
+            msg = "boom"
+            raise OSError(msg)
+        return real(win)
+
+    monkeypatch.setattr(rig.screen, "grab_window", flaky)
+    rig.capture.tick(0.0)
+    procs = [f[1] for f in rig.frames()]
+    assert "obs.exe" in procs
+    assert "game.exe" in procs
+    assert rig.capture.stats["error"] == 1
+    assert len(rig.games()) == 1
+
+
+def test_failed_side_grabs_count_toward_failing_images_and_a_good_one_clears_them(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = side_rig(make_rig)
+    rig.screen.unavailable = True
+    for t in (0.0, 16.0, 32.0):
+        rig.windows.at[SECOND.center] = side(title=f"W{t}")
+        rig.capture.tick(t)
+    assert rig.capture.images_failing(0.0)
+    rig.screen.unavailable = False
+    rig.windows.at[SECOND.center] = side(title="ok")
+    rig.capture.tick(48.0)
+    assert not rig.capture.images_failing(0.0)
+
+
+def test_every_other_monitor_gets_one_attempt(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rects = [Rect(800 * i, 0, 800 * (i + 1), 600) for i in range(4)]
+    rig.screen.rects = rects
+    rig.windows.focused = game(rect=rects[1])
+    for i in (0, 2, 3):
+        rig.windows.at[rects[i].center] = side(hwnd=10 + i, process=f"app{i}.exe", rect=rects[i])
+    rig.capture.tick(0.0)
+    assert sorted(str(f[3]) for f in side_frames(rig)) == ["app0.exe", "app2.exe", "app3.exe"]

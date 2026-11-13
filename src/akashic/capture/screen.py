@@ -211,6 +211,7 @@ class ScreenCapture:
         focused = self._windows.focused_window()
         if self._tick_game(focused, monitors, now):
             self._debouncer.clear()
+            self._tick_game_side(focused, monitors, now)
             return
         focus_monitor = _monitor_of(monitors, focused.rect.center) if focused else None
         for trigger in self._debouncer.pop_due(now):
@@ -232,10 +233,11 @@ class ScreenCapture:
     # --- gaming mode -------------------------------------------------------------------------
 
     def _tick_game(self, focused: WindowInfo | None, monitors: list[Rect], now: float) -> bool:
-        """Gaming mode (AGENTS.md): log the game, one screenshot per interval, no UI Automation,
-        no OCR (those frames have no text; the worker can OCR the stored image later), no input
-        triggers (cleared each tick) and no other monitors. Returns True while a game is in the
-        foreground."""
+        """Gaming mode (AGENTS.md): log the game, one screenshot per interval, no UIA text walk,
+        no OCR (those frames have no text; the worker can OCR the stored image later) and no
+        input triggers (cleared each tick). Other monitors are captured at the idle rate under
+        the unfocused rules (browser caption/URL readers still run). Returns True while a game
+        is in the foreground."""
         try:
             self._record_transition(self._game_mode.observe(focused, monitors, now), now)
             game = self._game_mode.current
@@ -253,6 +255,20 @@ class ScreenCapture:
             log.warning("gaming mode failed: %s", type(exc).__name__)
             self._note("error")
         return self._game_mode.active
+
+    def _tick_game_side(self, focused: WindowInfo | None, monitors: list[Rect], now: float) -> None:
+        """Idle-rate captures of the monitors other than the focused one, if that one is known."""
+        if focused is None or len(monitors) < 2:  # noqa: PLR2004 - one monitor has no side
+            return
+        focus_monitor = _monitor_of(monitors, focused.rect.center)
+        if focus_monitor is None:
+            return
+        for index in range(len(monitors)):
+            if index == focus_monitor:
+                continue
+            state = self._states.setdefault(index, _MonitorState())
+            if now - state.last_attempt >= self._settings.other_monitor_interval_s:
+                self._attempt("game", index, monitors, state, now)
 
     def _record_transition(self, transition: Transition, now: float) -> None:
         """Write the game rows and report the flag; a failed write is counted, not a grab fault."""
@@ -434,13 +450,21 @@ class ScreenCapture:
         self._note(outcome)
 
     def _target_window(
-        self, monitor: Rect, pointed: WindowInfo | None
+        self, trigger: Trigger, monitor: Rect, pointed: WindowInfo | None
     ) -> tuple[WindowInfo, bool] | str:
         """The window to capture and whether it is focused, or the outcome that skips it."""
         if pointed is not None:
             return "pointed_focused" if self._is_focused_hwnd(pointed.hwnd) else (pointed, False)
         window, is_focused = self._window_for(monitor)
-        return "no_window" if window is None else (window, is_focused)
+        if window is None:
+            return "no_window"
+        if trigger == "game":
+            if is_focused:
+                return "game_focused"
+            game = self._game_mode.current
+            if game is not None and window.process == game.process:
+                return "game_window"
+        return window, is_focused
 
     def _capture_monitor(  # noqa: PLR0911, PLR0913 - a pipeline of early exits, one per rule
         self,
@@ -454,7 +478,7 @@ class ScreenCapture:
     ) -> str:
         if self._windows.is_locked():
             return "locked"
-        chosen = self._target_window(monitor, pointed)
+        chosen = self._target_window(trigger, monitor, pointed)
         if isinstance(chosen, str):
             return chosen
         window, is_focused = chosen
@@ -489,7 +513,9 @@ class ScreenCapture:
             return "unchanged"
 
         black = imaging.is_black(image)
-        text, source, gate_result = self._read_text(target, image, black=black, now=now)
+        text, source, gate_result = self._read_text(
+            target, image, black=black, ocr=trigger != "game", now=now
+        )
         encoded = None if black else imaging.encode_webp(image)
         stored = self._store_frame(
             trigger=trigger,
@@ -522,7 +548,7 @@ class ScreenCapture:
     ) -> str:
         """The window cannot be rendered (a hung app): keep its metadata and UIA text only."""
         window = target.window
-        text, source, _ = self._read_text(target, None, black=False, now=now)
+        text, source, _ = self._read_text(target, None, black=False, ocr=trigger != "game", now=now)
         if state.window_key == window.key and state.last_text == text:
             return "unchanged_no_image"
         stored = self._store_frame(
@@ -643,7 +669,13 @@ class ScreenCapture:
         return normalize_url(raw) if raw else None
 
     def _read_text(
-        self, target: _Target, image: Image.Image | None, *, black: bool, now: float
+        self,
+        target: _Target,
+        image: Image.Image | None,
+        *,
+        black: bool,
+        ocr: bool,
+        now: float,
     ) -> tuple[str, TextSource | None, GateResult | None]:
         window = target.window
         text = ""
@@ -654,7 +686,7 @@ class ScreenCapture:
             self._budget.record(window.process, (time.perf_counter() - started) * 1000, now)
             text = assemble_text(parts or ())
             source = "uia" if text else None
-        if len(text) >= MIN_UIA_CHARS or black or image is None:
+        if len(text) >= MIN_UIA_CHARS or black or image is None or not ocr:
             return text, source, None
         result = self._gate.read(
             f"{window.process}:{window.hwnd}", image, Rect(0, 0, image.width, image.height)

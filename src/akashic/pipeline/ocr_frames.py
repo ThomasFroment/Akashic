@@ -1,9 +1,9 @@
 """Deferred OCR of game-mode screenshots.
 
-While a fullscreen game runs, capture stores one screenshot a minute and reads no text (no UI
-Automation walk, no OCR). Each such frame queues an ``ocr_frame`` job; the worker reads the text
-once the game is over, and the frame becomes searchable like any other. Heavy, so the scheduler
-holds these jobs back during games.
+While a fullscreen game runs, capture stores one screenshot a minute, plus the windows of the
+other monitors every 15 s, and reads no text (no UI Automation walk, no OCR). Each such frame
+queues an ``ocr_frame`` job; the worker reads the text once the game is over, and the frame
+becomes searchable like any other. Heavy, so the scheduler holds these jobs back during games.
 """
 
 from __future__ import annotations

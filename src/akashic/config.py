@@ -95,7 +95,8 @@ class Exclusions:
 
 @dataclass(frozen=True, slots=True)
 class Gaming:
-    """Fullscreen-game mode: one screenshot per interval, no UI Automation walks."""
+    """Fullscreen-game mode: one screenshot per interval, other monitors every 15 s, no UIA text
+    walks, text read later by OCR."""
 
     screenshot_interval_s: int = 60
     games: tuple[str, ...] = ()  # executables always treated as games when fullscreen
