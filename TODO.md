@@ -71,7 +71,14 @@ Three parts:
   - [x] #44 Index `audio_segments(continues_id)` so deletions don't block capture inserts
   - [x] #52 Name media files by UTC `ts_ms` so the DST fall-back can't overwrite a capture
 - [x] #162 Capture reports `degraded` (audio off, every grab failing); UI shows Stopped/Restarting
-- [ ] #79 Test that an unpaused capture run writes a frame row and an `.enc` file
+- [x] #79 Test that an unpaused capture run writes a frame row and an `.enc` file
+- [ ] Follow-ups found during A3
+  - [ ] Guard `capture.close()` in `run_capture`'s finally so a DB error can't skip the joins
+  - [ ] Clear `_game_id` when the game end-row write raises; leave the row to `close_stale`
+  - [ ] Per-HWND UIA backoff after a timeout; time-box the readers without a `UiaBudget`
+  - [ ] Shorter `busy_timeout` once stop is set, so a busy database at stop fits the 10 s kill
+  - [ ] One rate-limited, type-only fault log shared by the screen, audio and media loops
+  - [ ] Report dropped audio segments and failed frame writes as capture problems (with #143)
 
 ### A4. Screen coverage
 
