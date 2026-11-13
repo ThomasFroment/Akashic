@@ -21,7 +21,16 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import pytest
 from audio_fakes import WINDOW_MS, Clock, FakeDetector, FakeDevices, FakeSessions, silence, speech
-from capture_fakes import SCREEN, FakeMedia, FakeOcr, FakeScreen, FakeUia, FakeWindows, blank
+from capture_fakes import (
+    SCREEN,
+    FakeMedia,
+    FakeOcr,
+    FakeScreen,
+    FakeUia,
+    FakeWindows,
+    blank,
+    with_text_block,
+)
 from capture_fakes import window as plain_window
 from defects import known_defect
 from waits import wait_for
@@ -911,7 +920,6 @@ def fake_clock(step: float = 0.5) -> Callable[[], float]:
     return clock
 
 
-@known_defect(15, "input triggers stay due in game mode and the loop waits 0 s (busy spin)")
 def test_the_capture_loop_never_spins_while_a_game_is_played(
     conn: Connection, paths: Paths
 ) -> None:
@@ -923,13 +931,58 @@ def test_the_capture_loop_never_spins_while_a_game_is_played(
     assert all(t is not None and t > 0 for t in stop.timeouts[5:])
 
 
-@known_defect(15, "with no monitors, pending input triggers keep the loop at a 0 s wait")
 def test_the_capture_loop_never_spins_without_monitors(conn: Connection, paths: Paths) -> None:
     windows = BusyWindows(focused=plain_window())
     capture, _ = screen_capture(conn, paths, FakeScreen(rects=[]), windows, clock=fake_clock())
     stop = CountingStop(40)
     capture.run(stop, threading.Event())
     assert all(t is not None and t > 0 for t in stop.timeouts[5:])
+
+
+def stored_triggers(conn: Connection) -> list[str]:
+    return [str(r[0]) for r in conn.execute("SELECT trigger FROM frames ORDER BY id")]
+
+
+def test_normal_capture_resumes_when_the_game_ends_and_old_triggers_are_dropped(
+    conn: Connection, paths: Paths
+) -> None:
+    screen = FakeScreen()
+    windows = FakeWindows(focused=game_window())
+    capture, _ = screen_capture(conn, paths, screen, windows, clock=fake_clock())
+    capture.tick(0.0)
+    capture.note("input", 0.0)  # noted during the game
+    capture.note("focus", 0.0)
+    capture.tick(1.0)  # still in the game: nothing but the game screenshot
+    windows.focused = plain_window()
+    capture.tick(10.0)  # the game is over: normal capture on this very tick
+    triggers = stored_triggers(conn)
+    assert "idle" in triggers
+    assert "input" not in triggers  # triggers noted during the game were dropped, not replayed
+    capture.tick(11.0)  # the focus change away from the game fires normally
+    before = stored_triggers(conn)
+    capture.note("input", 12.0)
+    screen.frames[0] = with_text_block(blank())
+    capture.tick(13.0)
+    assert stored_triggers(conn) == [*before, "input"]  # a new input trigger fires again
+
+
+def test_normal_capture_resumes_when_the_monitors_come_back(conn: Connection, paths: Paths) -> None:
+    screen = FakeScreen(rects=[])
+    windows = FakeWindows(focused=plain_window())
+    capture, _ = screen_capture(conn, paths, screen, windows)
+    capture.tick(0.0)
+    capture.note("input", 0.0)  # noted while there is nothing to capture
+    capture.note("focus", 0.0)
+    capture.tick(1.0)
+    assert screen.grabs == 0
+    assert stored_triggers(conn) == []
+    screen.rects = [SCREEN]
+    capture.tick(10.0)  # monitor list refreshed: idle capture runs
+    assert stored_triggers(conn) == ["idle"]  # the stale input/focus triggers are not replayed
+    capture.note("input", 10.5)
+    screen.frames[0] = with_text_block(blank())
+    capture.tick(11.0)
+    assert stored_triggers(conn) == ["idle", "input"]
 
 
 MON_B = Rect(800, 0, 1600, 600)

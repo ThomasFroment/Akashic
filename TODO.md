@@ -57,10 +57,12 @@ Three parts:
 ### A3. Capture keeps running and keeps what it recorded
 
 - [ ] Screen loop survives faults
-  - [ ] #15 Game mode: clear due input triggers each tick; no busy-spin with no monitors
-  - [ ] #29 Per-iteration guard in screen `run`: log the type, count, continue
+  - [x] #15 Game mode: clear due input triggers each tick; no busy-spin with no monitors
+  - [x] #29 Per-iteration guard in screen `run`: log the type, count, continue
   - [ ] #22 Short UIA connection and transaction timeouts (`IUIAutomation2`)
-  - [ ] #158 Skip only a hung HWND; store text-only rows on a None image; downscale > 16 MP
+    - [x] `CUIAutomation8` + `IUIAutomation2`; 1 s connection, 3 s transaction (unmeasured)
+    - [ ] Spike: time the unbudgeted readers on real browsers; set the transaction timeout from it
+  - [x] #158 Skip only a hung HWND; store text-only rows on a None image; downscale > 16 MP
 - [ ] Audio loop survives faults
   - [ ] #23 Catch any exception per recorder iteration: log the type, count, release, retry
   - [ ] #160 Flush the open utterance on stop and device change; drop it only on pause

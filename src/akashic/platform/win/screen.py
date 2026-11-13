@@ -2,12 +2,14 @@
 """On-demand selected-window rendering and monitor enumeration through Windows GDI.
 
 Production capture uses PrintWindow, with bounded waiting and no desktop-pixel fallback.
+One hung app blocks only its own windows.
 The rectangular BitBlt helper remains for hardware checks. Smoke test: tests/manual/capture.md.
 """
 
 from __future__ import annotations
 
 import ctypes
+import math
 import queue
 import threading
 from ctypes import wintypes
@@ -24,7 +26,9 @@ _SRCCOPY = 0x00CC0020
 _CAPTUREBLT = 0x40000000  # include layered (transparent) windows
 _DIB_RGB_COLORS = 0
 _PER_MONITOR_AWARE_V2 = -4
-_MAX_WINDOW_PIXELS = 16_000_000
+_MAX_WINDOW_PIXELS = 16_000_000  # bound on the returned image; larger ones are shrunk
+_MAX_RENDER_PIXELS = 50_000_000  # bound on the allocation; larger rects are malformed
+_MAX_PENDING_RENDERS = 4
 WINDOW_RENDER_WAIT_S: Final = 1.0
 
 _MONITORENUMPROC = ctypes.WINFUNCTYPE(
@@ -96,17 +100,28 @@ def set_dpi_aware() -> None:
     user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(_PER_MONITOR_AWARE_V2))
 
 
+def _fit_output_bound(image: Image.Image) -> Image.Image:
+    pixels = image.width * image.height
+    if pixels <= _MAX_WINDOW_PIXELS:
+        return image
+    scale = math.sqrt(_MAX_WINDOW_PIXELS / pixels)
+    size = (max(1, int(image.width * scale)), max(1, int(image.height * scale)))
+    return image.resize(size, Image.Resampling.BILINEAR, reducing_gap=2.0)
+
+
 class GdiScreen:
     def __init__(self) -> None:
-        self._window_thread: threading.Thread | None = None
+        self._renders: dict[int, threading.Thread] = {}
 
     def grab_window(self, window: WindowInfo) -> Image.Image | None:
         """PrintWindow renders the selected HWND, including behind an occluder.
 
-        The owning app can hang inside PrintWindow. One daemon thread bounds caller wait and
-        outstanding work; late pixels are discarded, never used for a subsequent request.
+        The owning app can hang inside PrintWindow. One daemon thread per HWND bounds caller
+        wait; a hung window is refused until its render ends, so it blocks only itself, and
+        the number of outstanding renders is capped. Late pixels are discarded, never reused.
         """
-        if self._window_thread is not None and self._window_thread.is_alive():
+        self._renders = {h: t for h, t in self._renders.items() if t.is_alive()}
+        if window.hwnd in self._renders or len(self._renders) >= _MAX_PENDING_RENDERS:
             return None
         result: queue.Queue[Image.Image | None] = queue.Queue(maxsize=1)
 
@@ -116,12 +131,15 @@ class GdiScreen:
             except OSError:
                 result.put(None)
 
-        self._window_thread = threading.Thread(target=read, daemon=True, name="window-pixels")
-        self._window_thread.start()
+        render = threading.Thread(target=read, daemon=True, name="window-pixels")
+        self._renders[window.hwnd] = render
+        render.start()
         try:
-            return result.get(timeout=WINDOW_RENDER_WAIT_S)
+            image = result.get(timeout=WINDOW_RENDER_WAIT_S)
         except queue.Empty:
-            return None
+            return None  # stays in _renders until the render thread ends
+        del self._renders[window.hwnd]  # finished: the thread may still be exiting
+        return image
 
     @staticmethod
     def _render_window(window: WindowInfo) -> Image.Image | None:
@@ -130,7 +148,7 @@ class GdiScreen:
             return None
         width, height = rect.right - rect.left, rect.bottom - rect.top
         # Bound a malformed/during-resize target before allocating.
-        if width <= 0 or height <= 0 or width * height > _MAX_WINDOW_PIXELS:
+        if width <= 0 or height <= 0 or width * height > _MAX_RENDER_PIXELS:
             return None
         header = _BitmapInfoHeader()
         header.biSize = ctypes.sizeof(header)
@@ -157,7 +175,7 @@ class GdiScreen:
                 and rect.top <= bounds.top < bounds.bottom <= rect.bottom
             ):
                 return None
-            return image.crop(
+            cropped = image.crop(
                 (
                     bounds.left - rect.left,
                     bounds.top - rect.top,
@@ -165,6 +183,7 @@ class GdiScreen:
                     bounds.bottom - rect.top,
                 )
             )
+            return _fit_output_bound(cropped)
         finally:
             if previous:
                 gdi32.SelectObject(memory, previous)

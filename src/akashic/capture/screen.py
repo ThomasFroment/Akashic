@@ -70,6 +70,7 @@ class _MonitorState:
     last_attempt: float = float("-inf")
     signature: imaging.Signature | None = None
     window_key: tuple[int, str] | None = None
+    last_text: str | None = None
 
 
 class ScreenCapture:
@@ -142,22 +143,36 @@ class ScreenCapture:
 
     def run(self, stop: threading.Event, paused: threading.Event) -> None:
         last_stats = self._clock()
+        last_logged: dict[str, float] = {}
+        failed = False
         while not stop.is_set():
             now = self._clock()
             due = self._debouncer.next_due()
             timeout = self._settings.focus_poll_s
-            if due is not None:
+            if due is not None and not failed:
                 timeout = min(timeout, max(due - now, 0.0))
             if stop.wait(timeout):
                 break
-            if paused.is_set():
-                self.reset()  # paused means nothing is read, grabbed or kept
-                continue
-            now = self._clock()
-            self.tick(now)
-            if now - last_stats >= STATS_LOG_INTERVAL_S:
-                last_stats = now
-                log.info("capture stats: %s", dict(sorted(self.stats.items())))
+            failed = False
+            try:
+                if paused.is_set():
+                    self.reset()  # paused means nothing is read, grabbed or kept
+                    continue
+                now = self._clock()
+                self.tick(now)
+                if now - last_stats >= STATS_LOG_INTERVAL_S:
+                    last_stats = now
+                    log.info("capture stats: %s", dict(sorted(self.stats.items())))
+            except Exception as exc:  # noqa: BLE001 - the screen loop must outlive any one fault
+                failed = True
+                self.stats["loop_error"] += 1
+                self._log_loop_fault(type(exc).__name__, last_logged)
+
+    def _log_loop_fault(self, name: str, last_logged: dict[str, float]) -> None:
+        now = self._clock()
+        if now - last_logged.get(name, float("-inf")) >= STATS_LOG_INTERVAL_S:
+            last_logged[name] = now
+            log.warning("screen loop iteration failed: %s", name)
 
     def tick(self, now: float) -> None:
         """One iteration: poll the foreground window, run due triggers, then idle captures."""
@@ -165,9 +180,11 @@ class ScreenCapture:
         self._poll_focus(now)
         monitors = self._monitor_list(now)
         if not monitors:
+            self._debouncer.clear()  # nothing can be captured: never replay these later
             return
         focused = self._windows.focused_window()
         if self._tick_game(focused, monitors, now):
+            self._debouncer.clear()
             return
         focus_monitor = _monitor_of(monitors, focused.rect.center) if focused else None
         for trigger in self._debouncer.pop_due(now):
@@ -192,7 +209,8 @@ class ScreenCapture:
     def _tick_game(self, focused: WindowInfo | None, monitors: list[Rect], now: float) -> bool:
         """Gaming mode (AGENTS.md): log the game, one screenshot per interval, no UI Automation,
         no OCR (those frames have no text; the worker can OCR the stored image later), no input
-        triggers and no other monitors. Returns True while a game is in the foreground."""
+        triggers (cleared each tick) and no other monitors. Returns True while a game is in the
+        foreground."""
         try:
             transition = self._game_mode.observe(focused, monitors, now)
             if transition.ended is not None:
@@ -218,7 +236,6 @@ class ScreenCapture:
         return self._game_mode.active
 
     def _start_game_row(self, process: str, title: str, now: float) -> None:
-        self._debouncer.clear()  # input triggers queued before the game started are stale
         self._game_id = self._games.open(
             process=process, window_title=title or None, ts_ms=self._now_ms()
         )
@@ -338,8 +355,17 @@ class ScreenCapture:
 
         ts_ms = self._now_ms()
         image = self._screen.grab_window(window)
+        target = _Target(window, is_focused)
         if image is None:
-            return "image_unavailable"
+            return self._capture_text_only(
+                trigger=trigger,
+                index=index,
+                target=target,
+                url=url,
+                state=state,
+                ts_ms=ts_ms,
+                now=now,
+            )
         if not self._consistent(window, focused=is_focused, url=url):
             return "window_changed"
         sig = imaging.signature(image)
@@ -351,12 +377,77 @@ class ScreenCapture:
             return "unchanged"
 
         black = imaging.is_black(image)
-        target = _Target(window, is_focused)
         text, source, gate_result = self._read_text(target, image, black=black, now=now)
         encoded = None if black else imaging.encode_webp(image)
-        # UIA/URL and pixels are separate reads. Reject a switch/navigation/lock before writing.
-        if not self._consistent(window, focused=is_focused, url=url):
+        stored = self._store_frame(
+            trigger=trigger,
+            index=index,
+            target=target,
+            url=url,
+            state=state,
+            ts_ms=ts_ms,
+            text=text,
+            source=source,
+            encoded=encoded,
+            signature=sig,
+        )
+        if not stored:
             return "window_changed"
+        if gate_result is not None and source == "ocr":
+            self._gate.commit(f"{window.process}:{window.hwnd}", gate_result)
+        return "stored_black" if black else "stored"
+
+    def _capture_text_only(  # noqa: PLR0913 - the capture context travels together
+        self,
+        *,
+        trigger: Trigger,
+        index: int,
+        target: _Target,
+        url: str | None,
+        state: _MonitorState,
+        ts_ms: int,
+        now: float,
+    ) -> str:
+        """The window cannot be rendered (a hung app): keep its metadata and UIA text only."""
+        window = target.window
+        text, source, _ = self._read_text(target, None, black=False, now=now)
+        if state.window_key == window.key and state.last_text == text:
+            return "unchanged"
+        stored = self._store_frame(
+            trigger=trigger,
+            index=index,
+            target=target,
+            url=url,
+            state=state,
+            ts_ms=ts_ms,
+            text=text,
+            source=source,
+            encoded=None,
+            signature=None,
+        )
+        if not stored:
+            return "window_changed"
+        return "stored_no_image"
+
+    def _store_frame(  # noqa: PLR0913 - the capture context travels together
+        self,
+        *,
+        trigger: Trigger,
+        index: int,
+        target: _Target,
+        url: str | None,
+        state: _MonitorState,
+        ts_ms: int,
+        text: str,
+        source: TextSource | None,
+        encoded: bytes | None,
+        signature: imaging.Signature | None,
+    ) -> bool:
+        """Write a frame unless the window changed since it was read. Returns whether it did."""
+        window = target.window
+        # UIA/URL and pixels are separate reads. Reject a switch/navigation/lock before writing.
+        if not self._consistent(window, focused=target.is_focused, url=url):
+            return False
         self._store.add(
             NewFrame(
                 ts_ms=ts_ms,
@@ -365,17 +456,16 @@ class ScreenCapture:
                 process=window.process or None,
                 window_title=window.title or None,
                 url=url,
-                focused=is_focused,
+                focused=target.is_focused,
                 text=text or None,
                 text_source=source,
                 image_webp=encoded,
             )
         )
-        state.signature = sig
+        state.signature = signature
         state.window_key = window.key
-        if gate_result is not None and source == "ocr":
-            self._gate.commit(f"{window.process}:{window.hwnd}", gate_result)
-        return "stored_black" if black else "stored"
+        state.last_text = text
+        return True
 
     def _capture_allowed(
         self, window: WindowInfo, *, focused: bool
@@ -440,7 +530,7 @@ class ScreenCapture:
         return normalize_url(raw) if raw else None
 
     def _read_text(
-        self, target: _Target, image: Image.Image, *, black: bool, now: float
+        self, target: _Target, image: Image.Image | None, *, black: bool, now: float
     ) -> tuple[str, TextSource | None, GateResult | None]:
         window = target.window
         text = ""
@@ -451,7 +541,7 @@ class ScreenCapture:
             self._budget.record(window.process, (time.perf_counter() - started) * 1000, now)
             text = assemble_text(parts or ())
             source = "uia" if text else None
-        if len(text) >= MIN_UIA_CHARS or black:
+        if len(text) >= MIN_UIA_CHARS or black or image is None:
             return text, source, None
         result = self._gate.read(
             f"{window.process}:{window.hwnd}", image, Rect(0, 0, image.width, image.height)

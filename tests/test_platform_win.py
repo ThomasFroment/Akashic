@@ -429,3 +429,70 @@ def test_the_platform_does_not_remember_a_failed_app_listing(
     calls = names.calls
     assert media.app_name(AUMID) == "Firefox"
     assert names.calls == calls  # a name that is known never triggers a listing
+
+
+# --- UI Automation: a hung app times out instead of blocking ---------------------------------
+
+UIA_E_TIMEOUT = -2146233083  # 0x80131505
+
+
+class _TimingOutAutomation:
+    """Every call into the hung app fails with UIA_E_TIMEOUT, as the transaction timeout does."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def _timeout(self) -> Exception:
+        self.calls += 1
+        return com_error(UIA_E_TIMEOUT, "UIA_E_TIMEOUT")
+
+    def GetFocusedElement(self) -> object:  # noqa: N802 - COM
+        raise self._timeout()
+
+    def ElementFromHandle(self, hwnd: int) -> object:  # noqa: N802 - COM
+        del hwnd
+        raise self._timeout()
+
+
+class _FakeComObject:
+    def __init__(self) -> None:
+        self.ConnectionTimeout = None
+        self.TransactionTimeout = None
+
+
+def test_windows_uia_uses_the_v8_automation_object_with_named_timeouts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created: list[tuple[object, object]] = []
+    fake = _FakeComObject()
+
+    def create(clsid: object, interface: object = None) -> _FakeComObject:
+        created.append((clsid, interface))
+        return fake
+
+    monkeypatch.setattr(win_uia.comtypes_client, "CreateObject", create)
+    reader = win_uia.WindowsUia()
+    assert created == [(win_uia.uia.CUIAutomation8, win_uia.uia.IUIAutomation2)]
+    assert reader._auto is fake
+    assert fake.ConnectionTimeout == win_uia.UIA_CONNECTION_TIMEOUT_MS
+    assert fake.TransactionTimeout == win_uia.UIA_TRANSACTION_TIMEOUT_MS
+    # Milliseconds, bounded: a hung app must not block the capture loop for long.
+    assert 0 < win_uia.UIA_CONNECTION_TIMEOUT_MS <= win_uia.UIA_TRANSACTION_TIMEOUT_MS <= 10_000
+
+
+def test_a_timed_out_password_check_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    reader = object.__new__(win_uia.WindowsUia)
+    monkeypatch.setattr(reader, "_auto", _TimingOutAutomation(), raising=False)
+    assert reader.focused_is_password() is None
+
+
+def test_timed_out_readers_take_their_error_paths(monkeypatch: pytest.MonkeyPatch) -> None:
+    reader = object.__new__(win_uia.WindowsUia)
+    auto = _TimingOutAutomation()
+    monkeypatch.setattr(reader, "_auto", auto, raising=False)
+    target = window(process="chrome.exe", title="Page - Google Chrome")
+    assert reader.read_text(target, 100) is None
+    assert reader.read_url(target, "chromium") is None
+    assert reader.read_url(target, "firefox") is None
+    assert reader.browser_caption(target, "chromium") is None
+    assert auto.calls == 4  # each reader made its one failing call and gave up

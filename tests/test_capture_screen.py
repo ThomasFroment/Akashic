@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import io
+import logging
+import sqlite3
 import threading
 import time
 from dataclasses import dataclass, field
@@ -21,7 +23,6 @@ from capture_fakes import (
     window,
     with_text_block,
 )
-from defects import known_defect
 from store_reads import latest_frames
 from waits import wait_for
 
@@ -30,8 +31,8 @@ from akashic.capture import main as capture_main
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.ocr_gate import MAX_CACHED_WINDOWS, OcrGate
-from akashic.capture.ports import CapturePlatform, Rect, TextBlock
-from akashic.capture.screen import ScreenCapture, Settings
+from akashic.capture.ports import CapturePlatform, Rect, TextBlock, WindowInfo
+from akashic.capture.screen import STATS_LOG_INTERVAL_S, ScreenCapture, Settings
 from akashic.capture.text import MAX_TEXT_CHARS
 from akashic.capture.uia_budget import UiaBudget
 from akashic.config import Exclusions as UserExclusions
@@ -79,6 +80,7 @@ def make_rig(paths: Paths) -> Iterator[Callable[..., Rig]]:
         user: UserExclusions | None = None,
         settings: Settings | None = None,
         budget: UiaBudget | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> Rig:
         screen = FakeScreen(rects=monitors or [SCREEN])
         windows = FakeWindows(focused=window())
@@ -94,6 +96,7 @@ def make_rig(paths: Paths) -> Iterator[Callable[..., Rig]]:
             exclusions=Exclusions(user or UserExclusions()),
             settings=settings or Settings(min_gap_s=0.2),  # tests step in 0.1 s
             budget=budget,
+            clock=clock,
             now_ms=lambda: next(counter),
             browsers=BrowserState(),
             games=GameLog(conn),
@@ -184,9 +187,11 @@ def test_unavailable_window_does_not_fall_back_to_monitor(make_rig: Callable[...
     rig = make_rig()
     rig.screen.unavailable = True
     rig.capture.tick(0.0)
-    assert rig.screen.grabs == 0
-    assert latest_frames(rig.conn) == []
-    assert rig.capture.stats["image_unavailable"] == 1
+    assert rig.screen.grabs == 0  # never a monitor grab
+    frames = latest_frames(rig.conn)
+    assert len(frames) == 1  # a text-only row
+    assert frames[0].image_path is None
+    assert rig.capture.stats["stored_no_image"] == 1
 
 
 def test_changed_pixels_or_title_are_stored(make_rig: Callable[..., Rig]) -> None:
@@ -626,7 +631,6 @@ def test_body_stays_idle_when_capture_is_disabled(
 # --- the loop survives a failing iteration ---------------------------------------
 
 
-@known_defect(29, "one exception in a screen-loop iteration ends screen capture")
 def test_screen_loop_survives_a_failing_iteration(make_rig: Callable[..., Rig]) -> None:
     rig = make_rig()
     calls = [0]
@@ -663,7 +667,6 @@ def test_screen_loop_survives_a_failing_iteration(make_rig: Callable[..., Rig]) 
 # --- a window without pixels still stores its text -------------------------------
 
 
-@known_defect(158, "a window whose pixels are unavailable loses its text row too")
 def test_window_without_pixels_still_stores_its_text(make_rig: Callable[..., Rig]) -> None:
     rig = make_rig()
     rig.screen.unavailable = True
@@ -673,3 +676,375 @@ def test_window_without_pixels_still_stores_its_text(make_rig: Callable[..., Rig
     assert frames[0].image_path is None
     assert frames[0].text is not None
     assert "real window text" in frames[0].text
+
+
+def test_a_window_without_pixels_and_without_text_stores_a_bare_row(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.uia.texts.clear()  # UI Automation has nothing to read
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    frames = latest_frames(rig.conn)
+    assert len(frames) == 1
+    assert (frames[0].process, frames[0].window_title) == ("notepad.exe", "Notes")
+    assert (frames[0].text, frames[0].text_source, frames[0].image_path) == (None, None, None)
+    assert rig.capture.stats["stored_no_image"] == 1
+    assert rig.screen.grabs == 0
+
+
+def test_a_window_without_pixels_is_never_read_by_ocr(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.uia.texts[1] = ["short"]  # under the UIA threshold: with pixels this would go to OCR
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    assert rig.ocr.calls == 0
+    assert rig.capture.stats["stored_no_image"] == 1
+    assert latest_frames(rig.conn)[0].text_source in ("uia", None)
+
+
+def test_repeated_no_image_captures_of_the_same_text_store_one_row(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    rig.capture.note("input", 0.5)
+    rig.capture.tick(1.0)
+    rig.capture.tick(7.0)  # idle
+    rig.capture.tick(14.0)
+    assert len(latest_frames(rig.conn)) == 1
+    assert rig.capture.stats["stored_no_image"] == 1
+    assert rig.capture.stats["unchanged"] >= 2
+
+
+def test_a_changed_title_or_text_stores_a_new_no_image_row(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    rig.windows.focused = window(title="Notes - edited")
+    rig.capture.tick(2.0)
+    assert len(latest_frames(rig.conn)) == 2
+    rig.uia.texts[1] = ["Completely different words that are long enough to count as real text."]
+    rig.capture.note("input", 3.0)
+    rig.capture.tick(4.0)
+    assert len(latest_frames(rig.conn)) == 3
+    assert rig.capture.stats["stored_no_image"] == 3
+
+
+def test_a_pixel_row_between_two_identical_no_image_captures_makes_the_second_new(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    first_text = rig.uia.texts[1]
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)  # no-image row (K, T)
+    rig.screen.unavailable = False
+    rig.uia.texts[1] = ["Another text that is long enough to count as real window text."]
+    rig.capture.note("input", 1.0)
+    rig.capture.tick(1.5)  # pixel row for K with text X
+    rig.screen.unavailable = True
+    rig.uia.texts[1] = first_text
+    rig.capture.note("input", 3.0)
+    rig.capture.tick(3.5)  # no-image (K, T) again: not a duplicate of the pixel row
+    assert rig.capture.stats["stored"] == 1
+    assert rig.capture.stats["stored_no_image"] == 2
+    assert len(latest_frames(rig.conn)) == 3
+
+
+def test_pixels_coming_back_are_stored_normally(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    rig.screen.unavailable = False
+    rig.capture.note("input", 1.0)
+    rig.capture.tick(1.5)  # same window, same text, but now with an image
+    assert rig.capture.stats["stored"] == 1
+    frames = latest_frames(rig.conn)
+    assert len(frames) == 2
+    assert rig.store.image(frames[0]) is not None
+
+
+@pytest.mark.parametrize("change", ["focus", "title", "url", "lock", "password"])
+def test_a_text_only_row_is_dropped_when_the_window_changes(
+    make_rig: Callable[..., Rig], change: str
+) -> None:
+    rig = make_rig()
+    rig.windows.focused = window(process="chrome.exe")
+    rig.uia.urls[1] = "https://example.org/one"
+
+    def switch() -> None:
+        if change == "focus":
+            rig.windows.focused = window(hwnd=2, process="taskmgr.exe")
+        elif change == "title":
+            rig.windows.focused = window(process="chrome.exe", title="New tab")
+        elif change == "url":
+            rig.uia.urls[1] = "https://example.org/two"
+        elif change == "lock":
+            rig.windows.locked = True
+        else:
+            rig.uia.password = True
+
+    rig.screen.unavailable = True
+    rig.screen.on_grab = switch
+    rig.capture.tick(0.0)
+    assert latest_frames(rig.conn) == []
+    assert rig.capture.stats["window_changed"] == 1
+    assert rig.screen.grabs == 0
+
+
+def test_an_excluded_window_without_pixels_stores_nothing_and_is_not_read(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig(user=UserExclusions(processes=("notepad.exe",)))
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    assert latest_frames(rig.conn) == []
+    assert rig.uia.text_reads == []
+    assert rig.capture.stats["stored_no_image"] == 0
+
+
+@pytest.mark.parametrize("password", [True, None])
+def test_a_password_field_without_pixels_stores_nothing(
+    make_rig: Callable[..., Rig], *, password: bool | None
+) -> None:
+    rig = make_rig()
+    rig.uia.password = password
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    assert latest_frames(rig.conn) == []
+    assert rig.uia.text_reads == []
+
+
+def test_an_excluded_url_without_pixels_stores_nothing(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig(user=UserExclusions(urls=("*mybank.example*",)))
+    rig.windows.focused = window(process="chrome.exe", title="Bank - Google Chrome")
+    rig.uia.urls[1] = "https://mybank.example/compte"
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    assert latest_frames(rig.conn) == []
+    assert rig.uia.text_reads == []
+
+
+def test_the_text_only_row_keeps_the_url(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.windows.focused = window(process="chrome.exe", title="Page - Google Chrome")
+    rig.uia.urls[1] = "https://example.org/page"
+    rig.uia.texts[1] = LONG_TEXT
+    rig.screen.unavailable = True
+    rig.capture.tick(0.0)
+    frames = latest_frames(rig.conn)
+    assert len(frames) == 1
+    assert frames[0].url is not None
+    assert "example.org" in frames[0].url
+    assert frames[0].image_path is None
+
+
+def test_game_mode_without_pixels_still_stores_nothing(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.screen.unavailable = True
+    rig.windows.focused = WindowInfo(7, "game.exe", "The Game", SCREEN, has_frame=False)
+    rig.capture.tick(0.0)
+    assert rig.capture.stats["image_unavailable"] == 1
+    assert rig.capture.stats["stored_no_image"] == 0
+    assert latest_frames(rig.conn) == []
+
+
+# --- loop guard: faults, backoff, log hygiene ------------------------------------------------
+
+
+class CountingStop(threading.Event):
+    """Records each wait without waiting; stops the loop after ``limit`` waits."""
+
+    def __init__(self, limit: int) -> None:
+        super().__init__()
+        self.limit = limit
+        self.timeouts: list[float | None] = []
+
+    def wait(self, timeout: float | None = None) -> bool:
+        self.timeouts.append(timeout)
+        if len(self.timeouts) >= self.limit:
+            self.set()
+        return self.is_set()
+
+
+def stepping_clock(step: float) -> Callable[[], float]:
+    now = [0.0]
+
+    def clock() -> float:
+        now[0] += step
+        return now[0]
+
+    return clock
+
+
+def loop_warnings(caplog: pytest.LogCaptureFixture) -> list[str]:
+    return [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+def test_a_failed_tick_is_counted_logged_by_type_and_the_loop_goes_on(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    rig = make_rig(clock=stepping_clock(1.0))
+    real_tick = rig.capture.tick
+    calls = [0]
+
+    def flaky(now: float) -> None:
+        calls[0] += 1
+        if calls[0] == 1:
+            msg = "secret title https://private.example/x"
+            raise RuntimeError(msg)
+        real_tick(now)
+
+    monkeypatch.setattr(rig.capture, "tick", flaky)
+    stop = CountingStop(6)
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.screen"):
+        rig.capture.run(stop, threading.Event())
+    assert rig.capture.stats["loop_error"] == 1
+    assert calls[0] > 1  # the loop kept going
+    assert rig.capture.stats["stored"] >= 1  # and a healthy iteration stored a frame
+    warnings = loop_warnings(caplog)
+    assert len(warnings) == 1
+    assert "RuntimeError" in warnings[0]
+    assert "secret" not in caplog.text
+    assert "private.example" not in caplog.text
+    assert all(r.exc_info is None for r in caplog.records)
+
+
+def test_a_monitor_enumeration_error_does_not_end_the_loop(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rig = make_rig(clock=stepping_clock(10.0))  # every iteration refreshes the monitor list
+    real = rig.screen.monitors
+    calls = [0]
+
+    def flaky() -> list[Rect]:
+        calls[0] += 1
+        if calls[0] == 1:
+            msg = "display configuration changed"
+            raise OSError(msg)
+        return real()
+
+    monkeypatch.setattr(rig.screen, "monitors", flaky)
+    rig.capture.run(CountingStop(5), threading.Event())
+    assert rig.capture.stats["loop_error"] == 1
+    assert rig.screen.grabs > 0
+
+
+def test_a_failing_game_close_while_paused_does_not_end_the_loop(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rig = make_rig(clock=stepping_clock(1.0))
+    rig.windows.focused = WindowInfo(7, "game.exe", "The Game", SCREEN, has_frame=False)
+    rig.capture.tick(0.0)  # a game session opens
+    msg = "database is locked"
+
+    def failing_close(*_args: object, **_kwargs: object) -> None:
+        raise sqlite3.OperationalError(msg)
+
+    monkeypatch.setattr(GameLog, "close", failing_close)
+    paused = threading.Event()
+    paused.set()
+    stop = CountingStop(4)
+    rig.capture.run(stop, paused)  # reset() raises while paused
+    assert rig.capture.stats["loop_error"] >= 1
+    assert len(stop.timeouts) == 4  # the loop ran to the stop, not to its death
+
+
+def test_a_persistent_fault_neither_spins_nor_floods_the_log(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    rig = make_rig(clock=stepping_clock(0.01))
+    focus_poll_s = rig.capture._settings.focus_poll_s
+
+    def always(now: float) -> None:
+        del now
+        msg = "boom"
+        raise OSError(msg)
+
+    monkeypatch.setattr(rig.capture, "tick", always)
+    rig.capture.note("input", -1.0)  # a trigger already due would otherwise give a 0 s wait
+    stop = CountingStop(300)
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.screen"):
+        rig.capture.run(stop, threading.Event())
+    assert rig.capture.stats["loop_error"] == 299
+    assert all(t is not None and t >= focus_poll_s for t in stop.timeouts[1:])
+    assert len(loop_warnings(caplog)) == 1
+
+
+def test_a_fault_with_a_due_trigger_waits_at_least_the_focus_poll(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rig = make_rig(clock=stepping_clock(1.0))
+    focus_poll_s = rig.capture._settings.focus_poll_s
+    first = [True]
+    real_tick = rig.capture.tick
+
+    def once(now: float) -> None:
+        if first[0]:
+            first[0] = False
+            rig.capture.note("input", 0.0)  # a trigger that is already due
+            msg = "boom"
+            raise OSError(msg)
+        real_tick(now)
+
+    monkeypatch.setattr(rig.capture, "tick", once)
+    stop = CountingStop(3)
+    rig.capture.run(stop, threading.Event())
+    assert stop.timeouts[1] is not None
+    assert stop.timeouts[1] >= focus_poll_s
+
+
+def test_alternating_fault_types_are_each_logged_once_per_interval(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    rig = make_rig(clock=stepping_clock(1.0))
+    calls = [0]
+
+    def alternating(now: float) -> None:
+        del now
+        calls[0] += 1
+        if calls[0] % 2:
+            msg = "a"
+            raise OSError(msg)
+        msg = "b"
+        raise ValueError(msg)
+
+    monkeypatch.setattr(rig.capture, "tick", alternating)
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.screen"):
+        rig.capture.run(CountingStop(40), threading.Event())
+    warnings = loop_warnings(caplog)
+    assert len(warnings) == 2
+    assert sum("OSError" in w for w in warnings) == 1
+    assert sum("ValueError" in w for w in warnings) == 1
+
+
+def test_a_fault_type_is_logged_again_after_the_interval(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    rig = make_rig(clock=stepping_clock(STATS_LOG_INTERVAL_S / 4))
+
+    def always(now: float) -> None:
+        del now
+        msg = "boom"
+        raise OSError(msg)
+
+    monkeypatch.setattr(rig.capture, "tick", always)
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.screen"):
+        rig.capture.run(CountingStop(30), threading.Event())
+    assert 2 <= len(loop_warnings(caplog)) < 30
+
+
+def test_a_base_exception_is_not_swallowed_by_the_loop(
+    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rig = make_rig()
+
+    def interrupt(now: float) -> None:
+        del now
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(rig.capture, "tick", interrupt)
+    with pytest.raises(KeyboardInterrupt):
+        rig.capture.run(CountingStop(5), threading.Event())
+    assert rig.capture.stats["loop_error"] == 0

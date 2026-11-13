@@ -7,6 +7,13 @@ naming the item it came from.
 When a point is done, delete its line in the commit that does it. When it turns into planned
 work, move it to TODO.md as a task and delete it here. Drop a milestone heading once it is empty.
 
+## A3. Capture keeps running and keeps what it recorded
+
+- #22 UIA timeout not checked against a really hung app
+- #158 PrintWindow not checked on a really hung window
+- #158 No check of a window over 16 MP spanning monitors
+- #22 A hung focused browser still costs several UIA timeouts per tick
+
 ## A2. Capture stops when asked
 
 - #60 #163 Not checked in the running app: Lock, Quit, pause then lock/unlock, pause then restart

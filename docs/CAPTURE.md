@@ -4,6 +4,8 @@
 
 Screenshots represent the selected app window, never a monitor fallback. Episode images must
 belong to the claimed app and moment; a nearby timestamp alone is insufficient.
+A window whose pixels cannot be rendered (hung app) is stored text-only, like black
+frames, and windows over 16 MP are downscaled to fit.
 
 Screen text should preserve useful reading order, repeated messages and bilingual content while
 removing interface clutter. Prefer accessibility text with OCR as a fallback. Neither nonempty

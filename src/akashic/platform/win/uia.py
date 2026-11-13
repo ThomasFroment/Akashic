@@ -7,6 +7,9 @@ budgets and backs off per app (``capture/uia_budget.py``).
 
 COM runs multithreaded (``coinit_flags = 0``) so it can share the process with WinRT (OCR).
 Use one instance from one thread only.
+
+Calls into a hung app fail after the connection/transaction timeouts (a COMError) and
+take the readers' existing None/unknown paths instead of blocking the capture loop.
 """
 
 from __future__ import annotations
@@ -65,12 +68,16 @@ _OMNIBOX_CLASS = "OmniboxViewViews"
 _CHROMIUM_FRAME_CLASS = "BrowserRootView"  # its accessible name carries the private-mode marker
 _MAX_OMNIBOX_CANDIDATES = 4
 _MAX_ANCESTORS = 40
+UIA_CONNECTION_TIMEOUT_MS = 1000
+UIA_TRANSACTION_TIMEOUT_MS = 3000
 _ERRORS = (comtypes.COMError, OSError, ValueError, AttributeError)
 
 
 class WindowsUia:
     def __init__(self) -> None:
-        self._auto = comtypes_client.CreateObject(uia.CUIAutomation, interface=uia.IUIAutomation)
+        self._auto = comtypes_client.CreateObject(uia.CUIAutomation8, interface=uia.IUIAutomation2)
+        self._auto.ConnectionTimeout = UIA_CONNECTION_TIMEOUT_MS
+        self._auto.TransactionTimeout = UIA_TRANSACTION_TIMEOUT_MS
 
     def _cache(self, *properties: int):  # noqa: ANN202 - COM object
         cache = self._auto.CreateCacheRequest()
