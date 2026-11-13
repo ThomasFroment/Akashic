@@ -11,6 +11,12 @@ that is focused, or owned by the focused window, is never captured as unfocused.
 its own rate gate; both are checked together, so a trigger defers at most once and then captures
 both.
 
+A window that covers a monitor is a game when Windows reports a Direct3D exclusive-fullscreen app
+(`SHQueryUserNotificationState`, read at most once per second), even with a caption or on the
+built-in deny-list; otherwise when it has no caption and is not on the deny-list. Precedence: no
+process or no covered monitor is not a game, then the user's `games`, then the user's `not_games`,
+then D3D evidence, then the borderless rule.
+
 Game mode takes the game screenshot once per interval and drops input triggers. The unfocused
 window on each other monitor is captured every 15 s, with no UIA text and OCR deferred to the
 worker. The browser caption and URL readers still run on side browsers (each UIA request times

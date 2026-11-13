@@ -1,9 +1,12 @@
 # pyright: basic
-"""Foreground window, window under a point, cursor and session-lock facts (ctypes, no deps)."""
+"""Foreground window (with the D3D fullscreen state), window under a point, cursor and
+session-lock facts (ctypes, no deps)."""
 
 from __future__ import annotations
 
 import ctypes
+import dataclasses
+import time
 from ctypes import wintypes
 
 from akashic.capture.ports import Rect, WindowInfo
@@ -11,6 +14,7 @@ from akashic.platform.win.process import image_name
 
 user32 = ctypes.WinDLL("user32", use_last_error=True)
 dwmapi = ctypes.WinDLL("dwmapi", use_last_error=True)
+shell32 = ctypes.WinDLL("shell32")
 
 _GA_ROOT = 2
 _GA_ROOTOWNER = 3
@@ -20,6 +24,8 @@ _DWMWA_EXTENDED_FRAME_BOUNDS = 9
 _DESKTOP_SWITCHDESKTOP = 0x100
 _FRAME_HOST = "applicationframehost.exe"  # hosts every UWP app window
 _CORE_WINDOW_CLASS = "Windows.UI.Core.CoreWindow"
+_QUNS_RUNNING_D3D_FULL_SCREEN = 3
+_D3D_CACHE_S = 1.0  # the focus poll runs ~10 Hz; the shell query need not
 _WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
 
 user32.GetForegroundWindow.restype = wintypes.HWND
@@ -54,14 +60,23 @@ dwmapi.DwmGetWindowAttribute.argtypes = [
     ctypes.c_void_p,
     wintypes.DWORD,
 ]
+shell32.SHQueryUserNotificationState.argtypes = [ctypes.POINTER(ctypes.c_int)]
+shell32.SHQueryUserNotificationState.restype = ctypes.c_long  # HRESULT, checked by hand
 
 
 class Win32Windows:
+    def __init__(self) -> None:
+        self._d3d_fullscreen_value = False
+        self._d3d_read_at = float("-inf")
+
     def focused_window(self) -> WindowInfo | None:
         hwnd = user32.GetForegroundWindow()
         if not hwnd or user32.IsIconic(hwnd):
             return None
-        return self._info(hwnd)
+        info = self._info(hwnd)
+        if info is None:
+            return None
+        return dataclasses.replace(info, exclusive_fullscreen=self._d3d_fullscreen())
 
     def inspect_window(self, hwnd: int) -> WindowInfo | None:
         if not user32.IsWindowVisible(hwnd) or user32.IsIconic(hwnd):
@@ -102,6 +117,22 @@ class Win32Windows:
             return True
         user32.CloseDesktop(desktop)
         return False
+
+    def _d3d_fullscreen(self) -> bool:
+        now = time.monotonic()
+        if now - self._d3d_read_at >= _D3D_CACHE_S:
+            self._d3d_fullscreen_value = self._query_d3d_fullscreen()
+            self._d3d_read_at = now
+        return self._d3d_fullscreen_value
+
+    @staticmethod
+    def _query_d3d_fullscreen() -> bool:
+        state = ctypes.c_int()
+        try:
+            hr = shell32.SHQueryUserNotificationState(ctypes.byref(state))
+        except OSError:
+            return False
+        return hr == 0 and state.value == _QUNS_RUNNING_D3D_FULL_SCREEN
 
     def _info(self, hwnd: int) -> WindowInfo | None:
         rect = self._rect(hwnd)

@@ -496,3 +496,106 @@ def test_timed_out_readers_take_their_error_paths(monkeypatch: pytest.MonkeyPatc
     assert reader.read_url(target, "firefox") is None
     assert reader.browser_caption(target, "chromium") is None
     assert auto.calls == 4  # each reader made its one failing call and gave up
+
+
+# --- D3D exclusive-fullscreen state (#150) ---------------------------------------------------
+
+
+class _FakeShell32:
+    def __init__(self, *results: tuple[int, int] | Exception) -> None:
+        self.results = list(results)
+        self.calls = 0
+
+    def SHQueryUserNotificationState(self, ref: object) -> int:  # noqa: N802
+        self.calls += 1
+        result = self.results.pop(0) if len(self.results) > 1 else self.results[0]
+        if isinstance(result, Exception):
+            raise result
+        hr, state = result
+        ref._obj.value = state  # type: ignore[attr-defined]
+        return hr
+
+
+def _d3d_rig(
+    monkeypatch: pytest.MonkeyPatch, shell: _FakeShell32
+) -> tuple[win_windows.Win32Windows, list[float]]:
+    now = [100.0]
+    monkeypatch.setattr(win_windows, "shell32", shell)
+    monkeypatch.setattr(win_windows.time, "monotonic", lambda: now[0])
+    windows = win_windows.Win32Windows()
+    rect = win_windows.Rect(0, 0, 800, 600)
+    info = win_windows.WindowInfo(7, "game.exe", "T", rect, has_frame=False)
+    monkeypatch.setattr(windows, "_info", lambda _hwnd: info)
+    monkeypatch.setattr(win_windows.user32, "GetForegroundWindow", lambda: 7, raising=False)
+    monkeypatch.setattr(win_windows.user32, "IsIconic", lambda _hwnd: 0, raising=False)
+    return windows, now
+
+
+@pytest.mark.parametrize(
+    ("result", "expected"),
+    [
+        ((0, 3), True),
+        ((0, 2), False),
+        ((0, 4), False),
+        ((0, 0), False),
+        ((0, 7), False),
+        ((-2147467259, 3), False),  # failed HRESULT with a stale state value
+        ((1, 3), False),  # S_FALSE is not S_OK
+    ],
+)
+def test_only_an_ok_d3d_fullscreen_state_sets_the_flag(
+    monkeypatch: pytest.MonkeyPatch,
+    result: tuple[int, int],
+    expected: bool,  # noqa: FBT001
+) -> None:
+    windows, _ = _d3d_rig(monkeypatch, _FakeShell32(result))
+    focused = windows.focused_window()
+    assert focused is not None
+    assert focused.exclusive_fullscreen is expected
+
+
+def test_a_raising_shell_query_reports_false_and_does_not_raise(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    windows, _ = _d3d_rig(monkeypatch, _FakeShell32(OSError("boom")))
+    focused = windows.focused_window()
+    assert focused is not None
+    assert focused.exclusive_fullscreen is False
+
+
+def test_the_shell_query_runs_at_most_once_a_second(monkeypatch: pytest.MonkeyPatch) -> None:
+    shell = _FakeShell32((0, 3), (0, 2))
+    windows, now = _d3d_rig(monkeypatch, shell)
+    for _ in range(5):
+        focused = windows.focused_window()
+        assert focused is not None
+        assert focused.exclusive_fullscreen is True
+        now[0] += 0.1
+    assert shell.calls == 1
+    now[0] += 1.0
+    focused = windows.focused_window()
+    assert focused is not None
+    assert focused.exclusive_fullscreen is False
+    assert shell.calls == 2
+
+
+def test_inspect_window_never_reports_d3d(monkeypatch: pytest.MonkeyPatch) -> None:
+    shell = _FakeShell32((0, 3))
+    windows, _ = _d3d_rig(monkeypatch, shell)
+    monkeypatch.setattr(win_windows.user32, "IsWindowVisible", lambda _hwnd: 1, raising=False)
+    inspected = windows.inspect_window(7)
+    assert inspected is not None
+    assert inspected.exclusive_fullscreen is False
+    assert shell.calls == 0
+    focused = windows.focused_window()
+    assert focused is not None
+    assert focused.exclusive_fullscreen is True
+    assert focused == inspected  # identity ignores the flag (screen._consistent)
+
+
+def test_no_focused_window_means_no_shell_query(monkeypatch: pytest.MonkeyPatch) -> None:
+    shell = _FakeShell32((0, 3))
+    windows, _ = _d3d_rig(monkeypatch, shell)
+    monkeypatch.setattr(windows, "_info", lambda _hwnd: None)
+    assert windows.focused_window() is None
+    assert shell.calls == 0

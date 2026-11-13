@@ -1,9 +1,10 @@
 """Fullscreen-game detection (pure logic; the platform only reports window geometry).
 
-A game is the foreground window when it covers a whole monitor, has no caption bar (borderless
-or exclusive fullscreen) and is not a program that merely goes fullscreen: browsers (F11, video),
-media players, the desktop shell. Both lists are configurable, and ``games`` in the config forces
-detection for a process that does have a frame.
+A game is the foreground window when it covers a whole monitor and either Windows reports a
+Direct3D exclusive-fullscreen app, or it has no caption bar (borderless) and is not a program that
+merely goes fullscreen: browsers (F11, video), media players, meeting and remote-desktop clients,
+the desktop shell. Both lists are configurable and win over the heuristic: ``games`` forces
+detection for a process that does have a frame, ``not_games`` overrides even D3D evidence.
 
 Leaving the game takes a short grace period so alt-tab flicker and notification windows don't
 split one session into many.
@@ -22,21 +23,41 @@ if TYPE_CHECKING:
 # Programs that are fullscreen without being a game.
 DEFAULT_NOT_GAMES: Final = (
     *BROWSERS,
+    # shell
     "explorer.exe",
     "applicationframehost.exe",
     "searchhost.exe",
     "shellexperiencehost.exe",
     "lockapp.exe",
+    # media players
     "vlc.exe",
     "mpv.exe",
+    "mpvnet.exe",
     "mpc-hc64.exe",
     "mpc-hc.exe",
+    "mpc-be64.exe",
+    "mpc-be.exe",
     "potplayermini64.exe",
+    "potplayermini.exe",
+    "potplayer64.exe",
+    "potplayer.exe",
+    "smplayer.exe",
+    "kmplayer.exe",
+    "kmplayer64.exe",
+    "microsoft.media.player.exe",
+    "video.ui.exe",
     "wmplayer.exe",
+    # presentation
     "powerpnt.exe",
+    # meetings and chat
     "teams.exe",
+    "ms-teams.exe",
     "zoom.exe",
     "discord.exe",
+    # remote desktop and VMs
+    "mstsc.exe",
+    "msrdc.exe",
+    "vmconnect.exe",
 )
 
 
@@ -73,7 +94,11 @@ def is_game_window(window: WindowInfo, monitors: list[Rect], settings: GameSetti
         return False
     if window.process in settings.games:
         return True
-    return not window.has_frame and window.process not in (*DEFAULT_NOT_GAMES, *settings.not_games)
+    if window.process in settings.not_games:
+        return False
+    if window.exclusive_fullscreen:
+        return True
+    return not window.has_frame and window.process not in DEFAULT_NOT_GAMES
 
 
 @dataclass(frozen=True, slots=True)

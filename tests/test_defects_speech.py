@@ -1043,7 +1043,6 @@ def test_a_stream_watched_on_a_side_monitor_gets_a_time_span(conn: Connection) -
 HOUR_MS = 3_600_000
 
 
-@known_defect(150, "game detection is a deny-list: fullscreen players and RDP count as games")
 @pytest.mark.parametrize(
     "process", ["mpc-be64.exe", "potplayer64.exe", "ms-teams.exe", "mstsc.exe"]
 )

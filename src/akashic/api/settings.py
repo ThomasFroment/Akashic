@@ -222,7 +222,8 @@ SETTINGS: Final = (
         "Never treat as games",
         "lines",
         SCREEN,
-        "Fullscreen programs that are not games, one per line.",
+        "Fullscreen programs that are not games, one per line. "
+        "Also applies to exclusive-fullscreen apps.",
     ),
     Setting(
         "exclusions.processes",

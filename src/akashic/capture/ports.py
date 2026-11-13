@@ -6,7 +6,7 @@ reports facts (window geometry, text, "this field is a password"); core code dec
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, Literal, Protocol
 
 if TYPE_CHECKING:
@@ -71,6 +71,9 @@ class WindowInfo:
     rect: Rect  # screen coordinates (physical pixels)
     # False for borderless windows (no caption bar), which is how fullscreen games look.
     has_frame: bool = True
+    # True when the OS reports a Direct3D exclusive-fullscreen app (set on the focused window
+    # only; not part of window identity).
+    exclusive_fullscreen: bool = field(default=False, compare=False)
 
     @property
     def key(self) -> tuple[int, str]:

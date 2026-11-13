@@ -13,6 +13,7 @@ already follows it. Change a decision only when the user says so, and update its
 
 | Decision | Date | Status |
 | --- | --- | --- |
+| Game detection: D3D exclusive fullscreen (on a window covering a monitor) alone marks a game, even with a caption or on the deny-list; otherwise the borderless + covers-monitor + deny-list heuristic applies; the user's `games`/`not_games` win. (#150) | 2026-11-13 | done |
 | Personal, non-commercial project (needed for ported screenpipe logic). The repository becomes **private**; the user changes the GitHub setting. | 2026-11-12 (reverses 2026-11-10 "stay public") | pending, user |
 | Background browser media: a minimized or covered browser window that the screen loop never examined has no exclusion verdict, and its media title is logged even on a private, bank or user-excluded page. Accepted and documented in SECURITY.md rather than failing closed, to keep background videos answerable. | 2026-11-12 | done |
 | Window screenshots: render the selected app window (HWND), never fall back to the monitor. | 2026-11-09 | done |

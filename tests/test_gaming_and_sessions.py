@@ -653,3 +653,84 @@ def test_every_other_monitor_gets_one_attempt(make_rig: Callable[..., Rig]) -> N
         rig.windows.at[rects[i].center] = side(hwnd=10 + i, process=f"app{i}.exe", rect=rects[i])
     rig.capture.tick(0.0)
     assert sorted(str(f[3]) for f in side_frames(rig)) == ["app0.exe", "app2.exe", "app3.exe"]
+
+
+# --- D3D exclusive fullscreen (#150) ---------------------------------------------------------
+
+NEW_NOT_GAMES = (
+    "mpc-be64.exe",
+    "mpc-be.exe",
+    "potplayer64.exe",
+    "potplayer.exe",
+    "potplayermini.exe",
+    "potplayermini64.exe",
+    "mpvnet.exe",
+    "smplayer.exe",
+    "kmplayer.exe",
+    "kmplayer64.exe",
+    "microsoft.media.player.exe",
+    "video.ui.exe",
+    "ms-teams.exe",
+    "mstsc.exe",
+    "msrdc.exe",
+    "vmconnect.exe",
+)
+
+
+WINDOWED = Rect(900, 50, 1300, 400)  # inside the second monitor
+
+
+def d3d(
+    process: str = "game.exe", rect: Rect = SCREEN, *, has_frame: bool = False
+) -> WindowInfo:
+    return WindowInfo(7, process, "T", rect, has_frame=has_frame, exclusive_fullscreen=True)
+
+
+@pytest.mark.parametrize("process", NEW_NOT_GAMES)
+def test_players_meeting_and_remote_clients_are_not_borderless_games(process: str) -> None:
+    assert not is_game_window(game(process=process), [SCREEN], GameSettings())
+
+
+@pytest.mark.parametrize("process", ["mpv.exe", "chrome.exe", "game.exe", "discord.exe"])
+@pytest.mark.parametrize("has_frame", [True, False])
+def test_d3d_evidence_on_a_covered_monitor_is_a_game(process: str, has_frame: bool) -> None:  # noqa: FBT001
+    assert is_game_window(d3d(process, has_frame=has_frame), [SCREEN], GameSettings())
+
+
+@pytest.mark.parametrize("process", ["discord.exe", "game.exe"])
+def test_d3d_evidence_on_a_window_covering_no_monitor_is_not_a_game(process: str) -> None:
+    assert not is_game_window(d3d(process, WINDOWED), [SCREEN, SECOND], GameSettings())
+    assert not is_game_window(d3d(process, Rect(0, 0, 800, 560)), [SCREEN], GameSettings())
+
+
+def test_a_windowed_d3d_flag_neither_ends_nor_switches_the_session() -> None:
+    mode = GameMode(GameSettings(end_grace_s=5))
+    mode.observe(game(process="a.exe"), [SCREEN, SECOND], 0)
+    for t in (1, 2, 3):
+        change = mode.observe(d3d("b.exe", WINDOWED), [SCREEN, SECOND], t)
+        assert change.started is None
+        assert change.ended is None
+    assert mode.active
+    assert mode.observe(d3d("b.exe", WINDOWED), [SCREEN, SECOND], 6.5).ended is not None
+
+
+def test_precedence_empty_process_and_coverage_come_first() -> None:
+    settings = GameSettings(games=("game.exe",))
+    assert not is_game_window(d3d(""), [SCREEN], settings)
+    assert not is_game_window(d3d("game.exe", Rect(0, 0, 10, 10)), [SCREEN], settings)
+
+
+def test_user_not_games_beats_d3d_and_user_games_beats_the_default_list() -> None:
+    settings = GameSettings(games=("mpv.exe",), not_games=("odd.exe",))
+    assert not is_game_window(d3d("odd.exe"), [SCREEN], settings)
+    assert is_game_window(game(process="mpv.exe"), [SCREEN], settings)
+    both = GameSettings(games=("x.exe",), not_games=("x.exe",))
+    assert is_game_window(d3d("x.exe"), [SCREEN], both)  # games is checked first
+
+
+def test_window_identity_ignores_the_d3d_flag() -> None:
+    plain = WindowInfo(7, "game.exe", "T", SCREEN, has_frame=False)
+    flagged = d3d()
+    assert plain == flagged
+    assert hash(plain) == hash(flagged)
+    assert len({plain, flagged}) == 1

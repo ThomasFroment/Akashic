@@ -86,7 +86,7 @@ Three parts:
 
 - [x] #144 Scroll capture uses the window under the cursor, skipping the focused HWND
 - [x] #147 Game mode: idle captures of other monitors without UIA, OCR deferred; measure the cost
-- [ ] #150 Game detection: add common players and RDP; require fullscreen D3D evidence
+- [x] #150 Game detection: add common players, new Teams and RDP/Hyper-V clients; D3D exclusive fullscreen on a covered monitor marks a game
 - [ ] #21 UIA FindAll condition filters `IsOffscreen == False` before the 3000-node cut
 - [ ] #153 Keep an encrypted full-resolution copy (or crop) for deferred game OCR until it runs
 - [ ] #78 Test selected-window capture: 1 s bound, render thread, late pixels, bounds crop

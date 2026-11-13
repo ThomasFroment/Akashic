@@ -186,7 +186,9 @@ app_sessions = "forever"
 
 [gaming]
 # While a fullscreen game is in front: one screenshot per interval, no text reading.
-# Fullscreen browsers, media players and the desktop are never treated as games.
+# A window covering a monitor while Windows reports a Direct3D exclusive-fullscreen app is a
+# game; otherwise fullscreen browsers, media players, meeting apps, remote desktop and the
+# desktop are not games. not_games also overrides exclusive fullscreen.
 screenshot_interval_s = 60
 games = []       # executables always treated as games when fullscreen, e.g. ["eldenring.exe"]
 not_games = []   # fullscreen programs to ignore, added to the built-in list
