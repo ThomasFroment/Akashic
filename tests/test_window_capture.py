@@ -410,9 +410,11 @@ def test_outstanding_renders_have_a_fixed_cap(monkeypatch: pytest.MonkeyPatch) -
 
 
 def test_healthy_windows_never_fill_the_cap(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        GdiScreen, "_render_window", staticmethod(lambda _w: Image.new("RGB", (4, 3), "red"))
-    )
+
+    def red(_window: object) -> Image.Image:
+        return Image.new("RGB", (4, 3), "red")
+
+    monkeypatch.setattr(GdiScreen, "_render_window", staticmethod(red))
     grabber = GdiScreen()
     for hwnd in range(1, 4 * win_screen._MAX_PENDING_RENDERS):
         assert grabber.grab_window(WindowInfo(hwnd, "a.exe", "A", WINDOW.rect)) is not None

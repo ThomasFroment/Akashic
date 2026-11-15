@@ -4,12 +4,12 @@ owned popups, and the unfocused-capture consistency checks."""
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from capture_fakes import SCREEN, blank, window, with_text_block
+from screen_rig import MON_B, Rig
 from store_reads import latest_frames
-from test_capture_screen import MON_B, Rig, make_rig  # noqa: F401 - make_rig is a fixture
 
 from akashic.capture.health import FAILED_GRABS, GOOD_GRABS
 from akashic.capture.ports import Rect, WindowInfo
@@ -55,7 +55,7 @@ def _next_due(rig: Rig) -> float | None:
 
 
 def test_input_over_an_unfocused_window_beside_the_focused_one_is_stored_unfocused(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig)
@@ -66,7 +66,7 @@ def test_input_over_an_unfocused_window_beside_the_focused_one_is_stored_unfocus
 
 
 def test_the_cursor_frame_has_the_monitor_containing_the_cursor(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(monitors=[SCREEN, MON_B])
     rig.windows.at[MON_B.center] = window(hwnd=7, process="vlc.exe", title="Movie", rect=MON_B)
@@ -84,7 +84,7 @@ def test_the_cursor_frame_has_the_monitor_containing_the_cursor(
 
 
 def test_input_over_the_focused_window_is_neutral_and_leaves_the_cursor_gate_alone(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig)
@@ -101,7 +101,7 @@ def test_input_over_the_focused_window_is_neutral_and_leaves_the_cursor_gate_alo
 
 
 def test_pointed_focused_is_in_neither_grab_set_and_counts_once_per_pop(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     assert "pointed_focused" not in FAILED_GRABS
     assert "pointed_focused" not in GOOD_GRABS
@@ -115,7 +115,7 @@ def test_pointed_focused_is_in_neither_grab_set_and_counts_once_per_pop(
 
 
 def test_a_deferred_input_pop_does_not_count_pointed_focused(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(settings=Settings(min_gap_s=1.0))
     _beside(rig)
@@ -131,11 +131,12 @@ def test_a_deferred_input_pop_does_not_count_pointed_focused(
 
 
 def test_an_owned_popup_of_the_focused_app_is_never_stored_unfocused(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig, settle=False)
-    rig.windows.at[(600, 300)] = rig.windows.focused  # window_at resolves the popup to focused
+    # window_at resolves the popup to focused
+    rig.windows.at[(600, 300)] = cast("WindowInfo", rig.windows.focused)
     rig.capture.tick(0.0)
     rig.capture.tick(3.0)
     rig.capture.note("input", 4.0)
@@ -145,7 +146,7 @@ def test_an_owned_popup_of_the_focused_app_is_never_stored_unfocused(
 
 
 def test_a_centre_popup_of_the_focused_app_is_focused_and_gets_the_password_check(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(monitors=[SCREEN, MON_B])
     rig.windows.focused = window(rect=MON_B)
@@ -157,7 +158,7 @@ def test_a_centre_popup_of_the_focused_app_is_focused_and_gets_the_password_chec
 
 @pytest.mark.parametrize("cursor", [(-50, -50), (9000, 9000), (800, 600)])
 def test_no_cursor_capture_off_every_monitor(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
     cursor: tuple[int, int],
 ) -> None:
     rig = make_rig(settings=Settings(min_gap_s=1.0))
@@ -171,7 +172,7 @@ def test_no_cursor_capture_off_every_monitor(
 
 
 def test_no_cursor_capture_when_no_window_is_under_the_cursor(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig)
@@ -183,7 +184,7 @@ def test_no_cursor_capture_when_no_window_is_under_the_cursor(
 
 
 def test_one_input_defers_once_when_the_focused_gate_is_blocked(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(settings=Settings(min_gap_s=1.0))
     _beside(rig)
@@ -202,7 +203,7 @@ def test_one_input_defers_once_when_the_focused_gate_is_blocked(
 
 
 def test_the_trigger_defers_to_the_later_of_two_blocked_gates(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(settings=Settings(min_gap_s=1.0))
     _beside(rig)
@@ -216,7 +217,7 @@ def test_the_trigger_defers_to_the_later_of_two_blocked_gates(
 
 
 def test_a_blocked_cursor_gate_alone_defers_the_whole_trigger(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(settings=Settings(min_gap_s=1.0))
     _beside(rig)
@@ -229,7 +230,7 @@ def test_a_blocked_cursor_gate_alone_defers_the_whole_trigger(
 
 
 def test_cursor_over_the_focused_window_only_the_focused_gate_applies(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(settings=Settings(min_gap_s=1.0))
     _beside(rig)
@@ -243,7 +244,7 @@ def test_cursor_over_the_focused_window_only_the_focused_gate_applies(
 
 
 def test_repeated_input_over_an_unchanged_cursor_window_is_unchanged(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig)
@@ -256,7 +257,7 @@ def test_repeated_input_over_an_unchanged_cursor_window_is_unchanged(
     assert len(_discord(rig)) == 1
 
 
-def test_reset_clears_the_cursor_state(make_rig: Callable[..., Rig]) -> None:  # noqa: F811
+def test_reset_clears_the_cursor_state(make_rig: Callable[..., Rig]) -> None:
     rig = make_rig()
     _beside(rig)
     rig.capture.note("input", 4.0)
@@ -272,7 +273,7 @@ def test_reset_clears_the_cursor_state(make_rig: Callable[..., Rig]) -> None:  #
 
 
 def test_the_cursor_capture_goes_through_exclusions(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(user=UserExclusions(processes=("discord.exe",)))
     _beside(rig)
@@ -283,7 +284,7 @@ def test_the_cursor_capture_goes_through_exclusions(
 
 
 def test_the_cursor_capture_respects_the_lock(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig)
@@ -295,7 +296,7 @@ def test_the_cursor_capture_respects_the_lock(
 
 
 def test_a_private_browser_window_under_the_cursor_is_not_stored(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig)
@@ -308,7 +309,7 @@ def test_a_private_browser_window_under_the_cursor_is_not_stored(
 
 
 def test_an_excluded_url_under_the_cursor_is_not_stored(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(user=UserExclusions(urls=("*mybank.example*",)))
     _beside(rig)
@@ -322,7 +323,7 @@ def test_an_excluded_url_under_the_cursor_is_not_stored(
 
 
 def test_a_cursor_window_that_gains_focus_during_its_capture_is_rejected(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     side = _beside(rig)
@@ -334,12 +335,12 @@ def test_a_cursor_window_that_gains_focus_during_its_capture_is_rejected(
 
 
 def test_a_centre_window_that_gains_focus_during_its_capture_is_rejected(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(monitors=[SCREEN, MON_B])
     vlc = window(hwnd=7, process="vlc.exe", title="Movie", rect=MON_B)
     rig.windows.at[MON_B.center] = vlc
-    grabs = []
+    grabs: list[int] = []
 
     def focus_on_second_grab() -> None:
         grabs.append(1)
@@ -353,7 +354,7 @@ def test_a_centre_window_that_gains_focus_during_its_capture_is_rejected(
 
 
 def test_the_side_monitor_idle_capture_wins_the_hwnd_in_the_same_tick(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig(monitors=[SCREEN, MON_B])
     vlc = window(hwnd=7, process="vlc.exe", title="Movie", rect=MON_B)
@@ -370,7 +371,7 @@ def test_the_side_monitor_idle_capture_wins_the_hwnd_in_the_same_tick(
 
 
 def test_focus_and_title_triggers_never_capture_the_cursor_window(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig)
@@ -381,7 +382,7 @@ def test_focus_and_title_triggers_never_capture_the_cursor_window(
 
 
 def test_cursor_capture_logs_stay_content_free(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     rig = make_rig()
@@ -398,7 +399,7 @@ def test_cursor_capture_logs_stay_content_free(
 
 
 def test_a_failing_cursor_grab_is_counted_and_the_loop_recovers(
-    make_rig: Callable[..., Rig],  # noqa: F811
+    make_rig: Callable[..., Rig],
 ) -> None:
     rig = make_rig()
     _beside(rig)

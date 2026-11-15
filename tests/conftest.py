@@ -4,15 +4,33 @@ from __future__ import annotations
 
 import logging
 import sys
+import time
 from typing import TYPE_CHECKING, Final
 
 import pytest
+from capture_fakes import (
+    LONG_TEXT,
+    SCREEN,
+    FakeOcr,
+    FakeScreen,
+    FakeUia,
+    FakeWindows,
+    window,
+)
+from screen_rig import Rig
 from sink_spy import close_rig, make_rig_factory
 
+from akashic.capture.browser_state import BrowserState
+from akashic.capture.exclusions import Exclusions
+from akashic.capture.ocr_gate import OcrGate
+from akashic.capture.screen import ScreenCapture, Settings
+from akashic.config import Exclusions as UserExclusions
 from akashic.config import Paths
 from akashic.storage import db
 from akashic.storage.crypto import Argon2Params, DataKey
+from akashic.storage.frames import FrameStore
 from akashic.storage.media import MediaStore
+from akashic.storage.sessions import GameLog
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -20,6 +38,9 @@ if TYPE_CHECKING:
     from sqlite3 import Connection
 
     from sink_spy import PrivacyRig
+
+    from akashic.capture.ports import Rect
+    from akashic.capture.uia_budget import UiaBudget
 
 # Cheap parameters for tests only; production uses crypto.DEFAULT_ARGON2.
 FAST_ARGON2: Final = Argon2Params(time_cost=1, memory_kib=8 * 1024, parallelism=1)
@@ -83,3 +104,43 @@ def privacy_rig(
     yield make_rig_factory(paths, monkeypatch, created)
     for rig in created:
         close_rig(rig)
+
+
+@pytest.fixture
+def make_rig(paths: Paths) -> Iterator[Callable[..., Rig]]:
+    key = DataKey.generate()
+    conn = db.connect(paths.db_file, key.subkey("db"))
+    db.migrate(conn)
+    store = FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media")))
+
+    def build(
+        *,
+        monitors: list[Rect] | None = None,
+        user: UserExclusions | None = None,
+        settings: Settings | None = None,
+        budget: UiaBudget | None = None,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> Rig:
+        screen = FakeScreen(rects=monitors or [SCREEN])
+        windows = FakeWindows(focused=window())
+        uia = FakeUia(texts={1: LONG_TEXT})
+        ocr = FakeOcr()
+        counter = iter(range(1_000_000, 10**9))
+        capture = ScreenCapture(
+            screen=screen,
+            windows=windows,
+            uia=uia,
+            gate=OcrGate(ocr),
+            store=store,
+            exclusions=Exclusions(user or UserExclusions()),
+            settings=settings or Settings(min_gap_s=0.2),  # tests step in 0.1 s
+            budget=budget,
+            clock=clock,
+            now_ms=lambda: next(counter),
+            browsers=BrowserState(),
+            games=GameLog(conn),
+        )
+        return Rig(capture, screen, windows, uia, ocr, store, conn)
+
+    yield build
+    conn.close()

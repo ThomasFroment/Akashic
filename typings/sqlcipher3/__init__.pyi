@@ -5,6 +5,7 @@ from sqlite3 import DatabaseError as DatabaseError
 from sqlite3 import Error as Error
 from sqlite3 import IntegrityError as IntegrityError
 from sqlite3 import OperationalError as OperationalError
+from sqlite3 import ProgrammingError as ProgrammingError
 
 def connect(
     database: str,

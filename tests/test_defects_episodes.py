@@ -8,6 +8,7 @@ against a fake OS source, and nothing loads a model.
 
 from __future__ import annotations
 
+import contextlib
 import sqlite3
 import threading
 from dataclasses import dataclass
@@ -521,7 +522,7 @@ def test_the_video_address_comes_from_the_browser_that_plays_it(rig: Rig) -> Non
     ],
 )
 def test_a_window_title_matches_the_media_title_only_as_a_prefix(
-    window_title: str, media_title: str, matches: bool
+    window_title: str, media_title: str, *, matches: bool
 ) -> None:
     found = page_url(media_title, [(window_title, "https://youtube.com/watch?v=a")])
     assert (found is not None) is matches
@@ -595,10 +596,8 @@ def test_a_failed_address_write_is_retried(rig: Rig, monkeypatch: pytest.MonkeyP
 
     monkeypatch.setattr(rig.tracker._store, "set_url", flaky)
     for second in range(1, 20, 2):
-        try:
+        with contextlib.suppress(sqlite3.OperationalError):
             rig.at(second, "playing")
-        except sqlite3.OperationalError:
-            pass
     assert len(calls) >= 2
     assert rig.rows()[0][3] == "https://youtube.com/watch?v=a"
 

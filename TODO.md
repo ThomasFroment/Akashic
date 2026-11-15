@@ -439,6 +439,8 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] #97 Annotate `state: State`; build one `MediaStore`
   - [ ] #98 One `now_ms()`; import the shared clamp
   - [ ] #99 One disposable-store and embedding-server helper for the eval scripts
+  - [x] `scripts/check.ps1` passes: ruff format, ruff check and strict pyright clean in tests
+  - [ ] Remove the no-op `# pyright: ignore[reportPrivateUsage]` comments in tests (rule off there)
 
 ### B11. Dependencies and packaging (conditional)
 
@@ -457,6 +459,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] Shared `.claude/settings.json` permissions for the check and test commands
 - [ ] Headless stop/status script, if needed
 - [ ] Dependency audit with `uvx pip-audit` (sends package names to PyPI/OSV: ask first)
+- [ ] Run `scripts/check.ps1` before every commit (habit or a git pre-commit hook)
 
 ## Part C: needs the real dataset (after A8)
 

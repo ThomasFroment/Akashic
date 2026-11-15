@@ -640,7 +640,7 @@ def test_a_long_backlog_does_not_hold_up_the_pause_watch(
         rig.gaps.drop("mic", "music", i, i)
     rig.paused.set()
     rig.tick()
-    opens = [e for e in rig.gaps._events if type(e).__name__ == "_Open"]
+    opens = [e for e in rig.gaps._events if isinstance(e, gaps_module._Open)]
     assert [(o.kind, o.reason, o.ts_ms) for o in opens] == [("all", "paused", 12_000)]
     assert len(rig.gaps._events) == 51  # the backlog is still waiting behind it
 
@@ -775,12 +775,16 @@ class Recorder:
         self.devices = FakeDevices()
         self.clock = clock if clock is not None else Clock(T0)
         self.sink = sink if sink is not None else Spy()
+
+        def discard(*_args: object) -> None:
+            return None
+
         self.recorder = StreamRecorder(
             kind=kind,
             devices=self.devices,
             detector=FakeDetector(),
             settings=SETTINGS,
-            sink=lambda *_a: None,
+            sink=discard,
             clock_ms=self.clock,
             stats=Counter(),
             gaps=cast("Any", self.sink),
@@ -844,7 +848,7 @@ def test_pausing_closes_the_streams_device_row() -> None:
 
 def test_a_default_device_switch_that_reopens_fine_records_no_row() -> None:
     r = Recorder()
-    r.devices.scripts["mic"] += [[None], [None]]
+    r.devices.scripts["mic"].extend([[None], [None]])
     r.step()
     r.step()  # one successful read
     r.sink.events.clear()
@@ -867,7 +871,7 @@ def flush(gaps: CaptureGaps) -> None:
 def test_a_device_that_opens_but_fails_every_first_read_keeps_one_row(conn: Connection) -> None:
     gaps, clock = real_gaps(conn)
     r = Recorder(sink=gaps, clock=clock)
-    r.devices.scripts["mic"] += [[AudioError("x")] for _ in range(6)]
+    r.devices.scripts["mic"].extend([AudioError("x")] for _ in range(6))
     for _ in range(12):  # open, fail, open, fail ...
         clock.now += 100
         r.step()
@@ -880,7 +884,7 @@ def test_a_device_that_opens_but_fails_every_first_read_keeps_one_row(conn: Conn
 def test_the_first_good_read_closes_the_row_and_repeats_do_not_reopen(conn: Connection) -> None:
     gaps, clock = real_gaps(conn)
     r = Recorder(sink=gaps, clock=clock)
-    r.devices.scripts["mic"] += [[AudioError("x")], [None, None]]
+    r.devices.scripts["mic"].extend([[AudioError("x")], [None, None]])
     for _ in range(5):
         clock.now += 100
         r.step()
@@ -956,7 +960,7 @@ class WriterRig:
             Exclusions(UserExclusions()),
             self.clock,
             Counter(),
-            cast("Any", sink),
+            sink,
         )
 
     def write(

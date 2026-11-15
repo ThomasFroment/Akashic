@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 from capture_fakes import SCREEN, FakeUia, blank, window, with_text_block
+from screen_rig import MON_B, Rig
 from store_reads import latest_frames
-from test_capture_screen import MON_B, Rig, make_rig  # noqa: F401 - make_rig is a fixture
 
 from akashic.capture import screen as capture_screen
 from akashic.capture.ports import WindowInfo
@@ -65,7 +65,7 @@ class SlowUia(FakeUia):
 
 
 @pytest.fixture
-def slow_rig(make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch) -> Callable[..., Rig]:  # noqa: F811
+def slow_rig(make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch) -> Callable[..., Rig]:
     def build(**kwargs: object) -> Rig:
         rig = make_rig(**kwargs)
         slow = SlowUia(texts=rig.uia.texts)

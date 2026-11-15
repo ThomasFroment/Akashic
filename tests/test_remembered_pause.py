@@ -20,7 +20,7 @@ from akashic.supervisor import ChildSpec, Supervisor
 
 if TYPE_CHECKING:
     import subprocess
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable, Generator
     from pathlib import Path
     from sqlite3 import Connection
 
@@ -201,7 +201,7 @@ def test_state_holds_only_the_integer(conn: Connection) -> None:
 
 class FakeServices:
     @contextmanager
-    def db(self) -> Iterator[object]:
+    def db(self) -> Generator[object]:
         yield object()
 
 

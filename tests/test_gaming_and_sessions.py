@@ -680,9 +680,7 @@ NEW_NOT_GAMES = (
 WINDOWED = Rect(900, 50, 1300, 400)  # inside the second monitor
 
 
-def d3d(
-    process: str = "game.exe", rect: Rect = SCREEN, *, has_frame: bool = False
-) -> WindowInfo:
+def d3d(process: str = "game.exe", rect: Rect = SCREEN, *, has_frame: bool = False) -> WindowInfo:
     return WindowInfo(7, process, "T", rect, has_frame=has_frame, exclusive_fullscreen=True)
 
 

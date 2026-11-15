@@ -7,7 +7,6 @@ import logging
 import sqlite3
 import threading
 import time
-from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 import pytest
@@ -23,13 +22,12 @@ from capture_fakes import (
     window,
     with_text_block,
 )
+from screen_rig import MON_B, Rig
 from store_reads import latest_frames
 from waits import wait_for
 
 from akashic import child
 from akashic.capture import main as capture_main
-from akashic.capture.browser_state import BrowserState
-from akashic.capture.exclusions import Exclusions
 from akashic.capture.ocr_gate import MAX_CACHED_WINDOWS, OcrGate
 from akashic.capture.ports import CapturePlatform, Rect, TextBlock, WindowInfo
 from akashic.capture.screen import STATS_LOG_INTERVAL_S, ScreenCapture, Settings
@@ -38,73 +36,13 @@ from akashic.capture.uia_budget import UiaBudget
 from akashic.config import Exclusions as UserExclusions
 from akashic.storage import db
 from akashic.storage.crypto import DataKey
-from akashic.storage.frames import FrameStore
 from akashic.storage.media import MediaStore
 from akashic.storage.sessions import GameLog
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
-    from sqlite3 import Connection
+    from collections.abc import Callable
 
     from akashic.config import Paths
-
-MON_B = Rect(800, 0, 1600, 600)
-
-
-@dataclass
-class Rig:
-    capture: ScreenCapture
-    screen: FakeScreen
-    windows: FakeWindows
-    uia: FakeUia
-    ocr: FakeOcr
-    store: FrameStore
-    conn: Connection
-    clock: list[float] = field(default_factory=lambda: [0.0])
-
-    def frames(self) -> list[tuple[str, int, str | None]]:
-        rows = latest_frames(self.conn, 100)
-        return [(f.trigger, f.monitor, f.text_source) for f in reversed(rows)]
-
-
-@pytest.fixture
-def make_rig(paths: Paths) -> Iterator[Callable[..., Rig]]:
-    key = DataKey.generate()
-    conn = db.connect(paths.db_file, key.subkey("db"))
-    db.migrate(conn)
-    store = FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media")))
-
-    def build(
-        *,
-        monitors: list[Rect] | None = None,
-        user: UserExclusions | None = None,
-        settings: Settings | None = None,
-        budget: UiaBudget | None = None,
-        clock: Callable[[], float] = time.monotonic,
-    ) -> Rig:
-        screen = FakeScreen(rects=monitors or [SCREEN])
-        windows = FakeWindows(focused=window())
-        uia = FakeUia(texts={1: LONG_TEXT})
-        ocr = FakeOcr()
-        counter = iter(range(1_000_000, 10**9))
-        capture = ScreenCapture(
-            screen=screen,
-            windows=windows,
-            uia=uia,
-            gate=OcrGate(ocr),
-            store=store,
-            exclusions=Exclusions(user or UserExclusions()),
-            settings=settings or Settings(min_gap_s=0.2),  # tests step in 0.1 s
-            budget=budget,
-            clock=clock,
-            now_ms=lambda: next(counter),
-            browsers=BrowserState(),
-            games=GameLog(conn),
-        )
-        return Rig(capture, screen, windows, uia, ocr, store, conn)
-
-    yield build
-    conn.close()
 
 
 def test_ocr_cache_forgets_old_windows_and_recomputes_their_text() -> None:

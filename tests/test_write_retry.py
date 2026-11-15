@@ -11,7 +11,7 @@ import sqlite3
 import threading
 import time
 from collections import Counter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 import sqlcipher3
@@ -175,7 +175,10 @@ def test_busy_audio_write_is_retried_and_stored_once(
 @pytest.mark.parametrize(
     "exc",
     [
-        *[pytest.param(op_error(p.values[0], p.values[1]), id=p.id) for p in NOT_BUSY_CODES],
+        *[
+            pytest.param(op_error(*cast("tuple[type[Exception], int]", p.values)), id=p.id)
+            for p in NOT_BUSY_CODES
+        ],
         pytest.param(sqlite3.IntegrityError("constraint"), id="integrity"),
         pytest.param(ValueError("boom"), id="valueerror"),
         pytest.param(OSError("disk"), id="oserror"),

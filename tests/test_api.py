@@ -431,7 +431,11 @@ def test_image_decrypt_failure_is_a_500_logging_only_the_frame_id(
 def test_audio_error_responses(api: Api, monkeypatch: pytest.MonkeyPatch) -> None:
     audio = api.server._services.audio
     assert audio is not None
-    monkeypatch.setattr(audio, "read_file", lambda _s: None)
+
+    def missing(_segment: object) -> bytes | None:
+        return None
+
+    monkeypatch.setattr(audio, "read_file", missing)
     assert api.get("/api/audio/1")[0] == 404
     for error in (FileNotFoundError(), CryptoError("x")):
 

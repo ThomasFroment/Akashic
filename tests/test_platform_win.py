@@ -22,6 +22,13 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
 
+def _per_hwnd(value: object) -> Callable[[int], object]:
+    def call(_hwnd: int) -> object:
+        return value
+
+    return call
+
+
 def com_error(hresult: int, text: str) -> Exception:
     """A comtypes COMError. comtypes is reached through the platform module, which sets the
     COM apartment before comtypes is first imported (importing it here first would not)."""
@@ -525,9 +532,9 @@ def _d3d_rig(
     windows = win_windows.Win32Windows()
     rect = win_windows.Rect(0, 0, 800, 600)
     info = win_windows.WindowInfo(7, "game.exe", "T", rect, has_frame=False)
-    monkeypatch.setattr(windows, "_info", lambda _hwnd: info)
+    monkeypatch.setattr(windows, "_info", _per_hwnd(info))
     monkeypatch.setattr(win_windows.user32, "GetForegroundWindow", lambda: 7, raising=False)
-    monkeypatch.setattr(win_windows.user32, "IsIconic", lambda _hwnd: 0, raising=False)
+    monkeypatch.setattr(win_windows.user32, "IsIconic", _per_hwnd(0), raising=False)
     return windows, now
 
 
@@ -582,7 +589,7 @@ def test_the_shell_query_runs_at_most_once_a_second(monkeypatch: pytest.MonkeyPa
 def test_inspect_window_never_reports_d3d(monkeypatch: pytest.MonkeyPatch) -> None:
     shell = _FakeShell32((0, 3))
     windows, _ = _d3d_rig(monkeypatch, shell)
-    monkeypatch.setattr(win_windows.user32, "IsWindowVisible", lambda _hwnd: 1, raising=False)
+    monkeypatch.setattr(win_windows.user32, "IsWindowVisible", _per_hwnd(1), raising=False)
     inspected = windows.inspect_window(7)
     assert inspected is not None
     assert inspected.exclusive_fullscreen is False
@@ -596,6 +603,6 @@ def test_inspect_window_never_reports_d3d(monkeypatch: pytest.MonkeyPatch) -> No
 def test_no_focused_window_means_no_shell_query(monkeypatch: pytest.MonkeyPatch) -> None:
     shell = _FakeShell32((0, 3))
     windows, _ = _d3d_rig(monkeypatch, shell)
-    monkeypatch.setattr(windows, "_info", lambda _hwnd: None)
+    monkeypatch.setattr(windows, "_info", _per_hwnd(None))
     assert windows.focused_window() is None
     assert shell.calls == 0

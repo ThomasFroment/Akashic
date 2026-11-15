@@ -33,8 +33,8 @@ from akashic.capture.health import (
     SCREEN_IMAGES_FAILING,
     CaptureStatus,
 )
-from akashic.capture.ports import AudioError, AudioPlatform, CapturePlatform
 from akashic.capture.ocr_gate import OcrGate
+from akashic.capture.ports import AudioError, AudioPlatform, CapturePlatform
 from akashic.capture.screen import GRAB_FAILURE_RUN, ScreenCapture
 from akashic.config import Exclusions as UserExclusions
 from akashic.storage import db
@@ -45,7 +45,7 @@ from akashic.storage.media import MediaStore
 from akashic.storage.sessions import GameLog
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Buffer, Iterator
     from sqlite3 import Connection
 
     from akashic.capture.vad import SpeechDetector
@@ -93,7 +93,7 @@ def test_a_device_whose_reads_always_fail_never_counts_as_read(
 ) -> None:
     monkeypatch.setattr(audio_module, "RETRY_S", 0.01)
     rig = RecorderRig()
-    rig.devices.scripts["mic"] += [[AudioError("gone")] for _ in range(300)]
+    rig.devices.scripts["mic"].extend([AudioError("gone")] for _ in range(300))
     stop, thread = _run(rig)
     try:
         assert wait_for(lambda: len(rig.devices.opened) >= 4, 10)  # opened and failed, again
@@ -120,7 +120,7 @@ def test_a_device_that_cannot_be_acquired_never_counts_as_read(
 
 
 class _AlwaysFails(FakeDetector):
-    def probability(self, window: Any) -> float:
+    def probability(self, window: object) -> float:
         del window
         msg = "model fault"
         raise RuntimeError(msg)
@@ -131,7 +131,7 @@ def test_a_device_that_opens_but_whose_every_iteration_faults_never_counts_as_re
 ) -> None:
     monkeypatch.setattr(audio_module, "RETRY_S", 0.01)
     rig = RecorderRig()
-    rig.devices.scripts["mic"] += [[speech(20)] for _ in range(300)]
+    rig.devices.scripts["mic"].extend([speech(20)] for _ in range(300))
     rig.recorder._detector = _AlwaysFails()  # pyright: ignore[reportPrivateUsage]
     stop, thread = _run(rig)
     try:
@@ -252,7 +252,7 @@ def test_all_three_failures_must_be_after_the_resume() -> None:
     capture = object.__new__(ScreenCapture)
     capture.stats = Counter()
     capture._failures = deque(maxlen=GRAB_FAILURE_RUN)  # pyright: ignore[reportPrivateUsage]
-    capture._clock = lambda: float(next(clock))  # type: ignore[method-assign]  # pyright: ignore
+    capture._clock = lambda: float(next(clock))
     for _ in range(5):
         capture._note("error")  # pyright: ignore[reportPrivateUsage]  # at 0..4; kept: 2, 3, 4
     assert capture.images_failing(2.0)
@@ -289,7 +289,7 @@ class _Out(io.BytesIO):
         self._paths, self._key = paths, key
         self.rows: list[tuple[str, object]] = []
 
-    def write(self, data: Any) -> int:
+    def write(self, data: Buffer) -> int:
         n = super().write(data)
         row: object = "unreadable"
         try:
@@ -419,16 +419,28 @@ def test_disabled_capture_never_reports_degraded(
     assert "degraded" not in list(ipc.read_statuses(io.BytesIO(out.getvalue())))
 
 
-def _fake_capture(*, failing: bool) -> Any:
-    return SimpleNamespace(images_failing=lambda since: failing)
+def _fake_capture(*, failing: bool) -> ScreenCapture:
+    def images_failing(since: float) -> bool:
+        del since
+        return failing
+
+    return cast("ScreenCapture", SimpleNamespace(images_failing=images_failing))
 
 
-def _fake_audio(*codes: str) -> Any:
-    return SimpleNamespace(problems=lambda now, since: codes)
+def _fake_audio(*codes: str) -> AudioCapture:
+    def problems(now: float, since: float) -> tuple[str, ...]:
+        del now, since
+        return codes
+
+    return cast("AudioCapture", SimpleNamespace(problems=problems))
 
 
 def _status(*, audio_failed: bool) -> CaptureStatus:
-    return CaptureStatus(lambda state, *, epoch: True, lambda: 0, audio_failed=audio_failed)
+    def set_active(state: ipc.State, *, epoch: int | None) -> bool:
+        del state, epoch
+        return True
+
+    return CaptureStatus(set_active, lambda: 0, audio_failed=audio_failed)
 
 
 def test_active_problems_while_running_are_all_the_detected_ones() -> None:
@@ -465,7 +477,12 @@ def test_a_health_reading_that_raises_is_skipped_not_fatal(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     ctx = cast("Any", SimpleNamespace(health_snapshot=lambda: (0, False, 0.0)))
-    bad = SimpleNamespace(images_failing=lambda since: 1 / 0)
+
+    def images_failing(since: float) -> bool:
+        del since
+        raise ZeroDivisionError
+
+    bad = SimpleNamespace(images_failing=images_failing)
     with caplog.at_level("WARNING"):
         got = capture_main._collect(  # pyright: ignore[reportPrivateUsage]
             ctx,
