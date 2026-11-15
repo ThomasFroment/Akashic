@@ -321,7 +321,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 
 ### B4. Storage integrity and deletion
 
-- [ ] #10 Test that every `sqlite_master` table is deleted by "Delete all" or on a keep-list
+- [x] #10 Test that every `sqlite_master` table is deleted by "Delete all" or on a keep-list
 - [ ] #164 Rebuild `media_sessions`, `game_sessions`, `audio_segments` with AUTOINCREMENT
 - [ ] #164 An ignored episode ref is skipped and logged, never a stalled watermark
 - [ ] #49 `transaction()` rolls back only when in a transaction; rolls back and re-raises on commit

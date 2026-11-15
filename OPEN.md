@@ -7,6 +7,11 @@ naming the item it came from.
 When a point is done, delete its line in the commit that does it. When it turns into planned
 work, move it to TODO.md as a task and delete it here. Drop a milestone heading once it is empty.
 
+## B4. Storage integrity and deletion
+
+- #10 The completeness test counts a conditional `DELETE ... WHERE` as full coverage; only `state` (keeps `capture_paused`) relies on it today. An unconditional-only rule plus an explicit row-level keep for `state` would stop a future conditional delete from passing.
+- #10 An external-content FTS table counts as covered without checking it has a delete trigger; the end-to-end MATCH check covers only `frames_fts` and `audio_segments_fts`, and the shadow skip matches by suffix, not by owning FTS table.
+
 ## A4. Screen coverage
 
 - #21 Electron's `IsOffscreen` on a virtualized list (long Discord channel) not checked; Gecko (Zen) `IsOffscreen` on scrolled-away nodes not seen, the throwaway Zen page exposed no web content in the 2026-11-13 re-run
