@@ -3,7 +3,8 @@
 
 One ``FindAllBuildCache`` call per window fetches the matching text descendants with their
 properties cached, instead of a cross-process round trip per property (spike: 237 nodes in
-76 ms). The caller budgets and backs off per app (``capture/uia_budget.py``).
+76 ms). The caller budgets text walks per app and backs a window off per HWND after a slow call that
+failed (``capture/uia_budget.py``).
 
 COM runs multithreaded (``coinit_flags = 0``) so it can share the process with WinRT (OCR).
 Use one instance from one thread only.

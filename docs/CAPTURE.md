@@ -166,6 +166,19 @@ that run.
 The transaction timeout is the next 500 ms step above 3x the worst legitimate call
 (1878 ms), with a 1000 ms floor.
 
+The three readers without a budget (`focused_is_password`, `browser_caption`, `read_url`) are
+also time-boxed per window. A call that took 900 ms or more (`SLOW_CALL_MS`, wall time) and
+returned None backs that window's HWND off for 30 s (`HWND_BACKOFF_S`), stamped on the capture
+tick's clock. While it is backed off no UIA call is made for it and each reader returns its
+failure value: `browser_caption` None (Chrome and Brave end as `excluded:caption_unknown`),
+`read_url` None (the unreadable-address path), the password check None
+(`excluded:password_unknown`, or `window_changed` when the backoff starts mid-attempt),
+`read_text` skipped (OCR gate or empty text). So a hung focused Edge window costs one timed-out
+call per 30 s instead of about five per attempt. Other windows and monitors are unaffected.
+Neither `read_text` nor a slow call that returned a value starts a backoff. Remaining limit: a
+legitimate read that takes 900 ms or more and still returns None (for example a huge page with
+no omnibox found) excludes the window for 30 s.
+
 Spike 2026-11-13, Chrome 157 and Edge 157, throwaway profiles, PC locked: a flagless window
 returned only the browser's own interface text through UIA, never page text, even after 10 s.
 With Chromium's occlusion tracking turned off, the first read enabled web accessibility and the

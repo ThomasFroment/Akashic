@@ -196,7 +196,8 @@ def test_a_state_that_becomes_unknown_while_grabbing_discards_the_frame(
 def test_negative_control_treating_unknown_as_clear_stores_the_form(
     privacy_rig: Callable[..., PrivacyRig], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def old_reason(capture: ScreenCapture) -> str | None:
+    def old_reason(capture: ScreenCapture, window: object, now: float) -> str | None:
+        del window, now
         return "password_field" if capture._uia.focused_is_password() else None
 
     monkeypatch.setattr(ScreenCapture, "_password_reason", old_reason)

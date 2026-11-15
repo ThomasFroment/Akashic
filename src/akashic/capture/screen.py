@@ -250,7 +250,7 @@ class ScreenCapture:
                 and now - self._game_frame_at >= self._game_settings.interval_s
             ):
                 self._game_frame_at = now
-                self._note(self._capture_game(focused, monitors))
+                self._note(self._capture_game(focused, monitors, now))
         except Exception as exc:  # noqa: BLE001 - gaming mode must never stop the loop
             log.warning("gaming mode failed: %s", type(exc).__name__)
             self._note("error")
@@ -314,7 +314,7 @@ class ScreenCapture:
             except Exception as exc:  # noqa: BLE001 - e.g. a busy database
                 self._note_game_log_fault(exc)
 
-    def _capture_game(self, window: WindowInfo, monitors: list[Rect]) -> str:
+    def _capture_game(self, window: WindowInfo, monitors: list[Rect], now: float) -> str:
         if self._windows.is_locked():
             return "locked"
         reason = self._exclusions.check_window(window.process, window.title)
@@ -329,7 +329,7 @@ class ScreenCapture:
             return "image_unavailable"
         black = imaging.is_black(image)  # exclusive fullscreen often grabs black
         encoded = None if black else imaging.encode_webp(image)
-        if not self._consistent(window, focused=True, url=None, read_url=False):
+        if not self._consistent(window, now, focused=True, url=None, read_url=False):
             return "window_changed"
         self._store.add(
             NewFrame(
@@ -485,7 +485,7 @@ class ScreenCapture:
         if window.hwnd in self._tick_hwnds:
             return "duplicate_window"
         self._tick_hwnds.add(window.hwnd)  # before the rules: an excluded window stays excluded
-        reason, url = self._capture_allowed(window, focused=is_focused)
+        reason, url = self._capture_allowed(window, now, focused=is_focused)
         if reason is not None:
             return reason
 
@@ -502,7 +502,7 @@ class ScreenCapture:
                 ts_ms=ts_ms,
                 now=now,
             )
-        if not self._consistent(window, focused=is_focused, url=url):
+        if not self._consistent(window, now, focused=is_focused, url=url):
             return "window_changed"
         sig = imaging.signature(image)
         if (
@@ -524,6 +524,7 @@ class ScreenCapture:
             url=url,
             state=state,
             ts_ms=ts_ms,
+            now=now,
             text=text,
             source=source,
             encoded=encoded,
@@ -558,6 +559,7 @@ class ScreenCapture:
             url=url,
             state=state,
             ts_ms=ts_ms,
+            now=now,
             text=text,
             source=source,
             encoded=None,
@@ -576,6 +578,7 @@ class ScreenCapture:
         url: str | None,
         state: _MonitorState,
         ts_ms: int,
+        now: float,
         text: str,
         source: TextSource | None,
         encoded: bytes | None,
@@ -584,7 +587,7 @@ class ScreenCapture:
         """Write a frame unless the window changed since it was read. Returns whether it did."""
         window = target.window
         # UIA/URL and pixels are separate reads. Reject a switch/navigation/lock before writing.
-        if not self._consistent(window, focused=target.is_focused, url=url):
+        if not self._consistent(window, now, focused=target.is_focused, url=url):
             return False
         self._store.add(
             NewFrame(
@@ -606,64 +609,88 @@ class ScreenCapture:
         return True
 
     def _capture_allowed(
-        self, window: WindowInfo, *, focused: bool
+        self, window: WindowInfo, now: float, *, focused: bool
     ) -> tuple[str | None, str | None]:
-        reason, url = self._exclusion(window, focused=focused)
+        reason, url = self._exclusion(window, now, focused=focused)
         self._browsers.publish(window, reason)  # before any media write can rely on it
         return (f"excluded:{reason}" if reason else None), url
 
     def _exclusion(  # noqa: PLR0911 - one early exit per rule
-        self, window: WindowInfo, *, focused: bool
+        self, window: WindowInfo, now: float, *, focused: bool
     ) -> tuple[str | None, str | None]:
         """The exclusion category of a window (or None) and its address when it is a browser."""
         reason = self._exclusions.check_window(window.process, window.title)
         if reason is not None:
             return reason, None
-        if focused and (reason := self._password_reason()) is not None:
+        if focused and (reason := self._password_reason(window, now)) is not None:
             return reason, None
         family = BROWSERS.get(window.process)
         if family is None:
             return None, None
-        caption = self._uia.browser_caption(window, family)
+        caption = self._bounded(window, now, lambda: self._uia.browser_caption(window, family))
         if caption and self._exclusions.is_private_title(caption):
             return "private_window", None  # Chromium's marker is not in the Win32 title
         if caption is None and window.process in _CAPTION_ONLY:
             # Chrome and Brave keep the marker only in the frame's caption: without it nobody
             # knows whether this window is private, so it is skipped and media is rejected.
             return "caption_unknown", None
-        raw = self._read_raw(window)
+        raw = self._read_raw(window, now)
         url = normalize_url(raw) if raw else None
         if url is None and raw and (typed := self._exclusions.check_typed(raw)) is not None:
             return typed, None  # text typed into the bar still names a host
         return self._exclusions.check_browser(window.title, url), url
 
-    def _password_reason(self) -> str | None:
+    def _password_reason(self, window: WindowInfo, now: float) -> str | None:
         """Why the focused element forbids capture: a password field, or an unknown state (UI
         Automation failed, so nobody knows). None when it is not one and when nothing has focus."""
-        state = self._uia.focused_is_password()
+        state = self._bounded(window, now, self._uia.focused_is_password)
         if state is None:
             return "password_unknown"
         return "password_field" if state else None
 
     def _consistent(
-        self, window: WindowInfo, *, focused: bool, url: str | None, read_url: bool = True
+        self,
+        window: WindowInfo,
+        now: float,
+        *,
+        focused: bool,
+        url: str | None,
+        read_url: bool = True,
     ) -> bool:
         if self._windows.is_locked() or self._windows.inspect_window(window.hwnd) != window:
             return False
         if focused:
-            if self._windows.focused_window() != window or self._password_reason() is not None:
+            if (
+                self._windows.focused_window() != window
+                or self._password_reason(window, now) is not None
+            ):
                 return False
         elif self._is_focused_hwnd(window.hwnd):
             return False
-        return not read_url or self._read_url(window) == url
+        return not read_url or self._read_url(window, now) == url
 
-    def _read_raw(self, window: WindowInfo) -> str | None:
+    def _read_raw(self, window: WindowInfo, now: float) -> str | None:
         family = BROWSERS.get(window.process)
-        return self._uia.read_url(window, family) if family is not None else None
+        if family is None:
+            return None
+        return self._bounded(window, now, lambda: self._uia.read_url(window, family))
 
-    def _read_url(self, window: WindowInfo) -> str | None:
-        raw = self._read_raw(window)
+    def _read_url(self, window: WindowInfo, now: float) -> str | None:
+        raw = self._read_raw(window, now)
         return normalize_url(raw) if raw else None
+
+    def _bounded[T](self, window: WindowInfo, now: float, read: Callable[[], T | None]) -> T | None:
+        """Run a UIA reader unless its window is backed off. A slow call that returned nothing (a
+        timeout) backs the window off until `now` + HWND_BACKOFF_S."""
+        if not self._budget.window_allowed(window.hwnd, now):
+            return None
+        started = time.perf_counter()
+        result = read()
+        if result is None and self._budget.record_failure(
+            window.hwnd, (time.perf_counter() - started) * 1000, now
+        ):
+            self.stats["uia_backoff"] += 1
+        return result
 
     def _read_text(
         self,
@@ -677,7 +704,11 @@ class ScreenCapture:
         window = target.window
         text = ""
         source: TextSource | None = None
-        if target.is_focused and self._budget.allow(window.process, now):
+        if (
+            target.is_focused
+            and self._budget.window_allowed(window.hwnd, now)
+            and self._budget.allow(window.process, now)
+        ):
             started = time.perf_counter()
             parts = self._uia.read_text(window, MAX_UIA_NODES)
             self._budget.record(window.process, (time.perf_counter() - started) * 1000, now)

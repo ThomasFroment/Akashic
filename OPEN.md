@@ -24,11 +24,10 @@ work, move it to TODO.md as a task and delete it here. Drop a milestone heading 
 
 ## A3. Capture keeps running and keeps what it recorded
 
-- #22 UIA timeout not checked against a really hung app
+- #22 UIA timeouts and per-HWND backoff not checked against a really hung app
 - #158 PrintWindow not checked on a really hung window
 - #158 No check of a window over 16 MP spanning monitors
-- #22 A hung focused browser still costs several UIA timeouts per tick
-- #22 Timing spike used throwaway profiles; not timed on the user's real profiles or a focused Gecko password field
+- #22 Timing spike used throwaway profiles; not timed on the user's real profiles or a focused Gecko password field. The 900 ms box has not been checked against slow, empty (None) reads on the user's real, larger pages
 - #23 #160 Not checked on a real device unplug or default-device switch in the running app
 - #162 Thresholds (3 failed grabs, 60 s without a device read) unmeasured; not checked with a real unplugged mic or a really hung window in the running app
 - #161 Not checked against a real long retention or Delete-all lock in the running app

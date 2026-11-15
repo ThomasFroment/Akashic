@@ -75,7 +75,7 @@ Three parts:
 - [ ] Follow-ups found during A3
   - [ ] Guard `capture.close()` in `run_capture`'s finally so a DB error can't skip the joins
   - [ ] Clear `_game_id` when the game end-row write raises; leave the row to `close_stale`
-  - [ ] Per-HWND UIA backoff after a timeout; time-box the readers without a `UiaBudget`
+  - [x] Per-HWND UIA backoff after a timeout; time-box the readers without a `UiaBudget`
   - [ ] Shorter `busy_timeout` once stop is set, so a busy database at stop fits the 10 s kill
   - [ ] One rate-limited, type-only fault log shared by the screen, audio, media and gap loops
   - [ ] Report dropped audio segments and failed frame writes as capture problems (with #143)
