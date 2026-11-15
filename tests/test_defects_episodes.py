@@ -8,6 +8,7 @@ against a fake OS source, and nothing loads a model.
 
 from __future__ import annotations
 
+import sqlite3
 import threading
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -29,7 +30,7 @@ from memory_data import (
 
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
-from akashic.capture.media import MAX_POLL_GAP_MS, PAUSE_CLOSE_MS, MediaTracker
+from akashic.capture.media import MAX_POLL_GAP_MS, PAUSE_CLOSE_MS, MediaTracker, page_url
 from akashic.capture.ports import MediaState
 from akashic.config import Exclusions as UserExclusions
 from akashic.pipeline.episodes import (
@@ -487,7 +488,6 @@ def _frame(conn: Connection, ts_ms: int, process: str, title: str, url: str) -> 
     )
 
 
-@known_defect(145, "the first frame whose title contains the media title is locked in")
 def test_a_search_page_seen_first_does_not_become_the_video_address(rig: Rig) -> None:
     _frame(
         rig.conn, 500, "chrome.exe", "Elden Ring - Recherche Google", "https://google.com/search"
@@ -499,12 +499,115 @@ def test_a_search_page_seen_first_does_not_become_the_video_address(rig: Rig) ->
     assert rig.rows()[0][3] == "https://youtube.com/watch?v=a"
 
 
-@known_defect(145, "find_url ignores which process showed the title")
 def test_the_video_address_comes_from_the_browser_that_plays_it(rig: Rig) -> None:
     _frame(rig.conn, 400, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=c")
     _frame(rig.conn, 500, "zen.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=z")
     rig.at(1, "playing")
     assert rig.rows()[0][3] == "https://youtube.com/watch?v=c"
+
+
+@pytest.mark.parametrize(
+    ("window_title", "media_title", "matches"),
+    [
+        ("Elden Ring - YouTube - Google Chrome", "Elden Ring", True),
+        ("Elden Ring", "Elden Ring", True),
+        ("Elden Ring | YouTube", "Elden Ring", True),
+        ("Elden Ring Nightreign review - YouTube", "Elden Ring", False),
+        ("Watch Elden Ring - YouTube", "Elden Ring", False),
+        ("elden ring - YouTube", "Elden Ring", False),
+        ("(3) Elden Ring - YouTube", "Elden Ring", True),
+        ("(2024) Elden Ring review - YouTube", "(2024) Elden Ring review", True),
+        ("(3) (2024) Elden Ring review - YouTube", "(2024) Elden Ring review", True),
+    ],
+)
+def test_a_window_title_matches_the_media_title_only_as_a_prefix(
+    window_title: str, media_title: str, matches: bool
+) -> None:
+    found = page_url(media_title, [(window_title, "https://youtube.com/watch?v=a")])
+    assert (found is not None) is matches
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://www.google.fr/search?q=x",
+        "https://google.co.uk/search?q=x",
+        "https://www.bing.com/search?q=x",
+        "https://duckduckgo.com/?q=x",
+        "https://search.brave.com/search?q=x",
+        "https://www.qwant.com/?q=x",
+        "https://www.ecosia.org/search?q=x",
+        "https://www.startpage.com/do/search",
+        "https://search.yahoo.com/search?p=x",
+        "https://www.youtube.com/results?search_query=x",
+    ],
+)
+def test_a_search_results_page_never_supplies_the_address(url: str) -> None:
+    assert page_url("Elden Ring", [("Elden Ring - Search", url)]) is None
+
+
+def test_an_unparseable_stored_address_is_not_a_search_page() -> None:
+    assert page_url("Elden Ring", [("Elden Ring - X", "https://[a.b")]) == "https://[a.b"
+
+
+def test_a_later_matching_frame_replaces_the_earlier_address(rig: Rig) -> None:
+    _frame(rig.conn, 400, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=a")
+    rig.at(1, "playing")
+    assert rig.rows()[0][3] == "https://youtube.com/watch?v=a"
+    _frame(rig.conn, 6_000, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=b")
+    for second in range(3, 20, 2):
+        rig.at(second, "playing")
+    assert rig.rows()[0][3] == "https://youtube.com/watch?v=b"
+
+
+def test_the_address_lookup_stops_after_two_minutes(rig: Rig) -> None:
+    _frame(rig.conn, 400, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=a")
+    rig.at(1, "playing")
+    _frame(rig.conn, 100_000, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=b")
+    for second in range(3, 121, 2):
+        rig.at(second, "playing")
+    assert rig.rows()[0][3] == "https://youtube.com/watch?v=b"
+    _frame(rig.conn, 130_000, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=c")
+    for second in range(122, 160, 2):
+        rig.at(second, "playing")
+    assert rig.rows()[0][3] == "https://youtube.com/watch?v=b"
+
+
+def test_a_lookup_that_finds_nothing_keeps_the_stored_address(rig: Rig) -> None:
+    _frame(rig.conn, 400, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=a")
+    rig.at(1, "playing")
+    rig.conn.execute("UPDATE frames SET window_title = 'Other'")
+    for second in range(3, 30, 2):
+        rig.at(second, "playing")
+    assert rig.rows()[0][3] == "https://youtube.com/watch?v=a"
+
+
+def test_a_failed_address_write_is_retried(rig: Rig, monkeypatch: pytest.MonkeyPatch) -> None:
+    _frame(rig.conn, 400, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=a")
+    real = rig.tracker._store.set_url
+    calls: list[str] = []
+
+    def flaky(session_id: int, url: str) -> None:
+        calls.append(url)
+        if len(calls) == 1:
+            raise sqlite3.OperationalError("locked")
+        real(session_id, url)
+
+    monkeypatch.setattr(rig.tracker._store, "set_url", flaky)
+    for second in range(1, 20, 2):
+        try:
+            rig.at(second, "playing")
+        except sqlite3.OperationalError:
+            pass
+    assert len(calls) >= 2
+    assert rig.rows()[0][3] == "https://youtube.com/watch?v=a"
+
+
+def test_a_session_outside_a_browser_never_looks_up_an_address(rig: Rig) -> None:
+    rig.source.names = {"C1": "Spotify"}
+    _frame(rig.conn, 400, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=a")
+    rig.at(1, "playing")
+    assert rig.rows()[0][3] is None
 
 
 @known_defect(146, "a lock (or a UAC prompt) closes every media row while audio still records")

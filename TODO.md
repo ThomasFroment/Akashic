@@ -108,7 +108,7 @@ Three parts:
 - [ ] #167 Freeze `end_ms` while paused and close at `paused_since` (tracker side)
 - [ ] #142 After a poll gap (suspend), close at `last_poll_ms`; close games when last seen
 - [ ] #146 Close media rows only on Akashic pause, not on lock or UAC prompts
-- [ ] #145 `find_url`: same process, title prefix, skip search engines, no lock-in within 120 s
+- [x] #145 `find_url`: same process, title prefix, skip search engines, no lock-in within 120 s
 - [ ] Lead: spike several media sessions per browser (§9)
 
 ### A7. Capture gaps

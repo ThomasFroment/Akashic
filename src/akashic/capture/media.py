@@ -22,8 +22,10 @@ Logs here contain counts only, never titles.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
+from urllib.parse import urlsplit
 
 from akashic.capture.ports import BROWSERS
 
@@ -57,6 +59,52 @@ _BROWSER_STEMS: Final = {
 }
 
 
+_TITLE_COUNT: Final = re.compile(r"^\(\d+\)\s+")  # "(3) " unread count a site prefixes to its title
+_TITLE_END: Final = re.compile(r"\Z|\s+[-\u2013\u2014|\u00b7\u2022]\s+")  # dashes, bar, dot, bullet
+# (host, path prefix) of pages that list results instead of showing the video
+_SEARCH_PAGES: Final = tuple(
+    (re.compile(f"(?:www\\.)?(?:{host})"), path)
+    for host, path in (
+        (r"google\.[a-z.]+", "/search"),
+        (r"bing\.com", "/search"),
+        (r"duckduckgo\.com", ""),
+        (r"search\.brave\.com", ""),
+        (r"qwant\.com", ""),
+        (r"ecosia\.org", "/search"),
+        (r"startpage\.com", ""),
+        (r"(?:[a-z]+\.)?search\.yahoo\.com", ""),
+        (r"(?:m\.)?youtube\.com", "/results"),
+    )
+)
+
+
+def _starts_with_title(window_title: str, title: str) -> bool:
+    return window_title.startswith(title) and _TITLE_END.match(window_title, len(title)) is not None
+
+
+def _is_search_page(url: str) -> bool:
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    host = parts.hostname or ""
+    return any(
+        pattern.fullmatch(host) and parts.path.startswith(path) for pattern, path in _SEARCH_PAGES
+    )
+
+
+def page_url(title: str, rows: list[tuple[str, str]]) -> str | None:
+    """The address of the newest row whose window title, with or without a leading '(N) ' count,
+    is the media title followed by nothing or a separator, and which is not a search page."""
+    for window_title, url in rows:
+        without_count = _TITLE_COUNT.sub("", window_title, count=1)
+        if (
+            _starts_with_title(window_title, title) or _starts_with_title(without_count, title)
+        ) and not _is_search_page(url):
+            return url
+    return None
+
+
 def process_for_app(app: str) -> str:
     """Best guess at the executable behind a display name ("Google Chrome" -> chrome.exe)."""
     name = app.casefold()
@@ -78,7 +126,7 @@ class _Open:
     last_write_ms: int
     played_ms: int = 0
     paused_since_ms: int | None = None
-    url_found: bool = False
+    url: str | None = None
     url_tried_ms: int = -URL_SEARCH_EVERY_MS
     close_at: tuple[int, int] | None = None  # (end_ms, played_ms) once a close was attempted
 
@@ -265,19 +313,21 @@ class MediaTracker:
 
     def _find_url(self, current: _Open, now: int) -> None:
         """Match the browser tab by title. The frame may be captured a moment after the
-        session starts, so keep trying for a short while."""
+        session starts, so keep looking for the newest matching tab during
+        URL_SEARCH_WINDOW_MS."""
+        process = process_for_app(current.app)
         if (
-            current.url_found
-            or process_for_app(current.app) not in BROWSERS
+            process not in BROWSERS
             or now - current.start_ms > URL_SEARCH_WINDOW_MS
             or now - current.url_tried_ms < URL_SEARCH_EVERY_MS
         ):
             return
         current.url_tried_ms = now
-        url = self._store.find_url(current.title, current.start_ms - URL_LOOKBACK_MS)
-        if url is not None:
-            current.url_found = True
+        rows = self._store.tab_frames(process, current.title, current.start_ms - URL_LOOKBACK_MS)
+        url = page_url(current.title, rows)
+        if url is not None and url != current.url:
             self._store.set_url(current.session_id, url)
+            current.url = url
 
     def _try_close(self, app_id: str, end_ms: int) -> bool:
         """Close the session; on a failure it stays open, pending, and is retried by the next

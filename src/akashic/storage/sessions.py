@@ -75,18 +75,19 @@ class MediaLog:
         with db.transaction(self._conn) as conn:
             return conn.execute("UPDATE media_sessions SET closed = 1 WHERE closed = 0").rowcount
 
-    def find_url(self, title: str, since_ms: int) -> str | None:
-        """The address of a recent browser frame whose window title contains ``title``.
+    def tab_frames(self, process: str, title: str, since_ms: int) -> list[tuple[str, str]]:
+        """(window title, address) of recent frames of ``process`` whose window title contains
+        ``title``, newest first.
 
         Frames already went through exclusions, so this can only return URLs we are allowed to
         keep. ``instr`` is case-sensitive, which is right: the tab title repeats the media title.
         """
-        row = self._conn.execute(
-            "SELECT url FROM frames WHERE ts_ms >= ? AND url IS NOT NULL"
-            " AND instr(window_title, ?) > 0 ORDER BY ts_ms DESC LIMIT 1",
-            (since_ms, title),
-        ).fetchone()
-        return str(row[0]) if row else None
+        rows = self._conn.execute(
+            "SELECT window_title, url FROM frames WHERE ts_ms >= ? AND process = ?"
+            " AND url IS NOT NULL AND instr(window_title, ?) > 0 ORDER BY ts_ms DESC",
+            (since_ms, process, title),
+        ).fetchall()
+        return [(str(window_title), str(url)) for window_title, url in rows]
 
 
 class GameLog:
