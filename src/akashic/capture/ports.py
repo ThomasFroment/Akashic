@@ -236,5 +236,5 @@ class CapturePlatform:
     screen: ScreenGrabber
     windows: WindowSource
     uia: TextSource
-    ocr: OcrEngine
+    ocr: OcrEngine | None  # None: no recognizer is installed, frames get no OCR text
     media: MediaSource

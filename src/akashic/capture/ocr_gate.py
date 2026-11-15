@@ -47,12 +47,14 @@ def pick_language(wanted: str, available: Sequence[str]) -> str | None:
 
 
 class OcrGate:
-    def __init__(self, engine: OcrEngine) -> None:
+    def __init__(self, engine: OcrEngine | None) -> None:
         self._engine = engine
         self._indexed: dict[str, tuple[imaging.Signature | None, str]] = {}
 
     def read(self, key: str, frame: Image.Image, region: Rect) -> GateResult:
         """Text on screen inside ``region`` (frame pixels). Runs OCR only if the crop changed."""
+        if self._engine is None:
+            return GateResult("", None, ocr_ran=False)
         crop = frame.crop((region.left, region.top, region.right, region.bottom))
         box = imaging.find_text_box(crop)
         sig: imaging.Signature | None = None
@@ -62,8 +64,9 @@ class OcrGate:
         previous = self._indexed.get(key)
         if previous is not None and _same(previous[0], sig):
             return GateResult(previous[1], sig, ocr_ran=False)
-        text = self._engine.recognize(crop) if box is not None else ""
-        return GateResult(text, sig, ocr_ran=box is not None)
+        if box is None:
+            return GateResult("", sig, ocr_ran=False)
+        return GateResult(self._engine.recognize(crop), sig, ocr_ran=True)
 
     def commit(self, key: str, result: GateResult) -> None:
         """Remember ``result`` as the indexed state for ``key`` (after the DB write succeeded)."""
