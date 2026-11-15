@@ -9,7 +9,7 @@ import os
 import subprocess
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -32,7 +32,7 @@ from akashic.storage.retention import delete_all_recorded_data
 from akashic.supervisor import Supervisor
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Generator
     from pathlib import Path
     from sqlite3 import Connection
 
@@ -227,7 +227,9 @@ def test_full_api_deletion_stops_real_children_and_restores_their_state(
             ),
             config_file=paths.config_file,
         )
-        services.put_thumb((1, "2026/01/01/x.webp", 200), b"old decrypted image")
+        services.put_thumb(
+            (1, "2026/01/01/x.webp", 200), b"old decrypted image", services.thumb_generation()
+        )
         server = ApiServer(services)
         server.start()
         assert call(server, "bad")[0] == 401
@@ -274,7 +276,7 @@ def test_api_refuses_deletion_without_writer_shutdown_and_reports_file_failure(
             raise PermissionError("synthetic failure")
 
         monkeypatch.setattr(media, "delete_all", fail)
-        services.put_thumb((1, "2026/01/01/x.webp", 200), b"old image")
+        services.put_thumb((1, "2026/01/01/x.webp", 200), b"old image", services.thumb_generation())
         assert call(server, token)[0] == 409
         assert services.thumb((1, "2026/01/01/x.webp", 200)) is None
         assert conn.execute("SELECT count(*) FROM frames").fetchone() == (1,)
@@ -336,9 +338,37 @@ def test_media_clear_does_not_follow_windows_directory_junctions(
     assert list(paths.media_dir.iterdir()) == []
 
 
-def test_inflight_thumbnail_cannot_restore_cache_after_deletion_and_id_reuse(
+@dataclass
+class BlockedRender:
+    server: ApiServer
+    services: Services
+    token: str
+    frames: FrameStore
+    add_image: Callable[[str], int]
+    first: int
+    entered: threading.Event
+    release: threading.Event
+
+    def get(self, path: str, method: str = "GET") -> tuple[int, bytes]:
+        request = http.client.HTTPConnection("127.0.0.1", self.server.port, timeout=15)
+        try:
+            request.request(method, path, headers={"Cookie": f"akashic_session={self.token}"})
+            response = request.getresponse()
+            return response.status, response.read()
+        finally:
+            request.close()
+
+    def image(self) -> bytes:
+        status, body = self.get(f"/api/frames/{self.first}/image?w=50")
+        assert status == 200
+        return body
+
+
+@pytest.fixture
+def blocked_render(
     conn: Connection, media: MediaStore, paths: Paths, monkeypatch: pytest.MonkeyPatch
-) -> None:
+) -> Generator[BlockedRender]:
+    """A server whose w=50 thumbnail render waits on ``release`` once it sets ``entered``."""
     paths.config_file.write_text(DEFAULT_CONFIG_TOML, encoding="utf-8")
     frames = FrameStore(conn, media)
 
@@ -348,60 +378,67 @@ def test_inflight_thumbnail_cannot_restore_cache_after_deletion_and_id_reuse(
         return frames.add(NewFrame(NOW, 0, "click", image_webp=data.getvalue()))
 
     first = add_image("red")
-    first_path = str(frames.get(first).image_path)  # type: ignore[union-attr]
-    entered, release, deleting = threading.Event(), threading.Event(), threading.Event()
+    entered, release = threading.Event(), threading.Event()
     thumbnail = api_server._thumbnail
 
     def rendering(webp: bytes, width: int) -> bytes:
-        entered.set()
-        assert release.wait(10)
+        if width == 50:
+            entered.set()
+            assert release.wait(10)
         return thumbnail(webp, width)
-
-    def stopped(action: Callable[[], None]) -> None:
-        deleting.set()
-        action()  # this fixture has no capture/worker; the subprocess test covers shutdown
 
     monkeypatch.setattr(api_server, "_thumbnail", rendering)
     token = new_token()
+    # no capture/worker here; the subprocess test covers shutdown
     services = Services(
         conn,
         frames,
         token,
-        Controls(dict, lambda: None, lambda: None, while_stopped=stopped),
+        Controls(dict, lambda: None, lambda: None, while_stopped=lambda action: action()),
         config_file=paths.config_file,
     )
     server = ApiServer(services)
-
-    def image() -> bytes:
-        request = http.client.HTTPConnection("127.0.0.1", server.port, timeout=15)
-        try:
-            request.request(
-                "GET",
-                f"/api/frames/{first}/image?w=50",
-                headers={"Cookie": f"akashic_session={token}"},
-            )
-            response = request.getresponse()
-            assert response.status == 200
-            return response.read()
-        finally:
-            request.close()
-
     server.start()
     try:
-        with ThreadPoolExecutor(max_workers=2) as pool:
-            render = pool.submit(image)
-            try:
-                assert entered.wait(10)
-                deletion = pool.submit(call, server, token)
-                assert deleting.wait(10)
-                assert not deletion.done()
-            finally:
-                release.set()
-            old_image = render.result(timeout=15)
-            assert deletion.result(timeout=15)[0] == 200
-        assert services.thumb((first, first_path, 50)) is None
-        assert add_image("blue") == first
-        assert image() != old_image
+        yield BlockedRender(server, services, token, frames, add_image, first, entered, release)
     finally:
         release.set()
         server.stop()
+
+
+def test_inflight_thumbnail_cannot_restore_cache_after_deletion_and_id_reuse(
+    blocked_render: BlockedRender,
+) -> None:
+    b = blocked_render
+    first_path = str(b.frames.get(b.first).image_path)  # type: ignore[union-attr]
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        render = pool.submit(b.image)
+        try:
+            assert b.entered.wait(10)
+            deletion = pool.submit(call, b.server, b.token)
+            assert deletion.result(timeout=15)[0] == 200
+        finally:
+            b.release.set()
+        old_image = render.result(timeout=15)
+    assert b.services.thumb((b.first, first_path, 50)) is None
+    assert b.add_image("blue") == b.first
+    assert b.image() != old_image
+
+
+def test_other_requests_complete_while_a_thumbnail_renders(blocked_render: BlockedRender) -> None:
+    b = blocked_render
+    first_path = str(b.frames.get(b.first).image_path)  # type: ignore[union-attr]
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        render = pool.submit(b.image)
+        try:
+            assert b.entered.wait(10)
+            assert b.get("/api/status")[0] == 200
+            assert b.get("/api/timeline?day=2026-01-01")[0] == 200
+            assert b.get(f"/api/frames/{b.first}/image?w=60")[0] == 200
+            assert b.get("/api/settings/storage/screenshots", "DELETE")[0] == 200
+            assert b.services.thumb((b.first, first_path, 60)) is None
+            assert b.get("/api/settings/storage", "DELETE")[0] == 200
+        finally:
+            b.release.set()
+        render.result(timeout=15)
+    assert b.services.thumb((b.first, first_path, 50)) is None

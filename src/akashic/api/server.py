@@ -125,6 +125,8 @@ class Services:
         self.token = token
         self.controls = controls
         self._thumbs: OrderedDict[ThumbKey, bytes] = OrderedDict()
+        self._thumb_lock = threading.Lock()  # not the db lock: cache work must not wait on DB holds
+        self._thumb_generation = 0
         self._codes: dict[str, float] = {}  # one-time open codes -> expiry (monotonic seconds)
 
     def new_open_code(self, now: float | None = None) -> str:
@@ -153,21 +155,28 @@ class Services:
             yield self._conn
 
     def thumb(self, key: ThumbKey) -> bytes | None:
-        with self._lock:
+        with self._thumb_lock:
             value = self._thumbs.get(key)
             if value is not None:
                 self._thumbs.move_to_end(key)
             return value
 
-    def put_thumb(self, key: ThumbKey, value: bytes) -> None:
-        with self._lock:
+    def thumb_generation(self) -> int:
+        with self._thumb_lock:
+            return self._thumb_generation
+
+    def put_thumb(self, key: ThumbKey, value: bytes, generation: int) -> None:
+        with self._thumb_lock:
+            if generation != self._thumb_generation:
+                return
             self._thumbs[key] = value
             while len(self._thumbs) > THUMB_CACHE_SIZE:
                 self._thumbs.popitem(last=False)
 
     def clear_thumbs(self) -> None:
-        with self._lock:
+        with self._thumb_lock:
             self._thumbs.clear()
+            self._thumb_generation += 1
 
 
 @dataclass
@@ -347,12 +356,12 @@ def _audio_routes(services: Services) -> APIRouter:
             raise HTTPException(404, "audio is not available")
         with services.db():
             segment = services.audio.get(segment_id)
-            if segment is None:
-                raise HTTPException(404, "no such segment")
-            try:
-                data = services.audio.read_file(segment)
-            except (FileNotFoundError, CryptoError) as exc:
-                raise HTTPException(404, "audio file is missing or unreadable") from exc
+        if segment is None:
+            raise HTTPException(404, "no such segment")
+        try:
+            data = services.audio.read_file(segment)
+        except (FileNotFoundError, CryptoError) as exc:
+            raise HTTPException(404, "audio file is missing or unreadable") from exc
         if data is None:
             raise HTTPException(404, "the raw audio was deleted")
         return Response(data, media_type="audio/ogg")
@@ -389,29 +398,29 @@ def _frame_routes(services: Services) -> APIRouter:
     def frame_image(  # pyright: ignore[reportUnusedFunction]
         frame_id: int, w: Annotated[int | None, Query(ge=16, le=MAX_THUMB_PX)] = None
     ) -> Response:
-        # Serialize reading, rendering and caching with deletion. Row IDs can be reused
-        # afterward, so an in-flight thumbnail must not repopulate a cleared cache, and the
-        # file path in the key keeps a reused ID from showing another frame's pixels.
+        # The generation keeps a render begun before a purge out of the cleared cache; the path
+        # in the key keeps a reused id off old pixels. A purge during the file read can 409.
         with services.db():
             stored = services.frames.get(frame_id)
             if stored is None or stored.image_path is None:
                 raise HTTPException(404, "no image for this frame")
             cache_key = (frame_id, stored.image_path, w or 0)
-            cached = services.thumb(cache_key) if w else None
-            if cached is not None:
-                return Response(cached, media_type="image/webp")
-            try:
-                webp = services.frames.image(stored)
-            except FileNotFoundError as exc:
-                raise HTTPException(404, "image file is missing") from exc
-            except CryptoError as exc:
-                log.warning("frame %d image failed to decrypt", frame_id)
-                raise HTTPException(500, "image could not be decrypted") from exc
-            if webp is None:  # pragma: no cover - guarded by image_path above
-                raise HTTPException(404, "no image for this frame")
-            if w:
-                webp = _thumbnail(webp, w)
-                services.put_thumb(cache_key, webp)
+            generation = services.thumb_generation()
+        cached = services.thumb(cache_key) if w else None
+        if cached is not None:
+            return Response(cached, media_type="image/webp")
+        try:
+            webp = services.frames.image(stored)
+        except FileNotFoundError as exc:
+            raise HTTPException(404, "image file is missing") from exc
+        except CryptoError as exc:
+            log.warning("frame %d image failed to decrypt", frame_id)
+            raise HTTPException(500, "image could not be decrypted") from exc
+        if webp is None:  # pragma: no cover - guarded by image_path above
+            raise HTTPException(404, "no image for this frame")
+        if w:
+            webp = _thumbnail(webp, w)
+            services.put_thumb(cache_key, webp, generation)
         return Response(webp, media_type="image/webp")
 
     return router

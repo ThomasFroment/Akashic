@@ -387,8 +387,8 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] #34 Watermark per (kind, model) for the missing-embedding queries
 - [ ] #61 `/api/status` stays index-only; the app list comes from its own endpoint or a cache
 - [ ] #13 A separate read-only connection for read endpoints
-- [ ] #63 Only `frames.get` under the lock; decrypt and thumbnail outside it (after B4 #62)
-  - [ ] Generation counter: `clear_thumbs` bumps it, `put_thumb` drops renders started before
+- [x] #63 Only `frames.get` under the lock; decrypt and thumbnail outside it (after B4 #62)
+  - [x] Generation counter: `clear_thumbs` bumps it, `put_thumb` drops renders started before
 - [ ] #64 Debug counts with `SELECT count(*) FROM frames WHERE ts_ms >= ?`
 - [ ] #65 Log view cached by `(size, mtime_ns)`; parse appended bytes only
 - [ ] #58 Cache the storage report; the worker refreshes it after retention

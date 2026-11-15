@@ -5,12 +5,15 @@ from __future__ import annotations
 import http.client
 import io
 import json
+import logging
+import threading
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 import pytest
 from PIL import Image
 
+from akashic.api import server as api_server
 from akashic.api.models import Downloads
 from akashic.api.server import (
     OPEN_CODE_TTL_S,
@@ -25,7 +28,7 @@ from akashic.pipeline import models
 from akashic.pipeline.models import ModelSpec, Needed
 from akashic.storage import db
 from akashic.storage.audio import AudioStore, NewSegment
-from akashic.storage.crypto import DataKey
+from akashic.storage.crypto import CryptoError, DataKey
 from akashic.storage.frames import FrameStore, NewFrame
 from akashic.storage.media import MediaStore
 
@@ -311,3 +314,129 @@ def test_audio_endpoint_without_an_audio_store(paths: Paths) -> None:
     finally:
         server.stop()
         conn.close()
+
+
+def _lock_is_free(api: Api) -> bool:
+    services = api.server._services
+    got: list[bool] = []
+
+    def probe() -> None:
+        acquired = services._lock.acquire(timeout=1)
+        got.append(acquired)
+        if acquired:
+            services._lock.release()
+
+    worker = threading.Thread(target=probe)
+    worker.start()
+    worker.join(5)
+    return got == [True]
+
+
+def test_image_decrypt_and_thumbnail_run_outside_the_db_lock(
+    api: Api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    services = api.server._services
+    seen: list[bool] = []
+    read, thumbnail = services.frames.image, api_server._thumbnail
+
+    def image(frame: object) -> bytes | None:
+        seen.append(_lock_is_free(api))
+        return read(frame)  # type: ignore[arg-type]
+
+    def render(webp: bytes, width: int) -> bytes:
+        seen.append(_lock_is_free(api))
+        return thumbnail(webp, width)
+
+    monkeypatch.setattr(services.frames, "image", image)
+    monkeypatch.setattr(api_server, "_thumbnail", render)
+    assert api.get("/api/frames/2/image?w=100")[0] == 200
+    assert seen == [True, True]
+
+
+def test_audio_read_runs_outside_the_db_lock(api: Api, monkeypatch: pytest.MonkeyPatch) -> None:
+    audio = api.server._services.audio
+    assert audio is not None
+    seen: list[bool] = []
+    read = audio.read_file
+
+    def read_file(segment: object) -> bytes | None:
+        seen.append(_lock_is_free(api))
+        return read(segment)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(audio, "read_file", read_file)
+    assert api.get("/api/audio/1")[0] == 200
+    assert seen == [True]
+
+
+def test_thumbnail_cache_hit_skips_decrypt_and_full_size_is_not_cached(
+    api: Api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    services = api.server._services
+    thumb = api.get("/api/frames/2/image?w=100")[2]
+    reads: list[int] = []
+    read = services.frames.image
+
+    def counting(frame: object) -> bytes | None:
+        reads.append(1)
+        return read(frame)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(services.frames, "image", counting)
+    assert api.get("/api/frames/2/image?w=100")[2] == thumb
+    assert reads == []
+    api.get("/api/frames/2/image")
+    api.get("/api/frames/2/image")
+    assert len(reads) == 2
+    assert not any(key[2] == 0 for key in services._thumbs)
+
+
+def test_put_thumb_ignores_a_stale_generation(api: Api) -> None:
+    services = api.server._services
+    key = (2, "p.webp", 100)
+    stale = services.thumb_generation()
+    services.clear_thumbs()
+    assert services.thumb_generation() == stale + 1
+    services.put_thumb(key, b"x", stale)
+    assert services.thumb(key) is None
+    services.put_thumb(key, b"x", services.thumb_generation())
+    assert services.thumb(key) == b"x"
+    services.clear_thumbs()
+    assert services.thumb(key) is None
+
+
+def test_image_file_removed_after_the_row_read_is_a_404(
+    api: Api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def gone(_frame: object) -> bytes | None:
+        raise FileNotFoundError
+
+    monkeypatch.setattr(api.server._services.frames, "image", gone)
+    status, _, body = api.get("/api/frames/2/image?w=100")
+    assert status == 404
+    assert b"image file is missing" in body
+
+
+def test_image_decrypt_failure_is_a_500_logging_only_the_frame_id(
+    api: Api, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    def broken(_frame: object) -> bytes | None:
+        raise CryptoError("secret detail")
+
+    monkeypatch.setattr(api.server._services.frames, "image", broken)
+    with caplog.at_level(logging.WARNING):
+        assert api.get("/api/frames/2/image")[0] == 500
+    assert "frame 2" in caplog.text
+    assert "secret detail" not in caplog.text
+
+
+def test_audio_error_responses(api: Api, monkeypatch: pytest.MonkeyPatch) -> None:
+    audio = api.server._services.audio
+    assert audio is not None
+    monkeypatch.setattr(audio, "read_file", lambda _s: None)
+    assert api.get("/api/audio/1")[0] == 404
+    for error in (FileNotFoundError(), CryptoError("x")):
+
+        def failing(_s: object, error: Exception = error) -> bytes:
+            raise error
+
+        monkeypatch.setattr(audio, "read_file", failing)
+        assert api.get("/api/audio/1")[0] == 404
