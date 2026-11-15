@@ -130,8 +130,8 @@ Spike results go to a dated report in `docs/baselines/`; guides keep only the ru
 captured pixels and titles in memory; reports hold numbers only.
 
 - [x] Spike per-window composition and storage (baseline 2026-11-15 `window-composition.md`)
-- [ ] Ask the user: the WGC packages (`winrt` Graphics.Capture and DirectX projections: what they
-  do, network calls, alternative) before building on them
+- [x] Ask the user: the WGC packages (`winrt` Graphics.Capture and DirectX projections: what they
+  do, network calls, alternative) before building on them (approved 2026-11-15, TOOLING.md)
 - [ ] Remaining spikes on the real PC
   - [ ] Popups not yet seen: password-manager extension popup, autofill and save-password
     bubbles, IME and emoji panels, credential prompts, WebView2 popups

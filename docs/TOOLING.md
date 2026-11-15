@@ -59,8 +59,11 @@ coverage or an aggregate Ask score cannot substitute for these measurements.
 The approved runtime dependencies are those in `pyproject.toml` today: argon2-cffi, av, comtypes,
 cryptography, fastapi, faster-whisper, librosa, numpy, nvidia-cublas-cu12, onnxruntime-gpu,
 Pillow, pystray, sqlcipher3, torch, transformers, uvicorn and the `winrt-*` packages, plus the
-official llama.cpp `llama-server.exe` downloaded as a model runtime. Development tools: pyright,
-pytest, pytest-cov, ruff. Anything else needs the user's approval first.
+official llama.cpp `llama-server.exe` downloaded as a model runtime. Approved 2026-11-15 for
+monitor composition (TODO A9): winrt-Windows.Graphics.Capture, winrt-Windows.Graphics.DirectX and
+winrt-Windows.Graphics.DirectX.Direct3D11 (Microsoft's WinRT projections for
+Windows.Graphics.Capture; confirm they make no runtime network calls when adding them).
+Development tools: pyright, pytest, pytest-cov, ruff. Anything else needs the user's approval first.
 
 PyTorch, Transformers and librosa exist for the Qwen3-ASR and Canary speech models. Load pinned
 local artifacts with offline settings and no remote code. Having a library does not authorize
