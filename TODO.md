@@ -328,7 +328,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] #164 An ignored episode ref is skipped and logged, never a stalled watermark
 - [ ] #49 `transaction()` rolls back only when in a transaction; rolls back and re-raises on commit
 - [ ] #32 Episode builders honour the episode retention cutoff; expired episodes are not rebuilt
-- [ ] #62 Thumbnail cache keyed by `(frame_id, image_path, w)`; cleared on category deletes
+- [x] #62 Thumbnail cache keyed by `(frame_id, image_path, w)`; cleared on category deletes
 - [ ] #55 Reject keyfile Argon2 parameters above sane ceilings before using them
 
 ### B5. Episodes are built and correct
