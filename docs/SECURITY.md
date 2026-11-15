@@ -1,5 +1,9 @@
 # Security design
 
+> **Being replaced in part** by the [monitor-capture design](designs/2026-11-14-monitor-capture.md)
+> (TODO A9). Where they differ, the design and the 2026-11-14 and 2026-11-15 rows of DECISIONS.md
+> win.
+
 ## Threat model
 
 Encryption protects recorded files and backups while the app is locked or stopped. It does not

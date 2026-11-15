@@ -1,5 +1,9 @@
 # Capture
 
+> **Being replaced in part** by the [monitor-capture design](designs/2026-11-14-monitor-capture.md)
+> (TODO A9). Where they differ, the design and the 2026-11-14 and 2026-11-15 rows of DECISIONS.md
+> win.
+
 ## Evidence meaning
 
 Screenshots represent the selected app window, never a monitor fallback. Episode images must

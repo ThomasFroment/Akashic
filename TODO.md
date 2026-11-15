@@ -47,8 +47,7 @@ Three parts:
 - [x] Live check on Zen, Chrome, Edge (playing tabs, private windows, user URL rule) and Proton Pass
 - [x] Unexamined background browser media is logged: accepted and documented (DECISIONS, 2026-11-12)
 - [ ] Follow-ups found during A1
-  - [ ] Ask the user: drop browser audio while a private or excluded page is open? (process-only)
-  - [ ] Zen shows decoded URLs: a space makes the address unreadable, skipped under user URL rules
+  - [ ] Ask the user: drop browser audio while a private or excluded page is open? (after A9)
 
 ### A2. Capture stops when asked
 
@@ -88,15 +87,10 @@ Three parts:
 - [x] #147 Game mode: idle captures of other monitors without UIA, OCR deferred; measure the cost
 - [x] #150 Game detection: add common players, new Teams and RDP/Hyper-V clients; D3D exclusive fullscreen on a covered monitor marks a game
 - [x] #21 UIA FindAll condition filters `IsOffscreen == False` before the 3000-node cut
-- [ ] #153 Keep an encrypted full-resolution copy (or crop) for deferred game OCR until it runs
-- [ ] #78 Test selected-window capture: 1 s bound, render thread, late pixels, bounds crop
 - [x] #82 `FakeUia` returns `TextBlock`s; test the controls-only OCR fallback and `MAX_TEXT_CHARS`
 - [ ] Lead: spike Chrome 138+ native UIA as the cause of the blank Edge probe (§9)
   - [x] Locked PC (2026-11-13): occlusion, not lazy UIA, blanks page text; URL and caption still read
-  - [ ] Rerun unlocked, window foreground and covered (scratchpad `chrome-uia/run.py`, not kept)
-- [ ] Follow-ups found during A4
-  - [ ] Key screen rate state by target, not monitor index plus one cursor slot (helps #147, #149)
-  - [ ] Owned popups of unfocused apps (context menus): resolve to their owner window? Measure first
+  - [ ] Rerun unlocked, window foreground (scratchpad `chrome-uia/run.py`, not kept)
 
 ### A5. Audio recording
 
@@ -106,7 +100,7 @@ Three parts:
 - [ ] #110 Spike per-process loopback for the Discord process tree before building it
 - [ ] Explore per-app audio streams (process loopback, include and exclude modes) (after #110)
   - [ ] Drop only an excluded app's sound, not the overlapping speech of other apps
-  - [ ] Browser as its own stream, dropped while a private or excluded page of it is open or unknown
+  - [ ] Browser as its own stream, dropped while a private or excluded page is open (after A9)
   - [ ] Per-stream source for attribution (voice-chat stream = other people, browser = video)
 
 ### A6. Media sessions
@@ -120,9 +114,134 @@ Three parts:
 ### A7. Capture gaps
 
 - [ ] #143 Record outages in a content-free `capture_gaps(kind, reason, start_ms, end_ms)`
-  - [ ] Pause, lock, missing or failed audio device, gated drops
+  - [ ] Pause, lock, missing or failed audio device, gated drops (screen drops: A9 states)
   - [ ] OCR unavailable, capture process down
   - [ ] Covered by retention and "Delete all" (after B4 #10)
+
+### A9. Monitor capture and timeline (before A8)
+
+Design: [docs/designs/2026-11-14-monitor-capture.md](docs/designs/2026-11-14-monitor-capture.md).
+Decisions of 2026-11-14 and 2026-11-15 in DECISIONS.md. Supersedes #78 (selected-window capture
+test), #144 (window under the cursor), #153 (full-res copy for game OCR), #92 (`GdiScreen.grab`)
+and the A4 rate-state follow-up; the A4 owned-popups follow-up is covered by the popup rules.
+Spike results go to a dated report in `docs/baselines/`; guides keep only the rules. Spikes keep
+captured pixels and titles in memory; reports hold numbers only.
+
+- [x] Spike per-window composition and storage (baseline 2026-11-15 `window-composition.md`)
+- [ ] Ask the user: the WGC packages (`winrt` Graphics.Capture and DirectX projections: what they
+  do, network calls, alternative) before building on them
+- [ ] Remaining spikes on the real PC
+  - [ ] Popups not yet seen: password-manager extension popup, autofill and save-password
+    bubbles, IME and emoji panels, credential prompts, WebView2 popups
+  - [ ] Shell surfaces: taskbar-preview redaction, the snipping overlay outliving its window,
+    notifications, elevated windows, the 1,292 marker pixels seen with PowerToys Command Palette
+  - [ ] Title-change hold: same-title and in-page navigation, switching to a loaded tab, late
+    titles, back/forward cache, Zen (20+ runs, title-change event hook)
+  - [ ] Game frame times below the frame cap, exclusive fullscreen, DRM video, HDR output
+  - [ ] A normal day: number of windows, capture VRAM, frame-copy CPU, composition time
+  - [ ] Disk per normal day at native resolution (WebP vs AV1 NVENC), OCR of stored frames
+  - [ ] OCR time of window areas on 1440p and 4K; decode time of several frames per moment
+  - [ ] Caption and address reads for every visible browser; a hung side browser
+  - [ ] Monitor identity across reboot and replug, incl. two identical monitors
+- [ ] Ask the user: resolution, format and store drive, with disk per day
+  - [ ] If the store leaves the system drive: Settings chooses the data folder; documented move
+  - [ ] If resolution is capped: restore #153 (full-resolution copy for deferred game OCR)
+- [ ] Ask the user: acceptable game frame-rate loss, with the spike's numbers
+- [ ] Platform adapters (after the WGC package is approved)
+  - [ ] Monitors with stable identity and layout
+  - [ ] Per-window WGC captures: started after a kept verdict, stopped on exclusion or close,
+    border off, minimum update interval
+  - [ ] Visible windows with stacking order, cloaking, owner, constant alpha (skip alpha-0
+    overlays), UWP hosted app, child windows of other processes
+  - [ ] Window events (show, hide, move, reorder, title change) instead of polling
+- [ ] Verdicts: process, private mode and readable address only (incl. Akashic's localhost port)
+  - [ ] Remove all title exclusions (built-in, user list, media, own UI) and the password check
+  - [ ] Zen decoded addresses with spaces parse as addresses, so address rules apply
+  - [ ] Unreadable address kept; Settings and config lose the title list
+  - [ ] Unknown app, unresolved UWP host or unreadable private state counts as excluded;
+    re-judged at every check
+  - [ ] PiP and DevTools take their browser window's verdict
+  - [ ] Popups follow their owner; ownerless: excluded if its app has an excluded or unknown
+    window, minimized or on another desktop included
+  - [ ] Ownerless browser popups always excluded
+  - [ ] Browser extension, autofill and save-password popups always excluded
+  - [ ] Ghost windows take the hung window's verdict (`HungWindowFromGhostWindow`), else excluded
+  - [ ] A child window of an excluded or unknown app excludes the window that contains it
+  - [ ] Shell copy surfaces (Alt-Tab, Snap Assist, Task View, taskbar previews, snipping overlay)
+    always painted over
+  - [ ] Media: per-browser rule unchanged (excluding, unknown or stale), fed by every window
+- [ ] Composition
+  - [ ] Kept windows' latest frames in stacking order; excluded areas solid; pending until the
+    first frame
+  - [ ] Turning excluded: stop the capture, discard the last frame; back to kept: nothing older
+    than the change is painted
+  - [ ] Browser title change: pending until address and private state are read again (timeout:
+    unknown)
+  - [ ] Verdicts and UIA reads outside the composition lock
+- [ ] What a frame keeps
+  - [ ] Excluded windows: no text, absent from the window list; only "an area was hidden"
+  - [ ] All-excluded monitor stores no frame, state hidden
+  - [ ] Writer-spy tests: an excluded window's title, URL, text never reach SQL, files, logs
+- [ ] Storage, schema edited in place, store recreated
+  - [ ] Monitors and their layout over time
+  - [ ] Windows per frame; the frame row keeps a copy of the focused window's app, title, URL
+  - [ ] Per-window text rows
+  - [ ] Per-window text keeps D3: expiry clears copied excerpts and answers that used it (#57)
+  - [ ] States shown/hidden/dropped/failed, no reason; "not recording" from gaps (after A7 #143)
+  - [ ] Retention and "Delete all" cover them (after B4 #10)
+- [ ] Capture loop per monitor (after A3 per-HWND UIA backoff)
+  - [ ] Rate and change detection kept per monitor identity
+  - [ ] Compose only when a window on the monitor sent a frame or the window list changed
+  - [ ] Change measured against the last stored picture; lost frames mark dropped or failed
+  - [ ] Side monitors checked <= 30 s; every check refreshes media verdicts, even if dropped
+  - [ ] Input also captures the monitor under the cursor
+  - [ ] Game mode: game monitor at the game rate, others at the side rate, no UIA, OCR deferred
+  - [ ] A slow or hung window on one monitor never delays another
+  - [ ] Black monitor stores no image, only its window list and any focused-window UIA text
+  - [ ] Encoding off the loop, bounded queue; full: drop the oldest side-monitor frame
+  - [ ] Health per monitor: failure and drop runs; full disk reported as a problem
+- [ ] Text: UIA for the focused window, OCR per visible window area, unchanged windows reuse text
+  - [ ] Never OCR painted-over or pending areas, or the desktop
+  - [ ] Deferred OCR (game mode) follows the same per-window rules
+- [ ] Downstream reads the window list and per-window text
+  - [ ] App sessions follow the focused window
+  - [ ] Search, its app filter and passages per window
+  - [ ] Ask app filters and "on screen in …" wording
+  - [ ] Media URL lookup (after A6 #145)
+  - [ ] Drop the frame row's copy of the focused window's app, title, URL
+- [ ] Remove PrintWindow, its render thread, the 1920 px cap and the window-under-cursor path
+  - [ ] Remove `GdiScreen.grab` (#92)
+- [ ] Episode, search-hit and Ask images: the cited window's visible part, the rest masked
+  - [ ] No image when the window was not visible on the frame
+  - [ ] Thumbnail cache key includes the crop (after B4 #62)
+  - [ ] Latest frame counts while its monitor stayed "shown" since and the window is on it
+- [ ] Timeline (after B8 #63)
+  - [ ] Stage at relative positions; focused monitor marked; hover lists windows
+  - [ ] States drawn as such, with the age of the last check
+  - [ ] Pre-sized stage images
+  - [ ] Zoomable day strip with app bands; scroll, drag and keys
+  - [ ] Day navigation; the app filter highlights bands, never hides monitors
+  - [ ] Opening a moment: stage at that instant, cited monitor enlarged, window outlined
+  - [ ] Each moment has an address; Ask and episode links and Back land on it
+- [ ] Guides when A9 lands
+  - [ ] CAPTURE, STORAGE, RETRIEVAL, UI, ARCHITECTURE take the design's lasting rules
+  - [ ] SECURITY.md exceptions: titles, password fields, copies, notifications, background media
+  - [ ] SECURITY.md: unreadable address always kept; drop "focus state" and media-title rules
+  - [ ] DECISIONS.md: 2026-11-14 and 2026-11-15 rows to done; D2 and the background-media row
+    updated
+  - [ ] `tests/manual/CHECKLIST.md`: screen items 1-3, 5, 7 and gaming 3 for monitor capture
+  - [ ] OPEN.md: drop #158, #144, the #147 cost line (the cost spike) and #162's hung-window check
+  - [ ] Remove the "being replaced" notes at the top of CAPTURE.md and SECURITY.md
+  - [ ] Delete the design file
+- [ ] Hardware tests with `synthetic_window.py`: composition on mixed DPI and negative coordinates
+- [ ] Manual checklist on three monitors
+  - [ ] Private window on a side monitor; translucent window over a private one
+  - [ ] Alt-Tab, Snap Assist, a taskbar preview and Win+Shift+S with a private window open
+  - [ ] A game; a password-manager extension popup; minimizing a private window
+  - [ ] Dropdown, suggestions and tooltip on a private page; a page navigating to a bank address
+  - [ ] A hung private window; a private window on a side monitor cuts that browser's media
+  - [ ] Bank page with a readable address redacted, kept while typing in its bar
+  - [ ] A login page with a focused password field is kept
 
 ### A8. Dataset export (gate to Part C)
 
@@ -138,7 +257,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 ### B1. Trustworthy measurement
 
 - [ ] Ask eval runs production's path
-  - [ ] #113 Index through `EmbedHandler` (segment and frame passages); `image_scope='window'`
+  - [ ] #113 Index through `EmbedHandler` (segment and frame passages) (after A9)
   - [ ] #113 Cases: both target questions in one thread, runs at 00:40 and 09:00, ≥ 8 videos
   - [ ] #113 `eval_hard_memory` embeds `semantic_query`, not the whole question
   - [ ] #124 One test from capture rows through `build_episodes` to the video answer
@@ -198,7 +317,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] #35 `unload_if_idle` tests `self._model is not None`
   - [ ] #56 Retention also catches `MediaPathError`, logs the type and skips the path
 - [ ] #159 Housekeeping steps fail independently and publish per-step last-success times
-- [ ] #143 Queue OCR for frames stored without text
+- [ ] #143 Queue OCR for windows stored without text (after A9)
 
 ### B4. Storage integrity and deletion
 
@@ -207,7 +326,6 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] #164 An ignored episode ref is skipped and logged, never a stalled watermark
 - [ ] #49 `transaction()` rolls back only when in a transaction; rolls back and re-raises on commit
 - [ ] #32 Episode builders honour the episode retention cutoff; expired episodes are not rebuilt
-- [ ] #57 Frame-text expiry clears copied excerpts and the answers that used them (D3)
 - [ ] #62 Thumbnail cache keyed by `(frame_id, image_path, w)`; cleared on category deletes
 - [ ] #55 Reject keyfile Argon2 parameters above sane ceilings before using them
 
@@ -258,7 +376,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 
 - [ ] #47 Retire legacy per-segment vectors and their search path (2026-11-10)
 - [ ] #100 Vector scan C3 columnar chunk with C1's DAZ/FTZ self-test; identity harness
-- [ ] #101 Frame text reuse C3 link table with HMAC keys (after #100, B4 #10)
+- [ ] #101 Frame text reuse C3, re-evaluated for per-window text (after #100, B4 #10, A9)
 - [ ] #104 Windowed episode vector scan C2 split overlap; identity harness
 - [ ] #48 Check the windowed passage query with `EXPLAIN QUERY PLAN`; force the time side outer
 
@@ -271,7 +389,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] #64 Debug counts with `SELECT count(*) FROM frames WHERE ts_ms >= ?`
 - [ ] #65 Log view cached by `(size, mtime_ns)`; parse appended bytes only
 - [ ] #58 Cache the storage report; the worker refreshes it after retention
-- [ ] #51 `frames_au` fires only on updates of `text`, `window_title`, `url`
+- [ ] #51 Text-change trigger fires only on text, title, URL updates (after A9: per-window rows)
 - [ ] #37 Queue embed batches only when no transcription is runnable
 - [ ] #38 Reset the CPU baseline after each job, or subtract the worker's own time
 - [ ] Lead: NVML free-VRAM and free-RAM admission check in the scheduler (§9)
@@ -290,7 +408,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] #73 Category deletion maps `OSError`/`CryptoError` like "Delete all"
 - [ ] #74 `python -I` for autostart, `Akashic.cmd` and child spawns
 - [ ] Remove the low-disk warning `disk_warning_free_gb` (2026-11-12); old configs still load
-- [ ] Lead: isolated Edge `--app` window for the UI (§9)
+- [ ] Lead: isolated Edge `--app` window for the UI (§9) (after A9: no bar, so it is recorded)
 
 ### B10. Structure and clean-up
 
@@ -308,7 +426,6 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] #14 Regenerate the ARCHITECTURE.md layout from the tree; state the real dependency rules
 - [ ] Dead code and stale docs
   - [ ] #91 Delete `change_passphrase` and its tests; reword SECURITY.md and STORAGE.md (2026-11-10)
-  - [ ] #92 Delete `GdiScreen.grab` and its Protocol member; per-window fake; drop `Rect.translate`
   - [ ] #90 Drop `media_sessions_fts` and its triggers if still unread; keep `media_events` (user)
   - [ ] #93 Delete `_WORD_TOKEN`, `WHISPER_MODELS` and dead CSS; rewrite that test on `REGISTRY`
   - [ ] #94 Build `REGISTRY` from `SPEECH_CANDIDATES`; keep the GPT-OSS 20B and Qwen3 14B choices
@@ -380,7 +497,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] #170 In-game voice chat takes the overlapping game's process as its app
 - [ ] #171 Short videos: lower the 60 s minimum to 10–15 s, or keep clips played to the end
 - [ ] #172 App runs chain on gap only, kind by dominant time; ties go to the first seen
-- [ ] #149 Derive visible-window sessions from unfocused frames too
+- [ ] #149 Derive visible-window sessions from unfocused frames too (after A9)
 
 ### C6. Conditional extensions (spike or evidence first)
 
