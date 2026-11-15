@@ -34,8 +34,9 @@ another monitor, or what was in Discord during a call.
 - **WGC** (Windows.Graphics.Capture): the Windows API that delivers a window's own pixels, as
   drawn by the compositor, whatever covers it.
 - **Composite:** a monitor picture built by painting each kept window's latest WGC frame in
-  stacking order. **Pending:** a window with no usable frame yet, painted solid.
-- **Redact:** paint an area of the image over with a solid colour, in memory, before it is saved.
+  stacking order. **Blank:** an area of the composite filled with a plain colour, where an
+  excluded window sits; no pixel of it was ever captured. **Pending:** a window with no usable
+  frame yet, left blank.
 - **UIA** (UI Automation): asking a window for its text through Windows' accessibility interface.
   **OCR**: reading text from the image.
 - **Owned popup:** a menu, dropdown or tooltip window that belongs to another window.
@@ -80,7 +81,8 @@ another monitor, or what was in Discord during a call.
 Akashic keeps one WGC capture running for every visible window it has judged and kept. Windows
 sends that capture a frame only when the window's content changes. A monitor's frame is composed
 from those frames: each kept window's latest frame, painted at its place in stacking order, the
-desktop at the bottom. Excluded windows have no capture; their visible area is painted solid.
+desktop at the bottom. Excluded windows have no capture; their area is left blank, so the covered
+parts of the windows beneath them do not show either.
 
 The frame is stored at native resolution, with today's image quality. It keeps the monitor's
 identity and its place on the desktop at that time, and the list of kept app windows visible on
@@ -134,7 +136,7 @@ before the chosen moment.
 Encoding a native 4K frame is slow: today's WebP setting took 266 ms per 4K frame and 120-150 ms
 per 1440p frame, on one CPU thread. So encoding runs apart from the capture loop:
 
-- Composition, with its solid areas, happens in memory before a frame leaves the capture loop.
+- Composition, with its blank areas, happens in memory before a frame leaves the capture loop.
   Nothing is written unencrypted.
 - Frames wait for encoding in a short, bounded queue (a raw 4K frame is about 33 MB). When the
   queue is full, the oldest waiting side-monitor frame is dropped (if there is none, the oldest
@@ -158,7 +160,8 @@ At any moment, each monitor is in one of these states:
 - **hidden:** the monitor showed only excluded windows (a private window filling it).
 - **dropped:** encoding could not keep up.
 - **failed:** capturing, encoding or writing the picture failed.
-- **not recording:** paused, locked, Akashic not running, or the monitor absent. These periods
+- **not recording:** paused, Akashic's UI open, locked, Akashic not running, or the monitor
+  absent. These periods
   will be recorded by A7's capture gaps (TODO A7); the monitor state reads them from there.
 
 States are known at each capture attempt and assumed between attempts. They never say why. A
@@ -175,11 +178,10 @@ below decide which windows are excluded, keep their pixels from arriving through
 and say what is accepted.
 
 1. **Every visible window gets a verdict before its capture starts, and again at every check.** A
-   window is excluded for exactly these reasons, and no others:
+   window is excluded for these reasons, plus rules 2, 4 and 5, and no others:
    - its app: a built-in password manager or Windows sign-in surface, or an app the user
      excluded. A UWP app is judged by the app inside its frame window, not by the frame host;
    - a browser window in private (incognito) mode;
-   - Akashic's own interface, recognized by its local address (localhost on Akashic's port);
    - a browser whose address can be read and matches the built-in bank and password-manager
      sites or one of the user's address exclusions.
 
@@ -189,8 +191,7 @@ and say what is accepted.
    - **Still read:** a browser's own private-mode marker at the end of its title or caption
      (rule 1; an unreadable one falls under rule 2). Chrome shows it only in the caption that
      UIA reads, not in the window title.
-   - **Kept when unreadable:** a browser address (no bar, the user typing in it, a failed read),
-     Akashic's own pages included.
+   - **Kept when unreadable:** a browser address (no bar, the user typing in it, a failed read).
 2. **Unknown means excluded.** These are treated as excluded:
    - a window whose app cannot be read, or a UWP frame window whose app cannot be resolved;
    - a browser window whose private state cannot be read (a Chrome or Brave window whose caption
@@ -209,31 +210,40 @@ and say what is accepted.
      are read again.** A page that is excluded by its address paints after its title changes:
      measured in Chrome, the title changed at 59-64 ms and the first excluded pixels arrived at
      74-120 ms, in 5 of 5 runs. The hold starts from a title-change event, not from polling, and
-     ends when a fresh read gives the new address (or its timeout makes the window unknown).
-4. **Popups follow their owner; browser credential popups are always redacted.**
+     ends when a fresh read of the address and private state completes; an unreadable address is
+     then kept, as rule 1 says.
+4. **Popups follow their owner; browser credential popups are always excluded.**
    - A menu, dropdown, suggestion list or tooltip is its own window. An owned popup takes the
      verdict of the window that owns it. Measured: Chrome and Zen draw `<select>` options,
      suggestions and tooltips in such windows, and they showed the excluded page's content in the
      composite until they followed their owner.
-   - A popup whose owner cannot be found is redacted if any window of its app, minimized or on
-     another desktop included, is excluded or unknown. In a browser it is always redacted,
+   - A popup whose owner cannot be found is excluded if any window of its app, minimized or on
+     another desktop included, is excluded or unknown. In a browser it is always excluded,
      because it may belong to a private window.
-   - Browser surfaces that are not part of the page are redacted whatever the page's verdict:
+   - Browser surfaces that are not part of the page are excluded whatever the page's verdict:
      extension popups (password managers above all), saved-password and card autofill, and
      save-password bubbles.
    - A "Not Responding" ghost window, drawn by Windows with the hung window's last picture, takes
-     the verdict of the window it stands for. If that cannot be resolved, it is redacted.
-5. **Shell copy surfaces are always redacted.** Alt-Tab, Snap Assist, Task View, taskbar previews
+     the verdict of the window it stands for. If that cannot be resolved, it is excluded.
+5. **Shell copy surfaces are always excluded.** Alt-Tab, Snap Assist, Task View, taskbar previews
    and the Snipping Tool overlay show copies of other windows. Measured with an excluded window
    open: Alt-Tab, Snap Assist and the snipping overlay put 28,700, 93,400 and 3.7 million marker
-   pixels into the composite until they were redacted. Task View never appeared in the composite,
+   pixels into the composite until they were excluded. Task View never appeared in the composite,
    and the taskbar-preview result was inconclusive; both are on the list anyway. They are
-   redacted always, not only while an excluded window exists, because the snipping overlay is a
+   excluded always, not only while an excluded window exists, because the snipping overlay is a
    frozen copy that can outlive the window it shows (not reproduced yet).
-6. **Redaction is solid.** Blur was rejected: it can leak large text and layout.
-7. **Nothing about an excluded window is kept.** Its area produces no text, and it is left out of
+6. **Nothing about an excluded window is kept.** Its area produces no text, and it is left out of
    the frame's window list: no app, title or address, only the fact that an area was hidden.
-8. **A monitor showing only excluded content stores no frame**, only the "hidden" state.
+7. **A monitor showing only excluded content stores no frame**, only the "hidden" state.
+
+**Recording pauses while Akashic's own UI is open.** Screen, audio and media sessions all stop,
+and the pause is recorded as a gap of its own (not the user's Pause: never persisted, the
+utterance in progress is kept, the worker keeps processing what was already recorded). A UI page
+reports itself to the local server while it is visible (in any browser, whatever its address
+shows) and shows no recorded content until the server confirms the pause; a visible window whose
+readable address is Akashic's localhost port pauses recording too, as a failsafe. Akashic's
+pages never show recorded content while recording runs, and no copy of a transcript, excerpt or
+answer reaches the screen text, even through another app's copy of the window.
 
 Deferred OCR needs no second check: it reads only the stored image, which never contained an
 excluded window.
@@ -242,20 +252,18 @@ excluded window.
 
 - **Titles are never checked; an unreadable address is kept** (rule 1). A bank, password-manager
   or other sensitive page is excluded only through its readable address, so it is recorded while
-  the user types in its bar, in picture-in-picture or as an installed web app. Akashic's own pages
-  are recorded in the same cases. Their screen text then copies Akashic's transcripts, excerpts
-  and answers, so deleting or expiring a transcript (D3) no longer removes every copy of it.
+  the user types in its bar, in picture-in-picture or as an installed web app.
 - **Password fields are not checked.** A page or app is recorded while the user types a password;
   the password itself normally shows as dots, but the page around it is kept.
 - **Copies of other windows outside the shell.** A kept app that shows a copy of another window's
   pixels or text is captured as it appears: screen-share and OBS previews, remote desktop, the
   Magnifier and zoom tools, clipboard history, jump lists, Live Captions, or simply an app
-  displaying a screenshot of an excluded window. The shell's own copy surfaces are redacted
+  displaying a screenshot of an excluded window. The shell's own copy surfaces are excluded
   (rule 5); detecting every other one is not possible in general.
 - **Notifications** are captured like any other window.
 - **Background browser media** stays logged when the browser is minimized, fully covered or on
-  another virtual desktop, and for a background tab of a visible window: only the active tab's
-  address can be read.
+  another virtual desktop (even a private one), and for a background tab of a kept window: only the
+  active tab's address can be read.
 
 **Changes to existing rules:**
 
@@ -279,7 +287,7 @@ excluded window.
   are not interleaved), lets a window that did not change keep its previous text without new OCR,
   and attributes every line to the window it came from. A window that sent no new frame needs no
   new OCR.
-- Redacted and pending areas and the desktop are never read.
+- Blank (excluded or pending) areas and the desktop are never read.
 - **The window, not the frame, is the unit of text.** Search, its app filter, passages and text
   reuse work on each window's text with that window's app, title and address. A match in one
   window is never returned under another window's app, and a phrase never matches across two
@@ -348,7 +356,7 @@ retention category.
 Native resolution on three or more monitors costs much more disk than today's 1920 px window
 frames, on the system drive by default. Extrapolated from short samples with today's WebP
 setting: 42 MB per active hour for a 1440p monitor of changing text, 22-64 MB per monitor in a
-150 s composite sample (flattered by large painted-over areas), and 650 MB per hour for a 4K
+150 s composite sample (flattered by large blank areas), and 650 MB per hour for a 4K
 monitor showing video at one frame per second. An hour of normal use is still to be measured;
 the user re-decides resolution, format and where the store lives with that number. The spikes
 found AV1 video on the GPU encoder about 2 times smaller on video and 5 times smaller on text, at
@@ -369,9 +377,9 @@ from window capture carries over.
 | One OCR pass over the whole monitor | Lines of side-by-side windows interleave; any change anywhere means OCR of everything; attribution by position is weaker. |
 | Synchronized snapshots of all monitors | More work at every trigger, heaviest during games, for little information. |
 | Keep 1920 px | Small text unreadable when zooming in; the user chose native. |
-| Exclude by title, or redact when the address cannot be read | Titles rarely name a bank or a vault and do name harmless videos about them; an address bar being edited, a missing bar and a failed read look the same. |
+| Exclude by title, or exclude when the address cannot be read | Titles rarely name a bank or a vault and do name harmless videos about them; an address bar being edited, a missing bar and a failed read look the same. |
 | Blur, or dim the rest of a crop | Blur can leak text; dimming still shows other windows in evidence for one app. |
-| Detect every copy of another window | Impossible in general. The shell's own copy surfaces are a short, known list and are redacted (rule 5); other apps' copies are an accepted exception. |
+| Detect every copy of another window | Impossible in general. The shell's own copy surfaces are a short, known list and are excluded (rule 5); other apps' copies are an accepted exception. |
 
 ## Risks and open questions
 
@@ -380,16 +388,16 @@ remaining item is answered on the real PC before the matching part is built; mea
 dated report in [baselines](../baselines/), and the guides keep only the rules.
 
 - **The WGC package.** Python reaches WGC through the `winrt` projections for Graphics.Capture
-  and DirectX, which are new packages: the user approves them first (what they do, network calls,
-  the alternative).
+  and DirectX, which are new packages: approved 2026-11-15 (TOOLING.md); confirm they make no
+  runtime network calls when adding them.
 - **Capture border.** No border appeared for this unpackaged process on Windows 11 build 26200,
   but Microsoft documents turning it off as needing a capability and a prompt. Re-check on each
   Windows update; a border on every captured window would be visible to the user.
 - **Undocumented calls.** `HungWindowFromGhostWindow` maps a ghost to its hung window on this
-  build; it is exported but undocumented. If it fails, ghosts are redacted.
+  build; it is exported but undocumented. If it fails, ghosts are excluded.
 - **Popups and shell surfaces not yet seen.** Password-manager extension popups, autofill and
   save-password bubbles, the IME and emoji panels, credential prompts, popups drawn by another
-  process (WebView2), notifications, elevated windows, taskbar-preview redaction, and an
+  process (WebView2), notifications, elevated windows, taskbar previews, and an
   unexplained 1,292 marker pixels when the Start key opened PowerToys Command Palette.
 - **The title-change hold.** Same-title and in-page navigations, switching to an already-loaded
   tab, titles set late by script, back/forward cache, and Zen.

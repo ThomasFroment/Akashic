@@ -13,7 +13,7 @@ Sources: `#1`–`#112` are findings of [audit 2026-11-10](docs/audits/2026-11-10
 [audit 2026-11-10-2](docs/audits/2026-11-10-2.md). The [synthesis](docs/audits/2026-11-11-synthesis/synthesis.md)
 explains them and their order (§n below); `docs/solutions/` holds the method reports (C1, C7… are
 candidates of the named study). Read the finding's full row before starting it.
-User decisions (D1–D9 and dated ones) are in [DECISIONS.md](docs/DECISIONS.md).
+User decisions (D1, D3–D9 and dated ones) are in [DECISIONS.md](docs/DECISIONS.md).
 
 Every item keeps synthesis §7.7: exclusions before disk, everything encrypted, new tables and
 columns covered by retention and "Delete all", no captured text in logs, no dependency without asking.
@@ -45,7 +45,8 @@ Three parts:
   - [x] #28 Reload AUMID names with backoff instead of caching a failed load for the process life
   - [x] #148 Private markers only as browser title suffix; manager globs only off-browser (D2)
 - [x] Live check on Zen, Chrome, Edge (playing tabs, private windows, user URL rule) and Proton Pass
-- [x] Unexamined background browser media is logged: accepted and documented (DECISIONS, 2026-11-12)
+- [x] Unexamined background browser media is logged: accepted and documented
+  (DECISIONS, 2026-11-14 shell copy-surfaces row)
 - [ ] Follow-ups found during A1
   - [ ] Ask the user: drop browser audio while a private or excluded page is open? (after A9)
 
@@ -135,8 +136,9 @@ captured pixels and titles in memory; reports hold numbers only.
 - [ ] Remaining spikes on the real PC
   - [ ] Popups not yet seen: password-manager extension popup, autofill and save-password
     bubbles, IME and emoji panels, credential prompts, WebView2 popups
-  - [ ] Shell surfaces: taskbar-preview redaction, the snipping overlay outliving its window,
-    notifications, elevated windows, the 1,292 marker pixels seen with PowerToys Command Palette
+  - [ ] Shell surfaces: taskbar previews kept out of the composite, the snipping overlay
+    outliving its window, notifications, elevated windows, the 1,292 marker pixels seen with
+    PowerToys Command Palette
   - [ ] Title-change hold: same-title and in-page navigation, switching to a loaded tab, late
     titles, back/forward cache, Zen (20+ runs, title-change event hook)
   - [ ] Game frame times below the frame cap, exclusive fullscreen, DRM video, HDR output
@@ -149,15 +151,24 @@ captured pixels and titles in memory; reports hold numbers only.
   - [ ] If the store leaves the system drive: Settings chooses the data folder; documented move
   - [ ] If resolution is capped: restore #153 (full-resolution copy for deferred game OCR)
 - [ ] Ask the user: acceptable game frame-rate loss, with the spike's numbers
-- [ ] Platform adapters (after the WGC package is approved)
+- [ ] Platform adapters
   - [ ] Monitors with stable identity and layout
   - [ ] Per-window WGC captures: started after a kept verdict, stopped on exclusion or close,
     border off, minimum update interval
   - [ ] Visible windows with stacking order, cloaking, owner, constant alpha (skip alpha-0
     overlays), UWP hosted app, child windows of other processes
   - [ ] Window events (show, hide, move, reorder, title change) instead of polling
-- [ ] Verdicts: process, private mode and readable address only (incl. Akashic's localhost port)
+- [ ] Pause all recording (screen, audio, media sessions) while Akashic's UI is open
+  - [ ] Triggers: a heartbeat from each visible UI page; a visible window with Akashic's readable
+    localhost address as a failsafe
+  - [ ] A UI page shows no recorded content until the server confirms the pause
+  - [ ] Its own gap reason (`ui_open`, kind `all`); never persisted or shown as the user's Pause
+  - [ ] The utterance in progress is kept; the worker keeps processing recorded work
+  - [ ] Drop the `own_ui` verdict (#27 origin check): Akashic's address now triggers the pause
+- [ ] Verdicts: process, private mode and readable address (plus the popup, ghost, child-window
+  and copy-surface rules below)
   - [ ] Remove all title exclusions (built-in, user list, media, own UI) and the password check
+  - [ ] Reword the code comments that cite D2 (`capture/exclusions.py`, `capture/media.py`)
   - [ ] Zen decoded addresses with spaces parse as addresses, so address rules apply
   - [ ] Unreadable address kept; Settings and config lose the title list
   - [ ] Unknown app, unresolved UWP host or unreadable private state counts as excluded;
@@ -170,15 +181,14 @@ captured pixels and titles in memory; reports hold numbers only.
   - [ ] Ghost windows take the hung window's verdict (`HungWindowFromGhostWindow`), else excluded
   - [ ] A child window of an excluded or unknown app excludes the window that contains it
   - [ ] Shell copy surfaces (Alt-Tab, Snap Assist, Task View, taskbar previews, snipping overlay)
-    always painted over
+    always excluded
   - [ ] Media: per-browser rule unchanged (excluding, unknown or stale), fed by every window
 - [ ] Composition
-  - [ ] Kept windows' latest frames in stacking order; excluded areas solid; pending until the
-    first frame
+  - [ ] Kept windows' latest frames in stacking order; excluded and pending areas left blank
   - [ ] Turning excluded: stop the capture, discard the last frame; back to kept: nothing older
     than the change is painted
-  - [ ] Browser title change: pending until address and private state are read again (timeout:
-    unknown)
+  - [ ] Browser title change: pending until address and private state are read again; an
+    unreadable address is then kept
   - [ ] Verdicts and UIA reads outside the composition lock
 - [ ] What a frame keeps
   - [ ] Excluded windows: no text, absent from the window list; only "an area was hidden"
@@ -205,7 +215,7 @@ captured pixels and titles in memory; reports hold numbers only.
   - [ ] Encoding off the loop, bounded queue; full: drop the oldest side-monitor frame
   - [ ] Health per monitor: failure and drop runs; full disk reported as a problem
 - [ ] Text: UIA for the focused window, OCR per visible window area, unchanged windows reuse text
-  - [ ] Never OCR painted-over or pending areas, or the desktop
+  - [ ] Never OCR blank (excluded or pending) areas, or the desktop
   - [ ] Deferred OCR (game mode) follows the same per-window rules
 - [ ] Downstream reads the window list and per-window text
   - [ ] App sessions follow the focused window
@@ -231,8 +241,7 @@ captured pixels and titles in memory; reports hold numbers only.
   - [ ] CAPTURE, STORAGE, RETRIEVAL, UI, ARCHITECTURE take the design's lasting rules
   - [ ] SECURITY.md exceptions: titles, password fields, copies, notifications, background media
   - [ ] SECURITY.md: unreadable address always kept; drop "focus state" and media-title rules
-  - [ ] DECISIONS.md: 2026-11-14 and 2026-11-15 rows to done; D2 and the background-media row
-    updated
+  - [ ] DECISIONS.md: 2026-11-14 and 2026-11-15 rows to done
   - [ ] `tests/manual/CHECKLIST.md`: screen items 1-3, 5, 7 and gaming 3 for monitor capture
   - [ ] OPEN.md: drop #158, #144, the #147 cost line (the cost spike) and #162's hung-window check
   - [ ] Remove the "being replaced" notes at the top of CAPTURE.md and SECURITY.md
@@ -244,7 +253,7 @@ captured pixels and titles in memory; reports hold numbers only.
   - [ ] A game; a password-manager extension popup; minimizing a private window
   - [ ] Dropdown, suggestions and tooltip on a private page; a page navigating to a bank address
   - [ ] A hung private window; a private window on a side monitor cuts that browser's media
-  - [ ] Bank page with a readable address redacted, kept while typing in its bar
+  - [ ] Bank page with a readable address excluded, kept while typing in its bar
   - [ ] A login page with a focused password field is kept
 
 ### A8. Dataset export (gate to Part C)

@@ -47,9 +47,9 @@ evidence. The few accepted exceptions are listed once, in [SECURITY.md](SECURITY
 Browser rules: only the browser's own address bar counts as its URL, never an in-page field.
 Private-mode markers count only as the browser's own title suffix. Password-manager title
 patterns apply only to non-browser apps, so a video titled "Bitwarden vs 1Password" is kept
-([DECISIONS.md](DECISIONS.md), D2). Built-in finance and password-manager addresses match parsed
-hosts, not substrings. Akashic's own UI is always excluded. The detailed mechanics live with the
-code (`capture/screen.py`, `capture/exclusions.py`, `capture/browser_state.py`,
+([DECISIONS.md](DECISIONS.md), D2 of 2026-11-11, superseded by the 2026-11-14 exclusions row,
+TODO A9). Built-in finance and password-manager addresses match parsed hosts, not substrings.
+Akashic's own UI is always excluded. The detailed mechanics live with the code (`capture/screen.py`, `capture/exclusions.py`, `capture/browser_state.py`,
 `platform/win/uia.py`) and their tests.
 
 Media sessions follow the screen loop's per-window verdict: a browser's session is rejected while
