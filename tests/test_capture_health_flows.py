@@ -149,9 +149,7 @@ def test_a_device_that_opens_but_whose_every_iteration_faults_never_counts_as_re
         (940.1, []),  # 59.9 s does not
     ],
 )
-def test_audio_capture_names_each_recorder_down_for_a_minute(
-    since: float, down: list[str]
-) -> None:
+def test_audio_capture_names_each_recorder_down_for_a_minute(since: float, down: list[str]) -> None:
     capture = object.__new__(AudioCapture)
     rigs = [RecorderRig("mic"), RecorderRig("system")]
     capture._recorders = [r.recorder for r in rigs]  # pyright: ignore[reportPrivateUsage]
@@ -470,7 +468,12 @@ def test_a_health_reading_that_raises_is_skipped_not_fatal(
     bad = SimpleNamespace(images_failing=lambda since: 1 / 0)
     with caplog.at_level("WARNING"):
         got = capture_main._collect(  # pyright: ignore[reportPrivateUsage]
-            ctx, _status(audio_failed=False), cast("Any", bad), None, cast("Any", None)
+            ctx,
+            _status(audio_failed=False),
+            cast("Any", bad),
+            None,
+            cast("Any", None),
+            cast("Any", SimpleNamespace(stats={})),
         )
     assert got is None
     assert "collecting capture health failed: ZeroDivisionError" in caplog.text

@@ -248,6 +248,29 @@ CREATE TABLE state (
 
 
 -- ============================================================================================
+-- Capture gaps
+-- ============================================================================================
+
+-- Periods when something was not being recorded, and why. Content-free by construction: the
+-- vocabulary is closed and the times are integers. end_ms IS NULL means the gap is still going on.
+CREATE TABLE capture_gaps (
+    id       INTEGER PRIMARY KEY,
+    kind     TEXT NOT NULL CHECK (kind IN ('all', 'screen', 'screen_text', 'mic', 'system')),
+    reason   TEXT NOT NULL CHECK (reason IN (
+        'paused', 'stopped', 'crashed', 'stalled', 'locked', 'ocr_unavailable',
+        'audio_unavailable', 'disabled', 'device_missing', 'device_failed', 'excluded',
+        'unknown_sources', 'music', 'backlog', 'write_failed'
+    )),
+    start_ms INTEGER NOT NULL CHECK (typeof(start_ms) = 'integer'),
+    end_ms   INTEGER CHECK (
+        end_ms IS NULL OR (typeof(end_ms) = 'integer' AND end_ms >= start_ms)
+    )
+);
+
+CREATE INDEX capture_gaps_start ON capture_gaps (start_ms);
+
+
+-- ============================================================================================
 -- Speakers
 -- ============================================================================================
 

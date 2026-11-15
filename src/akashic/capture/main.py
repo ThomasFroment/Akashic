@@ -20,6 +20,7 @@ from akashic.capture.audio import VAD_CONTINUE_RATIO, AudioCapture, AudioSetting
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.gaming import GameSettings
+from akashic.capture.gaps import CaptureGaps
 from akashic.capture.health import SCREEN_IMAGES_FAILING, CaptureStatus
 from akashic.capture.media import MediaTracker
 from akashic.capture.ocr_gate import OcrGate
@@ -30,6 +31,7 @@ from akashic.storage import db, state
 from akashic.storage.audio import AudioStore
 from akashic.storage.debuginfo import ProcessInfo
 from akashic.storage.frames import FrameStore
+from akashic.storage.gaps import GapLog
 from akashic.storage.media import MediaStore
 from akashic.storage.sessions import GameLog, MediaLog
 
@@ -37,11 +39,18 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from sqlite3 import Connection
 
+    from akashic.capture.gaps import GapSink
     from akashic.capture.ports import AudioPlatform, CapturePlatform
     from akashic.capture.vad import SpeechDetector
     from akashic.config import Audio
 
 log = logging.getLogger("capture")
+
+
+def _now_ms() -> int:
+    return time.time_ns() // 1_000_000
+
+
 DISABLE_ENV = "AKASHIC_CAPTURE"
 
 
@@ -64,6 +73,7 @@ def _start_audio(
     audio_platform: AudioPlatform,
     exclusions: Exclusions,
     detector_factory: Callable[[], SpeechDetector],
+    gaps: GapSink,
 ) -> tuple[AudioCapture, threading.Thread, Connection] | None:
     """Audio is best effort: if it can't start, screen capture carries on without it."""
     cfg = ctx.config.audio
@@ -76,6 +86,7 @@ def _start_audio(
             store=AudioStore(conn, MediaStore(ctx.paths.media_dir, ctx.key.subkey("media"))),
             exclusions=exclusions,
             settings=audio_settings(cfg),
+            gaps=gaps,
         )
     except Exception as exc:  # noqa: BLE001 - e.g. the VAD model is missing
         conn.close()
@@ -87,6 +98,7 @@ def _start_audio(
     return audio, thread, conn
 
 
+GAP_THREAD_JOIN_S: Final = 2.0  # a tick still running means the database is busy anyway
 PUBLISH_INTERVAL_S: Final = 5.0
 FAST_PUBLISH_S: Final = 1.0  # while the Settings microphone meter is open
 
@@ -123,12 +135,13 @@ def _report_problems(status: CaptureStatus, problems: list[str], epoch: int) -> 
         log.warning("reporting capture health failed: %s", type(exc).__name__)
 
 
-def _collect(
+def _collect(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct collaborator
     ctx: ChildContext,
     status: CaptureStatus,
     capture: ScreenCapture,
     audio: AudioCapture | None,
     tracker: MediaTracker,
+    gaps: CaptureGaps,
 ) -> tuple[int, list[str], dict[str, object]] | None:
     """``(pause epoch, problems, debug data)``, or None (logged) when reading health failed."""
     try:
@@ -140,6 +153,7 @@ def _collect(
             "screen": dict(sorted(capture.stats.items())),
             "media": dict(sorted(tracker.stats.items())),
             "audio": audio.snapshot() if audio is not None else None,
+            "gaps": dict(sorted(gaps.stats.items())),
         }
     except Exception as exc:  # noqa: BLE001 - health reporting must never disturb capture
         log.warning("collecting capture health failed: %s", type(exc).__name__)
@@ -147,12 +161,13 @@ def _collect(
     return epoch, problems, data
 
 
-def _publish_info(
+def _publish_info(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct collaborator
     ctx: ChildContext,
     capture: ScreenCapture,
     audio: AudioCapture | None,
     tracker: MediaTracker,
     status: CaptureStatus,
+    gaps: CaptureGaps,
 ) -> None:
     """Tell the Debug page what this process is up to, every few seconds (numbers only), and
     report the capture problems it found."""
@@ -161,11 +176,11 @@ def _publish_info(
     try:
         while True:
             wait = PUBLISH_INTERVAL_S
-            collected = _collect(ctx, status, capture, audio, tracker)
+            collected = _collect(ctx, status, capture, audio, tracker, gaps)
             if collected is not None:
                 epoch, problems, data = collected
                 try:
-                    now_ms = time.time_ns() // 1_000_000
+                    now_ms = _now_ms()
                     info.publish("capture", data, now_ms)
                     wait = publish_interval(conn, now_ms)
                 except Exception as exc:  # noqa: BLE001 - debugging aid: never disturb capture
@@ -185,10 +200,42 @@ def _publish_sticky_problems(ctx: ChildContext, status: CaptureStatus) -> None:
         ProcessInfo(ctx.conn).publish(
             "capture",
             {"paused": ctx.paused.is_set(), "problems": list(status.sticky)},
-            time.time_ns() // 1_000_000,
+            _now_ms(),
         )
     except Exception as exc:  # noqa: BLE001 - debugging aid: never disturb capture
         log.warning("publishing debug info failed: %s", type(exc).__name__)
+
+
+def _open_unrecorded_streams(
+    gaps: CaptureGaps, *, enabled: bool, running: bool, start_ms: int
+) -> None:
+    """Both audio streams are gaps for the whole run when audio is off or could not start."""
+    if running:
+        return
+    reason = "audio_unavailable" if enabled else "disabled"
+    gaps.open("mic", reason, start_ms)
+    gaps.open("system", reason, start_ms)
+
+
+def _finish_gaps(gaps: CaptureGaps, thread: threading.Thread, stop_ms: int) -> bool:
+    """Write the clean stop once the gap thread is done. False when the thread would not end:
+    the next start then records a crash from the heartbeat."""
+    thread.join(timeout=GAP_THREAD_JOIN_S)
+    if thread.is_alive():
+        log.warning("capture gap thread did not stop; the stop is not recorded")
+        return False
+    try:
+        gaps.finish(stop_ms)
+    except Exception as exc:  # noqa: BLE001 - the next start settles open rows
+        log.warning("recording the capture stop failed: %s", type(exc).__name__)
+    return True
+
+
+def _flush_late_gaps(gaps: CaptureGaps) -> None:
+    try:
+        gaps.flush_late()
+    except Exception as exc:  # noqa: BLE001 - only late drops are lost
+        log.warning("writing late capture gaps failed: %s", type(exc).__name__)
 
 
 def run_capture(
@@ -206,10 +253,18 @@ def run_capture(
     games = GameLog(ctx.conn)
     games.close_stale()  # a crash left rows open; their end is the last heartbeat
     gaming = ctx.config.gaming
+    start_ms = _now_ms()
+    gap_conn = db.connect(ctx.paths.db_file, ctx.key.subkey("db"))
+    gaps = CaptureGaps(GapLog(gap_conn), _now_ms, start_ms)
+    if platform.ocr is None:
+        gaps.open("screen_text", "ocr_unavailable", start_ms)
     audio = (
-        _start_audio(ctx, audio_platform, exclusions, detector_factory)
+        _start_audio(ctx, audio_platform, exclusions, detector_factory, gaps)
         if audio_platform is not None and ctx.config.audio.enabled
         else None
+    )
+    _open_unrecorded_streams(
+        gaps, enabled=ctx.config.audio.enabled, running=audio is not None, start_ms=start_ms
     )
     status = CaptureStatus(
         ctx.set_active,
@@ -242,7 +297,7 @@ def run_capture(
         log_store=MediaLog(media_conn),
         exclusions=exclusions,
         focused_window=platform.windows.focused_window,
-        now_ms=lambda: time.time_ns() // 1_000_000,
+        now_ms=_now_ms,
         browsers=browsers,
     )
     media_thread = threading.Thread(
@@ -252,9 +307,16 @@ def run_capture(
         daemon=True,
     )
     media_thread.start()
+    gap_thread = threading.Thread(
+        target=gaps.run,
+        args=(ctx.stop, ctx.paused, platform.windows.is_locked),
+        name="gaps",
+        daemon=True,
+    )
+    gap_thread.start()
     threading.Thread(
         target=_publish_info,
-        args=(ctx, capture, audio[0] if audio is not None else None, tracker, status),
+        args=(ctx, capture, audio[0] if audio is not None else None, tracker, status, gaps),
         name="debug-info",
         daemon=True,
     ).start()
@@ -263,13 +325,18 @@ def run_capture(
         capture.run(ctx.stop, ctx.paused)
     finally:
         ctx.stop.set()
+        stop_ms = _now_ms()
         capture.close()
+        gaps_done = _finish_gaps(gaps, gap_thread, stop_ms)
         media_thread.join(timeout=10)
         media_conn.close()
         if audio is not None:
             audio[1].join(timeout=60)
             audio[2].close()
             log.info("audio stats: %s", dict(sorted(audio[0].stats.items())))
+        if gaps_done:
+            _flush_late_gaps(gaps)
+            gap_conn.close()
         log.info("capture stats: %s", dict(sorted(capture.stats.items())))
         log.info("media stats: %s", dict(sorted(tracker.stats.items())))
 

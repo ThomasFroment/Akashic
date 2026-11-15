@@ -19,6 +19,9 @@ just to free space ([DECISIONS.md](DECISIONS.md)).
 Retention uses capture time rather than processing time and is independently configurable by
 evidence category.
 
+Capture gaps (when nothing was recorded, and why) are not a retention type: they go at the
+longest limit, and only when every type has a limit; otherwise they stay until Delete all.
+
 Removing screenshots or raw audio alone is intended to preserve searchable text. Removing,
 expiring or replacing a transcript must also remove its derived text from episode digests,
 comparison results and affected saved answers/source excerpts, including later replies that

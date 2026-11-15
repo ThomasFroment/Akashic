@@ -18,6 +18,10 @@ LEVELS_WANTED_UNTIL: Final = "levels_wanted_until_ms"
 # across Lock, Quit and Delete all.
 CAPTURE_PAUSED: Final = "capture_paused"
 
+# The last time (ms) a running capture process said it was alive; the next start uses it to date
+# a crash.
+CAPTURE_ALIVE: Final = "capture_alive_ms"
+
 
 def get_int(conn: Connection, key: str, default: int) -> int:
     row = conn.execute("SELECT value FROM state WHERE key = ?", (key,)).fetchone()

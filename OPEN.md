@@ -36,6 +36,12 @@ work, move it to TODO.md as a task and delete it here. Drop a milestone heading 
 - #161 Play/pause events of a live session are lost on a busy database (matters for #167)
 - #161 A database still busy at stop can exceed the supervisor's 10 s kill: queued audio is lost and an `.opus.enc` written before the kill may be orphaned; open media rows wait for close_stale
 
+## A7. Capture gaps
+
+- #143 A stop that exceeds the supervisor's 10 s kill (busy database) is recorded as `crashed` from the last heartbeat instead of `stopped`
+- #143 Not checked in the running app: pause, lock, unplugging the mic, default-device switch, Quit and a kill, each against the rows written
+- #143 A write that fails for a reason other than a busy database drops that one gap row (counted as `write_rejected` in the Debug data)
+
 ## A2. Capture stops when asked
 
 - #60 #163 Not checked in the running app: Lock, Quit, pause then lock/unlock, pause then restart

@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from akashic.capture.gaps import NO_GAPS
 from akashic.capture.health import DEVICE_DOWN_CODES, DEVICE_DOWN_S
 from akashic.capture.ports import AudioError
 from akashic.capture.vad import WINDOW
@@ -42,6 +43,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from akashic.capture.exclusions import Exclusions
+    from akashic.capture.gaps import GapSink
     from akashic.capture.ports import (
         AudioDevice,
         AudioDevices,
@@ -51,6 +53,7 @@ if TYPE_CHECKING:
     )
     from akashic.capture.vad import SpeechDetector
     from akashic.storage.audio import AudioStore
+    from akashic.storage.gaps import GapReason
 
 log = logging.getLogger(__name__)
 
@@ -304,21 +307,24 @@ class SegmentWriter:
     """Encodes and stores utterances off the recording threads, so a slow disk or encoder can
     never make a device buffer overflow."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct collaborator
         self,
         store: AudioStore,
         sampler: SourceSampler,
         exclusions: Exclusions,
         clock_ms: Callable[[], int],
         stats: Counter[str],
+        gaps: GapSink = NO_GAPS,
     ) -> None:
         self._store = store
         self._sampler = sampler
         self._exclusions = exclusions
         self._clock_ms = clock_ms
         self._stats = stats
+        self._gaps = gaps
         self._queue: queue.Queue[tuple[AudioKind, Utterance]] = queue.Queue(WRITER_QUEUE)
         self._last_id: dict[str, int | None] = {}
+        self._last_drop: dict[str, GapReason | None] = {}  # the writer's last decision, per stream
         self._stop = threading.Event()
 
     def submit(self, kind: AudioKind, utterance: Utterance) -> None:
@@ -326,6 +332,7 @@ class SegmentWriter:
             self._queue.put_nowait((kind, utterance))
         except queue.Full:
             self._stats["dropped_backlog"] += 1
+            self._gaps.drop(kind, "backlog", utterance.start_ms, utterance.end_ms)
             log.warning("audio writer is behind; dropped a %s segment", kind)
 
     def run(self, stop: threading.Event) -> None:
@@ -343,6 +350,7 @@ class SegmentWriter:
             except Exception as exc:  # noqa: BLE001 - one bad segment must not stop recording
                 self._stats["write_failed"] += 1
                 self._last_id[kind] = None
+                self._report_drop(kind, "write_failed", utterance)
                 log.warning("storing a %s segment failed: %s", kind, type(exc).__name__)
 
     def write(self, kind: AudioKind, utterance: Utterance) -> int | None:
@@ -350,14 +358,17 @@ class SegmentWriter:
         if any(self._exclusions.check_process(name) for name in sources):
             self._stats["dropped_excluded"] += 1
             self._last_id[kind] = None
+            self._report_drop(kind, "excluded", utterance)
             return None
         if not complete:  # unknown sources: nothing unclear is kept, the RAM copy is dropped
             self._stats["dropped_unknown_sources"] += 1
             self._last_id[kind] = None
+            self._report_drop(kind, "unknown_sources", utterance)
             return None
         if kind == "system" and sources and set(sources) <= MUSIC_PROCESSES:
             self._stats["dropped_music"] += 1  # song lyrics: the media session logs the song
             self._last_id[kind] = None
+            self._report_drop(kind, "music", utterance)
             return None
         segment = NewSegment(
             stream=kind,
@@ -369,8 +380,15 @@ class SegmentWriter:
         )
         segment_id = self._add_with_retry(segment, encode_opus(utterance.samples))
         self._last_id[kind] = segment_id
+        self._last_drop[kind] = None
         self._stats[f"segments_{kind}"] += 1
         return segment_id
+
+    def _report_drop(self, kind: AudioKind, reason: GapReason, utterance: Utterance) -> None:
+        """Record the dropped span, extending the previous row while the same reason repeats."""
+        merge = self._last_drop.get(kind) == reason
+        self._gaps.drop(kind, reason, utterance.start_ms, utterance.end_ms, merge=merge)
+        self._last_drop[kind] = reason
 
     def _add_with_retry(self, segment: NewSegment, opus: bytes) -> int:
         """Store the segment, waiting out a busy database. Once stopping, the current attempt is
@@ -400,6 +418,7 @@ class StreamRecorder:
         sink: Callable[[AudioKind, Utterance], None],
         clock_ms: Callable[[], int],
         stats: Counter[str],
+        gaps: GapSink = NO_GAPS,
     ) -> None:
         self.kind: AudioKind = kind
         self._devices = devices
@@ -409,6 +428,7 @@ class StreamRecorder:
         self._sink = sink
         self._clock_ms = clock_ms
         self._stats = stats
+        self._gaps = gaps
         self.segmenter = Segmenter(settings, stats, kind)
         self._input: AudioInput | None = None
         self._device: AudioDevice | None = None
@@ -470,6 +490,7 @@ class StreamRecorder:
 
     def _iterate(self, stop: threading.Event, paused: threading.Event) -> None:
         if paused.is_set():
+            self._gaps.close(self.kind, self._clock_ms())
             self._release(keep=False)
             stop.wait(0.2)
         elif self._input is None:
@@ -480,6 +501,7 @@ class StreamRecorder:
 
     def _recover_from_fault(self, name: str, stop: threading.Event) -> None:
         self._stats[f"loop_error_{self.kind}"] += 1
+        self._gaps.open(self.kind, "device_failed", self._clock_ms())
         self._log_fault(name)
         with contextlib.suppress(Exception):  # _release clears its state even if close() raises
             self._release(keep=False)
@@ -494,11 +516,13 @@ class StreamRecorder:
     def _acquire(self) -> bool:
         device = self._devices.find(self.kind, self._wanted)
         if device is None:
+            self._gaps.open(self.kind, "device_missing", self._clock_ms())
             self._warn_once(f"no {self.kind} audio device found")
             return False
         try:
             self._input = self._devices.open(self.kind, device)
         except AudioError as exc:
+            self._gaps.open(self.kind, "device_failed", self._clock_ms())
             self._warn_once(f"cannot open the {self.kind} audio device: {exc}")
             return False
         self._device = device
@@ -537,10 +561,12 @@ class StreamRecorder:
         try:
             block = self._input.read(READ_TIMEOUT_S)
         except AudioError as exc:
+            self._gaps.open(self.kind, "device_failed", self._clock_ms())
             self._warn_once(f"{self.kind} audio device failed: {exc}")
             self._release(keep=True)
             return
         now = self._clock_ms()
+        self._gaps.close(self.kind, now)
         if block is None:
             for utterance in self.segmenter.flush(now):
                 self._sink(self.kind, utterance)
@@ -597,11 +623,12 @@ class AudioCapture:
         exclusions: Exclusions,
         settings: AudioSettings,
         clock_ms: Callable[[], int] = lambda: time.time_ns() // 1_000_000,
+        gaps: GapSink = NO_GAPS,
     ) -> None:
         self.stats: Counter[str] = Counter()
         sampler = SourceSampler(sessions, clock_ms)
         self._sampler = sampler
-        self._writer = SegmentWriter(store, sampler, exclusions, clock_ms, self.stats)
+        self._writer = SegmentWriter(store, sampler, exclusions, clock_ms, self.stats, gaps)
         self._energy_floor = settings.energy_floor
         self._devices = devices
         self._names: dict[str, list[str]] = {}
@@ -615,6 +642,7 @@ class AudioCapture:
                 sink=self._writer.submit,
                 clock_ms=clock_ms,
                 stats=self.stats,
+                gaps=gaps,
             )
             for kind in ("mic", "system")
         ]

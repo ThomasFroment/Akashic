@@ -30,6 +30,11 @@ Safety rules:
 - ``embeddings``: vectors of episodes, transcripts and screen text. Housekeeping does not
   make them again for anything older than the limit.
 
+- capture gaps (periods when nothing was recorded, and why): not a retention type of their own.
+  Closed rows are kept until the longest limit, and only when every type has one, so a gap never
+  expires while evidence from its period can still exist. With any type on "forever" they are
+  kept until Delete all. Open rows are never deleted.
+
 Nothing is ever deleted to free disk space on its own: only these age limits delete anything.
 """
 
@@ -261,6 +266,20 @@ def expire_app_sessions(conn: Connection, _media: MediaStore, cutoff_ms: int) ->
             return total
 
 
+def expire_capture_gaps(conn: Connection, cutoff_ms: int) -> int:
+    total = 0
+    while True:
+        with db.transaction(conn):
+            changed = conn.execute(
+                "DELETE FROM capture_gaps WHERE id IN"
+                " (SELECT id FROM capture_gaps WHERE end_ms IS NOT NULL AND end_ms < ? LIMIT ?)",
+                (cutoff_ms, BATCH),
+            ).rowcount
+        total += changed
+        if changed < BATCH:
+            return total
+
+
 # --- search data ----------------------------------------------------------------------------
 
 
@@ -368,6 +387,8 @@ def apply_retention(
     if "raw_audio" in cutoffs and "transcripts" in cutoffs:
         both = min(cutoffs["raw_audio"], cutoffs["transcripts"])
         removed["audio_rows"] = delete_spent_segments(conn, both)
+    if all(kind in cutoffs for kind in PURGERS):
+        removed["capture_gaps"] = expire_capture_gaps(conn, min(cutoffs[kind] for kind in PURGERS))
     return removed
 
 
@@ -405,6 +426,7 @@ def delete_all_recorded_data(conn: Connection, media: MediaStore) -> dict[str, i
             "media_sessions",
             "app_sessions",
             "game_sessions",
+            "capture_gaps",
             "speakers",
             "embeddings",
             "jobs",

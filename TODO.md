@@ -77,7 +77,7 @@ Three parts:
   - [ ] Clear `_game_id` when the game end-row write raises; leave the row to `close_stale`
   - [ ] Per-HWND UIA backoff after a timeout; time-box the readers without a `UiaBudget`
   - [ ] Shorter `busy_timeout` once stop is set, so a busy database at stop fits the 10 s kill
-  - [ ] One rate-limited, type-only fault log shared by the screen, audio and media loops
+  - [ ] One rate-limited, type-only fault log shared by the screen, audio, media and gap loops
   - [ ] Report dropped audio segments and failed frame writes as capture problems (with #143)
   - [ ] Keep UIA text on very large pages (filtered `read_text` on the 30k-element page: worst 1.9 s Edge, 1.8 s Chrome, against the 2 s timeout; target <= 666 ms)
 
@@ -113,10 +113,12 @@ Three parts:
 
 ### A7. Capture gaps
 
-- [ ] #143 Record outages in a content-free `capture_gaps(kind, reason, start_ms, end_ms)`
-  - [ ] Pause, lock, missing or failed audio device, gated drops (screen drops: A9 states)
-  - [ ] OCR unavailable, capture process down
-  - [ ] Covered by retention and "Delete all" (after B4 #10)
+- [x] #143 Record outages in a content-free `capture_gaps(kind, reason, start_ms, end_ms)`
+  - [x] Pause, lock, missing or failed audio device, gated drops (screen drops: A9 states)
+  - [x] OCR unavailable, capture process down
+  - [x] Covered by retention and "Delete all" (after B4 #10)
+- [ ] Shared overlapping-gaps reader (open rows end at heartbeat or now), with its first consumer
+- [ ] Own retention key for gaps if "longest limit, only when every type has one" proves wrong
 
 ### A9. Monitor capture and timeline (before A8)
 

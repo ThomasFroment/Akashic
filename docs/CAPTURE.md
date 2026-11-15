@@ -101,6 +101,45 @@ publish catches up with the real state. Problem changes are logged once, codes o
 when problems are active, info level when the set becomes empty.
 The thresholds (`GRAB_FAILURE_RUN`, `DEVICE_DOWN_S` in `capture/health.py`) are not measured.
 
+## Capture gaps
+
+The `capture_gaps` table says when something was not being recorded and why. Rows are
+content-free: a closed vocabulary (CHECK constraints) and two integer times. `end_ms IS NULL`
+means the gap is still going on. A gap thread of capture writes them on its own connection, so a
+busy database never delays capture; events keep their original times and are retried. Nothing
+is written before the previous run has been settled. Screen drops, failures and hidden monitors
+are not here (A9 monitor states).
+
+| kind | reason | opens | closes |
+| --- | --- | --- | --- |
+| `all` | `paused` | pause (also when capture starts paused) | resume |
+| `screen` | `locked` | `is_locked()` is true | unlock |
+| `mic`, `system` | `device_missing` | no device found | first read that returns, or a pause |
+| `mic`, `system` | `device_failed` | open, read or loop fault fails | first read that returns, or a pause |
+| `mic`, `system` | `audio_unavailable`, `disabled` | start, when audio could not be built or is off | stop |
+| `screen_text` | `ocr_unavailable` | start, when no recognizer is installed | stop |
+| `all` | `stopped` | start of a clean stop | next start |
+| `all` | `crashed` | next start after a kill: last heartbeat to this start | (written closed) |
+| `all` | `stalled` | a gap-thread tick more than 30 s after the previous one | (written closed) |
+| `mic`, `system` | `excluded`, `unknown_sources`, `music`, `write_failed` | a dropped segment | (written closed) |
+| `mic`, `system` | `backlog` | a segment dropped because the writer queue was full | (written closed) |
+
+Device rows start at the first failure and keep one row while the reason stays the same; a
+changed reason closes the old row and opens a new one. A successful open alone does not close
+them, a read does. A default-device switch that reopens fine records nothing.
+
+Dropped segments are closed rows. A drop extends the previous row of the same stream and reason
+when it starts within 30 s of its end, the writer's last decision on that stream was a drop with
+that reason and no segment was stored in between. `backlog` never merges. The segmenter's `short`
+and `quiet` drops write nothing.
+
+Capture writes `capture_alive_ms` to `state` every 5 s. On the next start without a `stopped`
+row, open rows are closed at the later of the start and that heartbeat, and the time from the
+heartbeat to the start is recorded as `crashed`. The stop is written when it begins, before
+the audio drain: every open row is closed and `stopped` opened; drops the audio writer reports
+while draining are still written afterwards as closed rows. Gaps queue at most 10,000 pending
+drops; transitions are always queued. Counters are under `gaps` in the capture Debug data.
+
 ## UI Automation timeouts
 
 `WindowsUia` sets `ConnectionTimeout` to 1000 ms and `TransactionTimeout` to 2000 ms
