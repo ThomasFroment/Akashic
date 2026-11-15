@@ -198,6 +198,8 @@ captured pixels and titles in memory; reports hold numbers only.
   - [ ] Side monitors checked <= 30 s; every check refreshes media verdicts, even if dropped
   - [ ] Input also captures the monitor under the cursor
   - [ ] Game mode: game monitor at the game rate, others at the side rate, no UIA, OCR deferred
+  - [ ] If one timed-out UIA call per HWND per 30 s still delays other monitors: per-HWND UIA thread
+    - [ ] Spike first: comtypes UIA calls from several MTA threads (`WindowsUia` is one-thread today)
   - [ ] A slow or hung window on one monitor never delays another
   - [ ] Black monitor stores no image, only its window list and any focused-window UIA text
   - [ ] Encoding off the loop, bounded queue; full: drop the oldest side-monitor frame
