@@ -353,8 +353,7 @@ monitor showing video at one frame per second. An hour of normal use is still to
 the user re-decides resolution, format and where the store lives with that number. The spikes
 found AV1 video on the GPU encoder about 2 times smaller on video and 5 times smaller on text, at
 a tenth of the CPU; but an unchanged monitor costs more as video (a keyframe is larger than a
-WebP still), and FFmpeg's NVENC creates a CUDA context, which the "capture loads no CUDA" rule
-forbids today. Filling the
+WebP still), and FFmpeg's NVENC creates a CUDA context in the capture process. Filling the
 system drive breaks Windows, not only Akashic. The retention decision (forever, no warning) is
 unchanged. When the disk is full, writes fail: capture reports it as a problem, as it does for
 other write failures, and never deletes history to make room.

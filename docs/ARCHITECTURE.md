@@ -5,9 +5,9 @@
 The application shell owns unlock, user interaction and child-process supervision. Capture
 records lightweight evidence; a separate worker performs deferred processing and model inference.
 This isolation keeps a model crash or expensive job from taking capture down with it.
-Capture loads no GPU model and no CUDA library. Its small CPU models (voice detection, Windows
-OCR) stay, and it may use a Direct3D device only to copy the screen.
-The worker owns heavy inference resources.
+With TODO A9, capture uses a Direct3D device to copy window frames (Windows.Graphics.Capture)
+and compose them into monitor frames; today it still renders windows with PrintWindow. The
+worker owns heavy inference resources.
 
 Windows integration belongs behind small interfaces. Core code decides exclusions, persistence
 and encryption; platform adapters report facts. Keep business rules out of Windows glue and
@@ -24,7 +24,7 @@ All code is under `src/akashic/`. Packages only; read the modules for the rest.
 | Process | Entry point | Packages it uses |
 | --- | --- | --- |
 | App shell: unlock, tray, local UI server, supervision | `app.py` (`supervisor.py`, `tray.py`, `unlock*.py`) | `api/` (HTTP handlers) serving `ui/` (static HTML/JS/CSS) |
-| Capture (no GPU models) | `capture/main.py` | `capture/` (screen, media, audio, exclusions) |
+| Capture | `capture/main.py` | `capture/` (screen, media, audio, exclusions) |
 | Worker: deferred jobs and models | `pipeline/main.py` | `pipeline/` (queue runner, transcription, speakers, episodes, embeddings, Ask) |
 
 Shared by all: `storage/` (encrypted database, media files, migrations, retention), `search/`

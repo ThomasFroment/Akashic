@@ -435,6 +435,9 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] #93 Delete `_WORD_TOKEN`, `WHISPER_MODELS` and dead CSS; rewrite that test on `REGISTRY`
   - [ ] #94 Build `REGISTRY` from `SPEECH_CANDIDATES`; keep the GPT-OSS 20B and Qwen3 14B choices
   - [ ] #95 Debug uses settings, the storage report and `Paths.db_file`; no 50 GB warning
+  - [ ] Drop the capture CPU-only rule from code (DECISIONS row removed 2026-11-15): the
+    `capture/main.py` and `capture/vad.py` docstrings and the two no-CUDA capture tests
+    (`test_processes.py`, `test_audio_wiring.py`); the voice detector may stay on CPU
   - [ ] #96 Fix citations to absent docs and deleted manual tests; correct the CUDA/cuDNN claim
   - [ ] #97 Annotate `state: State`; build one `MediaStore`
   - [ ] #98 One `now_ms()`; import the shared clamp
