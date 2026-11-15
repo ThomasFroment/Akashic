@@ -662,10 +662,7 @@ class ScreenCapture:
         return self._uia.read_url(window, family) if family is not None else None
 
     def _read_url(self, window: WindowInfo) -> str | None:
-        family = BROWSERS.get(window.process)
-        if family is None:
-            return None
-        raw = self._uia.read_url(window, family)
+        raw = self._read_raw(window)
         return normalize_url(raw) if raw else None
 
     def _read_text(
