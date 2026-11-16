@@ -10,7 +10,7 @@ function speechComparisonPanel() {
   const draft = h("textarea", { rows: 2, readOnly: true, "aria-label": "Existing draft (read only)" });
   const draftLabel = h("p", { class: "muted small" });
   const language = h("select", { "aria-label": "Reference language" }, ...["fr", "en", "mixed", "none"].map((v) => h("option", { value: v }, v)));
-  const condition = h("input", { placeholder: "Condition: quiet, game, short, overlap…", "aria-label": "Recording condition" });
+  const condition = h("input", { type: "text", placeholder: "Condition: quiet, game, short, overlap…", "aria-label": "Recording condition" });
   const derived = h("input", { type: "checkbox", "aria-label": "Reference derived from draft" });
   const previous = h("textarea", { rows: 2, placeholder: "Fixed preceding reference for prompt (if applicable)", "aria-label": "Preceding reference" });
   const overlap = h("textarea", { rows: 2, placeholder: "Fixed continuation predecessor reference for overlap trim (if applicable)", "aria-label": "Continuation reference" });
@@ -23,11 +23,26 @@ function speechComparisonPanel() {
   let lastState = "";
   let loading = false;
   const checked = new Set();
+  // The same labelled rows as the other settings; the clip editor shows only when clips exist.
+  const row = (label, help, ...controls) => h("div", { class: "setting" },
+    h("span", { class: "name" }, label), h("div", { class: "stack" }, ...controls),
+    help ? h("div", { class: "help" }, help) : null);
+  const editor = h("div", { hidden: true },
+    row("Recording", null, recording, audio),
+    row("Existing draft", null, draftLabel, draft),
+    row("Correct reference", "Type what you hear, without copying the draft.", reference,
+      h("label", { class: "autostart-row" }, derived, " I used the draft to create this reference")),
+    row("Language", null, language),
+    row("Condition", "For example quiet, game, short or overlap.", condition),
+    row("Preceding reference", "Only when the clip continues an earlier one.", previous),
+    row("Continuation reference", "Only for the overlap trim.", overlap),
+    row("Important terms", "Separated by commas; each must appear in the reference.", terms),
+    h("div", { class: "button-row" }, save));
   el.append(h("h2", {}, "Compare speech models"),
     h("p", { class: "muted small" }, "Use 6–12 short clips covering French, English, mixed speech, quiet speech and troublesome words. Correct the reference by listening; do not trust the old transcript as the answer. All clips, references and results stay local and encrypted."),
-    recording, audio, draftLabel, draft, reference, language, condition,
-    h("label", {}, derived, " I used the draft to create this reference"), previous, overlap, terms, save, note, samples, choices, compare,
-    h("p", { class: "muted small" }, "Runs one model at a time, waits during games or heavy load, and releases models between comparisons. Earlier memories are unchanged. First-clip time includes model loading. Word scores ignore accents/case/punctuation; inspect important words and the full text too. Canary compares French/English decodes and does not use vocabulary hints."), results);
+    editor, note, samples,
+    row("Models to compare", "Runs one model at a time, waits during games or heavy load, and releases models between comparisons. Earlier memories are unchanged. First-clip time includes model loading. Word scores ignore accents/case/punctuation; inspect important words and the full text too. Canary compares French/English decodes and does not use vocabulary hints.", choices, h("div", { class: "button-row" }, compare)),
+    results);
 
   async function request(path, method, body) {
     const response = await api(path, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
@@ -37,7 +52,7 @@ function speechComparisonPanel() {
     const clip = clips.find((c) => String(c.segment_id) === recording.value);
     reference.value = "";
     draft.value = clip?.transcript || "";
-    draftLabel.textContent = `Existing draft · model: ${clip?.draft_model || "unknown"}`;
+    draftLabel.textContent = `Written by ${clip?.draft_model || "an unknown model"}`;
     derived.checked = false;
     previous.value = overlap.value = "";
     condition.value = "";
@@ -97,6 +112,7 @@ function speechComparisonPanel() {
     getJson("/api/stt/recordings" + (segment ? `?segment_id=${encodeURIComponent(segment)}` : "")).then((data) => {
       clips = data;
       recording.replaceChildren(...data.map((c) => h("option", { value: c.segment_id }, `${fmtTime(c.start_ms)} · ${c.stream === "mic" ? "You" : "Heard"} · ${c.transcript.slice(0, 70)}`)));
+      editor.hidden = !data.length;
       chooseClip(); if (!data.length) note.textContent = "No recorded clips available. Use Search > Speech to choose one when recordings exist.";
     }).catch(() => { note.textContent = "Cannot list recorded clips."; });
     load(); return setInterval(load, 2000);
