@@ -1,4 +1,4 @@
-"""Capture-side privacy: password, address, hosted-app and local-UI checks come before any write.
+"""Capture-side privacy: address, unidentified-window and local-UI checks come before any write.
 
 Every scenario runs the screen loop and the media tracker over disposable encrypted stores with a
 writer spy (``sink_spy``) watching every SQL write, every encrypted file and every log record.
@@ -10,19 +10,24 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from typing import TYPE_CHECKING
 
 import pytest
 from capture_fakes import (
     AUMID,
-    HOSTED_TITLES,
+    FakeDisplays,
     FakeMedia,
     FakeOcr,
-    FakeScreen,
     FakeUia,
+    FakeWindowEvents,
+    FakeWindowFacts,
     FakeWindows,
+    blank,
+    top_window,
     window,
 )
+from screen_rig import ImageCaptures
 from sink_spy import SECRET, SinkSpy
 from waits import wait_for
 
@@ -33,7 +38,6 @@ from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.media import MediaTracker
 from akashic.capture.ports import CapturePlatform, MediaState, Rect, TextBlock, WindowInfo
-from akashic.capture.screen import ScreenCapture
 from akashic.child import ChildContext
 from akashic.config import Config
 from akashic.config import Exclusions as UserExclusions
@@ -79,137 +83,48 @@ def test_the_spy_sees_a_stored_frame_in_every_sink(privacy_rig: Callable[..., Pr
 # --- #16: the focused window is checked on every monitor it covers ---------------------------
 
 
-class _AnySet(set[int]):
-    """Stand-in for the per-tick window set that never remembers anything (the old behaviour)."""
-
-    def add(self, element: int) -> None:
-        del element
-
-
-def _old_window_for(self: ScreenCapture, monitor: Rect):  # noqa: ANN202
-    focused = self._windows.focused_window()
-    if focused is not None and monitor.contains(*focused.rect.center):
-        return focused, True
-    return self._windows.window_at(*monitor.center), False
-
-
 def spanning(privacy_rig: Callable[..., PrivacyRig], monitors: int, **kwargs: object) -> PrivacyRig:
-    """The focused window starts on monitor 0 and covers the centre of every other one."""
-    # Centred on monitor 0 (x = 400) and reaching past the centre of the last monitor.
+    """A browser window that covers monitor 0 and reaches into every other one."""
     wide = chrome(
         f"{SECRET} Sign in - Google Chrome",
         rect=Rect(1100 - 800 * monitors, 0, 800 * monitors - 300, 600),
     )
-    rig = privacy_rig(monitors=row(monitors), focused=wide, texts={1: SECRET_TEXT}, **kwargs)
-    for rect in row(monitors)[1:]:
-        rig.windows.at[rect.center] = wide  # the topmost window there is the focused one
-    return rig
+    return privacy_rig(monitors=row(monitors), focused=wide, texts={1: SECRET_TEXT}, **kwargs)
 
 
 @pytest.mark.parametrize("monitors", [2, 3, 4])
-def test_password_focus_on_a_spanning_window_stores_nothing_on_any_monitor(
+def test_an_excluded_spanning_window_stores_nothing_on_any_monitor(
     privacy_rig: Callable[..., PrivacyRig], monitors: int
 ) -> None:
     rig = spanning(privacy_rig, monitors)
-    rig.uia.password = True
+    rig.uia.urls[1] = "https://www.paypal.com/myaccount"
     rig.tick()
     assert rig.spy.nothing_stored(rig.conn)
     assert rig.leaks(SECRET) == []
-    assert rig.capture.stats["excluded:password_field"] == 1
-    assert rig.capture.stats["duplicate_window"] == monitors - 1
+    assert rig.rig.last_note("m1") == "hidden"
+    assert rig.rig.last_note(f"m{monitors}") == "hidden"
+    assert rig.uia.text_reads == []
 
 
-def test_the_window_is_the_focused_one_on_every_monitor_it_covers(
-    privacy_rig: Callable[..., PrivacyRig],
-) -> None:
-    rig = spanning(privacy_rig, 3)
-    monitors = row(3)
-    assert [rig.capture._window_for(m)[1] for m in monitors] == [True, True, True]
-    other = chrome("Other", hwnd=2, rect=Rect(1600, 0, 2400, 600))
-    rig.windows.at[monitors[2].center] = other
-    assert rig.capture._window_for(monitors[2]) == (other, False)
-
-
-def test_a_spanning_window_is_captured_once_per_tick(
+def test_a_spanning_window_that_is_kept_is_stored_on_each_monitor_it_covers(
     privacy_rig: Callable[..., PrivacyRig],
 ) -> None:
     rig = spanning(privacy_rig, 3)
     rig.tick()
-    assert rig.frames() == 1
-    assert len(rig.spy.files) == 1
-    assert rig.capture.stats["duplicate_window"] == 2
-    rig.tick(20.0)  # idle again on every monitor: examined once more, not three times
-    assert rig.capture.stats["duplicate_window"] == 4
+    assert rig.frames() == 3
+    assert rig.uia.text_reads == [1]  # its text is read once for the three pictures
 
 
-def test_negative_control_the_old_behaviour_stores_the_form(
-    privacy_rig: Callable[..., PrivacyRig], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(ScreenCapture, "_window_for", _old_window_for)
-    # the write-time check (an unfocused capture of the focused HWND) is also absent in the old code
-
-    def never_focused(_self: ScreenCapture, _hwnd: int) -> bool:
-        return False
-
-    monkeypatch.setattr(ScreenCapture, "_is_focused_hwnd", never_focused)
-    rig = spanning(privacy_rig, 2)
-    rig.capture._tick_hwnds = _AnySet()
-    rig.uia.password = True
-    rig.tick()
-    assert rig.frames() >= 1  # the second monitor stored the unchecked window
-    assert "sql" in rig.leaks(SECRET)
+# --- a focused password field is captured like any other window ----------------------------
 
 
-# --- #17: a UI Automation failure is "unknown", never "not a password field" -----------------
-
-
-def test_unknown_password_state_skips_the_frame_and_is_counted(
-    privacy_rig: Callable[..., PrivacyRig],
-) -> None:
-    rig = privacy_rig(focused=window(title=f"{SECRET} form"), texts={1: SECRET_TEXT})
-    rig.uia.password = None
-    rig.tick()
-    assert rig.spy.nothing_stored(rig.conn)
-    assert rig.leaks(SECRET) == []
-    assert rig.capture.stats["excluded:password_unknown"] == 1
-
-
-def test_no_focused_element_is_neither_a_password_nor_unknown(
+def test_a_focused_password_window_is_captured_like_any_other(
     privacy_rig: Callable[..., PrivacyRig],
 ) -> None:
     rig = privacy_rig(focused=window(title="Notes"), texts={1: SECRET_TEXT})
-    rig.uia.password = False  # UI Automation answered: nothing password-like has the focus
     rig.tick()
     assert rig.frames() == 1
-    assert "excluded:password_unknown" not in rig.capture.stats
-    assert "excluded:password_field" not in rig.capture.stats
-
-
-def test_a_state_that_becomes_unknown_while_grabbing_discards_the_frame(
-    privacy_rig: Callable[..., PrivacyRig],
-) -> None:
-    rig = privacy_rig(focused=window(title=f"{SECRET} form"), texts={1: SECRET_TEXT})
-    answers = iter([False, False, None, None, None])
-    rig.uia.focused_is_password = lambda: next(answers)  # type: ignore[method-assign]
-    rig.tick()
-    assert rig.spy.nothing_stored(rig.conn)
-    assert rig.leaks(SECRET) == []
-    assert rig.capture.stats["window_changed"] == 1
-
-
-def test_negative_control_treating_unknown_as_clear_stores_the_form(
-    privacy_rig: Callable[..., PrivacyRig], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    def old_reason(capture: ScreenCapture, window: object, now: float) -> str | None:
-        del window, now
-        return "password_field" if capture._uia.focused_is_password() else None
-
-    monkeypatch.setattr(ScreenCapture, "_password_reason", old_reason)
-    rig = privacy_rig(focused=window(title=f"{SECRET} form"), texts={1: SECRET_TEXT})
-    rig.uia.password = None
-    rig.tick()
-    assert rig.frames() == 1
-    assert "sql" in rig.leaks(SECRET)
+    assert not [k for k in rig.capture.stats_snapshot() if "password" in k]
 
 
 # --- #18: the screen loop's verdict on the focused browser gates media writes ----------------
@@ -233,9 +148,8 @@ def test_media_on_an_excluded_page_is_never_written(privacy_rig: Callable[..., P
     [
         (UserExclusions(urls=("*mybank.example*",)), "https://mybank.example/compte", "user_url"),
         (UserExclusions(), "https://vault.bitwarden.com/#/vault", "password_manager"),
-        (UserExclusions(urls=("*mybank.example*",)), None, "url_unreadable"),
     ],
-    ids=["user-rule", "password-manager", "unreadable-with-user-rule"],
+    ids=["user-rule", "password-manager"],
 )
 def test_other_excluding_verdicts_reject_the_session_too(
     privacy_rig: Callable[..., PrivacyRig], user: UserExclusions, url: str | None, reason: str
@@ -335,89 +249,85 @@ def test_negative_control_without_the_gate_the_title_and_channel_are_written(
     assert "sql" in rig.leaks(SECRET)
 
 
-# --- #19: an unreadable address does not switch the address rules off -----------------------
+# --- an unreadable address is kept, whatever the title and the user's rules --------------------
 
 
 @pytest.mark.parametrize(
-    ("user", "title", "reason"),
+    "title",
     [
-        (
-            UserExclusions(urls=("*mybank.example*",)),
-            "Mon compte - Google Chrome",
-            "url_unreadable",
-        ),
-        (UserExclusions(urls=("*mybank.example*",)), "mybank.example - Google Chrome", "user_url"),
-        (UserExclusions(), "PayPal.com - Mon compte - Google Chrome", "finance"),
-        (UserExclusions(), "Bitwarden.com - Vault - Google Chrome", "password_manager"),
+        "Mon compte - Google Chrome",
+        "mybank.example - Google Chrome",
+        "PayPal.com - Mon compte - Google Chrome",
+        "Bitwarden.com - Vault - Google Chrome",
     ],
-    ids=["user-rules-skip", "user-rule-title", "finance-title", "password-manager-title"],
 )
-def test_unreadable_address_still_applies_the_rules(
-    privacy_rig: Callable[..., PrivacyRig], user: UserExclusions, title: str, reason: str
+def test_an_address_that_turns_unreadable_is_stored_without_address(
+    privacy_rig: Callable[..., PrivacyRig], title: str
 ) -> None:
-    rig = privacy_rig(user=user, focused=chrome(f"{SECRET} {title}"), texts={1: SECRET_TEXT})
+    rig = privacy_rig(
+        user=UserExclusions(urls=("*mybank.example*",)),
+        focused=chrome(title),
+        texts={1: SECRET_TEXT},
+    )
+    rig.tick()  # the window is recognized as a browser by its readable address
     rig.uia.urls[1] = None
+    rig.tick(30.0)
+    assert rig.frames() == 2
+    assert rig.conn.execute(
+        "SELECT url FROM frame_windows WHERE focused ORDER BY frame_id DESC"
+    ).fetchone() == (None,)
+
+
+def test_bar_text_that_is_not_an_address_is_kept_without_address(
+    privacy_rig: Callable[..., PrivacyRig],
+) -> None:
+    rig = privacy_rig(user=UserExclusions(urls=("*mybank.example*",)), focused=chrome("Weather"))
+    rig.uia.urls[1] = "paypal.com login"
+    rig.tick()
+    assert rig.frames() == 1
+    assert rig.conn.execute("SELECT url FROM frame_windows WHERE focused").fetchone() == (None,)
+
+
+def test_a_decoded_address_with_spaces_is_stored_with_its_address(
+    privacy_rig: Callable[..., PrivacyRig],
+) -> None:
+    rig = privacy_rig(focused=window(process="zen.exe", title="Results - Zen Browser"))
+    rig.uia.urls[1] = "youtube.com/results?search_query=hello world"
+    rig.tick()
+    assert rig.conn.execute("SELECT url FROM frame_windows WHERE focused").fetchone() == (
+        "https://youtube.com/results?search_query=hello world",
+    )
+
+
+def test_a_decoded_address_with_spaces_is_excluded_when_it_matches(
+    privacy_rig: Callable[..., PrivacyRig],
+) -> None:
+    rig = privacy_rig(
+        user=UserExclusions(urls=("*mybank*",)),
+        focused=window(process="zen.exe", title=f"{SECRET} - Zen Browser"),
+        texts={1: SECRET_TEXT},
+    )
+    rig.uia.urls[1] = "mybank.example/a b"
     rig.tick()
     assert rig.spy.nothing_stored(rig.conn)
     assert rig.leaks(SECRET) == []
-    assert rig.capture.stats[f"excluded:{reason}"] == 1
 
 
-def test_without_user_rules_an_innocent_unreadable_page_is_stored_without_address(
-    privacy_rig: Callable[..., PrivacyRig],
-) -> None:
-    rig = privacy_rig(focused=chrome("Booking.fr - Hotels - Google Chrome"), texts={1: SECRET_TEXT})
-    rig.uia.urls[1] = None
-    rig.tick()
-    assert rig.frames() == 1
-    assert rig.conn.execute("SELECT url FROM frames").fetchone() == (None,)
-
-
-def test_a_title_cannot_vouch_for_a_hidden_address(privacy_rig: Callable[..., PrivacyRig]) -> None:
-    """The title looks harmless, but with user address rules the page cannot be told apart."""
-    rig = privacy_rig(user=UserExclusions(urls=("*mybank.example*",)), focused=chrome("Weather"))
-    rig.uia.urls[1] = "typing a search into the bar"  # not an address: nothing was read
-    rig.tick()
-    assert rig.frames() == 0
-    assert rig.capture.stats["excluded:url_unreadable"] == 1
-
-
-def test_negative_control_skipping_the_rules_stores_the_page(
-    privacy_rig: Callable[..., PrivacyRig], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    real = Exclusions.check_browser
-
-    def only_readable(ex: Exclusions, title: str, url: str | None) -> str | None:
-        return real(ex, title, url) if url is not None else None
-
-    monkeypatch.setattr(Exclusions, "check_browser", only_readable)
-    rig = privacy_rig(
-        user=UserExclusions(urls=("*mybank.example*",)),
-        focused=chrome(f"{SECRET} mybank.example - Google Chrome"),
-        texts={1: SECRET_TEXT},
-    )
-    rig.uia.urls[1] = None
-    rig.tick()
-    assert rig.frames() == 1
-    assert "sql" in rig.leaks(SECRET)
-
-
-# --- Akashic's own origin is never captured -----------------------------------------------
+# --- Akashic's own address stores nothing and trips the failsafe --------------------------
 
 
 @pytest.mark.parametrize("path", ["/", f"/open?code={SECRET}", "/api/memory/episodes/4"])
-def test_frames_and_media_of_the_local_ui_are_never_written(
+def test_frames_of_the_local_ui_are_never_written_and_trip_the_failsafe(
     privacy_rig: Callable[..., PrivacyRig], path: str
 ) -> None:
     rig = privacy_rig(focused=chrome("A page of some kind"), texts={1: SECRET_TEXT})
     rig.uia.urls[1] = f"127.0.0.1:5123{path}"  # Firefox/Zen style, no scheme
-    rig.media.states = [playing()]
     rig.tick()
-    rig.poll()
     assert rig.spy.nothing_stored(rig.conn)
     assert rig.leaks(SECRET) == []
-    assert rig.capture.stats["excluded:own_ui"] == 1
-    assert rig.tracker.stats["excluded:own_ui"] == 1
+    assert rig.rig.own_flags
+    assert all(rig.rig.own_flags)
+    assert rig.rig.writer.notes == []  # not even a monitor note
 
 
 def test_negative_control_a_wrong_origin_stores_the_page_and_the_session(
@@ -492,17 +402,21 @@ class _CountingUia(FakeUia):
         (None, "http://127.0.0.1:6000/media"),  # the port is unknown: all loopback is Akashic's
     ],
 )
-def test_the_capture_process_wiring_excludes_the_local_ui(
+def test_the_capture_process_wiring_halts_on_the_local_ui(
     paths: Paths, caplog: pytest.LogCaptureFixture, api_port: int | None, url: str
 ) -> None:
-    """run_capture as the supervisor starts it: shared browser state, origin from the port."""
+    """run_capture as the supervisor starts it: origin from the port; the failsafe halts it."""
     caplog.set_level(logging.DEBUG)
     key = DataKey.generate()
     uia = _CountingUia(texts={1: SECRET_TEXT}, urls={1: url})
     media = _CountingMedia(states=[playing()], names={"Chrome": "Google Chrome"})
+    page = chrome(f"{SECRET} Akashic")
     platform = CapturePlatform(
-        screen=FakeScreen(),
-        windows=FakeWindows(focused=chrome(f"{SECRET} Akashic")),
+        displays=FakeDisplays(),
+        windows=FakeWindows(focused=page),
+        facts=FakeWindowFacts([top_window(hwnd=1, process="chrome.exe", title=page.title)]),
+        events=FakeWindowEvents(),
+        captures=ImageCaptures(images={1: blank()}),
         uia=uia,
         ocr=FakeOcr(),
         media=media,
@@ -514,19 +428,15 @@ def test_the_capture_process_wiring_excludes_the_local_ui(
     thread = threading.Thread(target=capture_main.run_capture, args=(ctx, platform), daemon=True)
     thread.start()
     try:
-        seen: list[int] = []
-
-        def polled_after_screen() -> bool:
-            if uia.url_reads and not seen:
-                seen.append(media.polls)
-            return bool(seen) and media.polls >= seen[0] + 2
-
-        reached = wait_for(polled_after_screen, 15)
+        reached = wait_for(lambda: bool(uia.url_reads) and ctx.halt.is_set(), 15)
+        time.sleep(0.5)  # passes while halted
     finally:
         ctx.stop.set()
         thread.join(timeout=30)
         ctx_conn.close()
     assert reached
+    assert ctx.health_snapshot()[1]
+    assert ctx._sent == "ui_paused"
     spy = SinkSpy(paths)
     assert spy.table_text(boot).casefold().count(SECRET) == 0
     assert boot.execute("SELECT count(*) FROM frames").fetchone() == (0,)
@@ -537,18 +447,17 @@ def test_the_capture_process_wiring_excludes_the_local_ui(
     key.wipe()
 
 
-# --- hosted password managers and finance pages are never stored ----------------------
+# --- unidentified windows and finance pages are never stored ----------------------
 
 
-@pytest.mark.parametrize("title", list(HOSTED_TITLES.values()))
-def test_a_hosted_password_manager_is_never_stored(
-    privacy_rig: Callable[..., PrivacyRig], title: str
+@pytest.mark.parametrize("process", ["applicationframehost.exe", ""])
+def test_a_window_with_no_known_process_is_never_stored(
+    privacy_rig: Callable[..., PrivacyRig], process: str
 ) -> None:
-    rig = privacy_rig(focused=window(process="applicationframehost.exe", title=f"{title} {SECRET}"))
+    rig = privacy_rig(focused=window(process=process, title=f"Bitwarden {SECRET}"))
     rig.tick()
     assert rig.spy.nothing_stored(rig.conn)
     assert rig.leaks(SECRET) == []
-    assert rig.capture.stats["excluded:password_manager"] == 1
 
 
 def test_finance_pages_are_not_stored_and_innocent_lookalikes_are(
@@ -562,10 +471,7 @@ def test_finance_pages_are_not_stored_and_innocent_lookalikes_are(
     assert rig.spy.nothing_stored(rig.conn)
     assert rig.leaks(SECRET) == []
     for url in ("https://www.booking.fr/hotel", "https://www.google.com/search?q=paypal.com+frais"):
-        rig.uia.urls[1] = url
-        rig.windows.focused = window(
-            process="chrome.exe", title=f"Resultat {url[-4:]} - Google Chrome"
-        )
+        rig.show(chrome(f"Resultat {url[-4:]} - Google Chrome"), url=url)
         rig.tick(30.0)
     assert rig.frames() == 2
 

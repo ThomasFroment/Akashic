@@ -1,5 +1,5 @@
 # pyright: basic
-"""UI Automation: focused-window text, password-field flag and browser address bar.
+"""UI Automation: focused-window text and browser address bar.
 
 One ``FindAllBuildCache`` call per window fetches the matching text descendants with their
 properties cached, instead of a cross-process round trip per property (spike: 237 nodes in
@@ -85,16 +85,6 @@ class WindowsUia:
         for prop in properties:
             cache.AddProperty(prop)
         return cache
-
-    def focused_is_password(self) -> bool | None:
-        """False also when nothing has focus; None when UI Automation failed (unknown)."""
-        try:
-            element = self._auto.GetFocusedElement()
-            if not element:  # a null interface pointer: no element has the focus
-                return False
-            return bool(element.CurrentIsPassword)
-        except _ERRORS:
-            return None
 
     def read_text(self, window: WindowInfo, max_nodes: int) -> list[TextBlock] | None:
         try:

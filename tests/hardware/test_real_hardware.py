@@ -12,8 +12,8 @@ microphone with a real voice, which no software can stand in for (tests/manual/C
 
 from __future__ import annotations
 
+import ctypes
 import subprocess
-import sys
 import threading
 import time
 from typing import TYPE_CHECKING
@@ -29,7 +29,6 @@ from akashic.config import DEFAULT_WHISPER_MODEL, Paths, default_data_dir
 from akashic.config import Exclusions as UserExclusions
 from akashic.config import Scheduler as SchedulerSettings
 from akashic.pipeline import models
-from akashic.pipeline.jobs import Job, JobQueue
 from akashic.pipeline.scheduler import Scheduler
 from akashic.pipeline.speakers import OnnxVoiceModels, model_paths
 from akashic.pipeline.transcribe import TranscribeHandler
@@ -39,6 +38,7 @@ from akashic.platform.win.load import WindowsLoad
 from akashic.storage import db
 from akashic.storage.audio import AudioStore
 from akashic.storage.crypto import DataKey
+from akashic.storage.jobs import Job, JobQueue
 from akashic.storage.media import MediaStore
 from akashic.storage.sessions import GameLog
 
@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.hardware
 
 SENTENCE = "Hello Minlo. This is a short test of the audio recorder."
+_SM_XVIRTUALSCREEN, _SM_YVIRTUALSCREEN, _SM_CXVIRTUALSCREEN, _SM_CYVIRTUALSCREEN = 76, 77, 78, 79
 
 
 def speak(text: str, volume: int = 70) -> None:
@@ -153,6 +154,29 @@ def test_windows_ocr_reads_rendered_text() -> None:
     assert "royale" in text.lower()
 
 
+def test_windows_ocr_recognizes_from_another_thread() -> None:
+    from akashic.platform.win.ocr import WindowsOcr  # noqa: PLC0415
+
+    image = Image.new("RGB", (900, 200), "white")
+    draw = ImageDraw.Draw(image)
+    draw.text((20, 40), "Victory Royale 2026", fill="black", font=ImageFont.load_default(size=64))
+    ocr = WindowsOcr("fr")
+    result: list[str] = []
+    errors: list[BaseException] = []
+
+    def work() -> None:
+        try:
+            result.append(ocr.recognize(image))
+        except BaseException as error:  # noqa: BLE001 - reported to the test thread
+            errors.append(error)
+
+    thread = threading.Thread(target=work)
+    thread.start()
+    thread.join(30)
+    assert not errors
+    assert "victory" in result[0].lower()
+
+
 def test_windows_ocr_reads_rendered_french_text() -> None:
     from akashic.capture.exclusions import fold  # noqa: PLC0415
     from akashic.platform.win.ocr import WindowsOcr, available_languages  # noqa: PLC0415
@@ -220,52 +244,38 @@ def test_french_sapi_voice_and_default_whisper(whisper_dir: Paths, tmp_path: Pat
         transcriber.unload_if_idle(force=True)
 
 
-def test_selected_window_pixels_survive_verified_occlusion() -> None:
-    """Two disposable native windows: screenshot only the synthetic red target, behind blue."""
-    from akashic.platform.win.screen import GdiScreen, set_dpi_aware  # noqa: PLC0415
-    from akashic.platform.win.windows import Win32Windows  # noqa: PLC0415
+def test_displays_report_the_real_monitor_layout() -> None:
+    """Read-only: the monitors tile the virtual screen, with one primary at the origin."""
+    from akashic.platform.win.displays import Win32Displays, set_dpi_aware  # noqa: PLC0415
 
-    set_dpi_aware()  # match build_capture_platform before comparing physical DWM/Win32 bounds
-    script = (
-        "import tkinter as t, ctypes, sys; r=t.Tk(); r.title('Akashic synthetic hardware test'); "
-        "r.geometry('500x300+120+120'); r.configure(bg=sys.argv[1]); "
-        "r.attributes('-topmost',True); r.update(); "
-        "u=ctypes.windll.user32; u.GetAncestor.restype=ctypes.c_void_p; "
-        "u.GetAncestor.argtypes=[ctypes.c_void_p,ctypes.c_uint]; "
-        "print(u.GetAncestor(r.winfo_id(),2),flush=True); r.after(20000,r.destroy); r.mainloop()"
-    )
-    processes: list[subprocess.Popen[str]] = []
-    target = None
-    try:
-        for color in ("red", "blue"):
-            process = subprocess.Popen(  # noqa: S603 - owned synthetic windows only
-                [sys.executable, "-c", script, color],
-                stdout=subprocess.PIPE,
-                text=True,
-            )
-            processes.append(process)
-            assert process.stdout is not None
-            hwnd = int(process.stdout.readline().strip())
-            window = Win32Windows().inspect_window(hwnd)
-            assert window is not None
-            if color == "red":
-                target = window
-        at = Win32Windows().window_at(350, 250)
-        assert at is not None
-        assert at.hwnd == hwnd, "blue window must actually cover the selected red target"
-        assert target is not None
-        image = GdiScreen().grab_window(target)
-        assert image is not None
-        red, green, blue = np.asarray(image)[image.height // 2, image.width // 2, :3]
-        assert red > 200
-        assert green < 30
-        assert blue < 30
-    finally:
-        for process in reversed(processes):
-            process.terminate()
-            process.wait(timeout=10)
-            if process.stdout:
-                process.stdout.close()
+    set_dpi_aware()
+    first = Win32Displays().monitors()
+    second = Win32Displays().monitors()
+    assert first
+    assert second
+    assert [m.key for m in first] == [m.key for m in second]
+    assert len({m.key for m in first}) == len(first)
+    primaries = [m for m in first if m.primary]
+    assert len(primaries) == 1
+    assert (primaries[0].rect.left, primaries[0].rect.top) == (0, 0)
+    for m in first:
+        assert m.rect.right > m.rect.left
+        assert m.rect.bottom > m.rect.top
+        assert m.scale >= 1.0
+    for i, a in enumerate(first):
+        for b in first[i + 1 :]:
+            assert (
+                a.rect.right <= b.rect.left
+                or b.rect.right <= a.rect.left
+                or a.rect.bottom <= b.rect.top
+                or b.rect.bottom <= a.rect.top
+            ), f"{a.name} overlaps {b.name}"
+    metrics = ctypes.windll.user32.GetSystemMetrics
+    virtual_left, virtual_top = metrics(_SM_XVIRTUALSCREEN), metrics(_SM_YVIRTUALSCREEN)
+    assert min(m.rect.left for m in first) == virtual_left
+    assert min(m.rect.top for m in first) == virtual_top
+    assert max(m.rect.right for m in first) == virtual_left + metrics(_SM_CXVIRTUALSCREEN)
+    assert max(m.rect.bottom for m in first) == virtual_top + metrics(_SM_CYVIRTUALSCREEN)
 
 
 # --- the whole audio chain -------------------------------------------------------------------
@@ -283,7 +293,7 @@ def record_a_spoken_sentence(conn: Connection, paths: Paths, key: DataKey) -> Au
         settings=AudioSettings(),
     )
     stop, paused = threading.Event(), threading.Event()
-    thread = threading.Thread(target=capture.run, args=(stop, paused))
+    thread = threading.Thread(target=capture.run, args=(stop, paused, paused))
     thread.start()
     time.sleep(2)
     speak(SENTENCE)
@@ -383,7 +393,12 @@ def test_speaker_models_tell_two_windows_voices_apart(tmp_path: Path) -> None:
 def test_llama_server_embeds_french_and_english_close_together() -> None:
     """The pinned llama-server starts through the real launcher and the embedding model puts a
     French and an English sentence about the same thing closer than an unrelated one."""
-    from akashic.pipeline.llm import EMBEDDING_FLAGS, LlamaEmbedder, LlamaServer  # noqa: PLC0415
+    from akashic.pipeline.llm import (  # noqa: PLC0415
+        EMBED_DIMS,
+        EMBEDDING_FLAGS,
+        LlamaEmbedder,
+        LlamaServer,
+    )
     from akashic.platform.win.process import launch  # noqa: PLC0415
 
     paths = Paths(default_data_dir())
@@ -407,7 +422,7 @@ def test_llama_server_embeds_french_and_english_close_together() -> None:
             ]
         )
         query = embedder.embed_query("something about a game")
-        assert french.shape == (1024,)
+        assert french.shape == (EMBED_DIMS,)  # Matryoshka-truncated
         assert float(french @ english) > float(french @ unrelated) + 0.2
         assert float(query @ english) > float(query @ unrelated)
     finally:
@@ -423,6 +438,7 @@ def test_llama_server_plans_and_answers_with_the_chat_model(tmp_path: Path) -> N
     from akashic.config import DEFAULT_CHAT_MODEL  # noqa: PLC0415
     from akashic.pipeline.llm import (  # noqa: PLC0415
         CHAT_FLAGS,
+        EMBED_DIMS,
         EMBEDDING_FLAGS,
         LlamaChat,
         LlamaEmbedder,
@@ -456,6 +472,6 @@ def test_llama_server_plans_and_answers_with_the_chat_model(tmp_path: Path) -> N
         )
         assert "paris" in text.lower()
         vector = LlamaEmbedder(server, models.EMBEDDING_TEXT_MODEL).embed_query("a game")
-        assert vector.shape == (1024,)
+        assert vector.shape == (EMBED_DIMS,)  # Matryoshka-truncated
     finally:
         server.stop()

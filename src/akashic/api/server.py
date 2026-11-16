@@ -13,7 +13,6 @@ origin, and requests are never logged (URLs carry search text).
 
 from __future__ import annotations
 
-import io
 import logging
 import secrets
 import socket
@@ -21,7 +20,6 @@ import threading
 from collections import OrderedDict
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
 from pathlib import Path
 from time import monotonic
 from typing import TYPE_CHECKING, Annotated, Final, cast
@@ -30,19 +28,21 @@ import uvicorn
 from fastapi import APIRouter, Cookie, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from PIL import Image
+from pydantic import BaseModel, Field
 
 from akashic.api.ask import ask_routes
 from akashic.api.debug import debug_routes
-from akashic.api.memory import memory_routes
+from akashic.api.frames import frame_routes
+from akashic.api.memory import hit_json, memory_routes
 from akashic.api.models import model_routes
 from akashic.api.settings import settings_routes, theme_of
 from akashic.api.speakers import speaker_routes
 from akashic.api.stt import stt_routes
+from akashic.api.timeline import timeline_routes
 from akashic.config import DEFAULT_EMBEDDING_MODEL
 from akashic.jsonish import as_list
 from akashic.search import keyword, transcripts
-from akashic.search.keyword import Filters, Hit
+from akashic.search.keyword import Filters
 from akashic.storage.crypto import CryptoError
 from akashic.storage.debuginfo import ProcessInfo
 
@@ -68,9 +68,9 @@ CSP: Final = (
 SESSION_COOKIE: Final = "akashic_session"
 OPEN_CODE_TTL_S: Final = 120.0
 SAFE_METHODS: Final = frozenset({"GET", "HEAD"})
-type ThumbKey = tuple[int, str, int]  # frame id, stored image path, width (0 = full size)
+# frame id, stored image path, window id (0 = whole monitor), width (0 = full size)
+type ThumbKey = tuple[int, str, int, int]
 THUMB_CACHE_SIZE: Final = 300
-MAX_THUMB_PX: Final = 1920
 HOST: Final = "127.0.0.1"
 REOPEN_PAGE: Final = (
     "<!doctype html><meta charset=utf-8><title>Akashic</title>"
@@ -78,6 +78,14 @@ REOPEN_PAGE: Final = (
 )
 
 type Json = dict[str, object]
+
+# Capture states in which nothing is being recorded; a page may then show its content.
+NOT_RECORDING: Final = frozenset({"paused", "ui_paused", "stopped", "crashed", "stopping"})
+
+
+class PresenceBody(BaseModel):
+    page: str = Field(min_length=1, max_length=64)
+    visible: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +101,36 @@ class Controls:
     autostart_get: Callable[[], bool] | None = None
     autostart_set: Callable[[bool], None] | None = None
     while_stopped: Callable[[Callable[[], None]], None] | None = None
+    set_ui_open: Callable[[bool], None] = lambda _open: None  # halt capture while a page shows
+
+
+class Presence:
+    """Which UI pages are visible. Each report leases its page for ``LEASE_S``; recording halts
+    while any lease is alive. ``expire`` drops the stale ones: call it about once a second."""
+
+    LEASE_S: Final = 6.0
+
+    def __init__(
+        self, set_ui_open: Callable[[bool], None], clock: Callable[[], float] = monotonic
+    ) -> None:
+        self._set_ui_open = set_ui_open
+        self._clock = clock
+        self._leases: dict[str, float] = {}  # page id -> lease expiry
+        self._lock = threading.Lock()
+
+    def report(self, page: str, *, visible: bool) -> None:
+        with self._lock:
+            if visible:
+                self._leases[page] = self._clock() + self.LEASE_S
+            else:
+                self._leases.pop(page, None)
+            self._set_ui_open(bool(self._leases))
+
+    def expire(self) -> None:
+        with self._lock:
+            now = self._clock()
+            self._leases = {page: end for page, end in self._leases.items() if end > now}
+            self._set_ui_open(bool(self._leases))
 
 
 class Services:
@@ -124,6 +162,7 @@ class Services:
         self.downloads = downloads  # Settings > Models
         self.token = token
         self.controls = controls
+        self.presence = Presence(controls.set_ui_open)
         self._thumbs: OrderedDict[ThumbKey, bytes] = OrderedDict()
         self._thumb_lock = threading.Lock()  # not the db lock: cache work must not wait on DB holds
         self._thumb_generation = 0
@@ -196,41 +235,6 @@ def new_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-def day_range_ms(day: str) -> tuple[int, int]:
-    """Local midnight to next local midnight of ``YYYY-MM-DD``, as UTC milliseconds."""
-    try:
-        d = datetime.strptime(day, "%Y-%m-%d").date()  # noqa: DTZ007 - made local just below
-    except ValueError as exc:
-        raise HTTPException(422, "day must be YYYY-MM-DD") from exc
-    try:
-        start = datetime.combine(d, time.min).astimezone()
-        end = datetime.combine(d + timedelta(days=1), time.min).astimezone()
-        return int(start.timestamp() * 1000), int(end.timestamp() * 1000)
-    except (OSError, OverflowError) as exc:  # dates Windows cannot convert to local time
-        raise HTTPException(422, "day is out of range") from exc
-
-
-def _thumbnail(webp: bytes, width: int) -> bytes:
-    with Image.open(io.BytesIO(webp)) as img:
-        img.thumbnail((width, width * 4))
-        out = io.BytesIO()
-        img.save(out, "WEBP", quality=70)
-        return out.getvalue()
-
-
-def _hit_json(hit: Hit) -> Json:
-    return {
-        "id": hit.id,
-        "ts_ms": hit.ts_ms,
-        "monitor": hit.monitor,
-        "process": hit.process,
-        "window_title": hit.window_title,
-        "url": hit.url,
-        "has_image": hit.has_image,
-        "snippet": hit.snippet,
-    }
-
-
 def _utterance_json(u: transcripts.Utterance) -> Json:
     return {
         "id": u.id,
@@ -266,7 +270,6 @@ def _control_routes(services: Services) -> APIRouter:
         states = services.controls.states()
         with services.db() as conn:
             frames = conn.execute("SELECT count(*) FROM frames").fetchone()[0]
-            apps = keyword.processes(conn)
             game = (
                 conn.execute(
                     "SELECT process FROM game_sessions WHERE closed = 0"
@@ -281,15 +284,25 @@ def _control_routes(services: Services) -> APIRouter:
             "capture_problems": problems,
             "paused": states.get("capture") == "paused",
             "frames": frames,
-            "apps": apps,
             "game_process": game[0] if game else None,
             "theme": theme_of(services.config_file),
         }
+
+    @router.get("/apps")
+    def apps() -> list[str]:  # pyright: ignore[reportUnusedFunction]
+        with services.db() as conn:
+            return keyword.processes(conn)
 
     @router.post("/pause")
     def pause(*, paused: bool = True) -> dict[str, bool]:  # pyright: ignore[reportUnusedFunction]
         (services.controls.pause if paused else services.controls.resume)()
         return {"paused": paused}
+
+    @router.post("/presence")
+    def presence(body: PresenceBody) -> dict[str, bool]:  # pyright: ignore[reportUnusedFunction]
+        services.presence.report(body.page, visible=body.visible)
+        state = services.controls.states().get("capture")
+        return {"recording_paused": state in NOT_RECORDING}
 
     return router
 
@@ -311,22 +324,7 @@ def _search_routes(services: Services) -> APIRouter:
                 if q.strip()
                 else keyword.browse(conn, filters, page.limit, page.offset)
             )
-        return [_hit_json(h) for h in hits]
-
-    @router.get("/timeline")
-    def timeline(  # pyright: ignore[reportUnusedFunction]
-        page: Annotated[Page, Depends()], day: str
-    ) -> list[Json]:
-        start, end = day_range_ms(day)
-        with services.db() as conn:
-            hits = keyword.browse(
-                conn,
-                Filters(start, end, page.process or None),
-                page.limit,
-                page.offset,
-                newest_first=False,
-            )
-        return [_hit_json(h) for h in hits]
+        return [hit_json(h) for h in hits]
 
     return router
 
@@ -369,63 +367,6 @@ def _audio_routes(services: Services) -> APIRouter:
     return router
 
 
-def _frame_routes(services: Services) -> APIRouter:
-    router = APIRouter()
-
-    @router.get("/frames/{frame_id}")
-    def frame(frame_id: int) -> Json:  # pyright: ignore[reportUnusedFunction]
-        with services.db() as conn:
-            stored = services.frames.get(frame_id)
-            if stored is None:
-                raise HTTPException(404, "no such frame")
-            prev_id, next_id = keyword.neighbors(conn, frame_id)
-        return {
-            "id": stored.id,
-            "ts_ms": stored.ts_ms,
-            "monitor": stored.monitor,
-            "trigger": stored.trigger,
-            "process": stored.process,
-            "window_title": stored.window_title,
-            "url": stored.url,
-            "text": stored.text,
-            "text_source": stored.text_source,
-            "has_image": stored.image_path is not None,
-            "prev_id": prev_id,
-            "next_id": next_id,
-        }
-
-    @router.get("/frames/{frame_id}/image")
-    def frame_image(  # pyright: ignore[reportUnusedFunction]
-        frame_id: int, w: Annotated[int | None, Query(ge=16, le=MAX_THUMB_PX)] = None
-    ) -> Response:
-        # The generation keeps a render begun before a purge out of the cleared cache; the path
-        # in the key keeps a reused id off old pixels. A purge during the file read can 409.
-        with services.db():
-            stored = services.frames.get(frame_id)
-            if stored is None or stored.image_path is None:
-                raise HTTPException(404, "no image for this frame")
-            cache_key = (frame_id, stored.image_path, w or 0)
-            generation = services.thumb_generation()
-        cached = services.thumb(cache_key) if w else None
-        if cached is not None:
-            return Response(cached, media_type="image/webp")
-        try:
-            webp = services.frames.image(stored)
-        except FileNotFoundError as exc:
-            raise HTTPException(404, "image file is missing") from exc
-        except CryptoError as exc:
-            log.warning("frame %d image failed to decrypt", frame_id)
-            raise HTTPException(500, "image could not be decrypted") from exc
-        if webp is None:  # pragma: no cover - guarded by image_path above
-            raise HTTPException(404, "no image for this frame")
-        if w:
-            webp = _thumbnail(webp, w)
-            services.put_thumb(cache_key, webp, generation)
-        return Response(webp, media_type="image/webp")
-
-    return router
-
-
 def _page_routes(services: Services) -> APIRouter:
     """The page itself and the one-time door into it; no session needed for either."""
     router = APIRouter(include_in_schema=False)
@@ -455,10 +396,11 @@ def _api_routes(services: Services) -> list[APIRouter]:
         _control_routes(services),
         _search_routes(services),
         _audio_routes(services),
-        _frame_routes(services),
+        frame_routes(services),
         memory_routes(services),
         ask_routes(services),
         stt_routes(services),
+        timeline_routes(services),
     ]
     if services.speakers is not None:
         routers.append(speaker_routes(services, services.speakers))

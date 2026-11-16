@@ -1,9 +1,9 @@
 """OCR only when the text actually changed (research §3.2).
 
-For each app: crop to the window, shrink the crop to the cells that look like text, and compare
-that crop's pixels with the crop behind the last *stored* OCR result. Unchanged: reuse the stored
-text without running OCR. The signature is only remembered by ``commit``, which the caller calls
-after the database write succeeded, so a failed write retries naturally.
+For each window: take its capture (keyed by window), shrink it to the cells that look like text,
+and compare that crop's pixels with the crop behind the last *stored* OCR result. Unchanged: reuse
+the stored text without running OCR. The signature is only remembered by ``commit``, which the
+caller calls after the database write succeeded, so a failed write retries naturally.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from PIL import Image
 
-    from akashic.capture.ports import OcrEngine, Rect
+    from akashic.capture.ports import OcrEngine
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,20 +51,17 @@ class OcrGate:
         self._engine = engine
         self._indexed: dict[str, tuple[imaging.Signature | None, str]] = {}
 
-    def read(self, key: str, frame: Image.Image, region: Rect) -> GateResult:
-        """Text on screen inside ``region`` (frame pixels). Runs OCR only if the crop changed."""
+    def read(self, key: str, image: Image.Image) -> GateResult:
+        """Text on screen in ``image``. Runs OCR only if its text area changed."""
         if self._engine is None:
             return GateResult("", None, ocr_ran=False)
-        crop = frame.crop((region.left, region.top, region.right, region.bottom))
-        box = imaging.find_text_box(crop)
-        sig: imaging.Signature | None = None
-        if box is not None:
-            crop = crop.crop((box.left, box.top, box.right, box.bottom))
-            sig = imaging.signature(crop)
+        box = imaging.find_text_box(image)
+        crop = None if box is None else image.crop((box.left, box.top, box.right, box.bottom))
+        sig = None if crop is None else imaging.signature(crop)
         previous = self._indexed.get(key)
         if previous is not None and _same(previous[0], sig):
             return GateResult(previous[1], sig, ocr_ran=False)
-        if box is None:
+        if crop is None:
             return GateResult("", sig, ocr_ran=False)
         return GateResult(self._engine.recognize(crop), sig, ocr_ran=True)
 

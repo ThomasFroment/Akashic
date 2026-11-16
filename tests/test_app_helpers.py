@@ -156,6 +156,7 @@ def test_autostart_prefers_the_windowless_interpreter(
     command = app.autostart_command()
     assert command.startswith(f'"{tmp_path / "pythonw.exe"}" ')
     assert command.endswith(" -m akashic.app")
+    assert "--autostart" not in command
 
 
 def test_autostart_falls_back_to_the_running_interpreter(

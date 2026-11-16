@@ -25,11 +25,11 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
 
-from akashic.pipeline.jobs import NewJob, PermanentJobError
 from akashic.pipeline.llm import LlamaError, strip_thinking
 from akashic.search import answer, hybrid, planner, semantic
 from akashic.search.timeparse import TimeRange
 from akashic.storage import db
+from akashic.storage.jobs import NewJob, PermanentJobError
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -38,8 +38,8 @@ if TYPE_CHECKING:
     import numpy as np
     from numpy.typing import NDArray
 
-    from akashic.pipeline.jobs import Job
     from akashic.search.planner import Plan
+    from akashic.storage.jobs import Job
 
     type Vector = NDArray[np.float32]
 
@@ -158,6 +158,7 @@ def sources_json(sources: list[answer.Source]) -> str:
                 "text": s.text,
                 "episode_id": s.episode_id,
                 "segment_ids": s.segment_ids,
+                "window_id": s.window_id,
             }
             for s in sources
         ]
@@ -233,13 +234,13 @@ class AskHandler:
                 [(question_id, i) for i in segment_ids],
             )
             conn.executemany(
-                "INSERT OR IGNORE INTO question_frames VALUES (?, ?)",
-                [(question_id, s.ref_id) for s in sources if s.kind == "frame"],
+                "INSERT OR IGNORE INTO question_windows VALUES (?, ?)",
+                [(question_id, s.window_id) for s in sources if s.kind == "frame"],
             )
             # Keep inherited provenance even if an earlier turn is later forgotten separately.
             for lineage, column in (
                 ("question_segments", "segment_id"),
-                ("question_frames", "frame_id"),
+                ("question_windows", "window_id"),
             ):
                 conn.execute(
                     f"INSERT OR IGNORE INTO {lineage} SELECT ?, p.{column}"  # noqa: S608 - fixed names

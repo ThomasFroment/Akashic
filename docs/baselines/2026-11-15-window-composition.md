@@ -1,6 +1,10 @@
 # Window composition spike 2026-11-15
 
-Measurements behind the [monitor-capture design](../designs/2026-11-14-monitor-capture.md) (TODO
+Revised 2026-11-16: the code has moved past two points below. The D2 title-marker matching was
+superseded by [DECISIONS.md](../DECISIONS.md) row 18, and the "capture loads no CUDA" rule was
+dropped (commit ae9d7d3). Current rules: [CAPTURE.md](../CAPTURE.md) "Which windows are captured".
+
+Measurements behind the monitor-capture rules ([CAPTURE.md](../CAPTURE.md)) (TODO
 A9): each monitor's picture is composed from per-window Windows.Graphics.Capture (WGC) captures,
 and an excluded window is never captured. Tested on the user's PC with their normal windows, plus
 test windows driven by script and browser popups clicked by the user. Pixels and OCR text stayed

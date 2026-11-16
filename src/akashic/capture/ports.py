@@ -1,7 +1,7 @@
 """Plain data types and the Protocols that ``platform/win`` implements.
 
 Core capture code depends only on these, so it runs against fakes on any OS. Platform code only
-reports facts (window geometry, text, "this field is a password"); core code decides what to do.
+reports facts (window geometry, text); core code decides what to do.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from PIL import Image
 
-type Trigger = Literal["focus", "title", "input", "idle", "game"]
+type Trigger = Literal["focus", "title", "input", "idle", "game", "window"]
 type PlaybackState = Literal["playing", "paused", "stopped"]
 type BrowserFamily = Literal["chromium", "firefox"]
 
@@ -28,6 +28,7 @@ BROWSERS: Final[dict[str, BrowserFamily]] = {
     "firefox.exe": "firefox",
     "zen.exe": "firefox",
 }
+FRAME_HOST: Final = "applicationframehost.exe"  # hosts every UWP window; the app behind is unknown
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,31 +82,8 @@ class WindowInfo:
         return self.hwnd, self.title
 
 
-class ScreenGrabber(Protocol):
-    def monitors(self) -> list[Rect]:
-        """Monitor rectangles in virtual-screen coordinates, in a stable order."""
-        ...
-
-    def grab(self, rect: Rect) -> Image.Image:
-        """One RGB frame of ``rect``, taken now. Never streams; called only on demand."""
-        ...
-
-    def grab_window(self, window: WindowInfo) -> Image.Image | None:
-        """Only this window's pixels, or None if unavailable; never fall back to a monitor."""
-        ...
-
-
 class WindowSource(Protocol):
     def focused_window(self) -> WindowInfo | None: ...
-
-    def inspect_window(self, hwnd: int) -> WindowInfo | None:
-        """Fresh identity/geometry for a still-visible window; None if it has gone away."""
-        ...
-
-    def window_at(self, x: int, y: int) -> WindowInfo | None:
-        """The top-level window under a screen point (used for non-focused monitors and for the
-        window under the cursor on input). A window owned by the focused window resolves to it."""
-        ...
 
     def cursor_pos(self) -> tuple[int, int]: ...
 
@@ -119,6 +97,149 @@ class WindowSource(Protocol):
         ...
 
 
+type WindowChange = Literal["shown", "hidden", "destroyed", "moved", "title", "focus"]
+
+
+@dataclass(frozen=True, slots=True)
+class MonitorInfo:
+    key: str  # hash of the DisplayConfig device path; never enumeration order or LUID
+    name: str
+    rect: Rect  # virtual-screen physical pixels
+    scale: float  # DPI / 96
+    primary: bool
+
+
+type EntryRole = Literal["app", "hidden", "shell"]
+
+
+@dataclass(frozen=True, slots=True)
+class Entry:
+    """One window of a monitor picture, as the screen writer stores it. ``z`` 0 is the front.
+    Only app entries carry content; hidden and shell entries are stored as a rectangle."""
+
+    role: EntryRole
+    hwnd: int | None
+    rect: Rect
+    z: int
+    process: str | None = None
+    title: str | None = None
+    url: str | None = None
+    focused: bool = False
+    painted: bool = False  # the composite shows this window
+    image: Image.Image | None = field(default=None, compare=False)  # the window's full capture
+
+
+@dataclass(frozen=True, slots=True)
+class TopWindow:
+    """One top-level window as the OS reports it. Rects are virtual-screen physical pixels.
+
+    Unknown values: ``process == ""``, ``ghost_of is None`` (only meaningful when ``is_ghost``),
+    ``foreign_children is None``. ``owner is None`` (no owner, or unreadable) gets the
+    ownerless-popup rule, which fails closed.
+    """
+
+    hwnd: int
+    pid: int
+    process: str  # lower-case executable name
+    # ApplicationFrameHost window whose hosted app was not found; process stays that host.
+    uwp_unresolved: bool
+    class_name: str
+    title: str
+    rect: Rect
+    minimized: bool
+    cloaked: bool
+    owner: int | None
+    popup: bool
+    tool: bool
+    alpha: int | None  # constant alpha 0-255 when layered with LWA_ALPHA, else None
+    is_ghost: bool
+    ghost_of: int | None  # hwnd of the hung window this ghost replaces
+    # Lower-case exe names of child windows owned by other processes; () means none.
+    foreign_children: tuple[str, ...] | None
+    has_frame: bool
+
+
+@dataclass(frozen=True, slots=True)
+class WindowEvent:
+    hwnd: int
+    change: WindowChange
+    at: float  # time.monotonic() seconds
+
+
+@dataclass(frozen=True, slots=True)
+class WindowChanges:
+    events: tuple[WindowEvent, ...]
+    healthy: bool
+
+
+@dataclass(frozen=True, slots=True)
+class CapturedFrame:
+    seq: int  # one counter shared by all captures; higher means newer
+    at: float  # time.monotonic() seconds
+    image: Image.Image  # RGB, native window size
+
+
+class Displays(Protocol):
+    def monitors(self) -> list[MonitorInfo] | None:
+        """Active monitors sorted by (left, top); a path without a matching HMONITOR, or an
+        HMONITOR without a path, is left out. None when the OS could not be asked: any
+        non-zero code (ACCESS_DENIED, GEN_FAILURE, NOT_SUPPORTED, INVALID_PARAMETER...), an
+        EnumDisplayMonitors failure, or ERROR_INSUFFICIENT_BUFFER on all 5 tries."""
+        ...
+
+
+class WindowFacts(Protocol):
+    def windows(self) -> list[TopWindow] | None:
+        """The IsWindowVisible top-level windows, top of the z-order first. Minimized and
+        cloaked windows are included and flagged. None when the OS could not be asked."""
+        ...
+
+
+class WindowEvents(Protocol):
+    """Window change notifications. Never raises."""
+
+    def start(self) -> None: ...
+
+    def drain(self) -> WindowChanges:
+        """Events since the last drain, oldest first. Mapping: show, UNCLOAKED (0x8018) and
+        MINIMIZEEND (0x17) -> "shown"; hide, CLOAKED (0x8017) and MINIMIZESTART (0x16) ->
+        "hidden"; destroy -> "destroyed"; LOCATIONCHANGE on OBJID_WINDOW and REORDER (0x8004) ->
+        "moved"; NAMECHANGE on a top-level window (OBJID_WINDOW or OBJID_CLIENT) -> "title";
+        foreground -> "focus".
+        ``healthy`` is False when events may have been lost; the first drain after the event
+        hook is reinstalled is still unhealthy."""
+        ...
+
+    def close(self) -> None: ...
+
+
+class WindowCaptures(Protocol):
+    """Per-window pixel streams. Never raises: a failure is a False ``start`` or an hwnd in
+    ``failed()``, and both count as a capture failure. Device loss restarts every capture."""
+
+    def start(self, hwnd: int, min_interval_ms: int) -> bool:
+        """Begin capturing ``hwnd``, at most one frame per ``min_interval_ms``."""
+        ...
+
+    def stop(self, hwnd: int) -> None:
+        """Stop capturing and discard the frame. Idempotent; unknown hwnds are ignored."""
+        ...
+
+    def latest_seq(self, hwnd: int) -> int | None:
+        """Sequence of the newest frame, or None when none has arrived or it is not started."""
+        ...
+
+    def grab(self, hwnd: int) -> CapturedFrame | None:
+        """A copy of the newest frame taken at call time, or None when there is none."""
+        ...
+
+    def failed(self) -> frozenset[int]:
+        """The started hwnds whose capture has failed."""
+        ...
+
+    def close(self) -> None: ...
+
+
 @dataclass(frozen=True, slots=True)
 class TextBlock:
     text: str
@@ -128,12 +249,6 @@ class TextBlock:
 
 class TextSource(Protocol):
     """UI Automation. Every method returns quietly empty when the target vanished."""
-
-    def focused_is_password(self) -> bool | None:
-        """True when the focused element is a password field. False when it is not or when
-        nothing has focus. None when it could not be determined (UI Automation failed): callers
-        must treat that as "maybe", never as "no"."""
-        ...
 
     def read_text(self, window: WindowInfo, max_nodes: int) -> Sequence[TextBlock] | None:
         """Visible blocks with roles/geometry, or None on failure."""
@@ -233,8 +348,11 @@ class AudioPlatform:
 class CapturePlatform:
     """Everything the capture process needs from the OS, bundled for wiring."""
 
-    screen: ScreenGrabber
+    displays: Displays
     windows: WindowSource
+    facts: WindowFacts
+    events: WindowEvents
+    captures: WindowCaptures
     uia: TextSource
     ocr: OcrEngine | None  # None: no recognizer is installed, frames get no OCR text
     media: MediaSource

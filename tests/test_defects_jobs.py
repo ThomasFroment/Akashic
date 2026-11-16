@@ -34,7 +34,6 @@ from akashic.pipeline import embed, llm, speech, whisper
 from akashic.pipeline import main as worker
 from akashic.pipeline.ask import AskHandler, ask_job
 from akashic.pipeline.episodes import build_episodes
-from akashic.pipeline.jobs import MAX_ATTEMPTS, Job, JobQueue, NewJob
 from akashic.pipeline.llm import LlamaError, LlamaServer
 from akashic.pipeline.runner import Handler, JobRunner
 from akashic.pipeline.scheduler import Scheduler
@@ -43,6 +42,7 @@ from akashic.pipeline.transcribe import TranscribeHandler, Transcript
 from akashic.storage import db
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.frames import FrameStore
+from akashic.storage.jobs import MAX_ATTEMPTS, Job, JobQueue, NewJob
 from akashic.storage.opus import encode_opus
 from akashic.storage.retention import expire_raw_audio
 from akashic.storage.speakers import SpeakerStore

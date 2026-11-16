@@ -2,17 +2,23 @@
 
 Rows are content-free (a closed vocabulary and two integers). A row with ``end_ms IS NULL`` is
 still going on. Every end time is written as ``MAX(?, start_ms)``, so a clock that moved backwards
-can never produce a row the schema refuses.
+can never produce a row the schema refuses. ``overlapping`` reads them back, treating a stale
+heartbeat as a crash.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Final, Literal
 
 from akashic.storage import db, state
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
     from sqlite3 import Connection
+
+HEARTBEAT_MS: Final = 5_000
+HEARTBEAT_STALE_MS: Final = 2 * HEARTBEAT_MS
 
 type GapKind = Literal["all", "screen", "screen_text", "mic", "system"]
 type GapReason = Literal[
@@ -31,9 +37,64 @@ type GapReason = Literal[
     "music",
     "backlog",
     "write_failed",
+    "ui_open",
 ]
 
 _CLOSE_OPEN = "UPDATE capture_gaps SET end_ms = MAX(?, start_ms) WHERE end_ms IS NULL"
+
+
+@dataclass(frozen=True, slots=True)
+class GapSpan:
+    kind: GapKind
+    reason: GapReason
+    start_ms: int
+    end_ms: int
+
+
+def overlapping(
+    conn: Connection, a: int, b: int, now: int, kinds: Collection[GapKind]
+) -> list[GapSpan]:
+    """Gaps of ``kinds`` that overlap [a, b], sorted by start.
+
+    A closed row [s, e) overlaps when s <= b and e > a; an empty row never overlaps. An open row
+    ends at ``now``. When the capture heartbeat is stale and no clean stop is open, capture died:
+    open rows end at the heartbeat (or their start) and a synthetic ``all/crashed`` span covers
+    the time from the heartbeat to ``now``.
+    """
+    if not kinds:
+        return []
+    heartbeat = state.get_int(conn, state.CAPTURE_ALIVE, 0)
+    crashed = (
+        heartbeat > 0
+        and now - heartbeat > HEARTBEAT_STALE_MS
+        and conn.execute(
+            "SELECT 1 FROM capture_gaps"
+            " WHERE end_ms IS NULL AND kind = 'all' AND reason = 'stopped'"
+        ).fetchone()
+        is None
+    )
+    rows = conn.execute(
+        "SELECT kind, reason, start_ms, end_ms FROM capture_gaps"  # noqa: S608
+        f" WHERE kind IN ({','.join('?' * len(kinds))}) AND start_ms <= ?"
+        " AND (end_ms IS NULL OR (end_ms > ? AND end_ms > start_ms))",
+        (*kinds, b, a),
+    ).fetchall()
+    spans: list[GapSpan] = []
+    for kind, reason, start_ms, closed_end_ms in rows:
+        if closed_end_ms is not None:
+            end_ms = closed_end_ms
+        elif crashed:
+            end_ms = max(heartbeat, start_ms)
+            if end_ms <= max(a, start_ms):
+                continue
+        elif now < a:
+            continue
+        else:
+            end_ms = now
+        spans.append(GapSpan(kind, reason, start_ms, end_ms))
+    if crashed and "all" in kinds and heartbeat <= b and now > a:
+        spans.append(GapSpan("all", "crashed", heartbeat, now))
+    return sorted(spans, key=lambda span: span.start_ms)
 
 
 class GapLog:

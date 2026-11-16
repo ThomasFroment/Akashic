@@ -21,9 +21,9 @@ from oracles import HashEmbedder
 from akashic.pipeline.ask import AskHandler
 from akashic.pipeline.embed import EMBED, EmbedHandler, enqueue_missing
 from akashic.pipeline.episodes import build_episodes
-from akashic.pipeline.jobs import JobQueue
 from akashic.search.answer import MAX_EPISODES
 from akashic.search.timeparse import resolve
+from akashic.storage.jobs import JobQueue
 
 if TYPE_CHECKING:
     from sqlite3 import Connection

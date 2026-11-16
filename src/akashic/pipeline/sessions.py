@@ -1,17 +1,20 @@
-"""Derive ``app_sessions`` (contiguous focus periods) from focused frames.
+"""Derive ``app_sessions`` (contiguous focus periods) from focused app window rows.
 
 Incremental: the newest session row carries the id of the last frame it consumed, so each run
-only reads new frames. A session is one (process, window title, URL) run of frames; it closes when
-a different one arrives or when nothing new arrived for ``IDLE_GAP_MS``.
+only reads new frames. A session is one (process, window title, URL) run of focused window rows;
+it closes when a different one arrives or when nothing new arrived for ``IDLE_GAP_MS``.
 
-Frames are only stored when the screen changed, so a window left untouched stops producing
-frames: after ``IDLE_GAP_MS`` its session is closed at the last frame, and a later frame of the
-same window starts a new row. Callers that want "one long visit" can merge adjacent rows.
-Windows that were excluded never produced frames, so they have no sessions.
+Frames of other monitors have no focused row; a window spanning monitors is focused on each
+one's frame, so frames at one moment count once. Frames are only stored when the screen changed,
+so a window left untouched stops producing frames: after ``IDLE_GAP_MS`` its session is closed at
+the last frame, and a later frame of the same window starts a new row. Excluded windows never
+produce window rows, so they have no sessions. ``app_bands`` reads the sessions back for the
+timeline.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from akashic.storage import db
@@ -25,12 +28,13 @@ type _Key = tuple[str | None, str | None, str | None]
 
 
 def derive_app_sessions(conn: Connection, now_ms: int) -> int:
-    """Consume new focused frames. Returns how many frames were consumed."""
+    """Consume the focused window rows of new frames. Returns how many frames were consumed."""
     row = conn.execute("SELECT COALESCE(MAX(last_frame_id), 0) FROM app_sessions").fetchone()
     watermark: int = row[0]
     frames = conn.execute(
-        "SELECT id, ts_ms, process, window_title, url FROM frames"
-        " WHERE id > ? AND focused = 1 ORDER BY id",
+        "SELECT f.id, f.ts_ms, w.process, w.title, w.url FROM frames f"
+        " JOIN frame_windows w ON w.frame_id = f.id AND w.focused = 1"
+        " WHERE f.id > ? ORDER BY f.id",
         (watermark,),
     ).fetchall()
     open_row = conn.execute(
@@ -49,13 +53,15 @@ def derive_app_sessions(conn: Connection, now_ms: int) -> int:
         for frame_id, ts_ms, process, title, url in frames:
             key: _Key = (process, title, url)
             if current is not None and current[1] == key and ts_ms - current[2] <= IDLE_GAP_MS:
-                session_id, _, _, count = current
+                session_id, _, end_ms, count = current
+                if ts_ms > end_ms:
+                    end_ms, count = ts_ms, count + 1
                 conn.execute(
                     "UPDATE app_sessions SET end_ms = ?, frame_count = ?, last_frame_id = ?"
                     " WHERE id = ?",
-                    (ts_ms, count + 1, frame_id, session_id),
+                    (end_ms, count, frame_id, session_id),
                 )
-                current = (session_id, key, ts_ms, count + 1)
+                current = (session_id, key, end_ms, count)
                 continue
             if current is not None:
                 conn.execute("UPDATE app_sessions SET closed = 1 WHERE id = ?", (current[0],))
@@ -68,3 +74,23 @@ def derive_app_sessions(conn: Connection, now_ms: int) -> int:
         if current is not None and now_ms - current[2] > IDLE_GAP_MS:
             conn.execute("UPDATE app_sessions SET closed = 1 WHERE id = ?", (current[0],))
     return len(frames)
+
+
+@dataclass(frozen=True, slots=True)
+class AppBand:
+    start_ms: int
+    end_ms: int
+    process: str | None
+    title: str | None
+
+
+def app_bands(conn: Connection, start_ms: int, end_ms: int, process: str | None) -> list[AppBand]:
+    """Sessions overlapping ``[start_ms, end_ms)``, bounds unclipped; ``process`` ignores case."""
+    rows = conn.execute(
+        "SELECT start_ms, end_ms, process, window_title FROM app_sessions"
+        " WHERE :start_ms < :end_ms AND start_ms < :end_ms AND end_ms >= :start_ms"
+        " AND (:process IS NULL OR lower(process) = lower(:process))"
+        " ORDER BY start_ms, id",
+        {"start_ms": start_ms, "end_ms": end_ms, "process": process},
+    ).fetchall()
+    return [AppBand(*row) for row in rows]

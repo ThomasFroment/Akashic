@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from akashic.pipeline.jobs import Job, PermanentJobError
 from akashic.pipeline.transcribe import (
     MAX_GAIN,
     PREVIOUS_MAX_CHARS,
@@ -23,6 +22,7 @@ from akashic.pipeline.transcribe import (
 )
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import DataKey
+from akashic.storage.jobs import Job, PermanentJobError
 from akashic.storage.media import MediaStore
 from akashic.storage.opus import encode_opus
 

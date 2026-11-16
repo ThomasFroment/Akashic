@@ -1,11 +1,15 @@
-"""The event-driven screen capture loop.
+"""The event-driven screen capture loop, one schedule per monitor.
 
-Input activity (polled: only *when* the last input happened) and focus changes are debounced
-into capture requests. A request becomes a frame
-only if it survives, in this order: lock check, exclusions on the window (in memory, before any
-pixel is grabbed), the password-field check, URL exclusions, then change detection. Text comes
-from UI Automation first and from the OCR gate when that yields (almost) nothing. Screenshot and
-text share one timestamp and are written together, after every exclusion has been applied.
+Each monitor is checked when a trigger asks for it (focus, title, input, window events) or when its
+rate says so: the focus monitor every few seconds, the others less often. All monitors due in one
+tick share one window list and one ``Desk.check``; the desk decides what each monitor shows and the
+screen writer stores it off this loop. A picture is submitted only when the monitor changed. The
+focused window's UI Automation text rides along with the picture, and is dropped when the window or
+its address changed while it was read.
+
+A check that finds a visible browser window on Akashic's own address keeps nothing of it and halts
+capture (the failsafe); while halted by it, the addresses of visible browser windows are re-read
+about once a second until none shows it.
 
 Logs here contain counts and durations only, never window titles, URLs or text.
 """
@@ -14,185 +18,212 @@ from __future__ import annotations
 
 import logging
 import time
-from collections import Counter, deque
-from dataclasses import dataclass
+from collections import Counter
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
 from akashic.capture import imaging
 from akashic.capture.debounce import Debouncer
+from akashic.capture.desk import Desk, visible_monitors
 from akashic.capture.exclusions import normalize_url
 from akashic.capture.gaming import GameMode, GameSettings
-from akashic.capture.health import FAILED_GRABS, GOOD_GRABS, GRAB_FAILURE_RUN
-from akashic.capture.ports import BROWSERS, Rect, Trigger, WindowInfo
-from akashic.capture.text import MAX_UIA_NODES, MIN_UIA_CHARS, assemble_text
-from akashic.capture.uia_budget import UiaBudget
-from akashic.storage.frames import NewFrame, TextSource
+from akashic.capture.ports import BROWSERS
+from akashic.capture.screen_writer import Picture
+from akashic.capture.text import assemble_text
+from akashic.capture.uia_budget import BudgetedUia
+from akashic.capture.verdicts import Verdicts
 
 if TYPE_CHECKING:
     import threading
-    from collections.abc import Callable
-
-    from PIL import Image
+    from collections.abc import Callable, Collection, Sequence
 
     from akashic.capture.browser_state import BrowserState
+    from akashic.capture.desk import Snapshot
     from akashic.capture.exclusions import Exclusions
     from akashic.capture.gaming import Transition
-    from akashic.capture.ocr_gate import GateResult, OcrGate
-    from akashic.capture.ports import ScreenGrabber, WindowSource
+    from akashic.capture.ports import (
+        Displays,
+        Entry,
+        MonitorInfo,
+        Rect,
+        TopWindow,
+        Trigger,
+        WindowCaptures,
+        WindowChanges,
+        WindowEvents,
+        WindowFacts,
+        WindowInfo,
+        WindowSource,
+    )
     from akashic.capture.ports import TextSource as UiaSource
-    from akashic.storage.frames import FrameStore
+    from akashic.capture.screen_writer import ScreenWriter
+    from akashic.capture.uia_budget import UiaBudget
+    from akashic.storage.monitors import MonitorState
     from akashic.storage.sessions import GameLog
 
 log = logging.getLogger(__name__)
 
 STATS_LOG_INTERVAL_S: Final = 300.0
 MONITOR_REFRESH_S: Final = 5.0
-# Chromium browsers whose private-mode marker is not in the Win32 title (Edge's is).
-_CAPTION_ONLY: Final = frozenset({"chrome.exe", "brave.exe"})
 
 
 @dataclass(frozen=True, slots=True)
 class Settings:
     """Starting values from screenpipe (research §3.1); tune by measurement."""
 
-    idle_interval_s: float = 5.0  # focused monitor: capture at least this often (deduplicated)
-    other_monitor_interval_s: float = 15.0  # monitors without the focused window
-    min_gap_s: float = 1.0  # minimum time between captures of one monitor
-    focus_poll_s: float = 0.1  # how often the foreground window is checked for changes
-
-
-@dataclass(frozen=True, slots=True)
-class _Target:
-    window: WindowInfo
-    is_focused: bool
+    focus_interval_s: float = 5.0  # the monitor with the focused window: checked this often
+    side_interval_s: float = 15.0  # every other monitor
+    min_gap_s: float = 1.0  # minimum time between triggered checks of one monitor
+    poll_s: float = 0.1  # one loop pass; also how often the foreground window is polled
 
 
 @dataclass(slots=True)
-class _MonitorState:
-    last_attempt: float = float("-inf")
-    signature: imaging.Signature | None = None
-    window_key: tuple[int, str] | None = None
-    last_text: str | None = None
+class _Monitor:
+    last_check: float = float("-inf")
+    due_at: float | None = None  # when a trigger's check may run
+    trigger: Trigger | None = None
+    pending: bool = False  # due, but the desk had no snapshot yet
+    noted: MonitorState = "hidden"
+    signature: imaging.Signature | None = None  # of the last picture submitted
+    entries: tuple[Entry, ...] | None = None  # of the last picture submitted
+
+
+@dataclass(slots=True)
+class _Tick:
+    now: float
+    ts_ms: int
+    focused: WindowInfo | None
+    focus_key: str | None  # the monitor holding the centre of the focused window
+    game_focused: bool
+    game_active: bool
+    text_read: bool = False
+    text: str | None = None
 
 
 class ScreenCapture:
     def __init__(  # noqa: PLR0913 - the ports are the dependencies; keyword-only
         self,
         *,
-        screen: ScreenGrabber,
+        displays: Displays,
         windows: WindowSource,
+        facts: WindowFacts,
+        events: WindowEvents,
+        captures: WindowCaptures,
         uia: UiaSource,
-        gate: OcrGate,
-        store: FrameStore,
+        writer: ScreenWriter,
         exclusions: Exclusions,
         browsers: BrowserState,
         games: GameLog,
+        on_own_address: Callable[[bool], None],
         settings: Settings | None = None,
-        budget: UiaBudget | None = None,
         game_settings: GameSettings | None = None,
+        budget: UiaBudget | None = None,
         on_game: Callable[[bool], None] | None = None,
         clock: Callable[[], float] = time.monotonic,
         now_ms: Callable[[], int] = lambda: time.time_ns() // 1_000_000,
     ) -> None:
-        self._screen = screen
+        self._displays = displays
         self._windows = windows
-        self._uia = uia
-        self._gate = gate
-        self._store = store
-        self._exclusions = exclusions
+        self._facts = facts
+        self._events = events
+        self._captures = captures
+        self._writer = writer
         self._browsers = browsers
-        self._tick_hwnds: set[int] = set()
+        self._uia = BudgetedUia(uia, budget)
+        self._verdicts = Verdicts(exclusions, self._uia, browsers, clock)
+        self._desk = Desk(captures, self._verdicts)
         self._settings = settings or Settings()
-        self._budget = budget or UiaBudget()
         self._clock = clock
         self._now_ms = now_ms
         self._games = games
+        self._on_own_address = on_own_address
         self._on_game = on_game
         self._game_settings = game_settings or GameSettings()
         self._game_mode = GameMode(self._game_settings)
         self._game_id: int | None = None
-        self._game_frame_at = float("-inf")
         self._game_heartbeat_at = float("-inf")
         self._debouncer = Debouncer()
+        self._event_hwnds: set[int] = set()
         self._last_input: int | None = None
-        self._states: dict[int, _MonitorState] = {}
-        self._pointed_state = _MonitorState()
-        self._monitors: list[Rect] = []
+        self._focus_window_key: tuple[int, str] | None = None
+        self._states: dict[str, _Monitor] = {}
+        self._monitors: list[MonitorInfo] | None = None
         self._monitors_at = float("-inf")
-        self._focus_key: tuple[int, str] | None = None
-        self._focus_polled_at = float("-inf")
-        self.stats: Counter[str] = Counter()
-        # times of the latest failures
-        self._failures: deque[float] = deque(maxlen=GRAB_FAILURE_RUN)
+        self._own_address = False  # the failsafe holds: a browser window showed Akashic
+        self._watched_at = float("-inf")
+        self._rects: dict[int, Rect] = {}  # window rects of the last enumeration
+        self._stats: Counter[str] = Counter()
 
-    # --- input -------------------------------------------------------------------------------
+    def stats_snapshot(self) -> dict[str, int]:
+        """Loop and UI Automation counters, merged into a copy that is safe to read elsewhere."""
+        return dict(self._stats) | dict(self._uia.stats)
 
-    def note(self, trigger: Trigger, now: float) -> None:
-        self._debouncer.note(trigger, now)
+    # --- lifecycle ---------------------------------------------------------------------------
 
     def reset(self) -> None:
-        """Forget pending triggers and what was last seen (used while paused or locked)."""
+        """Forget everything seen and held (used while halted or locked)."""
+        self._desk.drop_all()
+        self._events.drain()
         self._debouncer.clear()
+        self._event_hwnds.clear()
         self._states.clear()
-        self._pointed_state = _MonitorState()
-        self._focus_key = None
+        self._rects = {}
+        self._focus_window_key = None
         self._last_input = None
         self._browsers.clear()
-        self._failures.clear()
-        self.close(notify=True)
+        self._end_game(notify=True)
 
-    def close(self, *, notify: bool = False) -> None:
+    def close(self) -> None:
+        self._end_game()
+        self._desk.drop_all()
+        self._captures.close()
+        self._events.close()
+
+    def _end_game(self, *, notify: bool = False) -> None:
         """End the current game session, if any (pause, lock or shutdown). ``notify`` reports the
         end through ``on_game`` even when writing the end row fails."""
         if self._game_mode.stop() is None:
             return
         try:
             self._end_game_row()
+        except Exception as exc:  # noqa: BLE001 - e.g. a busy database
+            self._note_game_log_fault(exc)
         finally:
             if notify and self._on_game is not None:
                 self._on_game(False)  # noqa: FBT003 - the callback takes the game flag
 
-    def images_failing(self, since: float) -> bool:
-        """Whether the last grabs all failed, all of them after ``since``, which must come from
-        the same clock as the injected ``clock`` (``time.monotonic`` in production)."""
-        failures = tuple(self._failures)
-        return len(failures) == GRAB_FAILURE_RUN and failures[0] >= since
-
-    def _note(self, outcome: str) -> None:
-        self.stats[outcome] += 1
-        if outcome in FAILED_GRABS:
-            self._failures.append(self._clock())
-        elif outcome in GOOD_GRABS:
-            self._failures.clear()
-
     # --- loop --------------------------------------------------------------------------------
 
-    def run(self, stop: threading.Event, paused: threading.Event) -> None:
+    def run(self, stop: threading.Event, halt: threading.Event, paused: threading.Event) -> None:
+        """Check until ``stop``. While ``halt`` is set nothing is grabbed or kept; only the
+        failsafe watch reads browser addresses. The user's ``paused`` ends that watch too."""
+        self._events.start()
         last_stats = self._clock()
         last_logged: dict[str, float] = {}
-        failed = False
-        while not stop.is_set():
-            now = self._clock()
-            due = self._debouncer.next_due()
-            timeout = self._settings.focus_poll_s
-            if due is not None and not failed:
-                timeout = min(timeout, max(due - now, 0.0))
-            if stop.wait(timeout):
-                break
-            failed = False
+        while not stop.wait(self._settings.poll_s):
             try:
                 if paused.is_set():
-                    self.reset()  # paused means nothing is read, grabbed or kept
+                    self._end_own_address()
+                    self.reset()
+                    continue
+                if self._own_address:
+                    self.reset()
+                    self._watch_own_address()
+                    continue
+                if halt.is_set():
+                    self.reset()
                     continue
                 now = self._clock()
                 self.tick(now)
                 if now - last_stats >= STATS_LOG_INTERVAL_S:
                     last_stats = now
-                    log.info("capture stats: %s", dict(sorted(self.stats.items())))
+                    log.info("capture stats: %s", dict(sorted(self.stats_snapshot().items())))
             except Exception as exc:  # noqa: BLE001 - the screen loop must outlive any one fault
-                failed = True
-                self._note("loop_error")
+                self._stats["loop_error"] += 1
                 self._log_loop_fault(type(exc).__name__, last_logged)
+                for key, state in self._states.items():
+                    state.noted = "failed"  # the next check composes and submits again
+                    self._writer.capture_failures(key, 1)
 
     def _log_loop_fault(self, name: str, last_logged: dict[str, float]) -> None:
         now = self._clock()
@@ -200,75 +231,307 @@ class ScreenCapture:
             last_logged[name] = now
             log.warning("screen loop iteration failed: %s", name)
 
+    def _trip_own_address(self) -> None:
+        """A visible browser window shows Akashic's own address: keep nothing of this check,
+        stop every capture and halt capture until the address is gone."""
+        self.reset()
+        self._own_address = True
+        self._on_own_address(True)  # noqa: FBT003 - the callback takes the flag
+        self._stats["own_address"] += 1
+
+    def _end_own_address(self) -> None:
+        if self._own_address:
+            self._own_address = False
+            self._on_own_address(False)  # noqa: FBT003 - the callback takes the flag
+
+    def _watch_own_address(self) -> None:
+        """While the failsafe holds: at most once per ``min_gap_s``, read only the addresses of
+        visible browser windows. Capture resumes when none shows Akashic's own."""
+        now = self._clock()
+        if now - self._watched_at < self._settings.min_gap_s:
+            return
+        self._watched_at = now
+        if self._windows.is_locked():
+            self._end_own_address()
+            return
+        monitors = self._displays.monitors()
+        windows = self._facts.windows()
+        if monitors is None or windows is None:
+            return  # unknown: stay halted
+        visible = visible_monitors(windows, monitors)
+        if not self._verdicts.shows_own_address(windows, visible.keys(), now):
+            self._end_own_address()
+
     def tick(self, now: float) -> None:
-        """One iteration: poll the foreground window, run due triggers, then idle captures."""
-        self._tick_hwnds.clear()  # a window spanning monitors is examined once per tick
-        self._poll_focus(now)
-        monitors = self._monitor_list(now)
+        """One pass: poll, turn triggers and rates into due monitors, check them together."""
+        if self._windows.is_locked():
+            self.reset()
+            return
+        monitors = self._refresh_monitors(now)
+        changes = self._events.drain()
+        self._verdicts.note_events(changes)
         if not monitors:
-            self._debouncer.clear()  # nothing can be captured: never replay these later
-            return
-        focused = self._windows.focused_window()
-        if self._tick_game(focused, monitors, now):
             self._debouncer.clear()
-            self._tick_game_side(focused, monitors, now)
             return
-        focus_monitor = _monitor_of(monitors, focused.rect.center) if focused else None
+        self._sync_states(monitors)
+        tick = self._begin(monitors, now)
+        window_due = self._collect_requests(monitors, changes, tick)
+        due = self._due_keys(tick)
+        if not due and not window_due:
+            return
+        windows = self._facts.windows()
+        if windows is None:
+            self._fail_checks(due, tick)
+            return
+        rects = {window.hwnd: window.rect for window in windows}
+        if window_due:
+            self._request_event_monitors(monitors, rects, now)
+            due = self._due_keys(tick)
+        self._rects = rects
+        if due:
+            self._check(monitors, due, windows, tick)
+
+    # --- scheduling --------------------------------------------------------------------------
+
+    def _begin(self, monitors: Sequence[MonitorInfo], now: float) -> _Tick:
+        """Poll the foreground window and the game state, once for the whole tick."""
+        focused = self._windows.focused_window()
+        self._record_transition(
+            self._game_mode.observe(focused, [m.rect for m in monitors], now), now
+        )
+        game = self._game_mode.current
+        if game is not None:
+            self._game_heartbeat(now)
+        self._poll_focus_and_input(focused, now)
+        return _Tick(
+            now=now,
+            ts_ms=self._now_ms(),
+            focused=focused,
+            focus_key=_monitor_key_at(monitors, focused.rect.center) if focused else None,
+            game_focused=game is not None
+            and focused is not None
+            and focused.process == game.process,
+            game_active=game is not None,
+        )
+
+    def _collect_requests(
+        self, monitors: Sequence[MonitorInfo], changes: WindowChanges, tick: _Tick
+    ) -> bool:
+        """Turn triggers and window events into monitor requests; True when events are due."""
+        if tick.game_active:
+            self._clear_triggers()
+            return False
+        self._event_hwnds.update(event.hwnd for event in changes.events)
+        if changes.events:
+            self._debouncer.note("window", tick.now)
+        if not changes.healthy:
+            for key in self._states:
+                self._request(key, "window", tick.now)
+        return self._request_triggers(monitors, tick.now, tick.focus_key)
+
+    def _refresh_monitors(self, now: float) -> list[MonitorInfo]:
+        if now - self._monitors_at >= MONITOR_REFRESH_S:
+            self._monitors_at = now
+            listed = self._displays.monitors()
+            if listed is not None and listed != self._monitors:
+                self._monitors = listed
+                self._writer.layout(listed, self._now_ms())
+        return self._monitors or []
+
+    def _sync_states(self, monitors: Sequence[MonitorInfo]) -> None:
+        keys = {monitor.key for monitor in monitors}
+        for key in keys - self._states.keys():
+            self._states[key] = _Monitor()
+            self._desk.retake(key)
+        for key in self._states.keys() - keys:
+            del self._states[key]
+
+    def _poll_focus_and_input(self, focused: WindowInfo | None, now: float) -> None:
+        last_input = self._windows.last_input_ms()
+        if self._last_input is not None and last_input != self._last_input:
+            self._debouncer.note("input", now)
+        self._last_input = last_input
+        if focused is None:
+            return
+        previous = self._focus_window_key
+        self._focus_window_key = focused.key
+        if previous is None or previous[0] != focused.hwnd:
+            self._debouncer.note("focus", now)
+        elif previous != focused.key:
+            self._debouncer.note("title", now)
+
+    def _clear_triggers(self) -> None:
+        self._debouncer.clear()
+        self._event_hwnds.clear()
+        for state in self._states.values():
+            state.due_at = None
+            state.trigger = None
+
+    def _request_triggers(
+        self, monitors: Sequence[MonitorInfo], now: float, focus_key: str | None
+    ) -> bool:
+        """Turn the debounced triggers into monitor requests; True when window events are due."""
+        window_due = False
         for trigger in self._debouncer.pop_due(now):
-            index = focus_monitor if focus_monitor is not None else 0
+            if trigger == "window":
+                window_due = True
+                continue
+            self._request(focus_key, trigger, now)
             if trigger == "input":
-                self._capture_input(index, monitors, focused, now)
-            else:
-                self._capture(trigger, index, monitors, now)
-        for index in range(len(monitors)):
-            state = self._states.setdefault(index, _MonitorState())
-            interval = (
-                self._settings.idle_interval_s
-                if index == focus_monitor
-                else self._settings.other_monitor_interval_s
+                self._request(_monitor_key_at(monitors, self._windows.cursor_pos()), trigger, now)
+        return window_due
+
+    def _request_event_monitors(
+        self, monitors: Sequence[MonitorInfo], rects: dict[int, Rect], now: float
+    ) -> None:
+        """Request the monitors that each event's window touched, before or after the event."""
+        touched = [
+            rect
+            for hwnd in self._event_hwnds
+            for rect in (self._rects.get(hwnd), rects.get(hwnd))
+            if rect is not None
+        ]
+        for monitor in monitors:
+            if any(monitor.rect.intersect(rect) is not None for rect in touched):
+                self._request(monitor.key, "window", now)
+        self._event_hwnds.clear()
+
+    def _request(self, key: str | None, trigger: Trigger, now: float) -> None:
+        state = None if key is None else self._states.get(key)
+        if state is not None and state.trigger is None:
+            state.trigger = trigger
+            state.due_at = max(now, state.last_check + self._settings.min_gap_s)
+
+    def _due_keys(self, tick: _Tick) -> set[str]:
+        return {
+            key
+            for key, state in self._states.items()
+            if state.pending
+            or (state.due_at is not None and tick.now >= state.due_at)
+            or tick.now - state.last_check >= self._interval(key, tick)
+        }
+
+    def _interval(self, key: str, tick: _Tick) -> float:
+        if key != tick.focus_key:
+            return self._settings.side_interval_s
+        if tick.game_focused:
+            return self._game_settings.interval_s
+        return (
+            self._settings.side_interval_s if tick.game_active else self._settings.focus_interval_s
+        )
+
+    # --- checking ----------------------------------------------------------------------------
+
+    def _fail_checks(self, due: Collection[str], tick: _Tick) -> None:
+        self._stats["enumeration_failed"] += 1
+        for key in due:
+            state = self._states[key]
+            state.noted = "failed"
+            state.pending = False
+            state.trigger = None
+            state.due_at = None
+            state.last_check = tick.now
+            self._writer.note(key, "failed", tick.ts_ms)
+            self._writer.capture_failures(key, 1)
+
+    def _check(
+        self,
+        monitors: Sequence[MonitorInfo],
+        due: set[str],
+        windows: Sequence[TopWindow],
+        tick: _Tick,
+    ) -> None:
+        for key in due:
+            state = self._states[key]
+            state.due_at = None
+            if state.noted == "failed" or self._writer.lost(key):
+                self._desk.retake(key)
+                state.signature = None
+                state.entries = None
+        checked = self._desk.check(monitors, due, windows, tick.focused, tick.now)
+        if checked.own_address:
+            self._trip_own_address()
+            return
+        returned = {snapshot.monitor.key for snapshot in checked.snapshots}
+        for key in due - returned:
+            self._states[key].pending = True
+            self._stats["pending"] += 1
+        for snapshot in checked.snapshots:
+            self._handle(snapshot, tick)
+
+    def _handle(self, snapshot: Snapshot, tick: _Tick) -> None:
+        key = snapshot.monitor.key
+        state = self._states[key]
+        trigger: Trigger = "game" if tick.game_focused else state.trigger or "idle"
+        state.trigger = None
+        state.pending = False
+        state.last_check = tick.now
+        self._writer.capture_failures(key, snapshot.capture_failures)
+        composite = snapshot.composite
+        if not snapshot.changed:
+            self._note(key, state, state.noted, tick)
+        elif composite is None or composite.image is None:
+            state.signature = None
+            self._note(key, state, "hidden", tick)
+        else:
+            signature = imaging.signature(composite.image)
+            if (
+                state.signature is not None
+                and not imaging.differs(state.signature, signature)
+                and state.entries == snapshot.entries
+            ):
+                self._note(key, state, "shown", tick)
+                return
+            entries = snapshot.entries
+            if composite.black:
+                entries = tuple(replace(entry, image=None) for entry in entries)
+            self._writer.submit(
+                Picture(
+                    monitor_key=key,
+                    ts_ms=tick.ts_ms,
+                    trigger=trigger,
+                    image=None if composite.black else composite.image,
+                    entries=entries,
+                    uia_text=self._focused_text(snapshot.entries, tick),
+                    defer_ocr=tick.game_active,
+                    side=key != tick.focus_key,
+                )
             )
-            if now - state.last_attempt >= interval:
-                self._capture("idle", index, monitors, now)
+            state.signature = signature
+            state.entries = tuple(replace(entry, image=None) for entry in snapshot.entries)
+            state.noted = "shown"
+            self._stats["picture"] += 1
+
+    def _note(self, key: str, state: _Monitor, noted: MonitorState, tick: _Tick) -> None:
+        state.noted = noted
+        self._writer.note(key, noted, tick.ts_ms)
+        self._stats["unchanged" if noted == "shown" else noted] += 1
+
+    # --- focused window text -----------------------------------------------------------------
+
+    def _focused_text(self, entries: Sequence[Entry], tick: _Tick) -> str | None:
+        """The focused window's UIA text, read once per tick, only for a picture that shows it."""
+        entry = next((e for e in entries if e.role == "app" and e.focused), None)
+        if entry is None or tick.focused is None or tick.game_active:
+            return None
+        if not tick.text_read:
+            tick.text_read = True
+            tick.text = self._read_text(tick.focused, entry, tick.now)
+        return tick.text
+
+    def _read_text(self, window: WindowInfo, entry: Entry, now: float) -> str | None:
+        text = assemble_text(self._uia.text(window, now) or ())
+        fresh = self._windows.focused_window()
+        if fresh is None or fresh.hwnd != entry.hwnd or fresh.title != entry.title:
+            return None
+        family = BROWSERS.get(fresh.process)
+        if family is not None:
+            address = self._uia.address(fresh, family, now)
+            if normalize_url(address) != entry.url:
+                return None
+        return text or None
 
     # --- gaming mode -------------------------------------------------------------------------
-
-    def _tick_game(self, focused: WindowInfo | None, monitors: list[Rect], now: float) -> bool:
-        """Gaming mode (AGENTS.md): log the game, one screenshot per interval, no UIA text walk,
-        no OCR (those frames have no text; the worker can OCR the stored image later) and no
-        input triggers (cleared each tick). Other monitors are captured at the idle rate under
-        the unfocused rules (browser caption/URL readers still run). Returns True while a game
-        is in the foreground."""
-        try:
-            self._record_transition(self._game_mode.observe(focused, monitors, now), now)
-            game = self._game_mode.current
-            if game is None:
-                return False
-            self._game_heartbeat(now)
-            if (
-                focused is not None
-                and focused.process == game.process
-                and now - self._game_frame_at >= self._game_settings.interval_s
-            ):
-                self._game_frame_at = now
-                self._note(self._capture_game(focused, monitors, now))
-        except Exception as exc:  # noqa: BLE001 - gaming mode must never stop the loop
-            log.warning("gaming mode failed: %s", type(exc).__name__)
-            self._note("error")
-        return self._game_mode.active
-
-    def _tick_game_side(self, focused: WindowInfo | None, monitors: list[Rect], now: float) -> None:
-        """Idle-rate captures of the monitors other than the focused one, if that one is known."""
-        if focused is None or len(monitors) < 2:  # noqa: PLR2004 - one monitor has no side
-            return
-        focus_monitor = _monitor_of(monitors, focused.rect.center)
-        if focus_monitor is None:
-            return
-        for index in range(len(monitors)):
-            if index == focus_monitor:
-                continue
-            state = self._states.setdefault(index, _MonitorState())
-            if now - state.last_attempt >= self._settings.other_monitor_interval_s:
-                self._attempt("game", index, monitors, state, now)
 
     def _record_transition(self, transition: Transition, now: float) -> None:
         """Write the game rows and report the flag; a failed write is counted, not a grab fault."""
@@ -280,28 +543,31 @@ class ScreenCapture:
         except Exception as exc:  # noqa: BLE001 - e.g. a busy database
             self._note_game_log_fault(exc)
         finally:
+            if transition.started is not None:
+                for state in self._states.values():
+                    state.last_check = float("-inf")  # the first game picture comes at once
             if self._on_game is not None and (transition.ended or transition.started):
                 self._on_game(self._game_mode.active)
 
     def _note_game_log_fault(self, exc: Exception) -> None:
         log.warning("game log write failed: %s", type(exc).__name__)
-        self.stats["game_log_error"] += 1
+        self._stats["game_log_error"] += 1
 
     def _start_game_row(self, process: str, title: str, now: float) -> None:
         self._game_id = self._games.open(
             process=process, window_title=title or None, ts_ms=self._now_ms()
         )
         log.info("game mode started for %s (fullscreen detection)", process)
-        self._game_frame_at = float("-inf")
         self._game_heartbeat_at = now
-        self.stats["game_started"] += 1
+        self._stats["game_started"] += 1
 
     def _end_game_row(self) -> None:
-        if self._game_id is not None:
-            self._games.close(self._game_id, self._now_ms())
+        # Cleared first: a failed close leaves the open row to close_stale, never to a later end.
+        game_id, self._game_id = self._game_id, None
+        if game_id is not None:
+            self._games.close(game_id, self._now_ms())
             log.info("game mode ended")
-            self.stats["game_ended"] += 1
-        self._game_id = None
+            self._stats["game_ended"] += 1
 
     def _game_heartbeat(self, now: float) -> None:
         if (
@@ -314,419 +580,6 @@ class ScreenCapture:
             except Exception as exc:  # noqa: BLE001 - e.g. a busy database
                 self._note_game_log_fault(exc)
 
-    def _capture_game(self, window: WindowInfo, monitors: list[Rect], now: float) -> str:
-        if self._windows.is_locked():
-            return "locked"
-        reason = self._exclusions.check_window(window.process, window.title)
-        if reason is not None:
-            return f"excluded:{reason}"
-        index = _monitor_of(monitors, window.rect.center)
-        if index is None:
-            return "no_window"
-        ts_ms = self._now_ms()
-        image = self._screen.grab_window(window)
-        if image is None:
-            return "image_unavailable"
-        black = imaging.is_black(image)  # exclusive fullscreen often grabs black
-        encoded = None if black else imaging.encode_webp(image)
-        if not self._consistent(window, now, focused=True, url=None, read_url=False):
-            return "window_changed"
-        self._store.add(
-            NewFrame(
-                ts_ms=ts_ms,
-                monitor=index,
-                trigger="game",
-                process=window.process,
-                window_title=window.title or None,
-                image_webp=encoded,
-            )
-        )
-        return "game_black" if black else "game_stored"
 
-    # --- helpers -----------------------------------------------------------------------------
-
-    def _monitor_list(self, now: float) -> list[Rect]:
-        if now - self._monitors_at >= MONITOR_REFRESH_S:
-            self._monitors = self._screen.monitors()
-            self._monitors_at = now
-        return self._monitors
-
-    def _poll_focus(self, now: float) -> None:
-        if now - self._focus_polled_at < self._settings.focus_poll_s:
-            return
-        self._focus_polled_at = now
-        last_input = self._windows.last_input_ms()
-        if self._last_input is not None and last_input != self._last_input:
-            self._debouncer.note("input", now)
-        self._last_input = last_input
-        window = self._windows.focused_window()
-        if window is None:
-            return
-        previous = self._focus_key
-        self._focus_key = window.key
-        if previous is None or previous[0] != window.hwnd:
-            self._debouncer.note("focus", now)
-        elif previous != window.key:
-            self._debouncer.note("title", now)
-
-    def _window_for(self, monitor: Rect) -> tuple[WindowInfo | None, bool]:
-        """The window to record for a monitor, and whether it is the focused one."""
-        focused = self._windows.focused_window()
-        if focused is not None and monitor.contains(*focused.rect.center):
-            return focused, True
-        window = self._windows.window_at(*monitor.center)
-        # A focused window that spans several monitors is the topmost window at their centres
-        # too: it is the focused one there as well, so its password check applies.
-        return window, window is not None and focused is not None and window.hwnd == focused.hwnd
-
-    def _is_focused_hwnd(self, hwnd: int) -> bool:
-        focused = self._windows.focused_window()
-        return focused is not None and focused.hwnd == hwnd
-
-    def _capture(self, trigger: Trigger, index: int, monitors: list[Rect], now: float) -> None:
-        state = self._states.setdefault(index, _MonitorState())
-        if now - state.last_attempt < self._settings.min_gap_s:
-            if trigger != "idle":
-                self._debouncer.defer(trigger, state.last_attempt + self._settings.min_gap_s)
-            return
-        self._attempt(trigger, index, monitors, state, now)
-
-    def _pointed_target(self, monitors: list[Rect]) -> tuple[int, WindowInfo] | None:
-        """The monitor and window under the cursor, if there is one."""
-        point = self._windows.cursor_pos()
-        pointed = _monitor_of(monitors, point)
-        if pointed is None:
-            return None
-        window = self._windows.window_at(*point)
-        return None if window is None else (pointed, window)
-
-    def _capture_input(
-        self, index: int, monitors: list[Rect], focused: WindowInfo | None, now: float
-    ) -> None:
-        """Capture the focused monitor and the window under the cursor (e.g. one being scrolled
-        without focus). Both gates are checked first, so a trigger defers at most once."""
-        focus_state = self._states.setdefault(index, _MonitorState())
-        target = self._pointed_target(monitors)
-        on_focused = target is not None and focused is not None and target[1].hwnd == focused.hwnd
-        if on_focused:
-            target = None
-        focus_done = focus_state.last_attempt == now  # a focus trigger just captured it this tick
-        gates = [] if focus_done else [focus_state]
-        if target is not None:
-            gates.append(self._pointed_state)
-        min_gap = self._settings.min_gap_s
-        blocked = [s.last_attempt + min_gap for s in gates if now - s.last_attempt < min_gap]
-        if blocked:
-            self._debouncer.defer("input", max(blocked))
-            return
-        if on_focused:
-            self._note("pointed_focused")
-        if not focus_done:
-            self._attempt("input", index, monitors, focus_state, now)
-        if target is not None:
-            pointed_index, window = target
-            self._attempt(
-                "input", pointed_index, monitors, self._pointed_state, now, pointed=window
-            )
-
-    def _attempt(  # noqa: PLR0913 - the capture context travels together
-        self,
-        trigger: Trigger,
-        index: int,
-        monitors: list[Rect],
-        state: _MonitorState,
-        now: float,
-        *,
-        pointed: WindowInfo | None = None,
-    ) -> None:
-        state.last_attempt = now
-        try:
-            outcome = self._capture_monitor(
-                trigger, index, monitors[index], state, now, pointed=pointed
-            )
-        except Exception as exc:  # noqa: BLE001 - one bad capture must never stop the loop
-            log.warning("capture failed: %s", type(exc).__name__)
-            outcome = "error"
-        self._note(outcome)
-
-    def _target_window(
-        self, trigger: Trigger, monitor: Rect, pointed: WindowInfo | None
-    ) -> tuple[WindowInfo, bool] | str:
-        """The window to capture and whether it is focused, or the outcome that skips it."""
-        if pointed is not None:
-            return "pointed_focused" if self._is_focused_hwnd(pointed.hwnd) else (pointed, False)
-        window, is_focused = self._window_for(monitor)
-        if window is None:
-            return "no_window"
-        if trigger == "game":
-            if is_focused:
-                return "game_focused"
-            game = self._game_mode.current
-            if game is not None and window.process == game.process:
-                return "game_window"
-        return window, is_focused
-
-    def _capture_monitor(  # noqa: PLR0911, PLR0913 - a pipeline of early exits, one per rule
-        self,
-        trigger: Trigger,
-        index: int,
-        monitor: Rect,
-        state: _MonitorState,
-        now: float,
-        *,
-        pointed: WindowInfo | None = None,
-    ) -> str:
-        if self._windows.is_locked():
-            return "locked"
-        chosen = self._target_window(trigger, monitor, pointed)
-        if isinstance(chosen, str):
-            return chosen
-        window, is_focused = chosen
-        if window.hwnd in self._tick_hwnds:
-            return "duplicate_window"
-        self._tick_hwnds.add(window.hwnd)  # before the rules: an excluded window stays excluded
-        reason, url = self._capture_allowed(window, now, focused=is_focused)
-        if reason is not None:
-            return reason
-
-        ts_ms = self._now_ms()
-        image = self._screen.grab_window(window)
-        target = _Target(window, is_focused)
-        if image is None:
-            return self._capture_text_only(
-                trigger=trigger,
-                index=index,
-                target=target,
-                url=url,
-                state=state,
-                ts_ms=ts_ms,
-                now=now,
-            )
-        if not self._consistent(window, now, focused=is_focused, url=url):
-            return "window_changed"
-        sig = imaging.signature(image)
-        if (
-            state.signature is not None
-            and state.window_key == window.key
-            and not imaging.differs(state.signature, sig)
-        ):
-            return "unchanged"
-
-        black = imaging.is_black(image)
-        text, source, gate_result = self._read_text(
-            target, image, black=black, ocr=trigger != "game", now=now
-        )
-        encoded = None if black else imaging.encode_webp(image)
-        stored = self._store_frame(
-            trigger=trigger,
-            index=index,
-            target=target,
-            url=url,
-            state=state,
-            ts_ms=ts_ms,
-            now=now,
-            text=text,
-            source=source,
-            encoded=encoded,
-            signature=sig,
-        )
-        if not stored:
-            return "window_changed"
-        if gate_result is not None and source == "ocr":
-            self._gate.commit(f"{window.process}:{window.hwnd}", gate_result)
-        return "stored_black" if black else "stored"
-
-    def _capture_text_only(  # noqa: PLR0913 - the capture context travels together
-        self,
-        *,
-        trigger: Trigger,
-        index: int,
-        target: _Target,
-        url: str | None,
-        state: _MonitorState,
-        ts_ms: int,
-        now: float,
-    ) -> str:
-        """The window cannot be rendered (a hung app): keep its metadata and UIA text only."""
-        window = target.window
-        text, source, _ = self._read_text(target, None, black=False, ocr=trigger != "game", now=now)
-        if state.window_key == window.key and state.last_text == text:
-            return "unchanged_no_image"
-        stored = self._store_frame(
-            trigger=trigger,
-            index=index,
-            target=target,
-            url=url,
-            state=state,
-            ts_ms=ts_ms,
-            now=now,
-            text=text,
-            source=source,
-            encoded=None,
-            signature=None,
-        )
-        if not stored:
-            return "window_changed"
-        return "stored_no_image"
-
-    def _store_frame(  # noqa: PLR0913 - the capture context travels together
-        self,
-        *,
-        trigger: Trigger,
-        index: int,
-        target: _Target,
-        url: str | None,
-        state: _MonitorState,
-        ts_ms: int,
-        now: float,
-        text: str,
-        source: TextSource | None,
-        encoded: bytes | None,
-        signature: imaging.Signature | None,
-    ) -> bool:
-        """Write a frame unless the window changed since it was read. Returns whether it did."""
-        window = target.window
-        # UIA/URL and pixels are separate reads. Reject a switch/navigation/lock before writing.
-        if not self._consistent(window, now, focused=target.is_focused, url=url):
-            return False
-        self._store.add(
-            NewFrame(
-                ts_ms=ts_ms,
-                monitor=index,
-                trigger=trigger,
-                process=window.process or None,
-                window_title=window.title or None,
-                url=url,
-                focused=target.is_focused,
-                text=text or None,
-                text_source=source,
-                image_webp=encoded,
-            )
-        )
-        state.signature = signature
-        state.window_key = window.key
-        state.last_text = text
-        return True
-
-    def _capture_allowed(
-        self, window: WindowInfo, now: float, *, focused: bool
-    ) -> tuple[str | None, str | None]:
-        reason, url = self._exclusion(window, now, focused=focused)
-        self._browsers.publish(window, reason)  # before any media write can rely on it
-        return (f"excluded:{reason}" if reason else None), url
-
-    def _exclusion(  # noqa: PLR0911 - one early exit per rule
-        self, window: WindowInfo, now: float, *, focused: bool
-    ) -> tuple[str | None, str | None]:
-        """The exclusion category of a window (or None) and its address when it is a browser."""
-        reason = self._exclusions.check_window(window.process, window.title)
-        if reason is not None:
-            return reason, None
-        if focused and (reason := self._password_reason(window, now)) is not None:
-            return reason, None
-        family = BROWSERS.get(window.process)
-        if family is None:
-            return None, None
-        caption = self._bounded(window, now, lambda: self._uia.browser_caption(window, family))
-        if caption and self._exclusions.is_private_title(caption):
-            return "private_window", None  # Chromium's marker is not in the Win32 title
-        if caption is None and window.process in _CAPTION_ONLY:
-            # Chrome and Brave keep the marker only in the frame's caption: without it nobody
-            # knows whether this window is private, so it is skipped and media is rejected.
-            return "caption_unknown", None
-        raw = self._read_raw(window, now)
-        url = normalize_url(raw) if raw else None
-        if url is None and raw and (typed := self._exclusions.check_typed(raw)) is not None:
-            return typed, None  # text typed into the bar still names a host
-        return self._exclusions.check_browser(window.title, url), url
-
-    def _password_reason(self, window: WindowInfo, now: float) -> str | None:
-        """Why the focused element forbids capture: a password field, or an unknown state (UI
-        Automation failed, so nobody knows). None when it is not one and when nothing has focus."""
-        state = self._bounded(window, now, self._uia.focused_is_password)
-        if state is None:
-            return "password_unknown"
-        return "password_field" if state else None
-
-    def _consistent(
-        self,
-        window: WindowInfo,
-        now: float,
-        *,
-        focused: bool,
-        url: str | None,
-        read_url: bool = True,
-    ) -> bool:
-        if self._windows.is_locked() or self._windows.inspect_window(window.hwnd) != window:
-            return False
-        if focused:
-            if (
-                self._windows.focused_window() != window
-                or self._password_reason(window, now) is not None
-            ):
-                return False
-        elif self._is_focused_hwnd(window.hwnd):
-            return False
-        return not read_url or self._read_url(window, now) == url
-
-    def _read_raw(self, window: WindowInfo, now: float) -> str | None:
-        family = BROWSERS.get(window.process)
-        if family is None:
-            return None
-        return self._bounded(window, now, lambda: self._uia.read_url(window, family))
-
-    def _read_url(self, window: WindowInfo, now: float) -> str | None:
-        raw = self._read_raw(window, now)
-        return normalize_url(raw) if raw else None
-
-    def _bounded[T](self, window: WindowInfo, now: float, read: Callable[[], T | None]) -> T | None:
-        """Run a UIA reader unless its window is backed off. A slow call that returned nothing (a
-        timeout) backs the window off until `now` + HWND_BACKOFF_S."""
-        if not self._budget.window_allowed(window.hwnd, now):
-            return None
-        started = time.perf_counter()
-        result = read()
-        if result is None and self._budget.record_failure(
-            window.hwnd, (time.perf_counter() - started) * 1000, now
-        ):
-            self.stats["uia_backoff"] += 1
-        return result
-
-    def _read_text(
-        self,
-        target: _Target,
-        image: Image.Image | None,
-        *,
-        black: bool,
-        ocr: bool,
-        now: float,
-    ) -> tuple[str, TextSource | None, GateResult | None]:
-        window = target.window
-        text = ""
-        source: TextSource | None = None
-        if (
-            target.is_focused
-            and self._budget.window_allowed(window.hwnd, now)
-            and self._budget.allow(window.process, now)
-        ):
-            started = time.perf_counter()
-            parts = self._uia.read_text(window, MAX_UIA_NODES)
-            self._budget.record(window.process, (time.perf_counter() - started) * 1000, now)
-            text = assemble_text(parts or ())
-            source = "uia" if text else None
-        if len(text) >= MIN_UIA_CHARS or black or image is None or not ocr:
-            return text, source, None
-        result = self._gate.read(
-            f"{window.process}:{window.hwnd}", image, Rect(0, 0, image.width, image.height)
-        )
-        ocr_text = result.text.strip()
-        if len(ocr_text) > len(text):
-            return ocr_text, "ocr", result
-        return text, source, None
-
-
-def _monitor_of(monitors: list[Rect], point: tuple[int, int]) -> int | None:
-    for index, rect in enumerate(monitors):
-        if rect.contains(*point):
-            return index
-    return None
+def _monitor_key_at(monitors: Sequence[MonitorInfo], point: tuple[int, int]) -> str | None:
+    return next((m.key for m in monitors if m.rect.contains(*point)), None)

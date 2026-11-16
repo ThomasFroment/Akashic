@@ -19,7 +19,6 @@ from akashic.config import THEMES, Config, ConfigError, Paths, parse_config
 from akashic.config_edit import EditError, set_values
 from akashic.jsonish import as_dict
 from akashic.pipeline.models import CHAT_CANDIDATES, SPEECH_CANDIDATES
-from akashic.storage import state
 from akashic.storage.crypto import CryptoError
 from akashic.storage.debuginfo import ProcessInfo
 from akashic.storage.retention import (
@@ -70,7 +69,6 @@ KEEP: Final = "Retention"
 LOAD: Final = "Background work"
 OTHER: Final = "Storage and logs"
 MODELS: Final = "Model selection"
-LEVELS_WANTED_MS: Final = 10_000  # how long one meter poll keeps capture publishing every second
 
 SETTINGS: Final = (
     Setting(
@@ -89,7 +87,8 @@ SETTINGS: Final = (
         "Microphone gain",
         "number",
         MIC,
-        "Multiplies the microphone level before anything else. Raise it if the meter stays low.",
+        "Multiplies the microphone level before anything else. "
+        "Raise it if your voice is dropped as too quiet.",
         0.1,
         30.0,
         0.1,
@@ -100,7 +99,7 @@ SETTINGS: Final = (
         "number",
         MIC,
         "Speech quieter than this (average level of the spoken part) is dropped as noise. "
-        "Keep it below your voice level on the meter.",
+        "Keep it below your voice level (Debug lists the levels of dropped speech).",
         0.0,
         0.99,
         0.001,
@@ -233,18 +232,13 @@ SETTINGS: Final = (
         "Executable names, one per line (globs allowed), added to the built-in list.",
     ),
     Setting(
-        "exclusions.window_titles",
-        "Never capture these window titles",
-        "lines",
-        PRIVACY,
-        "Globs, one per line, e.g. *bank*.",
-    ),
-    Setting(
         "exclusions.urls",
         "Never capture these addresses",
         "lines",
         PRIVACY,
-        "Globs, one per line, e.g. *://*.example.com/*.",
+        "Globs, one per line, e.g. *://*.example.com/*. An address with a path excludes the "
+        "whole site while a window is on it: the host part is what gets excluded, so */login* "
+        "excludes every site.",
     ),
     Setting(
         "retention.screenshots",
@@ -501,15 +495,14 @@ def save_values(path: Path, values: dict[str, object]) -> list[str]:
     return list(changes)
 
 
-def _capture_audio(services: Services) -> tuple[int | None, Json | None]:
-    """The capture process's latest audio numbers and how old they are (ms)."""
+def _capture_audio(services: Services) -> Json | None:
+    """The capture process's latest audio numbers."""
     with services.db() as conn:
         infos = {i.name: i for i in ProcessInfo(conn).read_all()}
     capture = infos.get("capture")
     if capture is None:
-        return None, None
-    age_ms = time.time_ns() // 1_000_000 - capture.updated_ms
-    return age_ms, as_dict(capture.data.get("audio"))
+        return None
+    return as_dict(capture.data.get("audio"))
 
 
 _FILES_REMAIN: Final = "some files could not be removed; close programs using them and retry"
@@ -581,7 +574,7 @@ def settings_routes(services: Services, path: Path) -> APIRouter:
     @router.get("")
     def read() -> Json:  # pyright: ignore[reportUnusedFunction]
         config = read_config(path)
-        _, audio = _capture_audio(services)
+        audio = _capture_audio(services)
         return {
             "devices": as_dict(audio.get("available")) if audio else {},
             "fields": [
@@ -646,16 +639,6 @@ def settings_routes(services: Services, path: Path) -> APIRouter:
             "warn_below_gb": config.disk_warning_free_gb,
             "low_space": free_gb is not None and free_gb < config.disk_warning_free_gb,
         }
-
-    @router.get("/levels")
-    def levels() -> Json:  # pyright: ignore[reportUnusedFunction]
-        """What the microphone meter shows: the capture process's latest numbers. Polling this
-        asks capture to publish every second for the next ten seconds (otherwise every five)."""
-        with services.db() as conn:
-            now_ms = time.time_ns() // 1_000_000
-            state.set_int(conn, state.LEVELS_WANTED_UNTIL, now_ms + LEVELS_WANTED_MS)
-        age_ms, audio = _capture_audio(services)
-        return {"age_ms": age_ms, "audio": audio}
 
     @router.post("/restart")
     def restart() -> Json:  # pyright: ignore[reportUnusedFunction]

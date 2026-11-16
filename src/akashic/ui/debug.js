@@ -25,7 +25,6 @@ function debugView(tab) {
 }
 
 // ---- shared bits ----------------------------------------------------------------------------
-const fmtAge = (ms) => (ms < 10000 ? "just now" : ms < 120000 ? Math.round(ms / 1000) + " s ago" : ms < 7200000 ? Math.round(ms / 60000) + " min ago" : Math.round(ms / 3600000) + " h ago");
 const dbgCell = (v, col) => {
   if (v === null || v === undefined) return h("td", { class: "mono null" }, "–");
   if (typeof v === "number" && /_ms$/.test(col || "") && v > 1e11) return h("td", { class: "mono", title: String(v) }, fmtTime(v));
@@ -89,7 +88,8 @@ function debugOverview(root) {
       if (a.stats.dropped_quiet) out.push(dbgNote("bad", `${a.stats.dropped_quiet} segment(s) dropped as too quiet (floor ${a.energy_floor}). Recent levels: ${levels.slice(-8).join(", ") || "none kept"}. If that was real speech, set [audio] energy_floor in config.toml below those levels and restart.`));
       if (a.stats.dropped_short) out.push(dbgNote("", `${a.stats.dropped_short} segment(s) dropped as under 0.4 s of speech (coughs, clicks, single words).`));
       if (a.stats.write_failed || a.stats.dropped_backlog) out.push(dbgNote("bad", "Some audio segments could not be stored: see the capture log."));
-      for (const [kind, s] of Object.entries(a.streams)) if (!s.device) out.push(dbgNote("bad", `No ${kind} audio device is open.`));
+      // While Akashic is open, capture is halted and has released its devices on purpose.
+      if (!c.data.halted) for (const [kind, s] of Object.entries(a.streams)) if (!s.device) out.push(dbgNote("bad", `No ${kind} audio device is open.`));
     } else out.push(dbgNote("bad", "Audio recording is not running (disabled, or it failed to start): see the capture log."));
     if (o.disk.free_gb !== null && o.disk.free_gb < 50) out.push(dbgNote("bad", `Only ${o.disk.free_gb} GB free on the data drive.`));
     return out;

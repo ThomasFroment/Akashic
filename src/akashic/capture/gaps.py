@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol
 
 from akashic.storage import db
+from akashic.storage.gaps import HEARTBEAT_MS
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -26,7 +27,6 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 TICK_S: Final = 1.0
-HEARTBEAT_MS: Final = 5_000
 STALL_MS: Final = 30_000  # a tick this late means the process was asleep or frozen
 MERGE_WITHIN_MS: Final = 30_000
 MAX_PENDING_DROPS: Final = 10_000
@@ -147,11 +147,15 @@ class CaptureGaps:
             self._events.append(_Span(kind, reason, start_ms, end_ms, merge, bounded=True))
 
     def run(
-        self, stop: threading.Event, paused: threading.Event, locked: Callable[[], bool]
+        self,
+        stop: threading.Event,
+        paused: threading.Event,
+        halted: threading.Event,
+        locked: Callable[[], bool],
     ) -> None:
         while not stop.is_set():
             try:
-                self._tick(paused, locked)
+                self._tick(paused, halted, locked)
             except Exception as exc:  # noqa: BLE001 - gap bookkeeping must never stop capture
                 self.stats["tick_failed"] += 1
                 log.warning("capture gap tick failed: %s", type(exc).__name__)
@@ -178,22 +182,31 @@ class CaptureGaps:
         if stop_written:
             self._flush(STOP_FLUSH_S)
 
-    def _tick(self, paused: threading.Event, locked: Callable[[], bool]) -> None:
+    def _tick(
+        self, paused: threading.Event, halted: threading.Event, locked: Callable[[], bool]
+    ) -> None:
         now = self._now_ms()
-        self._watch(now, paused=paused.is_set(), locked=self._is_locked(locked))
+        self._watch(
+            now, paused=paused.is_set(), halted=halted.is_set(), locked=self._is_locked(locked)
+        )
         if not self._settle():
             return
         if self._flush(TICK_FLUSH_S):
             self._beat(now)
 
-    def _watch(self, now: int, *, paused: bool, locked: bool) -> None:
+    def _watch(self, now: int, *, paused: bool, halted: bool, locked: bool) -> None:
         previous, self._last_tick_ms = self._last_tick_ms, now
         if previous is not None and now - previous > STALL_MS:
             with self._lock:
                 self._events.append(
                     _Span("all", "stalled", previous, now, merge=False, bounded=False)
                 )
-        self._set("all", "paused", wanted=paused, ts_ms=now)
+        if paused:
+            self.open("all", "paused", now)
+        elif halted:
+            self.open("all", "ui_open", now)
+        else:
+            self.close("all", now)
         self._set("screen", "locked", wanted=locked, ts_ms=now)
 
     def _set(self, kind: GapKind, reason: GapReason, *, wanted: bool, ts_ms: int) -> None:

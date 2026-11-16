@@ -111,7 +111,11 @@ Read the one that matches your task before changing that area.
 - `docs/audits/`: dated project audits (skill `frogg:audit`).
 - `docs/solutions/`: invented methods with measured candidates (skill `frogg:invent`). Read the matching report before implementing or replacing its method.
 - `eval/`: the method studies' harnesses, labelled sets and results behind `docs/solutions/` (frozen prototypes, outside the lint bar). Large data is rebuilt from public sources; see `eval/README.md`.
-- `docs/baselines/`: dated measured baselines (tests, known defects, Ask, planner, timings). Compare a change against the latest one; see TOOLING.md "Known defects and measurement".
+- `docs/baselines/`: dated measured baselines and spike reports (tests, known defects, Ask, planner, timings, window composition, browser reads). Compare a change against the latest one; see TOOLING.md "Known defects and measurement".
+- `TODO.md`: planned work by milestone. Tick an item when done and verified.
+- `OPEN.md`: what finished items left open (unrun checks, unverified facts, deferred findings).
+- `tests/manual/CHECKLIST.md`: manual checks on the real PC, run when a change touches what tests cannot see.
+- `docs/archive/`: superseded records, kept for history, not specifications.
 
 ## Scope exclusions
 

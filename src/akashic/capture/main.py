@@ -21,18 +21,20 @@ from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.gaming import GameSettings
 from akashic.capture.gaps import CaptureGaps
-from akashic.capture.health import SCREEN_IMAGES_FAILING, CaptureStatus
+from akashic.capture.health import CaptureStatus
 from akashic.capture.media import MediaTracker
 from akashic.capture.ocr_gate import OcrGate
 from akashic.capture.screen import ScreenCapture
+from akashic.capture.screen_writer import ScreenWriter
 from akashic.capture.vad import SileroVad
 from akashic.child import ChildContext, run_child
-from akashic.storage import db, state
+from akashic.storage import db
 from akashic.storage.audio import AudioStore
 from akashic.storage.debuginfo import ProcessInfo
 from akashic.storage.frames import FrameStore
 from akashic.storage.gaps import GapLog
 from akashic.storage.media import MediaStore
+from akashic.storage.monitors import MonitorLog
 from akashic.storage.sessions import GameLog, MediaLog
 
 if TYPE_CHECKING:
@@ -92,39 +94,32 @@ def _start_audio(
         conn.close()
         log.error("audio recording unavailable: %s", type(exc).__name__)  # noqa: TRY400
         return None
-    thread = threading.Thread(target=audio.run, args=(ctx.stop, ctx.paused), name="audio")
+    thread = threading.Thread(target=audio.run, args=(ctx.stop, ctx.halt, ctx.paused), name="audio")
     thread.start()
     log.info("audio recording running")
     return audio, thread, conn
 
 
 GAP_THREAD_JOIN_S: Final = 2.0  # a tick still running means the database is busy anyway
+WRITER_JOIN_S: Final = 10.0  # time to store the few pictures still queued at stop
 PUBLISH_INTERVAL_S: Final = 5.0
-FAST_PUBLISH_S: Final = 1.0  # while the Settings microphone meter is open
-
-
-def publish_interval(conn: Connection, now_ms: int) -> float:
-    """Seconds until the next publish: fast only while someone watches the meter."""
-    wanted = state.get_int(conn, state.LEVELS_WANTED_UNTIL, 0) > now_ms
-    return FAST_PUBLISH_S if wanted else PUBLISH_INTERVAL_S
 
 
 def _active_problems(
     status: CaptureStatus,
-    capture: ScreenCapture,
+    writer: ScreenWriter,
     audio: AudioCapture | None,
     *,
-    paused: bool,
+    halted: bool,
     since: float,
 ) -> list[str]:
-    """Problems now: only the sticky ones while paused, because nothing is read then."""
+    """Problems now: only the sticky ones while halted, because nothing is read then."""
     problems = list(status.sticky)
-    if paused:
+    if halted:
         return problems
     if audio is not None:
         problems.extend(audio.problems(time.monotonic(), since))
-    if capture.images_failing(since):
-        problems.append(SCREEN_IMAGES_FAILING)
+    problems.extend(writer.problems(since))
     return problems
 
 
@@ -139,18 +134,19 @@ def _collect(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct co
     ctx: ChildContext,
     status: CaptureStatus,
     capture: ScreenCapture,
+    writer: ScreenWriter,
     audio: AudioCapture | None,
     tracker: MediaTracker,
     gaps: CaptureGaps,
 ) -> tuple[int, list[str], dict[str, object]] | None:
     """``(pause epoch, problems, debug data)``, or None (logged) when reading health failed."""
     try:
-        epoch, paused, since = ctx.health_snapshot()  # before reading any health
-        problems = _active_problems(status, capture, audio, paused=paused, since=since)
+        epoch, halted, since = ctx.health_snapshot()  # before reading any health
+        problems = _active_problems(status, writer, audio, halted=halted, since=since)
         data: dict[str, object] = {
-            "paused": paused,
+            "halted": halted,
             "problems": problems,
-            "screen": dict(sorted(capture.stats.items())),
+            "screen": dict(sorted(capture.stats_snapshot().items())),
             "media": dict(sorted(tracker.stats.items())),
             "audio": audio.snapshot() if audio is not None else None,
             "gaps": dict(sorted(gaps.stats.items())),
@@ -164,6 +160,7 @@ def _collect(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct co
 def _publish_info(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct collaborator
     ctx: ChildContext,
     capture: ScreenCapture,
+    writer: ScreenWriter,
     audio: AudioCapture | None,
     tracker: MediaTracker,
     status: CaptureStatus,
@@ -175,18 +172,15 @@ def _publish_info(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distin
     info = ProcessInfo(conn)
     try:
         while True:
-            wait = PUBLISH_INTERVAL_S
-            collected = _collect(ctx, status, capture, audio, tracker, gaps)
+            collected = _collect(ctx, status, capture, writer, audio, tracker, gaps)
             if collected is not None:
                 epoch, problems, data = collected
                 try:
-                    now_ms = _now_ms()
-                    info.publish("capture", data, now_ms)
-                    wait = publish_interval(conn, now_ms)
+                    info.publish("capture", data, _now_ms())
                 except Exception as exc:  # noqa: BLE001 - debugging aid: never disturb capture
                     log.warning("publishing debug info failed: %s", type(exc).__name__)
                 _report_problems(status, problems, epoch)
-            if ctx.stop.wait(wait):
+            if ctx.stop.wait(PUBLISH_INTERVAL_S):
                 break
     finally:
         conn.close()
@@ -199,7 +193,7 @@ def _publish_sticky_problems(ctx: ChildContext, status: CaptureStatus) -> None:
     try:
         ProcessInfo(ctx.conn).publish(
             "capture",
-            {"paused": ctx.paused.is_set(), "problems": list(status.sticky)},
+            {"halted": ctx.halt.is_set(), "problems": list(status.sticky)},
             _now_ms(),
         )
     except Exception as exc:  # noqa: BLE001 - debugging aid: never disturb capture
@@ -231,6 +225,34 @@ def _finish_gaps(gaps: CaptureGaps, thread: threading.Thread, stop_ms: int) -> b
     return True
 
 
+def _stop_writer(
+    writer: ScreenWriter, stop: threading.Event, thread: threading.Thread, conn: Connection
+) -> None:
+    """Let the writer store what is queued; give up (and drop the rest) after a bounded wait.
+    Called once the screen loop has returned, so nothing more is submitted."""
+    stop.set()
+    thread.join(timeout=WRITER_JOIN_S)
+    if thread.is_alive():
+        log.warning("screen writer did not stop; queued pictures are dropped")
+        writer.close()
+    else:
+        conn.close()
+
+
+def _close_capture(
+    capture: ScreenCapture,
+    writer: ScreenWriter,
+    writer_stop: threading.Event,
+    thread: threading.Thread,
+    conn: Connection,
+) -> None:
+    try:
+        capture.close()
+    except Exception as exc:  # noqa: BLE001 - the rest of the stop must still run
+        log.warning("closing screen capture failed: %s", type(exc).__name__)
+    _stop_writer(writer, writer_stop, thread, conn)
+
+
 def _flush_late_gaps(gaps: CaptureGaps) -> None:
     try:
         gaps.flush_late()
@@ -245,8 +267,7 @@ def run_capture(
     detector_factory: Callable[[], SpeechDetector] = SileroVad,
 ) -> None:
     """Wire the screen loop, the media poller and audio to storage; run until the context stops."""
-    store = FrameStore(ctx.conn, MediaStore(ctx.paths.media_dir, ctx.key.subkey("media")))
-    # Akashic's own pages are never captured. Without the port every loopback address counts.
+    # Akashic's own address halts capture (the failsafe). Without the port every loopback counts.
     api_origin = f"http://127.0.0.1:{ctx.api_port}" if ctx.api_port is not None else None
     exclusions = Exclusions(ctx.config.exclusions, api_origin)
     browsers = BrowserState()  # screen verdicts on browser windows, read by the media tracker
@@ -273,12 +294,26 @@ def run_capture(
     )
     _publish_sticky_problems(ctx, status)
     ctx.set_resume_state("degraded" if status.sticky else "ready")
+    # The writer stores pictures in its own thread, so it gets its own connection.
+    writer_conn = db.connect(ctx.paths.db_file, ctx.key.subkey("db"))
+    writer = ScreenWriter(
+        FrameStore(writer_conn, MediaStore(ctx.paths.media_dir, ctx.key.subkey("media"))),
+        MonitorLog(writer_conn),
+        OcrGate(platform.ocr),
+    )
+    writer_stop = threading.Event()  # set after the screen loop is done, not with ctx.stop
+    writer_thread = threading.Thread(
+        target=writer.run, args=(writer_stop,), name="screen-writer", daemon=True
+    )
+    writer_thread.start()
     capture = ScreenCapture(
-        screen=platform.screen,
+        displays=platform.displays,
         windows=platform.windows,
+        facts=platform.facts,
+        events=platform.events,
+        captures=platform.captures,
         uia=platform.uia,
-        gate=OcrGate(platform.ocr),
-        store=store,
+        writer=writer,
         exclusions=exclusions,
         browsers=browsers,
         games=games,
@@ -287,6 +322,7 @@ def run_capture(
             games=gaming.games,
             not_games=gaming.not_games,
         ),
+        on_own_address=lambda seen: ctx.set_own_address(visible=seen),
         on_game=status.set_gaming,
     )
     # The media poller runs in its own thread, so it gets its own connection: a sqlite
@@ -302,31 +338,31 @@ def run_capture(
     )
     media_thread = threading.Thread(
         target=tracker.run,
-        args=(ctx.stop, ctx.paused, platform.windows.is_locked),
+        args=(ctx.stop, ctx.halt, platform.windows.is_locked),
         name="media",
         daemon=True,
     )
     media_thread.start()
     gap_thread = threading.Thread(
         target=gaps.run,
-        args=(ctx.stop, ctx.paused, platform.windows.is_locked),
+        args=(ctx.stop, ctx.paused, ctx.halt, platform.windows.is_locked),
         name="gaps",
         daemon=True,
     )
     gap_thread.start()
     threading.Thread(
         target=_publish_info,
-        args=(ctx, capture, audio[0] if audio is not None else None, tracker, status, gaps),
+        args=(ctx, capture, writer, audio[0] if audio is not None else None, tracker, status, gaps),
         name="debug-info",
         daemon=True,
     ).start()
     log.info("screen capture and media logging running")
     try:
-        capture.run(ctx.stop, ctx.paused)
+        capture.run(ctx.stop, ctx.halt, ctx.paused)
     finally:
         ctx.stop.set()
         stop_ms = _now_ms()
-        capture.close()
+        _close_capture(capture, writer, writer_stop, writer_thread, writer_conn)
         gaps_done = _finish_gaps(gaps, gap_thread, stop_ms)
         media_thread.join(timeout=10)
         media_conn.close()
@@ -337,7 +373,7 @@ def run_capture(
         if gaps_done:
             _flush_late_gaps(gaps)
             gap_conn.close()
-        log.info("capture stats: %s", dict(sorted(capture.stats.items())))
+        log.info("capture stats: %s", dict(sorted(capture.stats_snapshot().items())))
         log.info("media stats: %s", dict(sorted(tracker.stats.items())))
 
 

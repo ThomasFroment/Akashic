@@ -16,10 +16,10 @@ from whisper_fakes import small_whisper_spec, stage_whisper_model
 from akashic import child
 from akashic.pipeline import main as worker
 from akashic.pipeline import whisper
-from akashic.pipeline.jobs import JobQueue, NewJob
 from akashic.pipeline.whisper import WhisperTranscriber
 from akashic.storage import db
 from akashic.storage.crypto import DataKey
+from akashic.storage.jobs import JobQueue, NewJob
 
 if TYPE_CHECKING:
     from pathlib import Path

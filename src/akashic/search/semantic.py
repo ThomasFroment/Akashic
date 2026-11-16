@@ -13,8 +13,8 @@ import time
 from typing import TYPE_CHECKING, Final
 
 from akashic.pipeline.embed import query_job
-from akashic.pipeline.jobs import JobQueue
 from akashic.storage import embeddings
+from akashic.storage.jobs import JobQueue
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -36,7 +36,7 @@ def semantic_ready(conn: Connection, model: str) -> bool:
     row = conn.execute(
         "SELECT EXISTS (SELECT 1 FROM embeddings WHERE owner_kind = 'episode' AND model = :model)"
         " OR EXISTS (SELECT 1 FROM segment_passages WHERE model = :model)"
-        " OR EXISTS (SELECT 1 FROM frame_passages WHERE model = :model)",
+        " OR EXISTS (SELECT 1 FROM window_passages WHERE model = :model)",
         {"model": model},
     ).fetchone()
     return bool(row[0])

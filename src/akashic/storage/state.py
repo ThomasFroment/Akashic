@@ -1,4 +1,4 @@
-"""Named integers in the ``state`` table: watermarks, short-lived flags, and the user's paused
+"""Named integers in the ``state`` table: watermarks and the user's paused
 choice."""
 
 from __future__ import annotations
@@ -9,10 +9,6 @@ from akashic.storage import db
 
 if TYPE_CHECKING:
     from sqlite3 import Connection
-
-# Until when (ms) someone is watching the live microphone meter in Settings. The API sets it on
-# every meter poll; capture publishes its numbers every second only while it is in the future.
-LEVELS_WANTED_UNTIL: Final = "levels_wanted_until_ms"
 
 # The user's recording choice (1 = paused), read and written only by the app process and kept
 # across Lock, Quit and Delete all.

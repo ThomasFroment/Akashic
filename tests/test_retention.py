@@ -2,20 +2,29 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
+from memory_data import add_monitor, app_window, new_frame, window_of
 
 from akashic.config import RETENTION_TYPES, Config
-from akashic.pipeline.jobs import Job, JobQueue, NewJob, enqueue_in
 from akashic.pipeline.main import housekeeping
 from akashic.pipeline.retention import RetentionHandler, retention_job
 from akashic.pipeline.sessions import derive_app_sessions
 from akashic.search import keyword, transcripts
 from akashic.storage.audio import AudioStore, NewSegment
-from akashic.storage.frames import FrameStore, NewFrame
-from akashic.storage.retention import DAY_MS, PURGERS, apply_retention
+from akashic.storage.frames import FrameStore, NewFrame, NewWindow
+from akashic.storage.jobs import Job, JobQueue, NewJob, enqueue_in
+from akashic.storage.retention import (
+    DAY_MS,
+    PURGERS,
+    apply_retention,
+    delete_all_recorded_data,
+    delete_spent_frames,
+    unreleased_media_references,
+)
 from akashic.storage.usage import WEEK_MS, storage_report
 
 if TYPE_CHECKING:
@@ -33,6 +42,7 @@ def ago(days: float) -> int:
 
 @pytest.fixture
 def frames(conn: Connection, media: MediaStore) -> FrameStore:
+    add_monitor(conn)
     return FrameStore(conn, media)
 
 
@@ -45,15 +55,12 @@ def frame(
     frames: FrameStore, age_days: float, text: str | None = "hello", *, image: bool = True
 ) -> int:
     return frames.add(
-        NewFrame(
-            ts_ms=ago(age_days),
-            monitor=0,
+        new_frame(
+            ago(age_days),
             trigger="click",
             process="zen.exe",
-            window_title="Window",
             text=text,
-            text_source="uia" if text else None,
-            image_webp=b"webp" if image else None,
+            image=b"webp" if image else None,
         )
     )
 
@@ -110,7 +117,7 @@ def test_expired_screenshots_lose_the_image_but_keep_the_row_and_text(
     assert run(conn, media, screenshots=30) == {"screenshots": 1}
     stored = frames.get(old)
     assert stored is not None
-    assert (stored.image_path, stored.text) == (None, "hello")
+    assert (stored.image_path, stored.windows[0].text) == (None, "hello")
     assert not media.exists(old_path)
     assert frames.get(new).image_path is not None  # type: ignore[union-attr]
     assert run(conn, media, screenshots=30) == {"screenshots": 0}  # idempotent
@@ -130,16 +137,100 @@ def test_empty_date_folders_are_removed_with_the_last_file(
     assert len([p for p in paths.media_dir.rglob("*") if p.is_dir() and not any(p.iterdir())]) == 0
 
 
-def test_a_screenshot_waiting_for_deferred_ocr_is_kept(
+def capture_frame(frames: FrameStore, age_days: float, *, image: bool = True) -> int:
+    shot = replace(app_window(), capture_webp=b"webp")
+    return frames.add(NewFrame(ago(age_days), 0, "game", b"webp" if image else None, (shot,)))
+
+
+def capture_of(conn: Connection, frame_id: int) -> tuple[int, str | None]:
+    return conn.execute(
+        "SELECT id, capture_path FROM frame_windows WHERE frame_id = ?", (frame_id,)
+    ).fetchone()
+
+
+def test_a_capture_waiting_for_deferred_ocr_is_kept_but_its_frame_image_is_not(
     conn: Connection, media: MediaStore, frames: FrameStore
 ) -> None:
-    waiting = frames.add(
-        NewFrame(ts_ms=ago(40), monitor=0, trigger="game", image_webp=b"webp")
-    )  # queues an ocr_frame job
+    waiting = capture_frame(frames, 40)
+    window_id, path = capture_of(conn, waiting)
+    assert path is not None
+    assert run(conn, media, screenshots=30) == {"screenshots": 1}  # the frame image only
+    assert frames.get(waiting).image_path is None  # type: ignore[union-attr]
+    assert capture_of(conn, waiting)[1] == path
+    assert media.exists(path)
+    conn.execute("UPDATE jobs SET state = 'running'")
     assert run(conn, media, screenshots=30) == {"screenshots": 0}
-    assert frames.get(waiting).image_path is not None  # type: ignore[union-attr]
     conn.execute("UPDATE jobs SET state = 'done'")
     assert run(conn, media, screenshots=30) == {"screenshots": 1}
+    assert capture_of(conn, waiting) == (window_id, None)
+    assert not media.exists(path)
+
+
+def test_a_capture_with_no_job_or_a_failed_job_expires_when_old_enough(
+    conn: Connection, media: MediaStore, frames: FrameStore
+) -> None:
+    orphan, failed, recent = (
+        capture_frame(frames, 40),
+        capture_frame(frames, 41),
+        capture_frame(frames, 5),
+    )
+    conn.execute("DELETE FROM jobs WHERE key = ?", (f"ocr_window:{capture_of(conn, orphan)[0]}",))
+    conn.execute(
+        "UPDATE jobs SET state = 'failed' WHERE state = 'pending' AND data_ms < ?", (ago(30),)
+    )
+    assert run(conn, media, screenshots=30) == {"screenshots": 4}  # 2 images + 2 captures
+    assert capture_of(conn, orphan)[1] is None
+    assert capture_of(conn, failed)[1] is None
+    assert capture_of(conn, recent)[1] is not None
+
+
+def test_a_locked_or_foreign_capture_keeps_its_reference_and_is_reported(
+    conn: Connection, media: MediaStore, frames: FrameStore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    locked, foreign = capture_frame(frames, 40, image=False), capture_frame(frames, 41, image=False)
+    conn.execute("UPDATE jobs SET state = 'done'")
+    locked_path = capture_of(conn, locked)[1]
+    conn.execute(
+        "UPDATE frame_windows SET capture_path = '../outside.webp' WHERE frame_id = ?", (foreign,)
+    )
+    real_delete = media.delete
+
+    def delete(rel_path: str) -> None:
+        if rel_path == locked_path:
+            raise PermissionError
+        real_delete(rel_path)
+
+    monkeypatch.setattr(media, "delete", delete)
+    assert run(conn, media, screenshots=30) == {
+        "screenshots": 0,
+        "bad_media_paths": 1,
+        "locked_media_files": 1,
+    }
+    assert capture_of(conn, locked)[1] == locked_path
+    assert capture_of(conn, foreign)[1] == "../outside.webp"
+    assert unreleased_media_references(conn, media, "screenshots", ago(30)) == {
+        "bad_media_paths": 1,
+        "locked_media_files": 1,
+    }
+
+
+def test_a_frame_with_a_capture_left_is_not_deleted_as_spent(
+    conn: Connection, frames: FrameStore
+) -> None:
+    held = capture_frame(frames, 40, image=False)
+    free = capture_frame(frames, 41, image=False)
+    conn.execute("UPDATE frame_windows SET capture_path = NULL WHERE frame_id = ?", (free,))
+    assert delete_spent_frames(conn, ago(30)) == 1
+    assert frames.get(held) is not None
+    assert frames.get(free) is None
+
+
+def test_delete_all_removes_captures_and_counts_them(
+    conn: Connection, media: MediaStore, frames: FrameStore, paths: Paths
+) -> None:
+    capture_frame(frames, 1)  # an image and a capture
+    assert delete_all_recorded_data(conn, media)["screenshots"] == 2
+    assert [p for p in paths.media_dir.rglob("*") if p.is_file()] == []
 
 
 def test_a_file_that_cannot_be_deleted_is_skipped_and_retried_next_time(
@@ -179,7 +270,7 @@ def test_expired_frame_text_leaves_the_image_and_the_search_index(
     assert run(conn, media, frame_text=30) == {"frame_text": 1}
     stored = frames.get(old)
     assert stored is not None
-    assert (stored.text, stored.text_source) == (None, None)
+    assert (stored.windows[0].text, stored.windows[0].text_source) == (None, None)
     assert stored.image_path is not None
     assert not keyword.search(conn, "needle", keyword.Filters(0, 2**62, None), 10, 0)
 
@@ -195,7 +286,11 @@ def test_a_frame_row_goes_only_when_screenshot_and_text_have_both_expired(
     both = run(conn, media, screenshots=30, frame_text=30)
     assert both["frame_rows"] == 1
     assert frames.get(old) is None
-    assert count(conn, "SELECT count(*) FROM frames_fts WHERE frames_fts MATCH 'hello'") == 0
+    assert count(conn, "SELECT count(*) FROM frame_windows") == 0
+    assert (
+        count(conn, "SELECT count(*) FROM frame_windows_fts WHERE frame_windows_fts MATCH 'hello'")
+        == 0
+    )
 
 
 def test_different_limits_for_image_and_text_use_the_longer_one_for_the_row(
@@ -205,7 +300,71 @@ def test_different_limits_for_image_and_text_use_the_longer_one_for_the_row(
     run(conn, media, screenshots=10, frame_text=30)
     stored = frames.get(mid)
     assert stored is not None
-    assert (stored.image_path, stored.text) == (None, "hello")
+    assert (stored.image_path, stored.windows[0].text) == (None, "hello")
+
+
+def test_text_expiry_clears_every_window_of_old_frames_only(
+    conn: Connection, media: MediaStore, frames: FrameStore
+) -> None:
+    old = frames.add(
+        NewFrame(
+            ago(40),
+            0,
+            "idle",
+            None,
+            (
+                app_window(z=0, hwnd=1, text="first words"),
+                app_window(z=1, hwnd=2, text="second words", focused=False),
+            ),
+        )
+    )
+    new = frame(frames, 5, text="recent")
+    assert run(conn, media, frame_text=30) == {"frame_text": 2}
+    kept = frames.get(old)
+    assert kept is not None
+    assert [(w.text, w.text_source) for w in kept.windows] == [(None, None), (None, None)]
+    assert [w.text for w in frames.get(new).windows] == ["recent"]  # type: ignore[union-attr]
+
+
+def test_spent_frames_are_the_old_ones_without_image_or_window_text(
+    conn: Connection, frames: FrameStore
+) -> None:
+    hidden = NewWindow("hidden", 1, None, 0, 0, 10, 10)
+    spent = frames.add(NewFrame(ago(40), 0, "idle", None, (app_window(), hidden)))
+    with_text = frame(frames, 40, text="kept words", image=False)
+    with_image = frames.add(new_frame(ago(40), image=b"webp"))
+    recent = frames.add(NewFrame(ago(5), 0, "idle"))
+    assert delete_spent_frames(conn, ago(30)) == 1
+    assert frames.get(spent) is None
+    assert count(conn, "SELECT count(*) FROM frame_windows WHERE frame_id = ?", spent) == 0
+    for frame_id in (with_text, with_image, recent):
+        assert frames.get(frame_id) is not None
+
+
+def test_embedding_expiry_removes_window_passages_of_old_frames(
+    conn: Connection, media: MediaStore, frames: FrameStore
+) -> None:
+    old, new = frame(frames, 40), frame(frames, 5)
+    for frame_id in (old, new):
+        window = window_of(conn, frame_id)
+        conn.execute("INSERT INTO window_passages VALUES (?, 'm', 0, 5, 1, x'0000')", (window,))
+    assert run(conn, media, embeddings=30) == {"embeddings": 1}
+    assert conn.execute("SELECT window_id FROM window_passages").fetchall() == [
+        (window_of(conn, new),)
+    ]
+
+
+def test_the_frame_text_size_sums_every_window_by_the_frame_time(
+    conn: Connection, paths: Paths, frames: FrameStore
+) -> None:
+    both = (
+        app_window(z=0, hwnd=1, text="abc"),
+        app_window(z=1, hwnd=2, text="héllo", focused=False),
+    )
+    frames.add(NewFrame(ago(40), 0, "idle", None, both))
+    frames.add(NewFrame(ago(1), 0, "idle", None, both))
+    by_kind = {u.kind: u for u in storage_report(conn, paths, NOW).usage}
+    assert (by_kind["frame_text"].bytes, by_kind["frame_text"].bytes_7d) == (18, 9)
 
 
 # --- audio ----------------------------------------------------------------------------------

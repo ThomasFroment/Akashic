@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal, NamedTuple
 
 import numpy as np
 
@@ -20,11 +20,31 @@ if TYPE_CHECKING:
 
 CHARS: Final = 400
 STEP: Final = 300
-type Kind = Literal["segment", "frame"]
+type Kind = Literal["segment", "window"]
+
+
+class _Table(NamedTuple):
+    table: str
+    owner: str
+    source: str
+    text: str
+    join: str  # extra join after the source ``s``
+    ts: str
+
+
 # Only these literal identifiers can enter SQL. All captured values remain bound parameters.
 _TABLES: Final = {
-    "segment": ("segment_passages", "segment_id", "audio_segments", "transcript", "start_ms"),
-    "frame": ("frame_passages", "frame_id", "frames", "text", "ts_ms"),
+    "segment": _Table(
+        "segment_passages", "segment_id", "audio_segments", "transcript", "", "s.start_ms"
+    ),
+    "window": _Table(
+        "window_passages",
+        "window_id",
+        "frame_windows",
+        "text",
+        " JOIN frames f ON f.id = s.frame_id",
+        "f.ts_ms",
+    ),
 }
 
 
@@ -47,7 +67,7 @@ def publish(  # noqa: PLR0913 - original owner/text/vectors and the source kind
     kind: Kind = "segment",
 ) -> bool:
     """Publish a complete set only if the source text has not changed during inference."""
-    table, column, source, text_column, _ = _TABLES[kind]
+    spec = _TABLES[kind]
     offsets = windows(text)
     rows = [
         (
@@ -62,16 +82,16 @@ def publish(  # noqa: PLR0913 - original owner/text/vectors and the source kind
     ]
     with db.transaction(conn):
         current = conn.execute(
-            f"SELECT {text_column} FROM {source} WHERE id = ?",  # noqa: S608 - literal identifiers
+            f"SELECT {spec.text} FROM {spec.source} WHERE id = ?",  # noqa: S608 - literal names
             (owner_id,),
         ).fetchone()
         if current is None or current[0] != text:
             return False
         conn.execute(
-            f"DELETE FROM {table} WHERE {column} = ? AND model = ?",  # noqa: S608
+            f"DELETE FROM {spec.table} WHERE {spec.owner} = ? AND model = ?",  # noqa: S608
             (owner_id, model),
         )
-        conn.executemany(f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?, ?)", rows)  # noqa: S608
+        conn.executemany(f"INSERT INTO {spec.table} VALUES (?, ?, ?, ?, ?, ?)", rows)  # noqa: S608
         if kind == "segment":
             conn.execute(
                 "DELETE FROM embeddings WHERE owner_kind = 'segment'"
@@ -109,15 +129,15 @@ def top(  # noqa: PLR0913 - same filters as the existing exact vector search
     allowed = None if only is None else set(only)
     if allowed is not None and not allowed:
         return []
-    table, column, source, text_column, timestamp = _TABLES[kind]
+    spec = _TABLES[kind]
     sql = (
-        f"SELECT p.{column}, p.start_char, p.end_char, p.vec FROM {table} p"  # noqa: S608
-        f" JOIN {source} s ON s.id = p.{column} WHERE p.model = :model"
-        f" AND s.{timestamp} >= :start AND s.{timestamp} < :end"
-        f" AND s.{text_column} IS NOT NULL"
+        f"SELECT p.{spec.owner}, p.start_char, p.end_char, p.vec FROM {spec.table} p"  # noqa: S608
+        f" JOIN {spec.source} s ON s.id = p.{spec.owner}{spec.join} WHERE p.model = :model"
+        f" AND {spec.ts} >= :start AND {spec.ts} < :end"
+        f" AND s.{spec.text} IS NOT NULL"
     )
     params: dict[str, object] = {"model": model, "start": start_ms, "end": end_ms}
-    if kind == "frame" and apps:
+    if kind == "window" and apps:
         sql += (
             " AND replace(lower(s.process), '.exe', '')"
             " IN (SELECT replace(lower(value), '.exe', '') FROM json_each(:apps))"

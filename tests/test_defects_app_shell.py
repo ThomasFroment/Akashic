@@ -181,9 +181,70 @@ def restart_threads_done() -> bool:
 
 
 def test_lock_stops_the_children(shell: Shell, paths: Paths, key: DataKey) -> None:
-    assert app._run(paths, key) == "lock"
+    assert app._run(paths, key, open_ui_at_start=False) == "lock"
     assert len(shell.children) == 2
     assert shell.running() == 0
+
+
+def recording_opener(opened: list[str]) -> Callable[[str], bool]:
+    def opener(url: str) -> bool:
+        opened.append(url)
+        return True
+
+    return opener
+
+
+@pytest.mark.parametrize("first_run", [True, False])
+def test_the_ui_opens_at_start_only_on_the_first_run(
+    shell: Shell, paths: Paths, key: DataKey, monkeypatch: pytest.MonkeyPatch, *, first_run: bool
+) -> None:
+    del shell
+    opened: list[str] = []
+    monkeypatch.setattr(app.webbrowser, "open", recording_opener(opened))
+    app._run(paths, key, open_ui_at_start=first_run)
+    assert len(opened) == (1 if first_run else 0)
+
+
+def test_the_tray_click_opens_the_ui(
+    shell: Shell, paths: Paths, key: DataKey, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened: list[str] = []
+    monkeypatch.setattr(app.webbrowser, "open", recording_opener(opened))
+
+    def click(tray: FakeTray) -> None:
+        tray.open_ui()
+        tray.lock_app()
+
+    shell.on_tray_run = click
+    app._run(paths, key, open_ui_at_start=False)
+    assert len(opened) == 1
+
+
+def no_op(*_args: object, **_kwargs: object) -> None:
+    return None
+
+
+def test_main_opens_the_ui_on_the_first_run_only(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    flags: list[bool] = []
+
+    def fake_run(_paths: Paths, _key: DataKey, *, open_ui_at_start: bool) -> str:
+        flags.append(open_ui_at_start)
+        return "lock" if len(flags) == 1 else "quit"
+
+    def fake_until_quit(unlock_fn: Callable[[], Any], run: Callable[[Any], str]) -> None:
+        del unlock_fn
+        run(None)
+        run(None)
+
+    monkeypatch.setattr(app, "default_data_dir", lambda: tmp_path)
+    monkeypatch.setattr(app, "_run", fake_run)
+    monkeypatch.setattr(app, "run_until_quit", fake_until_quit)
+    monkeypatch.setattr(app, "setup_logging", no_op)
+    monkeypatch.setattr(app, "enable_crash_log", no_op)
+    assert app.main() == 0
+    assert flags == [True, False]
 
 
 def test_a_restart_request_during_lock_never_leaves_children_recording(
@@ -193,7 +254,7 @@ def test_a_restart_request_during_lock_never_leaves_children_recording(
         shell.controls.restart()
 
     shell.on_api_stop = restart_request
-    assert app._run(paths, key) == "lock"
+    assert app._run(paths, key, open_ui_at_start=False) == "lock"
     assert wait_for(restart_threads_done)
     assert shell.running() == 0
 
@@ -231,7 +292,7 @@ def test_tray_pause_returns_while_a_deletion_holds_the_children(
         tray.lock_app()
 
     shell.on_tray_run = during_tray
-    app._run(paths, key)
+    app._run(paths, key, open_ui_at_start=False)
     assert returned == [True]
 
 
@@ -265,7 +326,7 @@ def test_the_connection_is_not_closed_under_a_running_request(
     shell.on_api_stop = api_stop
     shell.on_close = lambda: closed_while_busy.append(not finished.is_set())
     try:
-        app._run(paths, key)
+        app._run(paths, key, open_ui_at_start=False)
     finally:
         release.set()
     assert closed_while_busy == [False]
@@ -454,7 +515,7 @@ def _pause_then_lock(tray: FakeTray) -> None:
 
 def test_a_fresh_install_starts_recording(shell: Shell, paths: Paths, key: DataKey) -> None:
     specs = _recording_spawn(shell)
-    app._run(paths, key)
+    app._run(paths, key, open_ui_at_start=False)
     assert [s.start_paused for s in specs] == [False, False]
     assert _stored_pause(paths, key) is None
 
@@ -462,11 +523,11 @@ def test_a_fresh_install_starts_recording(shell: Shell, paths: Paths, key: DataK
 def test_a_pause_survives_lock_and_unlock(shell: Shell, paths: Paths, key: DataKey) -> None:
     specs = _recording_spawn(shell)
     shell.on_tray_run = _pause_then_lock
-    assert app._run(paths, key) == "lock"
+    assert app._run(paths, key, open_ui_at_start=False) == "lock"
     assert _stored_pause(paths, key) == 1
     specs.clear()
     shell.on_tray_run = lambda tray: tray.lock_app()
-    app._run(paths, key)
+    app._run(paths, key, open_ui_at_start=False)
     assert [s.start_paused for s in specs] == [True, True]
     assert _stored_pause(paths, key) == 1  # a paused start does not change the choice
 
@@ -477,12 +538,12 @@ def test_resuming_after_a_paused_start_records_next_time(
     _seed_pause(paths, key, 1)
     specs = _recording_spawn(shell)
     shell.on_tray_run = lambda tray: (shell.controls.resume(), tray.lock_app())[1]
-    app._run(paths, key)
+    app._run(paths, key, open_ui_at_start=False)
     assert [s.start_paused for s in specs] == [True, True]
     assert _stored_pause(paths, key) == 0
     specs.clear()
     shell.on_tray_run = lambda tray: tray.lock_app()
-    app._run(paths, key)
+    app._run(paths, key, open_ui_at_start=False)
     assert [s.start_paused for s in specs] == [False, False]
 
 
@@ -497,7 +558,7 @@ def test_api_pause_and_resume_write_the_flag(shell: Shell, paths: Paths, key: Da
         tray.lock_app()
 
     shell.on_tray_run = act
-    app._run(paths, key)
+    app._run(paths, key, open_ui_at_start=False)
     assert seen == [1, 0]
 
 
@@ -533,7 +594,7 @@ def test_a_failed_flag_write_does_not_break_pause_or_resume(  # noqa: PLR0913, P
 
     shell.on_tray_run = act
     with caplog.at_level(logging.WARNING):
-        assert app._run(paths, key) == "lock"
+        assert app._run(paths, key, open_ui_at_start=False) == "lock"
     assert specs
     assert states == ["paused", "resumed"]
     assert sum(error in r.getMessage() for r in caplog.records) == 3

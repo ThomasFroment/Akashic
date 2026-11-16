@@ -7,6 +7,7 @@ import json
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from memory_data import add_monitor, new_frame
 
 from akashic.api.debug import DebugSources
 from akashic.api.server import ApiServer, Controls, Services, new_token
@@ -14,7 +15,7 @@ from akashic.storage import db
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import DataKey
 from akashic.storage.debuginfo import ProcessInfo
-from akashic.storage.frames import FrameStore, NewFrame
+from akashic.storage.frames import FrameStore
 from akashic.storage.media import MediaStore
 
 if TYPE_CHECKING:
@@ -79,7 +80,8 @@ def client(paths: Paths, conn: Connection) -> Iterator[Client]:
     seg = audio.add(NewSegment("mic", NOW, NOW + 2_000, 1_500, ("discord.exe",)), b"OggS", NOW)
     assert seg == 1
     frames = FrameStore(conn, media)
-    frames.add(NewFrame(NOW, 0, "click", "chrome.exe", "Café", None, "x" * 500, "uia"))
+    add_monitor(conn)
+    frames.add(new_frame(NOW, trigger="click", title="Café", text="x" * 500))
     ProcessInfo(conn).publish("worker", {"deferred_reason": "game", "pending_jobs": 1}, 5)
     _write_logs(paths.logs_dir)
     paths.config_file.write_text('log_level = "INFO"\n', encoding="utf-8")

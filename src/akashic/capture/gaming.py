@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from akashic.capture.ports import BROWSERS
+from akashic.capture.ports import BROWSERS, FRAME_HOST
 
 if TYPE_CHECKING:
     from akashic.capture.ports import Rect, WindowInfo
@@ -25,7 +25,7 @@ DEFAULT_NOT_GAMES: Final = (
     *BROWSERS,
     # shell
     "explorer.exe",
-    "applicationframehost.exe",
+    FRAME_HOST,
     "searchhost.exe",
     "shellexperiencehost.exe",
     "lockapp.exe",

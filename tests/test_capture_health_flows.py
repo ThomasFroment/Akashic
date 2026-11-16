@@ -1,4 +1,4 @@
-"""Capture health, end to end: the audio device clock, the grab record, what capture publishes,
+"""Capture health, end to end: the audio device clock, what capture publishes,
 and how the status API, the tray and the sidebar present it."""
 
 from __future__ import annotations
@@ -9,7 +9,6 @@ import shutil
 import subprocess
 import threading
 import time
-from collections import Counter, deque
 from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
@@ -17,7 +16,19 @@ from typing import TYPE_CHECKING, Any, cast
 import pytest
 from api_client import Client
 from audio_fakes import FakeDetector, FakeDevices, FakeSessions, RecorderRig, speech
-from capture_fakes import FakeMedia, FakeOcr, FakeScreen, FakeUia, FakeWindows, window
+from capture_fakes import (
+    FakeDisplays,
+    FakeMedia,
+    FakeOcr,
+    FakeUia,
+    FakeWindowEvents,
+    FakeWindowFacts,
+    FakeWindows,
+    blank,
+    top_window,
+    window,
+)
+from screen_rig import ImageCaptures
 from waits import wait_for
 
 from akashic import app, child, ipc, tray
@@ -25,29 +36,24 @@ from akashic.api.server import ApiServer, Controls, Services, new_token
 from akashic.capture import audio as audio_module
 from akashic.capture import main as capture_main
 from akashic.capture.audio import AudioCapture
-from akashic.capture.browser_state import BrowserState
-from akashic.capture.exclusions import Exclusions
 from akashic.capture.health import (
     AUDIO_UNAVAILABLE,
     DEVICE_DOWN_S,
     SCREEN_IMAGES_FAILING,
     CaptureStatus,
 )
-from akashic.capture.ocr_gate import OcrGate
 from akashic.capture.ports import AudioError, AudioPlatform, CapturePlatform
-from akashic.capture.screen import GRAB_FAILURE_RUN, ScreenCapture
-from akashic.config import Exclusions as UserExclusions
 from akashic.storage import db
 from akashic.storage.crypto import DataKey
 from akashic.storage.debuginfo import ProcessInfo
 from akashic.storage.frames import FrameStore
 from akashic.storage.media import MediaStore
-from akashic.storage.sessions import GameLog
 
 if TYPE_CHECKING:
     from collections.abc import Buffer, Iterator
     from sqlite3 import Connection
 
+    from akashic.capture.screen_writer import ScreenWriter
     from akashic.capture.vad import SpeechDetector
     from akashic.config import Paths
 
@@ -60,7 +66,9 @@ INF = float("inf")
 
 def _run(rig: RecorderRig) -> tuple[threading.Event, threading.Thread]:
     stop = threading.Event()
-    thread = threading.Thread(target=rig.recorder.run, args=(stop, threading.Event()), daemon=True)
+    thread = threading.Thread(
+        target=rig.recorder.run, args=(stop, threading.Event(), threading.Event()), daemon=True
+    )
     thread.start()
     return stop, thread
 
@@ -164,108 +172,16 @@ def test_audio_capture_reports_only_the_recorder_that_is_down() -> None:
     assert capture.problems(1000.0, 0.0) == ("system_audio_unavailable",)
 
 
-# --- the screen loop's record ---------------------------------------------------------------
-
-
-@pytest.fixture
-def screen_capture(paths: Paths) -> Iterator[ScreenCapture]:
-    key = DataKey.generate()
-    conn = db.connect(paths.db_file, key.subkey("db"))
-    db.migrate(conn)
-    yield ScreenCapture(
-        screen=FakeScreen(),
-        windows=FakeWindows(focused=window()),
-        uia=FakeUia(),
-        gate=OcrGate(FakeOcr()),
-        store=FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media"))),
-        exclusions=Exclusions(UserExclusions()),
-        browsers=BrowserState(),
-        games=GameLog(conn),
-    )
-    conn.close()
-
-
-FAILED = ["error", "loop_error", "image_unavailable", "stored_no_image", "unchanged_no_image"]
-GOOD = ["stored", "stored_black", "unchanged", "game_stored", "game_black"]
-NEUTRAL = [
-    "locked",
-    "excluded:password",
-    "excluded:app",
-    "no_window",
-    "duplicate_window",
-    "window_changed",
-    "no_monitors",
-]
-
-
-def _note(capture: ScreenCapture, *outcomes: str) -> None:
-    for outcome in outcomes:
-        capture._note(outcome)  # pyright: ignore[reportPrivateUsage]
-
-
-@pytest.mark.parametrize("outcome", FAILED)
-def test_each_failure_outcome_counts_toward_the_run(
-    screen_capture: ScreenCapture, outcome: str
-) -> None:
-    _note(screen_capture, outcome, outcome)
-    assert not screen_capture.images_failing(-INF)
-    _note(screen_capture, outcome)
-    assert screen_capture.images_failing(-INF)
-
-
-@pytest.mark.parametrize("outcome", GOOD)
-def test_each_success_outcome_clears_the_record(
-    screen_capture: ScreenCapture, outcome: str
-) -> None:
-    _note(screen_capture, *["error"] * GRAB_FAILURE_RUN)
-    assert screen_capture.images_failing(-INF)
-    _note(screen_capture, outcome)
-    assert not screen_capture.images_failing(-INF)
-    _note(screen_capture, "error", "error")  # the run starts over
-    assert not screen_capture.images_failing(-INF)
-
-
-@pytest.mark.parametrize("outcome", NEUTRAL)
-def test_neutral_outcomes_neither_clear_nor_add(
-    screen_capture: ScreenCapture, outcome: str
-) -> None:
-    _note(screen_capture, "error", "error", outcome, "error")
-    assert screen_capture.images_failing(-INF)  # not cleared, and the run did not restart
-    _note(screen_capture, outcome, outcome, outcome)
-    assert screen_capture.images_failing(-INF)
-
-
-def test_neutral_outcomes_alone_never_make_a_failure(screen_capture: ScreenCapture) -> None:
-    _note(screen_capture, *NEUTRAL * 3)
-    assert not screen_capture.images_failing(-INF)
-
-
-def test_mixed_failures_in_the_order_produced(screen_capture: ScreenCapture) -> None:
-    _note(screen_capture, "error", "image_unavailable", "stored", "loop_error", "stored_no_image")
-    assert not screen_capture.images_failing(-INF)
-    _note(screen_capture, "unchanged_no_image")
-    assert screen_capture.images_failing(-INF)
-
-
-def test_all_three_failures_must_be_after_the_resume() -> None:
-    clock = iter(range(10))
-    capture = object.__new__(ScreenCapture)
-    capture.stats = Counter()
-    capture._failures = deque(maxlen=GRAB_FAILURE_RUN)  # pyright: ignore[reportPrivateUsage]
-    capture._clock = lambda: float(next(clock))
-    for _ in range(5):
-        capture._note("error")  # pyright: ignore[reportPrivateUsage]  # at 0..4; kept: 2, 3, 4
-    assert capture.images_failing(2.0)
-    assert not capture.images_failing(2.5)  # one of the three is from before the resume
-
-
 # --- what capture publishes ------------------------------------------------------------------
 
 
 def _platform() -> CapturePlatform:
     return CapturePlatform(
-        screen=FakeScreen(),
+        displays=FakeDisplays(),
         windows=FakeWindows(focused=window()),
+        facts=FakeWindowFacts([top_window(hwnd=1)]),
+        events=FakeWindowEvents(),
+        captures=ImageCaptures(images={1: blank()}),
         uia=FakeUia(texts={1: ["x" * 80]}),
         ocr=FakeOcr(),
         media=FakeMedia(),
@@ -419,12 +335,12 @@ def test_disabled_capture_never_reports_degraded(
     assert "degraded" not in list(ipc.read_statuses(io.BytesIO(out.getvalue())))
 
 
-def _fake_capture(*, failing: bool) -> ScreenCapture:
-    def images_failing(since: float) -> bool:
+def _fake_writer(*, failing: bool) -> ScreenWriter:
+    def problems(since: float) -> list[str]:
         del since
-        return failing
+        return [SCREEN_IMAGES_FAILING] if failing else []
 
-    return cast("ScreenCapture", SimpleNamespace(images_failing=images_failing))
+    return cast("ScreenWriter", SimpleNamespace(problems=problems))
 
 
 def _fake_audio(*codes: str) -> AudioCapture:
@@ -446,9 +362,9 @@ def _status(*, audio_failed: bool) -> CaptureStatus:
 def test_active_problems_while_running_are_all_the_detected_ones() -> None:
     problems = capture_main._active_problems(  # pyright: ignore[reportPrivateUsage]
         _status(audio_failed=True),
-        _fake_capture(failing=True),
+        _fake_writer(failing=True),
         _fake_audio("mic_unavailable", "system_audio_unavailable"),
-        paused=False,
+        halted=False,
         since=0.0,
     )
     assert problems == [
@@ -459,16 +375,16 @@ def test_active_problems_while_running_are_all_the_detected_ones() -> None:
     ]
 
 
-def test_active_problems_while_paused_are_only_the_sticky_one() -> None:
+def test_active_problems_while_halted_are_only_the_sticky_one() -> None:
     active = capture_main._active_problems  # pyright: ignore[reportPrivateUsage]
-    args = (_fake_capture(failing=True), _fake_audio("mic_unavailable"))
-    assert active(_status(audio_failed=True), *args, paused=True, since=0.0) == [AUDIO_UNAVAILABLE]
-    assert active(_status(audio_failed=False), *args, paused=True, since=0.0) == []
+    args = (_fake_writer(failing=True), _fake_audio("mic_unavailable"))
+    assert active(_status(audio_failed=True), *args, halted=True, since=0.0) == [AUDIO_UNAVAILABLE]
+    assert active(_status(audio_failed=False), *args, halted=True, since=0.0) == []
 
 
 def test_active_problems_with_no_audio_recorders() -> None:
     problems = capture_main._active_problems(  # pyright: ignore[reportPrivateUsage]
-        _status(audio_failed=False), _fake_capture(failing=False), None, paused=False, since=0.0
+        _status(audio_failed=False), _fake_writer(failing=False), None, halted=False, since=0.0
     )
     assert problems == []
 
@@ -478,18 +394,19 @@ def test_a_health_reading_that_raises_is_skipped_not_fatal(
 ) -> None:
     ctx = cast("Any", SimpleNamespace(health_snapshot=lambda: (0, False, 0.0)))
 
-    def images_failing(since: float) -> bool:
+    def problems(since: float) -> list[str]:
         del since
         raise ZeroDivisionError
 
-    bad = SimpleNamespace(images_failing=images_failing)
+    bad = SimpleNamespace(problems=problems)
     with caplog.at_level("WARNING"):
         got = capture_main._collect(  # pyright: ignore[reportPrivateUsage]
             ctx,
             _status(audio_failed=False),
+            cast("Any", SimpleNamespace(stats={})),
             cast("Any", bad),
             None,
-            cast("Any", None),
+            cast("Any", SimpleNamespace(stats={})),
             cast("Any", SimpleNamespace(stats={})),
         )
     assert got is None
@@ -622,7 +539,10 @@ def test_the_sidebar_words_and_dot_colours() -> None:
         js[start:end]
         + "\nconsole.log(JSON.stringify({L: STATUS_LABELS, D: DOT_CLASSES, "
         + "empty: problemSentence([]), none: problemSentence(undefined), "
-        + "some: problemSentence(['mic_unavailable','screen_images_failing','made_up'])}));"
+        + "some: problemSentence(['mic_unavailable','screen_images_failing','made_up']), "
+        + "monitors: problemSentence(['screen_images_failing@Monitor 2',"
+        + "'screen_images_failing@Monitor 3','screen_disk_full@Monitor 1',"
+        + "'screen_frames_dropped'])}));"
     )
     done = subprocess.run(  # noqa: S603
         [str(shutil.which("node")), "-e", script],
@@ -641,12 +561,19 @@ def test_the_sidebar_words_and_dot_colours() -> None:
         "starting": "Starting…",
         "crashed": "Restarting…",
         "paused": "Paused",
+        "ui_paused": "Not recording while Akashic is open",
     }
     assert got["D"]["degraded"] == "warn"
     assert "has problems" in got["empty"]
     assert got["empty"] == got["none"]
     assert "microphone" in got["some"]
     assert "screenshots" in got["some"]
+    assert (
+        "screenshots are failing on Monitor 2; screenshots are failing on Monitor 3;"
+        in (got["monitors"])
+    )
+    assert "screenshots on Monitor 1 can't be saved because the disk is full" in got["monitors"]
+    assert "screenshots are being dropped" in got["monitors"]
     assert "made_up" not in got["some"]
     assert "undefined" not in got["some"]
 

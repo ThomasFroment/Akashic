@@ -13,7 +13,6 @@ import math
 import sqlite3
 import sys
 import threading
-import time
 import types
 from collections import Counter
 from typing import TYPE_CHECKING, Any
@@ -24,15 +23,12 @@ from audio_fakes import WINDOW_MS, Clock, FakeDetector, FakeDevices, FakeSession
 from capture_fakes import (
     SCREEN,
     FakeMedia,
-    FakeOcr,
-    FakeScreen,
-    FakeUia,
     FakeWindows,
     blank,
     with_text_block,
 )
-from capture_fakes import window as plain_window
 from defects import known_defect
+from memory_data import add_frame
 from waits import wait_for
 
 from akashic.capture import audio as audio_module
@@ -48,15 +44,12 @@ from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.gaming import GameSettings, is_game_window
 from akashic.capture.media import MediaTracker
-from akashic.capture.ocr_gate import OcrGate
 from akashic.capture.ports import AudioDevice, MediaState, Rect, WindowInfo
-from akashic.capture.screen import ScreenCapture
 from akashic.capture.vad import WINDOW
 from akashic.config import Exclusions as UserExclusions
 from akashic.pipeline import whisper
-from akashic.pipeline.jobs import Job
 from akashic.pipeline.models import CANARY_V2, QWEN3_ASR
-from akashic.pipeline.ocr_frames import OcrFrameHandler
+from akashic.pipeline.ocr_windows import OcrWindowHandler
 from akashic.pipeline.sessions import derive_app_sessions
 from akashic.pipeline.speakers import LocalTurn, OnnxVoiceModels, SpeakersHandler
 from akashic.pipeline.speech import TransformerTranscriber
@@ -69,10 +62,10 @@ from akashic.pipeline.transcribe import (
 from akashic.pipeline.whisper import WhisperTranscriber
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import DataKey
-from akashic.storage.frames import FrameStore
+from akashic.storage.jobs import Job
 from akashic.storage.media import MediaStore
 from akashic.storage.opus import encode_opus
-from akashic.storage.sessions import GameLog, MediaLog
+from akashic.storage.sessions import MediaLog
 from akashic.storage.speakers import NewTurn, SpeakerStore
 
 if TYPE_CHECKING:
@@ -82,6 +75,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
     from PIL import Image
+    from screen_rig import Rig
 
     from akashic.capture.ports import AudioKind
     from akashic.config import Paths
@@ -730,7 +724,7 @@ class RecorderRig:
         )
         self.stop, self.paused = threading.Event(), threading.Event()
         self.thread = threading.Thread(
-            target=self.recorder.run, args=(self.stop, self.paused), daemon=True
+            target=self.recorder.run, args=(self.stop, self.paused, self.paused), daemon=True
         )
 
     def consumed(self) -> bool:
@@ -875,37 +869,6 @@ class BusyWindows(FakeWindows):
         return self.last_input
 
 
-def screen_capture(  # noqa: PLR0913 - the fakes a test wants to drive
-    conn: Connection,
-    paths: Paths,
-    screen: FakeScreen,
-    windows: FakeWindows,
-    *,
-    clock: Callable[[], float] = time.monotonic,
-    uia: FakeUia | None = None,
-) -> tuple[ScreenCapture, FrameStore]:
-    store = FrameStore(conn, MediaStore(paths.media_dir, DataKey.generate().subkey("media")))
-    counter = iter(range(1_000_000, 10**9))
-    capture = ScreenCapture(
-        screen=screen,
-        windows=windows,
-        uia=uia or FakeUia(),
-        gate=OcrGate(FakeOcr()),
-        store=store,
-        exclusions=Exclusions(UserExclusions()),
-        games=GameLog(conn),
-        game_settings=GameSettings(interval_s=60.0),
-        clock=clock,
-        now_ms=lambda: next(counter),
-        browsers=BrowserState(),
-    )
-    return capture, store
-
-
-def game_window(rect: Rect = SCREEN) -> WindowInfo:
-    return WindowInfo(7, "game.exe", "The Game", rect, has_frame=False)
-
-
 def fake_clock(step: float = 0.5) -> Callable[[], float]:
     now = [0.0]
 
@@ -917,123 +880,79 @@ def fake_clock(step: float = 0.5) -> Callable[[], float]:
 
 
 def test_the_capture_loop_never_spins_while_a_game_is_played(
-    conn: Connection, paths: Paths
+    make_rig: Callable[..., Rig],
 ) -> None:
-    windows = BusyWindows(focused=game_window())
-    capture, _ = screen_capture(conn, paths, FakeScreen(), windows, clock=fake_clock())
+    rig = make_rig(clock=fake_clock(), windows=BusyWindows(), shown=False)
+    rig.show(7, "game.exe", "The Game", has_frame=False)
     stop = CountingStop(40)
-    capture.run(stop, threading.Event())
-    assert conn.execute("SELECT count(*) FROM game_sessions").fetchone()[0] == 1
-    assert all(t is not None and t > 0 for t in stop.timeouts[5:])
+    rig.capture.run(stop, threading.Event(), threading.Event())
+    assert rig.conn.execute("SELECT count(*) FROM game_sessions").fetchone()[0] == 1
+    assert set(stop.timeouts) == {0.1}  # a fixed wait on every pass, whatever the input
 
 
-def test_the_capture_loop_never_spins_without_monitors(conn: Connection, paths: Paths) -> None:
-    windows = BusyWindows(focused=plain_window())
-    capture, _ = screen_capture(conn, paths, FakeScreen(rects=[]), windows, clock=fake_clock())
+def test_the_capture_loop_never_spins_without_monitors(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig(clock=fake_clock(), windows=BusyWindows())
+    rig.displays.monitor_list = []
     stop = CountingStop(40)
-    capture.run(stop, threading.Event())
-    assert all(t is not None and t > 0 for t in stop.timeouts[5:])
+    rig.capture.run(stop, threading.Event(), threading.Event())
+    assert set(stop.timeouts) == {0.1}
 
 
-def stored_triggers(conn: Connection) -> list[str]:
-    return [str(r[0]) for r in conn.execute("SELECT trigger FROM frames ORDER BY id")]
+def triggers(rig: Rig) -> list[str]:
+    return [p.trigger for p in rig.writer.pictures]
 
 
 def test_normal_capture_resumes_when_the_game_ends_and_old_triggers_are_dropped(
-    conn: Connection, paths: Paths
+    make_rig: Callable[..., Rig],
 ) -> None:
-    screen = FakeScreen()
-    windows = FakeWindows(focused=game_window())
-    capture, _ = screen_capture(conn, paths, screen, windows, clock=fake_clock())
-    capture.tick(0.0)
-    capture.note("input", 0.0)  # noted during the game
-    capture.note("focus", 0.0)
-    capture.tick(1.0)  # still in the game: nothing but the game screenshot
-    windows.focused = plain_window()
-    capture.tick(10.0)  # the game is over: normal capture on this very tick
-    triggers = stored_triggers(conn)
-    assert "idle" in triggers
-    assert "input" not in triggers  # triggers noted during the game were dropped, not replayed
-    capture.tick(11.0)  # the focus change away from the game fires normally
-    before = stored_triggers(conn)
-    capture.note("input", 12.0)
-    screen.frames[0] = with_text_block(blank())
-    capture.tick(13.0)
-    assert stored_triggers(conn) == [*before, "input"]  # a new input trigger fires again
+    rig = make_rig(shown=False)
+    rig.show(7, "game.exe", "The Game", has_frame=False)
+    rig.settle(0.0)
+    rig.windows.last_input = 1  # input noted during the game
+    rig.tick(1.0)
+    assert triggers(rig) == ["game"]  # still in the game: nothing but the game screenshot
+    rig.show(1, "notepad.exe", "Notes")
+    rig.tick(10.0)  # the game is over: normal capture on this very tick
+    rig.tick(10.1)
+    assert triggers(rig) == ["game", "idle"]  # the stale input trigger was dropped, not replayed
+    rig.tick(11.2)
+    rig.repaint(1, with_text_block(blank()))
+    rig.windows.last_input = 2
+    rig.tick(12.0)
+    rig.tick(12.4)
+    assert triggers(rig)[-1] == "input"  # a new input trigger fires again
 
 
-def test_normal_capture_resumes_when_the_monitors_come_back(conn: Connection, paths: Paths) -> None:
-    screen = FakeScreen(rects=[])
-    windows = FakeWindows(focused=plain_window())
-    capture, _ = screen_capture(conn, paths, screen, windows)
-    capture.tick(0.0)
-    capture.note("input", 0.0)  # noted while there is nothing to capture
-    capture.note("focus", 0.0)
-    capture.tick(1.0)
-    assert screen.grabs == 0
-    assert stored_triggers(conn) == []
-    screen.rects = [SCREEN]
-    capture.tick(10.0)  # monitor list refreshed: idle capture runs
-    assert stored_triggers(conn) == ["idle"]  # the stale input/focus triggers are not replayed
-    capture.note("input", 10.5)
-    screen.frames[0] = with_text_block(blank())
-    capture.tick(11.0)
-    assert stored_triggers(conn) == ["idle", "input"]
-
-
-MON_B = Rect(800, 0, 1600, 600)
-
-
-def input_frames(conn: Connection) -> list[str]:
-    return [
-        str(r[0])
-        for r in conn.execute("SELECT process FROM frames WHERE trigger = 'input' ORDER BY id")
-    ]
-
-
-def test_scrolling_a_side_window_captures_that_window(conn: Connection, paths: Paths) -> None:
-    screen = FakeScreen(rects=[SCREEN, MON_B])
-    windows = FakeWindows(focused=plain_window())
-    discord = WindowInfo(9, "discord.exe", "#general", Rect(800, 0, 1100, 600))
-    windows.at[MON_B.center] = WindowInfo(8, "vlc.exe", "Movie", Rect(1100, 0, 1600, 600))
-    windows.at[(900, 300)] = discord
-    capture, _ = screen_capture(conn, paths, screen, windows)
-    capture.tick(0.0)
-    capture.tick(0.4)
-    windows.cursor = (900, 300)  # scrolling the Discord chat, which does not have the focus
-    capture.note("input", 2.0)
-    capture.tick(2.5)
-    assert "discord.exe" in input_frames(conn)
-
-
-def test_scrolling_a_window_beside_the_focused_one_captures_it(
-    conn: Connection, paths: Paths
-) -> None:
-    windows = FakeWindows(focused=plain_window(rect=Rect(0, 0, 400, 600)))
-    side = WindowInfo(9, "discord.exe", "#general", Rect(400, 0, 800, 600))
-    windows.at[(600, 300)] = side
-    capture, _ = screen_capture(conn, paths, FakeScreen(), windows)
-    capture.tick(0.0)
-    capture.tick(0.4)
-    windows.cursor = (600, 300)
-    capture.note("input", 2.0)
-    capture.tick(2.5)
-    assert "discord.exe" in input_frames(conn)
+def test_normal_capture_resumes_when_the_monitors_come_back(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    monitors = rig.displays.monitor_list
+    rig.displays.monitor_list = []
+    rig.tick(0.0)
+    rig.windows.last_input = 1  # noted while there is nothing to capture
+    rig.tick(1.0)
+    assert rig.facts.reads == 0
+    assert rig.writer.pictures == []
+    rig.displays.monitor_list = monitors
+    rig.tick(10.0)  # monitor list refreshed: idle capture runs
+    rig.tick(10.1)
+    assert triggers(rig) == ["idle"]  # the stale input trigger is not replayed
+    rig.tick(10.4)  # the focus seen again fires; its check waits for the 1 s gap
+    rig.tick(11.1)
+    assert triggers(rig) == ["idle"]  # nothing changed
+    rig.repaint(1, with_text_block(blank()))
+    rig.windows.last_input = 2
+    rig.tick(12.0)
+    rig.tick(12.4)
+    assert triggers(rig) == ["idle", "input"]
 
 
 @known_defect(149, "app sessions are derived from focused frames only")
 def test_a_stream_watched_on_a_side_monitor_gets_a_time_span(conn: Connection) -> None:
     for minute in range(10):
         ts = T0 + minute * 60_000
-        conn.execute(
-            "INSERT INTO frames (ts_ms, monitor, process, window_title, trigger, focused)"
-            " VALUES (?, 0, 'code.exe', 'main.py', 'idle', 1)",
-            (ts,),
-        )
-        conn.execute(
-            "INSERT INTO frames (ts_ms, monitor, process, window_title, trigger, focused)"
-            " VALUES (?, 1, 'vlc.exe', 'Le match', 'idle', 0)",
-            (ts + 1_000,),
+        add_frame(conn, ts, None, "main.py", process="code.exe", monitor_id=0)
+        add_frame(
+            conn, ts + 1_000, None, "Le match", process="vlc.exe", monitor_id=1, focused=False
         )
     derive_app_sessions(conn, T0 + HOUR_MS)
     processes = {r[0] for r in conn.execute("SELECT process FROM app_sessions")}
@@ -1060,15 +979,15 @@ class SizeOcr:
         return "Minlo a rejoint le salon"
 
 
-@known_defect(153, "deferred game OCR reads the 1920 px WebP, not the full-resolution frame")
-def test_deferred_game_ocr_reads_the_full_resolution_frame(conn: Connection, paths: Paths) -> None:
+def test_deferred_game_ocr_reads_the_full_resolution_frame(make_rig: Callable[..., Rig]) -> None:
     uhd = Rect(0, 0, 3840, 2160)
-    screen = FakeScreen(rects=[uhd], frames={0: blank("gray", (3840, 2160))})
-    capture, store = screen_capture(conn, paths, screen, FakeWindows(focused=game_window(uhd)))
-    capture.tick(0.0)
-    (frame_id,) = (int(r[0]) for r in conn.execute("SELECT id FROM frames"))
+    rig = make_rig(monitors=[uhd], shown=False)
+    rig.show(7, "game.exe", "The Game", uhd, image=blank("gray", (3840, 2160)), has_frame=False)
+    rig.settle(0.0)
+    rig.drain()
+    (window_id,) = (int(r[0]) for r in rig.conn.execute("SELECT id FROM frame_windows"))
     ocr = SizeOcr()
-    OcrFrameHandler(store, lambda: ocr).run(
-        Job(1, "ocr_frame", f"ocr_frame:{frame_id}", {"frame_id": frame_id}, 0, 1)
+    OcrWindowHandler(rig.store, lambda: ocr).run(
+        Job(1, "ocr_window", f"ocr_window:{window_id}", {"window_id": window_id}, 0, 1)
     )
     assert ocr.sizes == [(3840, 2160)]

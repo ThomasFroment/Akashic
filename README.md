@@ -4,8 +4,8 @@ A personal, fully local memory of what you see, hear and say on your Windows PC.
 Nothing leaves the machine. Personal, non-commercial project. See [AGENTS.md](AGENTS.md) for the
 constraints and [docs/README.md](docs/README.md) for the documentation map.
 
-Akashic records the screen (app-window screenshots plus the text on them), what plays, which
-games run, and speech from the microphone and system sound. It transcribes speech in French and
+Akashic records the screen (one frame per monitor, composed from window captures, plus the text
+on the windows), what plays, which games run, and speech from the microphone and system sound. It transcribes speech in French and
 English, tells voices apart, groups everything into episodes (videos, calls, games, browsing,
 work) and answers questions about them with a local language model, citing the moments it used.
 
@@ -31,9 +31,10 @@ uv sync --no-cache
 Installing and downloading models fetch only public files. The running app talks only to
 `127.0.0.1`.
 
-**Optional: French OCR.** When an app exposes no text through UI Automation, Windows OCR reads the
-screen. French is the default recognizer (it reads English well too). Without the French pack the
-app falls back to English and logs a warning. To add it, run once in an elevated PowerShell (or
+**Optional: French OCR.** UI Automation reads the focused window; Windows OCR reads every other
+kept window (the whole window), and the focused window keeps the longer text. French is the
+default recognizer (it reads English well too). Without the French pack the app falls back to
+English and logs a warning. To add it, run once in an elevated PowerShell (or
 add French under Settings › Time & language):
 
 ```powershell
@@ -77,10 +78,10 @@ Models. See [docs/PACKAGING.md](docs/PACKAGING.md).
 - Database, screenshots and audio are encrypted at rest; the key exists only in memory while
   unlocked. Design and limits: [docs/SECURITY.md](docs/SECURITY.md).
 - Excluded apps, windows and addresses (`[exclusions]` in `config.toml`, password managers,
-  private browser windows, banking sites, password fields) are dropped before anything is
+  private browser windows, banking sites) are dropped before anything is
   written. Boundaries: [docs/CAPTURE.md](docs/CAPTURE.md).
-- To decide when to capture, Akashic reads only the time of your last input
-  (`GetLastInputInfo`), never which key was pressed.
+- To decide when to capture, Akashic reads only the time of your last input and the cursor
+  position, never which key was pressed.
 
 ## Where things live
 

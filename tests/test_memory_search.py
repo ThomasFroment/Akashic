@@ -229,7 +229,7 @@ def test_screen_text_matching_the_words_is_returned_too(conn: Connection) -> Non
     inside = add_frame(conn, at(5, 9), "Elden Ring boss guide", "Guide")
     add_frame(conn, at(5, 20), "Elden Ring boss guide")  # outside the morning
     found = search_memory(conn, plan("elden boss ce matin"), None, "m")
-    assert [f.id for f in found.frames] == [inside]
+    assert [f.frame_id for f in found.frames] == [inside]
 
 
 @pytest.mark.parametrize("mode", ["words", "vectors", "hybrid"])

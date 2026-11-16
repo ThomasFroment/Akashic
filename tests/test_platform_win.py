@@ -6,20 +6,24 @@ adapters are tested in test_exclusions.py and test_capture_privacy.py.
 
 from __future__ import annotations
 
+import ctypes
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pytest
 from capture_fakes import AUMID, window
 
+from akashic.capture.ports import Rect
 from akashic.platform.win import audio as win_audio
+from akashic.platform.win import displays as win_displays
 from akashic.platform.win import media as win_media
 from akashic.platform.win import uia as win_uia
 from akashic.platform.win import windows as win_windows
 
 if TYPE_CHECKING:
-    import ctypes
     from collections.abc import Callable, Iterator
+
+    from akashic.capture.ports import TopWindow, WindowFacts, WindowSource
 
 
 def _per_hwnd(value: object) -> Callable[[int], object]:
@@ -39,25 +43,11 @@ def com_error(hresult: int, text: str) -> Exception:
 # --- UI Automation: errors fail closed ------------------------------------------------------
 
 
-class _BrokenAutomation:
-    def __init__(self, error: Exception) -> None:
-        self.error = error
+def test_no_reader_asks_for_the_focused_password_field() -> None:
+    from akashic.capture.ports import TextSource  # noqa: PLC0415
 
-    def GetFocusedElement(self) -> object:  # noqa: N802 - the COM method name
-        raise self.error
-
-
-@pytest.mark.parametrize(
-    "error",
-    [com_error(-2147220991, "UIA_E_ELEMENTNOTAVAILABLE"), OSError("rpc failed")],
-    ids=["com", "os"],
-)
-def test_password_check_reports_unknown_on_ui_automation_errors(
-    monkeypatch: pytest.MonkeyPatch, error: Exception
-) -> None:
-    reader = object.__new__(win_uia.WindowsUia)  # no COM object: only the error path runs
-    monkeypatch.setattr(reader, "_auto", _BrokenAutomation(error), raising=False)
-    assert reader.focused_is_password() is None  # unknown, never "not a password field"
+    assert not hasattr(win_uia.WindowsUia, "focused_is_password")
+    assert not hasattr(TextSource, "focused_is_password")
 
 
 # --- UI Automation: the address bar is the omnibox, not an in-page input --------------------
@@ -281,30 +271,6 @@ def test_negative_control_the_first_edit_in_tree_order_reads_page_text(
     assert _reader_for(monkeypatch, pwa).read_url(target, "chromium") == SPOOFED
 
 
-def test_uia_distinguishes_unknown_no_focus_and_password(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    class _Focused:
-        def __init__(self, element: object) -> None:
-            self.element = element
-
-        def GetFocusedElement(self) -> object:  # noqa: N802 - the COM method name
-            return self.element
-
-    class _Field:
-        def __init__(self, *, password: bool) -> None:
-            self.CurrentIsPassword = password
-
-    reader = object.__new__(win_uia.WindowsUia)
-    for element, expected in [
-        (None, False),  # a null interface pointer: nothing has the focus
-        (_Field(password=False), False),
-        (_Field(password=True), True),
-    ]:
-        monkeypatch.setattr(reader, "_auto", _Focused(element), raising=False)
-        assert reader.focused_is_password() is expected
-
-
 # --- audio sessions: unknown is not silence ---------------------------------------------------
 
 
@@ -398,9 +364,9 @@ def test_a_hosted_app_is_named_by_its_own_executable(monkeypatch: pytest.MonkeyP
         return 1
 
     monkeypatch.setattr(win_windows.user32, "GetWindowThreadProcessId", pid_of, raising=False)
-    assert windows._process_name(7) == "dashlane.exe"
+    assert windows._identity(7)[1] == "dashlane.exe"
     hosted[0] = None
-    assert windows._process_name(7) == "applicationframehost.exe"
+    assert windows._identity(7)[1] == "applicationframehost.exe"
 
 
 # --- media app names ---------------------------------------------------------------------------
@@ -485,12 +451,6 @@ def test_windows_uia_uses_the_v8_automation_object_with_named_timeouts(
     assert fake.TransactionTimeout == win_uia.UIA_TRANSACTION_TIMEOUT_MS
     # Milliseconds, bounded: a hung app must not block the capture loop for long.
     assert 0 < win_uia.UIA_CONNECTION_TIMEOUT_MS <= win_uia.UIA_TRANSACTION_TIMEOUT_MS <= 10_000
-
-
-def test_a_timed_out_password_check_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
-    reader = object.__new__(win_uia.WindowsUia)
-    monkeypatch.setattr(reader, "_auto", _TimingOutAutomation(), raising=False)
-    assert reader.focused_is_password() is None
 
 
 def test_timed_out_readers_take_their_error_paths(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -586,23 +546,391 @@ def test_the_shell_query_runs_at_most_once_a_second(monkeypatch: pytest.MonkeyPa
     assert shell.calls == 2
 
 
-def test_inspect_window_never_reports_d3d(monkeypatch: pytest.MonkeyPatch) -> None:
-    shell = _FakeShell32((0, 3))
-    windows, _ = _d3d_rig(monkeypatch, shell)
-    monkeypatch.setattr(win_windows.user32, "IsWindowVisible", _per_hwnd(1), raising=False)
-    inspected = windows.inspect_window(7)
-    assert inspected is not None
-    assert inspected.exclusive_fullscreen is False
-    assert shell.calls == 0
-    focused = windows.focused_window()
-    assert focused is not None
-    assert focused.exclusive_fullscreen is True
-    assert focused == inspected  # identity ignores the flag (screen._consistent)
-
-
 def test_no_focused_window_means_no_shell_query(monkeypatch: pytest.MonkeyPatch) -> None:
     shell = _FakeShell32((0, 3))
     windows, _ = _d3d_rig(monkeypatch, shell)
     monkeypatch.setattr(windows, "_info", _per_hwnd(None))
     assert windows.focused_window() is None
     assert shell.calls == 0
+
+
+# --- every visible top-level window with its facts ---------------------------------------------
+
+_CAPTION = 0x00C00000
+_POPUP = 0x80000000
+_TOOL = 0x80
+_LAYERED = 0x80000
+_FRAME = "ApplicationFrameWindow"
+_CORE = "Windows.UI.Core.CoreWindow"
+
+
+@dataclass
+class _Win:
+    pid: int = 10
+    cls: str = "Plain"
+    title: str = ""
+    visible: bool = True
+    dwm_rect: tuple[int, int, int, int] | None = (0, 0, 100, 50)
+    rect: tuple[int, int, int, int] | None = (1, 1, 99, 49)
+    style: int = _CAPTION
+    exstyle: int = 0
+    iconic: bool = False
+    cloak: int | None = 0  # None: the DWM call fails
+    owner: int = 0
+    layered: tuple[int, int] | None = None  # (alpha, flags); None: the call fails
+    hung: bool = False
+    children: tuple[int, ...] = ()
+    ghost_of: int = 0
+
+
+class _DeskUser32:
+    def __init__(self, order: list[int], wins: dict[int, _Win], *, enum_ok: bool = True) -> None:
+        self.order, self.wins, self.enum_ok = order, wins, enum_ok
+
+    def EnumWindows(self, proc: object, param: int) -> int:  # noqa: N802
+        for hwnd in self.order:
+            proc(hwnd, param)  # type: ignore[operator]
+        return int(self.enum_ok)
+
+    def EnumChildWindows(self, hwnd: int, proc: object, param: int) -> None:  # noqa: N802
+        # Like the real call: every descendant, depth first, stopping when the callback says so.
+        for child in self.wins[hwnd].children:
+            if not proc(child, param):  # type: ignore[operator]
+                return
+            self.EnumChildWindows(child, proc, param)
+
+    def IsWindowVisible(self, hwnd: int) -> int:  # noqa: N802
+        return int(self.wins[hwnd].visible)
+
+    def IsIconic(self, hwnd: int) -> int:  # noqa: N802
+        return int(self.wins[hwnd].iconic)
+
+    def IsHungAppWindow(self, hwnd: int) -> int:  # noqa: N802
+        return int(self.wins[hwnd].hung)
+
+    def GetWindow(self, hwnd: int, kind: int) -> int:  # noqa: N802
+        assert kind == 4  # GW_OWNER
+        return self.wins[hwnd].owner
+
+    def GetWindowRect(self, hwnd: int, ref: object) -> int:  # noqa: N802
+        rect = self.wins[hwnd].rect
+        if rect is None:
+            return 0
+        out = ref._obj  # type: ignore[attr-defined]
+        out.left, out.top, out.right, out.bottom = rect
+        return 1
+
+    def GetWindowTextLengthW(self, hwnd: int) -> int:  # noqa: N802
+        return len(self.wins[hwnd].title)
+
+    def GetWindowTextW(self, hwnd: int, buffer: ctypes.Array[ctypes.c_wchar], size: int) -> int:  # noqa: N802
+        buffer.value = self.wins[hwnd].title[: size - 1]
+        return len(buffer.value)
+
+    def GetClassNameW(self, hwnd: int, buffer: ctypes.Array[ctypes.c_wchar], size: int) -> int:  # noqa: N802
+        buffer.value = self.wins[hwnd].cls[: size - 1]
+        return len(buffer.value)
+
+    def GetWindowThreadProcessId(self, hwnd: int, pid: object) -> int:  # noqa: N802
+        pid._obj.value = self.wins[hwnd].pid  # type: ignore[attr-defined]
+        return 1
+
+    def GetWindowLongW(self, hwnd: int, index: int) -> int:  # noqa: N802
+        win = self.wins[hwnd]
+        return win.style if index == -16 else win.exstyle
+
+    def GetLayeredWindowAttributes(  # noqa: N802
+        self, hwnd: int, key: object, alpha: object, flags: object
+    ) -> int:
+        del key
+        layered = self.wins[hwnd].layered
+        if layered is None:
+            return 0
+        alpha._obj.value, flags._obj.value = layered  # type: ignore[attr-defined]
+        return 1
+
+
+class _DeskDwm:
+    def __init__(self, wins: dict[int, _Win]) -> None:
+        self.wins = wins
+
+    def DwmGetWindowAttribute(self, hwnd: int, attr: int, ref: object, size: int) -> int:  # noqa: N802
+        del size
+        win = self.wins[hwnd]
+        out = ref._obj  # type: ignore[attr-defined]
+        if attr == 9:  # DWMWA_EXTENDED_FRAME_BOUNDS
+            if win.dwm_rect is None:
+                return 0x80070057
+            out.left, out.top, out.right, out.bottom = win.dwm_rect
+            return 0
+        assert attr == 14  # DWMWA_CLOAKED
+        if win.cloak is None:
+            return 0x80070057
+        out.value = win.cloak
+        return 0
+
+
+_NAMES = {10: "app.exe", 20: "other.exe", 30: "dwm.exe", 100: "applicationframehost.exe"}
+
+
+def _desk(
+    monkeypatch: pytest.MonkeyPatch,
+    wins: dict[int, _Win],
+    order: list[int] | None = None,
+    *,
+    names: dict[int, str] | None = None,
+    enum_ok: bool = True,
+) -> win_windows.Win32Windows:
+    monkeypatch.setattr(
+        win_windows,
+        "user32",
+        _DeskUser32(list(wins) if order is None else order, wins, enum_ok=enum_ok),
+    )
+    monkeypatch.setattr(win_windows, "dwmapi", _DeskDwm(wins))
+    table = _NAMES if names is None else names
+
+    def image_name(pid: int) -> str:
+        return table.get(pid, "")
+
+    monkeypatch.setattr(win_windows, "image_name", image_name)
+    monkeypatch.setattr(win_windows, "_hung_window_from_ghost", None)
+    return win_windows.Win32Windows()
+
+
+def _listed(
+    monkeypatch: pytest.MonkeyPatch, wins: dict[int, _Win], **kwargs: object
+) -> dict[int, TopWindow]:
+    listed = _desk(monkeypatch, wins, **kwargs).windows()  # type: ignore[arg-type]
+    assert listed is not None
+    return {w.hwnd: w for w in listed}
+
+
+def test_win32_windows_still_serves_both_window_ports() -> None:
+    both: WindowSource = win_windows.Win32Windows()
+    facts: WindowFacts = win_windows.Win32Windows()
+    assert both is not None
+    assert facts is not None
+
+
+def test_every_visible_window_is_listed_in_enum_order_and_hidden_ones_never(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wins = {
+        1: _Win(),
+        2: _Win(visible=False),
+        3: _Win(iconic=True, cloak=1, exstyle=_TOOL, dwm_rect=(-32000, -32000, -31840, -31972)),
+        4: _Win(dwm_rect=(0, 0, 0, 0)),
+        5: _Win(dwm_rect=(99999, 99999, 100100, 100050)),
+    }
+    listed = _desk(monkeypatch, wins, [5, 3, 2, 4, 1]).windows()
+    assert listed is not None
+    assert [w.hwnd for w in listed] == [5, 3, 4, 1]
+
+
+def test_a_failed_enumeration_is_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert _desk(monkeypatch, {1: _Win()}, enum_ok=False).windows() is None
+
+
+def test_rect_is_the_dwm_frame_with_get_window_rect_as_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    listed = _listed(monkeypatch, {1: _Win(), 2: _Win(dwm_rect=None)})
+    assert listed[1].rect == Rect(0, 0, 100, 50)
+    assert listed[2].rect == Rect(1, 1, 99, 49)
+
+
+def test_a_window_that_vanished_is_left_out_without_raising(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    listed = _listed(monkeypatch, {1: _Win(dwm_rect=None, rect=None), 2: _Win()})
+    assert list(listed) == [2]
+
+
+def test_class_title_minimized_cloaked_and_owner(monkeypatch: pytest.MonkeyPatch) -> None:
+    wins = {
+        1: _Win(cls="Chrome_WidgetWin_1", title="Doc é", iconic=True, cloak=2, owner=7),
+        2: _Win(cloak=None),
+    }
+    listed = _listed(monkeypatch, wins)
+    one = listed[1]
+    assert (one.class_name, one.title) == ("Chrome_WidgetWin_1", "Doc é")
+    assert (one.minimized, one.cloaked, one.owner) == (True, True, 7)
+    two = listed[2]
+    assert (two.minimized, two.cloaked, two.owner) == (False, False, None)
+
+
+def test_popup_tool_and_frame_come_from_the_styles(monkeypatch: pytest.MonkeyPatch) -> None:
+    wins = {
+        1: _Win(style=_POPUP | _CAPTION, exstyle=_TOOL),
+        2: _Win(style=0x00800000),  # border only: not all of WS_CAPTION
+        3: _Win(style=0),
+    }
+    listed = _listed(monkeypatch, wins)
+    assert (listed[1].popup, listed[1].tool, listed[1].has_frame) == (True, True, True)
+    assert (listed[2].popup, listed[2].tool, listed[2].has_frame) == (False, False, False)
+    assert listed[3].has_frame is False
+
+
+def test_alpha_only_when_layered_with_lwa_alpha(monkeypatch: pytest.MonkeyPatch) -> None:
+    wins = {
+        1: _Win(exstyle=_LAYERED, layered=(0, 2)),
+        2: _Win(exstyle=_LAYERED, layered=(128, 2)),
+        3: _Win(exstyle=_LAYERED, layered=(255, 1)),  # colour key only
+        4: _Win(exstyle=_LAYERED, layered=None),  # call fails
+        5: _Win(layered=(128, 2)),  # not layered
+    }
+    listed = _listed(monkeypatch, wins)
+    assert [listed[h].alpha for h in (1, 2, 3, 4, 5)] == [0, 128, None, None, None]
+
+
+def test_pid_and_process_of_the_window_itself(monkeypatch: pytest.MonkeyPatch) -> None:
+    wins = {1: _Win(pid=10), 2: _Win(pid=999), 3: _Win(pid=0)}
+    listed = _listed(monkeypatch, wins)
+    assert (listed[1].pid, listed[1].process, listed[1].uwp_unresolved) == (10, "app.exe", False)
+    assert (listed[2].pid, listed[2].process) == (999, "")
+    assert (listed[3].pid, listed[3].process) == (0, "")
+
+
+def test_a_frame_host_resolves_to_its_core_window_app(monkeypatch: pytest.MonkeyPatch) -> None:
+    wins = {
+        1: _Win(pid=100, cls=_FRAME, children=(2, 3)),
+        2: _Win(pid=100, cls="ApplicationFrameInputSinkWindow"),
+        3: _Win(pid=20, cls=_CORE),
+        # a frame whose app name cannot be read
+        4: _Win(pid=100, cls=_FRAME, children=(5,)),
+        5: _Win(pid=999, cls=_CORE),
+        # a frame with no CoreWindow child
+        6: _Win(pid=100, cls=_FRAME, children=(2,)),
+    }
+    listed = _listed(monkeypatch, wins, order=[1, 4, 6])
+    assert (listed[1].pid, listed[1].process, listed[1].uwp_unresolved) == (20, "other.exe", False)
+    assert (listed[4].pid, listed[4].process, listed[4].uwp_unresolved) == (999, "", False)
+    assert (listed[6].pid, listed[6].process, listed[6].uwp_unresolved) == (
+        100,
+        "applicationframehost.exe",
+        True,
+    )
+
+
+def test_foreign_children_are_sorted_unique_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    wins = {
+        1: _Win(pid=10, children=(2, 3, 4, 5, 6)),
+        2: _Win(pid=10),
+        3: _Win(pid=20),
+        4: _Win(pid=20),
+        5: _Win(pid=30, visible=False),  # hidden children count too
+        6: _Win(pid=10, children=(7,)),
+        7: _Win(pid=40),  # a descendant, not only a direct child
+        8: _Win(pid=10),
+    }
+    names = {**_NAMES, 40: "a.exe"}
+    listed = _listed(monkeypatch, wins, order=[1, 8], names=names)
+    assert listed[1].foreign_children == ("a.exe", "dwm.exe", "other.exe")
+    assert listed[8].foreign_children == ()
+
+
+def test_an_unnameable_foreign_child_makes_the_list_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wins = {1: _Win(pid=10, children=(2, 3)), 2: _Win(pid=20), 3: _Win(pid=999)}
+    assert _listed(monkeypatch, wins, order=[1])[1].foreign_children is None
+
+
+def test_a_resolved_frame_does_not_count_its_app_or_host_children_as_foreign(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wins = {
+        1: _Win(pid=100, cls=_FRAME, children=(2, 3, 4)),
+        2: _Win(pid=100, cls="ApplicationFrameInputSinkWindow"),
+        3: _Win(pid=20, cls=_CORE),
+        4: _Win(pid=10),  # a real foreign child still counts
+    }
+    listed = _listed(monkeypatch, wins, order=[1])
+    assert listed[1].foreign_children == ("app.exe",)
+    wins[4].pid = 20
+    assert _listed(monkeypatch, wins, order=[1])[1].foreign_children == ()
+
+
+def test_ghost_by_class_or_by_a_hung_window_of_dwm(monkeypatch: pytest.MonkeyPatch) -> None:
+    wins = {
+        1: _Win(cls="Ghost", pid=10),
+        2: _Win(pid=30, hung=True),
+        3: _Win(pid=30, hung=False),
+        4: _Win(pid=10, hung=True),  # a hung app window that is not the ghost
+        5: _Win(pid=10),
+    }
+    listed = _listed(monkeypatch, wins)
+    assert [listed[h].is_ghost for h in (1, 2, 3, 4, 5)] == [True, True, False, False, False]
+
+
+def test_ghost_of_is_set_only_for_a_ghost_with_a_known_target(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wins = {
+        1: _Win(cls="Ghost", ghost_of=55),
+        2: _Win(cls="Ghost", ghost_of=0),
+        3: _Win(ghost_of=55),  # not a ghost
+    }
+    windows = _desk(monkeypatch, wins)
+
+    def hung_window(hwnd: int) -> int:
+        return wins[hwnd].ghost_of
+
+    monkeypatch.setattr(win_windows, "_hung_window_from_ghost", hung_window)
+    listed = {w.hwnd: w for w in windows.windows() or []}
+    assert [listed[h].ghost_of for h in (1, 2, 3)] == [55, None, None]
+    monkeypatch.setattr(win_windows, "_hung_window_from_ghost", None)
+    assert {w.hwnd: w.ghost_of for w in windows.windows() or []} == {1: None, 2: None, 3: None}
+
+
+def test_a_hosted_app_with_an_unreadable_name_reports_an_empty_process(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wins = {
+        1: _Win(pid=100, cls=_FRAME, children=(2,)),
+        2: _Win(pid=999, cls=_CORE),
+    }
+    listed = _listed(monkeypatch, wins)
+    assert listed[1].process == ""
+
+
+# --- DPI awareness ------------------------------------------------------------------------------
+
+
+def test_set_dpi_aware_sets_per_monitor_v2_and_returns_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[int | None] = []
+
+    class _User32:
+        def SetProcessDpiAwarenessContext(self, context: object) -> int:  # noqa: N802
+            seen.append(getattr(context, "value", None))
+            return 1
+
+    monkeypatch.setattr(win_displays, "user32", _User32())
+    assert win_displays.set_dpi_aware() is None
+    assert seen == [ctypes.c_void_p(-4).value]
+
+
+def test_build_capture_platform_sets_dpi_awareness_first(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from akashic.platform import win  # noqa: PLC0415 - Windows only
+
+    calls: list[str] = []
+
+    class _Stop(Exception):  # noqa: N818
+        pass
+
+    def aware() -> None:
+        calls.append("dpi")
+
+    def displays() -> object:
+        calls.append("displays")
+        raise _Stop
+
+    monkeypatch.setattr(win, "set_dpi_aware", aware)
+    monkeypatch.setattr(win, "Win32Displays", displays)
+    with pytest.raises(_Stop):
+        win.build_capture_platform("en")
+    assert calls[0] == "dpi"

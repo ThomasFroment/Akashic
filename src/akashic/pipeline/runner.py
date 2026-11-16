@@ -11,14 +11,14 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, ClassVar, Final, Literal, Protocol
 
-from akashic.pipeline.jobs import PermanentJobError
 from akashic.pipeline.llm import LlamaError
+from akashic.storage.jobs import PermanentJobError
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Collection
 
-    from akashic.pipeline.jobs import Job, JobQueue
     from akashic.pipeline.scheduler import Scheduler
+    from akashic.storage.jobs import Job, JobQueue
 
 log = logging.getLogger(__name__)
 

@@ -10,14 +10,14 @@ from typing import TYPE_CHECKING
 
 import pytest
 import sqlcipher3
-from memory_data import NOW, add_segment
+from memory_data import NOW, add_monitor, add_segment, new_frame
 
 from akashic.api.server import ApiServer, Controls, Services, new_token
 from akashic.config import DEFAULT_CONFIG_TOML
 from akashic.storage import db, retention
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import CryptoError, DataKey
-from akashic.storage.frames import FrameStore, NewFrame
+from akashic.storage.frames import FrameStore
 from akashic.storage.retention import DAY_MS, PURGERS, apply_retention
 
 if TYPE_CHECKING:
@@ -32,7 +32,8 @@ RECENT = NOW - DAY_MS
 
 
 def screenshot(conn: Connection, media: MediaStore, ts_ms: int, text: str | None = "t") -> int:
-    return FrameStore(conn, media).add(NewFrame(ts_ms, 0, "idle", text=text, image_webp=b"synth"))
+    add_monitor(conn)
+    return FrameStore(conn, media).add(new_frame(ts_ms, text=text, image=b"synth"))
 
 
 def clip(conn: Connection, media: MediaStore, start_ms: int, transcript: str = "bonjour") -> int:

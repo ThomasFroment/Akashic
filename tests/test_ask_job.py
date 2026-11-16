@@ -12,10 +12,10 @@ from defects import known_defect
 from memory_data import HOUR, MINUTE, NOW, add_episode, add_segment, add_speaker
 
 from akashic.pipeline.ask import ask_job, plan_json, stored_plan
-from akashic.pipeline.jobs import Job, JobQueue
 from akashic.pipeline.llm import LlamaError
 from akashic.search.planner import Plan
 from akashic.storage import db, embeddings
+from akashic.storage.jobs import Job, JobQueue
 
 if TYPE_CHECKING:
     from sqlite3 import Connection

@@ -96,6 +96,12 @@ const fmtTime = (ms) => new Date(ms).toLocaleString([], {
 });
 const fmtClock = (ms) => new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const appName = (p) => (p || "").replace(/\.exe$/i, "");
+// "Monitor N · name" by id, N counting left to right, then top to bottom: the order capture/screen_writer.py
+// uses for the numbers in health problems.
+const monitorLabels = (monitors) => new Map([...monitors]
+  .sort((a, b) => a.rect[0] - b.rect[0] || a.rect[1] - b.rect[1])
+  .map((m, i) => [m.id, m.name ? `Monitor ${i + 1} · ${m.name}` : `Monitor ${i + 1}`]));
+const fmtAge = (ms) => (ms < 10000 ? "just now" : ms < 120000 ? Math.round(ms / 1000) + " s ago" : ms < 7200000 ? Math.round(ms / 60000) + " min ago" : Math.round(ms / 3600000) + " h ago");
 // Whisper was unsure of this line (pipeline/transcribe.py UNCLEAR_BELOW): shown greyed out.
 const UNCLEAR_BELOW = 0.55;
 const unclearAttrs = (confidence) => (confidence !== null && confidence !== undefined && confidence < UNCLEAR_BELOW
@@ -114,7 +120,7 @@ function lazyImg(cls, path, alt = "") {
 
 function thumb(hit) {
   if (!hit.has_image) return h("div", { class: "thumb none" }, "no image");
-  return lazyImg("thumb", `/api/frames/${hit.id}/image?w=480`);
+  return lazyImg("thumb", `/api/frames/${hit.id}/image?window=${hit.window_id}&w=480`);
 }
 
 // ---- audio: one clip at a time --------------------------------------------------------------
@@ -132,6 +138,14 @@ function playButton(label = "Play", cls = "") {
 const view = document.getElementById("view");
 const shell = document.getElementById("shell");
 let cleanup = () => {};
+
+// Focus and scroll do nothing while the shell is hidden (until recording is confirmed paused):
+// run them now if it shows, else when it is revealed. A new route drops the old page's ones.
+let onReveal = [];
+function whenShown(fn) {
+  if (shell.hidden) onReveal.push(fn);
+  else fn();
+}
 
 function setActive(route) {
   for (const a of document.querySelectorAll(".nav-link")) {
@@ -156,12 +170,21 @@ function backButton(fallback, label = "Back") {
   return iconButton("arrow-left", label, { text: label, cls: "ghost back", onclick: () => goBack(fallback) });
 }
 
+// The address of the timeline at one moment, optionally with a monitor enlarged and a window outlined.
+function momentHref(ts, monitor = null, windowId = null) {
+  const p = new URLSearchParams();
+  if (monitor !== null) p.set("monitor", monitor);
+  if (windowId !== null) p.set("window", windowId);
+  const query = p.toString();
+  return `#/moment/${ts}` + (query ? "?" + query : "");
+}
+
 function resultRow(hit, back) {
   return h("a", { class: "row", href: `#/frame/${hit.id}?from=${encodeURIComponent(back)}` },
     thumb(hit),
     h("div", { class: "row-body" },
       metaLine(fmtTime(hit.ts_ms), hit.process ? appName(hit.process) : ""),
-      h("div", { class: "row-title" }, hit.window_title || hit.url || "(untitled)"),
+      h("div", { class: "row-title" }, hit.title || hit.url || "(untitled)"),
       hit.snippet ? h("div", { class: "row-snippet clamp" }, ...highlighted(hit.snippet)) : null));
 }
 
@@ -207,7 +230,7 @@ function screenSearch(root, apps, saved) {
     h("div", { class: "filters" }, appSel, h("label", {}, "From", from), h("label", {}, "To", to)),
     h("div", { class: "search-hint muted small" }, "Exact words in screen text, window titles and addresses.", helpIcon(WORDS_ONLY)),
     results, more);
-  input.focus();
+  whenShown(() => input.focus());
 
   async function run(append) {
     const mine = ++seq;
@@ -237,58 +260,6 @@ function screenSearch(root, apps, saved) {
 }
 let lastSearch = null;
 
-function timelineView(apps, day) {
-  setActive("timeline");
-  const today = isoDay(new Date());
-  const date = h("input", { type: "date", value: day || today, "aria-label": "Day" });
-  const appSel = h("select", { "aria-label": "App" },
-    h("option", { value: "" }, "All apps"), apps.map((a) => h("option", { value: a }, appName(a))));
-  const step = (n) => () => {
-    const d = new Date(date.value + "T12:00:00");
-    d.setDate(d.getDate() + n);
-    date.value = isoDay(d);
-    load(false);
-  };
-  const todayBtn = h("button", { type: "button", onclick: () => { date.value = today; load(false); } }, "Today");
-  const grid = h("div", { class: "grid" });
-  const more = h("button", { class: "more", type: "button", hidden: true }, "Show more");
-  view.replaceChildren(h("div", { class: "column wide" },
-    pageHead("Timeline", h("div", { class: "spacer" }),
-      iconButton("chev-left", "Previous day", { cls: "", onclick: step(-1) }), date,
-      iconButton("chev-right", "Next day", { cls: "", onclick: step(1) }), todayBtn, appSel),
-    grid, more));
-
-  const LIMIT = 120;
-  let offset = 0;
-  let seq = 0;
-  async function load(append) {
-    const mine = ++seq;
-    if (!append) offset = 0;
-    if (!date.value) return;
-    // Keep the day in the address, so Back from a moment returns to it.
-    if (!append) history.replaceState(null, "", "#/timeline/" + date.value);
-    if (visited.length) visited[visited.length - 1] = location.hash;
-    const p = new URLSearchParams({ day: date.value, limit: LIMIT, offset });
-    if (appSel.value) p.set("process", appSel.value);
-    let hits;
-    try { hits = await getJson("/api/timeline?" + p); } catch { return; }
-    if (mine !== seq) return;
-    if (!append) grid.replaceChildren();
-    if (!hits.length && !append) grid.append(h("div", { class: "empty" }, "Nothing captured this day."));
-    const back = "timeline:" + date.value;
-    for (const hit of hits) {
-      grid.append(h("a", { class: "tile", href: `#/frame/${hit.id}?from=${encodeURIComponent(back)}` },
-        thumb(hit), metaLine(fmtClock(hit.ts_ms), hit.process ? appName(hit.process) : "")));
-    }
-    offset += hits.length;
-    more.hidden = hits.length < LIMIT;
-  }
-  date.addEventListener("change", () => load(false));
-  appSel.addEventListener("change", () => load(false));
-  more.addEventListener("click", () => load(true));
-  load(false);
-}
-
 // Speech: what was said, searchable, each with its recording to play back.
 function speechSearch(root) {
   const { input, el: box } = searchField("Search what was said…", "Search transcripts");
@@ -299,7 +270,7 @@ function speechSearch(root) {
     h("div", { class: "filters" }, h("label", {}, "Day", date)),
     h("div", { class: "search-hint muted small" }, "Exact words in speech transcripts.", helpIcon(WORDS_ONLY)),
     results, more);
-  input.focus();
+  whenShown(() => input.focus());
   let offset = 0;
   let seq = 0;
   let timer = 0;
@@ -343,8 +314,14 @@ function speechSearch(root) {
   run(false);
 }
 
+const TEXT_SOURCE_LABELS = {
+  uia: "app (UI Automation)",
+  ocr: "screen reading (OCR)",
+  ocr_deferred: "screen reading after the game (OCR)",
+};
+
 async function frameView(id, from) {
-  setActive(from.startsWith("timeline") ? "timeline" : from === "memory" ? null : "search");
+  setActive(from === "memory" ? null : "search");
   let f;
   try { f = await getJson(`/api/frames/${id}`); } catch {
     view.replaceChildren(h("div", { class: "column empty" }, "That moment no longer exists."));
@@ -356,11 +333,16 @@ async function frameView(id, from) {
     visited.pop();
     location.replace(`#/frame/${target}?from=${encodeURIComponent(from)}`);
   };
-  const fallback = from.startsWith("timeline:") ? "#/timeline/" + from.slice(9) : from === "timeline" ? "#/timeline" : from === "memory" ? "#/" : "#/search";
+  const fallback = from === "memory" ? "#/" : "#/search";
   const shot = f.has_image
     ? lazyImg("shot", `/api/frames/${f.id}/image`, "Screenshot")
     : h("div", { class: "noshot" }, "No screenshot was kept for this moment.");
   const row = (k, v) => (v ? [h("dt", {}, k), h("dd", {}, v)] : []);
+  const windowBlock = (w) => h("section", { class: "window" },
+    h("dl", { class: "meta" },
+      row("App", appName(w.process)), row("Window", w.title), row("Address", w.url),
+      row("Text from", TEXT_SOURCE_LABELS[w.text_source])),
+    w.text ? h("div", { class: "text-block" }, w.text) : h("div", { class: "muted" }, "No text was read"));
   view.replaceChildren(h("div", { class: "column wide" },
     h("div", { class: "viewer-bar" },
       backButton(fallback),
@@ -369,11 +351,8 @@ async function frameView(id, from) {
       iconButton("chev-left", "Earlier moment (←)", { cls: "", disabled: !f.prev_id, onclick: () => go(f.prev_id) }),
       iconButton("chev-right", "Later moment (→)", { cls: "", disabled: !f.next_id, onclick: () => go(f.next_id) })),
     shot,
-    h("dl", { class: "meta" },
-      row("When", fmtTime(f.ts_ms)), row("App", appName(f.process)), row("Window", f.window_title),
-      row("Address", f.url), row("Monitor", String(f.monitor + 1)), row("Captured on", f.trigger),
-      row("Text from", f.text_source === "uia" ? "app (UI Automation)" : f.text_source === "ocr" ? "screen reading (OCR)" : "")),
-    f.text ? h("div", { class: "text-block" }, f.text) : h("div", { class: "muted" }, "No text was read for this moment.")));
+    h("dl", { class: "meta" }, row("When", fmtTime(f.ts_ms))),
+    ...f.windows.filter((w) => w.role === "app").map(windowBlock)));
   view.focus();
   const onKey = (e) => {
     if (e.target.matches("input, select, textarea")) return;
@@ -385,10 +364,10 @@ async function frameView(id, from) {
 }
 
 // ---- routing --------------------------------------------------------------------------------
-let appList = [];
 async function route() {
   cleanup();
   cleanup = () => {};
+  onReveal = [];
   trackHistory();
   shell.classList.remove("nav-open");
   view.classList.remove("chat-mode");
@@ -400,14 +379,20 @@ async function route() {
   const frame = /^\/frame\/(\d+)$/.exec(path);
   const episode = /^\/episode\/(\d+)$/.exec(path);
   const chat = /^\/ask\/(\d+)$/.exec(path);
-  const tl = /^\/timeline(?:\/(\d{4}-\d{2}-\d{2}))?$/.exec(path);
+  const moment = /^\/moment\/(\d+)$/.exec(path);
+  const appList = () => getJson("/api/apps").catch(() => []);  // the filters only; empty if unreadable
   if (!signedIn) {
     view.replaceChildren(h("div", { class: "column empty" }, REOPEN));
     return;
   }
   if (frame) await frameView(Number(frame[1]), from);
-  else if (tl) timelineView(appList, tl[1]);
-  else if (path === "/search") searchView(appList, params.get("tab"));
+  else if (moment) timelineView(await appList(), Number(moment[1]), params.get("monitor"), params.get("window"));
+  else if (path === "/timeline") {
+    // Recording is paused while this page shows, so "now" is never recorded: open on the latest moment.
+    const [apps, latest] = await Promise.all([appList(), getJson(`/api/stage?ts=${Date.now()}`).catch(() => ({}))]);
+    timelineView(apps, latest.prev_ms ?? Date.now(), null, null);
+  }
+  else if (path === "/search") searchView(await appList(), params.get("tab"));
   else if (path === "/speakers") speakersView();
   else if (episode) await episodeView(Number(episode[1]));
   else if (chat) await chatView(Number(chat[1]));
@@ -432,16 +417,25 @@ let paused = false;
 const STATUS_LABELS = {
   ready: "Recording", gaming: "Recording (game mode)", degraded: "Recording (with problems)",
   starting: "Starting…", crashed: "Restarting…", paused: "Paused",
+  ui_paused: "Not recording while Akashic is open",
 };
 const DOT_CLASSES = { ready: "on", gaming: "on", degraded: "warn", paused: "paused" };
 const PROBLEM_WORDS = {
   audio_unavailable: "audio recording could not start",
   mic_unavailable: "the microphone could not be read for a minute",
   system_audio_unavailable: "system audio could not be read for a minute",
-  screen_images_failing: "screenshots are failing",
+  screen_images_failing: (where) => `screenshots are failing${where}`,
+  screen_frames_dropped: (where) => `screenshots${where} are being dropped because saving cannot keep up`,
+  screen_disk_full: (where) => `screenshots${where} can't be saved because the disk is full`,
 };
+// A screen problem arrives as "<code>@<monitor label>".
+function problemWords(problem) {
+  const [code, monitor] = problem.split(/@(.*)/s);
+  const words = PROBLEM_WORDS[code];
+  return typeof words === "function" ? words(monitor ? ` on ${monitor}` : "") : words;
+}
 function problemSentence(codes) {
-  const words = (codes || []).map((code) => PROBLEM_WORDS[code]).filter(Boolean);
+  const words = (codes || []).map(problemWords).filter(Boolean);
   const what = words.length ? words.join("; ") : "part of the recording is not working";
   return `Recording has problems: ${what}. The Debug page has details.`;
 }
@@ -453,7 +447,6 @@ async function refreshStatus() {
     const wasSignedOut = !signedIn;
     signedIn = true;
     paused = s.paused;
-    appList = s.apps;
     applyTheme(s.theme);
     const capture = s.processes.capture;
     dot.className = "dot " + (DOT_CLASSES[capture] ?? "");
@@ -494,3 +487,64 @@ window.addEventListener("DOMContentLoaded", () => {
   refreshStatus().then(() => { loadRecents(); route(); });
 });
 setInterval(refreshStatus, 5000);
+
+// ---- presence: recording stops while this page is visible ------------------------------------
+// The page shows nothing recorded until the server confirms that recording is paused. It says
+// so every 2 s while visible (every 250 ms until confirmed); the server drops it after 6 s.
+// Renewed at every hide, so a late reply cannot affect the next visible period.
+let pageId = crypto.randomUUID();
+const CONFIRMED_EVERY_MS = 2000;
+const UNCONFIRMED_EVERY_MS = 250;
+const waitNote = document.getElementById("wait-note");
+let confirmed = false;
+let presenceTimer = 0;
+
+function postPresence(visible, keepalive) {
+  return api("/api/presence", {
+    method: "POST", headers: { "Content-Type": "application/json" }, keepalive,
+    body: JSON.stringify({ page: pageId, visible }),
+  });
+}
+
+function conceal() {
+  confirmed = false;
+  shell.hidden = true;
+  waitNote.hidden = false;
+  stopClip();
+  for (const el of document.querySelectorAll("audio")) el.pause();
+}
+
+async function reportPresence() {
+  clearTimeout(presenceTimer);
+  if (document.hidden) return;
+  const id = pageId;
+  let next = UNCONFIRMED_EVERY_MS;
+  try {
+    const { recording_paused } = await (await postPresence(true, false)).json();
+    if (id !== pageId) return;
+    if (recording_paused) {
+      if (shell.hidden) refreshStatus();  // the footer says at once that recording is paused
+      confirmed = true;
+      shell.hidden = false;
+      waitNote.hidden = true;
+      for (const fn of onReveal.splice(0)) fn();
+      next = CONFIRMED_EVERY_MS;
+    } else if (confirmed) {
+      conceal();
+    }
+  } catch (e) {
+    if (id !== pageId) return;
+    conceal();
+    if (e.status === 401) { waitNote.textContent = REOPEN; return; }
+  }
+  presenceTimer = setTimeout(reportPresence, next);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) { reportPresence(); return; }
+  clearTimeout(presenceTimer);
+  conceal();
+  postPresence(false, true).catch(() => {});
+  pageId = crypto.randomUUID();
+});
+window.addEventListener("DOMContentLoaded", reportPresence);

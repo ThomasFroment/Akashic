@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import replace
 from pathlib import Path
 
 from memory_data import NOW
 
+from akashic.pipeline.ask import sources_json
 from akashic.pipeline.transcribe import UNCLEAR_BELOW
 from akashic.search import answer
 from akashic.search.answer import (
@@ -38,6 +40,7 @@ def line(
 def frame(i: int, snippet: str = "\x02cat\x03 pictures") -> Hit:
     return Hit(
         i,
+        i + 500,
         NOW,
         0,
         "chrome.exe",
@@ -51,6 +54,22 @@ def frame(i: int, snippet: str = "\x02cat\x03 pictures") -> Hit:
 def test_frame_sources_are_labelled_with_their_app_and_window() -> None:
     source = build_sources(Results(frames=[frame(1)]))[0]
     assert source.label == "on screen in chrome.exe: Cats - Chrome"
+
+
+def test_a_frame_source_names_the_cited_window_by_its_own_process_and_title() -> None:
+    hit = replace(frame(1), process="code.exe", title="main.py")
+    source = build_sources(Results(frames=[hit]))[0]
+    assert source.label == "on screen in code.exe: main.py"
+    assert (source.kind, source.ref_id, source.window_id) == ("frame", 1, 501)
+
+
+def test_the_saved_sources_carry_the_window_id() -> None:
+    sources = build_sources(Results([episode(10)], frames=[frame(30)]))
+    saved = json.loads(sources_json(sources))
+    assert [(s["kind"], s["id"], s["window_id"]) for s in saved] == [
+        ("episode", 10, None),
+        ("frame", 30, 530),
+    ]
 
 
 def test_sources_are_numbered_from_one_in_episode_line_frame_order() -> None:

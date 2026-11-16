@@ -9,9 +9,9 @@ import numpy as np
 from memory_data import NOW
 
 from akashic.pipeline.ask import AskHandler, ask_job
-from akashic.pipeline.jobs import Job
 from akashic.pipeline.llm import LlamaError
 from akashic.storage import db
+from akashic.storage.jobs import Job
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping, Sequence

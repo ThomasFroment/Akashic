@@ -49,7 +49,6 @@ def test_full_config() -> None:
         raw_audio = "forever"
         [exclusions]
         processes = ["Signal.exe"]
-        window_titles = ["*Mon compte*"]
         urls = ["*.bank.example/*"]
         """
     )
@@ -61,8 +60,20 @@ def test_full_config() -> None:
     assert cfg.retention_days["raw_audio"] is None
     assert cfg.retention_days["transcripts"] is None
     assert cfg.exclusions.processes == ("Signal.exe",)
-    assert cfg.exclusions.window_titles == ("*Mon compte*",)
     assert cfg.exclusions.urls == ("*.bank.example/*",)
+
+
+def test_window_titles_are_gone_from_the_exclusions_and_the_default_file() -> None:
+    assert "window_titles" not in DEFAULT_CONFIG_TOML
+    assert not hasattr(Config().exclusions, "window_titles")
+
+
+@pytest.mark.parametrize("value", ['["*Mon compte*"]', '"x"', "5", "true", "{ a = 1 }", "[1, [2]]"])
+def test_an_old_window_titles_key_is_accepted_and_ignored(value: str) -> None:
+    head = '[exclusions]\nprocesses = ["a.exe"]\n'
+    cfg = parse_config(f"{head}window_titles = {value}\n")
+    assert cfg.exclusions.processes == ("a.exe",)
+    assert cfg.exclusions == parse_config(head).exclusions
 
 
 @pytest.mark.parametrize(

@@ -15,8 +15,8 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, Literal
 
 from akashic.jsonish import as_list
-from akashic.pipeline.jobs import NewJob, enqueue_in
 from akashic.storage import db
+from akashic.storage.jobs import NewJob, enqueue_in
 from akashic.storage.opus import decode_opus
 
 if TYPE_CHECKING:

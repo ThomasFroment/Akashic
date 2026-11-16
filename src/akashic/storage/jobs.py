@@ -1,6 +1,6 @@
 """The persistent job queue: a SQLite table every heavy task goes through.
 
-Properties the rest of the app relies on (AGENTS.md, "Pipeline and GPU scheduling"):
+Properties the rest of the app relies on:
 
 - Durable: jobs survive restarts; a job left ``running`` by a crash goes back to ``pending``.
 - Idempotent: ``key`` is unique, so enqueueing the same work twice does nothing.

@@ -37,11 +37,13 @@ class ChildSpec:
     name: str
     module: str
     start_paused: bool = False
-    api_port: int | None = None  # the app's local server, so capture can exclude its pages
+    ui_open: bool = False
+    pauses_for_ui: bool = False  # halts while Akashic's own UI is open
+    api_port: int | None = None  # the app's local server, so capture can find its pages
 
 
 CHILDREN: Final = (
-    ChildSpec("capture", "akashic.capture.main"),
+    ChildSpec("capture", "akashic.capture.main", pauses_for_ui=True),
     ChildSpec("worker", "akashic.pipeline.main"),
 )
 
@@ -55,6 +57,7 @@ def spawn_module(spec: ChildSpec, data_dir: Path) -> subprocess.Popen[bytes]:
     return subprocess.Popen(  # noqa: S603 - fixed argv: our own interpreter and module
         [sys.executable, "-m", spec.module, "--data-dir", str(data_dir)]
         + (["--paused"] if spec.start_paused else [])
+        + (["--ui-open"] if spec.ui_open else [])
         + (["--api-port", str(spec.api_port)] if spec.api_port is not None else []),
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -96,6 +99,7 @@ class Supervisor:
         self._stopping = False
         self._shut_down = threading.Event()
         self._paused = False
+        self._ui_open = False
         self._api_port: int | None = None
 
     def set_api_port(self, port: int) -> None:
@@ -112,7 +116,12 @@ class Supervisor:
                 self._launch(child, paused=paused)
 
     def _launch(self, child: _Child, *, paused: bool = False) -> None:
-        spec = replace(child.spec, start_paused=paused, api_port=self._api_port)
+        spec = replace(
+            child.spec,
+            start_paused=paused,
+            ui_open=self._ui_open and child.spec.pauses_for_ui,
+            api_port=self._api_port,
+        )
         proc = self._spawn(spec, self._data_dir)
         child.proc = proc
         child.state = "starting"
@@ -208,18 +217,33 @@ class Supervisor:
         with self._restart_lock:
             self._send(command)
 
+    def set_ui_open(self, ui_open: bool) -> None:  # noqa: FBT001 - the Controls callback signature
+        """Halt capture while Akashic's UI is open; launches carry it, so a restart stays halted."""
+        with self._restart_lock:
+            if ui_open == self._ui_open:
+                return
+            self._ui_open = ui_open
+            command: ipc.Command = "ui_open" if ui_open else "ui_closed"
+            for child in self._children.values():
+                if child.spec.pauses_for_ui:
+                    self._tell(child, command)
+
     def _send(self, command: ipc.Command) -> None:
         if command in {"pause", "resume"}:
             self._paused = command == "pause"
         for child in self._children.values():
-            proc = child.proc
-            if proc is not None and proc.poll() is None and proc.stdin is not None:
-                try:
-                    ipc.send_command(proc.stdin, command)
-                except OSError:
-                    log.warning("could not send %s to %s", command, child.spec.name)
+            self._tell(child, command)
         if command in {"pause", "resume"}:
             self._remember_paused(self._paused)
+
+    @staticmethod
+    def _tell(child: _Child, command: ipc.Command) -> None:
+        proc = child.proc
+        if proc is not None and proc.poll() is None and proc.stdin is not None:
+            try:
+                ipc.send_command(proc.stdin, command)
+            except OSError:
+                log.warning("could not send %s to %s", command, child.spec.name)
 
     def stop(self, timeout: float = STOP_TIMEOUT_S) -> None:
         """Ask every child to stop, wait, and kill any that don't exit in time."""

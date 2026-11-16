@@ -12,12 +12,12 @@ from ask_fakes import DocumentEmbedder
 from memory_data import add_segment, add_speaker
 
 from akashic.pipeline.embed import EMBED, EmbedHandler, enqueue_missing
-from akashic.pipeline.jobs import JobQueue
 from akashic.search.answer import build_sources
 from akashic.search.hybrid import search_memory
 from akashic.search.planner import Plan
 from akashic.search.timeparse import TimeRange
 from akashic.storage import embeddings, passages
+from akashic.storage.jobs import JobQueue
 from akashic.storage.media import MediaStore
 from akashic.storage.retention import expire_embeddings
 from akashic.storage.speakers import NewTurn, SpeakerStore

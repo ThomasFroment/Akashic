@@ -25,7 +25,6 @@ from typing import TYPE_CHECKING, ClassVar, Final, Protocol
 
 import numpy as np
 
-from akashic.pipeline.jobs import PermanentJobError
 from akashic.pipeline.models import (
     EMBEDDING_FILE,
     EMBEDDING_MODEL,
@@ -33,6 +32,7 @@ from akashic.pipeline.models import (
     SEGMENTATION_MODEL,
 )
 from akashic.storage.embeddings import unit
+from akashic.storage.jobs import PermanentJobError
 from akashic.storage.opus import SAMPLE_RATE
 from akashic.storage.speakers import MIN_IDENTIFY_MS, NewTurn
 
@@ -43,8 +43,8 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from akashic.pipeline.jobs import Job
     from akashic.storage.audio import AudioStore
+    from akashic.storage.jobs import Job
     from akashic.storage.speakers import SpeakerStore
 
 log = logging.getLogger(__name__)

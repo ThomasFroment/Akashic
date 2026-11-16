@@ -20,27 +20,16 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from capture_fakes import (
-    LONG_TEXT,
-    SCREEN,
-    FakeMedia,
-    FakeOcr,
-    FakeScreen,
-    FakeUia,
-    FakeWindows,
-)
+from capture_fakes import FakeMedia
+from screen_rig import build_rig as build_screen_rig
 
-from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.media import MediaTracker
-from akashic.capture.ocr_gate import OcrGate
-from akashic.capture.screen import ScreenCapture, Settings
 from akashic.config import Exclusions as UserExclusions
 from akashic.storage import db
 from akashic.storage.crypto import DataKey
-from akashic.storage.frames import FrameStore
 from akashic.storage.media import MediaStore
-from akashic.storage.sessions import GameLog, MediaLog
+from akashic.storage.sessions import MediaLog
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -48,8 +37,12 @@ if TYPE_CHECKING:
     from sqlite3 import Connection
 
     import pytest
+    from capture_fakes import FakeUia, FakeWindows
+    from screen_rig import Rig
 
+    from akashic.capture.browser_state import BrowserState
     from akashic.capture.ports import Rect, TextBlock, WindowInfo
+    from akashic.capture.screen import ScreenCapture
     from akashic.config import Paths
 
 SECRET = "zzsentinel4f2a"  # noqa: S105 - a synthetic marker, not a credential
@@ -139,7 +132,14 @@ class SinkSpy:
 
     def nothing_stored(self, conn: Connection) -> bool:
         """No row-writing statement for captured content, no file written, nothing on disk."""
-        content = ("frames", "media_sessions", "media_events", "audio_segments", "game_sessions")
+        content = (
+            "frames",
+            "frame_windows",
+            "media_sessions",
+            "media_events",
+            "audio_segments",
+            "game_sessions",
+        )
         wrote = [s for s in self.writes() if any(t in s.casefold() for t in content)]
         return not wrote and not self.files and not self.disk_files() and self._empty(conn, content)
 
@@ -153,23 +153,53 @@ class SinkSpy:
 
 @dataclass
 class PrivacyRig:
-    """Screen loop + media tracker sharing one browser state, over disposable encrypted stores."""
+    """Screen loop + screen writer + media tracker over disposable encrypted stores."""
 
     spy: SinkSpy
     conn: Connection
     media_conn: Connection
-    screen: FakeScreen
-    windows: FakeWindows
-    uia: FakeUia
+    rig: Rig
     media: FakeMedia
-    browsers: BrowserState
-    capture: ScreenCapture
     tracker: MediaTracker
-    clock: list[float]
+
+    @property
+    def capture(self) -> ScreenCapture:
+        return self.rig.capture
+
+    @property
+    def windows(self) -> FakeWindows:
+        return self.rig.windows
+
+    @property
+    def uia(self) -> FakeUia:
+        return self.rig.uia
+
+    @property
+    def browsers(self) -> BrowserState:
+        return self.rig.browsers
+
+    @property
+    def clock(self) -> list[float]:
+        return self.rig.clock
+
+    def show(self, info: WindowInfo, **kwargs: object) -> None:
+        """Put a window in front and focus it (a title change when the hwnd is already there)."""
+        self.rig.show(
+            info.hwnd,
+            info.process,
+            info.title,
+            info.rect,
+            has_frame=info.has_frame,
+            **kwargs,  # type: ignore[arg-type]
+        )
 
     def tick(self, advance_s: float = 1.0) -> None:
+        """Check the monitors (a second pass paints started captures) and store what was queued."""
         self.clock[0] += advance_s
-        self.capture.tick(self.clock[0])
+        self.rig.tick(self.clock[0])
+        self.clock[0] += 0.1
+        self.rig.tick(self.clock[0])
+        self.rig.drain()
 
     def poll(self, advance_s: float = 2.0) -> None:
         self.clock[0] += advance_s
@@ -203,37 +233,31 @@ def build_rig(  # noqa: PLR0913 - one switch per scenario input
     spy.watch(conn)
     spy.watch(media_conn)
     spy.install(monkeypatch)
-    clock = [1_000.0]
-    screen = FakeScreen(rects=monitors or [SCREEN])
-    windows = FakeWindows(focused=focused)
-    uia = FakeUia(texts=texts if texts is not None else {1: LONG_TEXT})
-    media = FakeMedia(names={"Chrome": "Google Chrome", "Z1": "Zen"})
-    exclusions = Exclusions(user or UserExclusions(), api_origin)
-    browsers = BrowserState(clock=lambda: clock[0])
-    counter = iter(range(T0, T0 + 10**9))
-    capture = ScreenCapture(
-        screen=screen,
-        windows=windows,
-        uia=uia,
-        gate=OcrGate(FakeOcr(text="recognized words")),
-        store=FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media"))),
-        exclusions=exclusions,
-        browsers=browsers,
-        settings=Settings(min_gap_s=0.2),
-        now_ms=lambda: next(counter),
-        games=GameLog(conn),
+    rig = build_screen_rig(
+        conn,
+        MediaStore(paths.media_dir, key.subkey("media")),
+        monitors=monitors,
+        user=user,
+        api_origin=api_origin,
+        shown=False,
+        ts_start=T0,
     )
+    rig.clock[0] = 1_000.0
+    if texts is not None:
+        rig.uia.texts = dict(texts)
+    media = FakeMedia(names={"Chrome": "Google Chrome", "Z1": "Zen"})
     tracker = MediaTracker(
         source=media,
         log_store=MediaLog(media_conn),
-        exclusions=exclusions,
-        focused_window=windows.focused_window,
-        now_ms=lambda: int(clock[0] * 1000),
-        browsers=browsers,
+        exclusions=Exclusions(user or UserExclusions(), api_origin),
+        focused_window=rig.windows.focused_window,
+        now_ms=lambda: int(rig.clock[0] * 1000),
+        browsers=rig.browsers,
     )
-    return PrivacyRig(
-        spy, conn, media_conn, screen, windows, uia, media, browsers, capture, tracker, clock
-    )
+    private = PrivacyRig(spy, conn, media_conn, rig, media, tracker)
+    if focused is not None:
+        private.show(focused)
+    return private
 
 
 def close_rig(rig: PrivacyRig) -> None:

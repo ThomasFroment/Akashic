@@ -22,12 +22,12 @@ from eval_ask import disposable_connection, embedding_server, index_memory
 from akashic.config import DEFAULT_EMBEDDING_MODEL, Paths, default_data_dir
 from akashic.pipeline.embed import EmbedHandler
 from akashic.pipeline.episodes import build_episodes
-from akashic.pipeline.jobs import Job
 from akashic.pipeline.llm import LlamaEmbedder
 from akashic.search.answer import MAX_LINES, build_sources
 from akashic.search.hybrid import Results, episode_lines, match_any, search_memory
 from akashic.search.planner import Plan
 from akashic.storage import db
+from akashic.storage.jobs import Job
 
 if TYPE_CHECKING:
     from sqlite3 import Connection

@@ -63,6 +63,7 @@ class Source:
     episode_id: int | None = None  # for a line: the episode it belongs to
     unclear: bool = False  # for a line: Whisper was unsure of it
     segment_ids: tuple[int, ...] = ()  # all speech in this excerpt, including neighbours
+    window_id: int | None = None  # for a frame: the window whose text it cites
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,8 +107,12 @@ def build_sources(found: Results, *, overview: bool = False) -> list[Source]:
         )  # fmt: skip
     for f in found.frames[:MAX_FRAMES]:
         label = f"on screen in {f.process or 'an app'}"
-        label += f": {f.window_title}" if f.window_title else ""
-        wanted.append(Source(0, "frame", f.id, f.ts_ms, f.ts_ms, label, f.snippet))
+        label += f": {f.title}" if f.title else ""
+        wanted.append(
+            Source(
+                0, "frame", f.frame_id, f.ts_ms, f.ts_ms, label, f.snippet, window_id=f.window_id
+            )
+        )
 
     sources: list[Source] = []
     used = 0

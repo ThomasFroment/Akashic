@@ -19,7 +19,6 @@ import http.server
 import json
 import os
 import subprocess
-import sys
 import threading
 import time
 from ctypes import wintypes
@@ -29,33 +28,37 @@ from typing import TYPE_CHECKING, Any, cast
 import pytest
 from capture_fakes import FakeOcr
 from sink_spy import SinkSpy
+from synthetic_window import bring_to_front, launch_window, right_monitor
 
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.ocr_gate import OcrGate
-from akashic.capture.ports import Rect
+from akashic.capture.ports import Rect, WindowInfo
 from akashic.capture.screen import ScreenCapture, Settings
+from akashic.capture.screen_writer import ScreenWriter
 from akashic.config import Exclusions as UserExclusions
 from akashic.config import Paths
 from akashic.platform.win.audio import WindowsAudioSessions, comtypes
+from akashic.platform.win.displays import Win32Displays, set_dpi_aware
+from akashic.platform.win.events import Win32WindowEvents
 from akashic.platform.win.process import image_name
-from akashic.platform.win.screen import GdiScreen, set_dpi_aware
 from akashic.platform.win.uia import WindowsUia
+from akashic.platform.win.wgc import WgcCaptures
 from akashic.platform.win.windows import Win32Windows
 from akashic.storage import db
 from akashic.storage.crypto import DataKey
 from akashic.storage.frames import FrameStore
 from akashic.storage.media import MediaStore
+from akashic.storage.monitors import MonitorLog
 from akashic.storage.sessions import GameLog
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from akashic.capture.ports import WindowInfo
+    from akashic.capture.ports import TopWindow
 
 pytestmark = pytest.mark.hardware
 
-HELPER = Path(__file__).with_name("synthetic_window.py")
 EVIDENCE: dict[str, object] = {}
 user32 = ctypes.WinDLL("user32", use_last_error=True)
 shcore = ctypes.WinDLL("shcore")
@@ -98,23 +101,19 @@ def monitor_facts() -> list[dict[str, int]]:
 
 
 class Owned:
-    """The real window source, restricted to windows this test created."""
+    """The real window source and window facts, restricted to windows this test created."""
 
     def __init__(self, hwnds: set[int]) -> None:
         self.real = Win32Windows()
         self.hwnds = hwnds
 
-    def _mine(self, window: WindowInfo | None) -> WindowInfo | None:
+    def focused_window(self) -> WindowInfo | None:
+        window = self.real.focused_window()
         return window if window is not None and window.hwnd in self.hwnds else None
 
-    def focused_window(self) -> WindowInfo | None:
-        return self._mine(self.real.focused_window())
-
-    def inspect_window(self, hwnd: int) -> WindowInfo | None:
-        return self._mine(self.real.inspect_window(hwnd))
-
-    def window_at(self, x: int, y: int) -> WindowInfo | None:
-        return self._mine(self.real.window_at(x, y))
+    def windows(self) -> list[TopWindow] | None:
+        listed = self.real.windows()
+        return None if listed is None else [w for w in listed if w.hwnd in self.hwnds]
 
     def cursor_pos(self) -> tuple[int, int]:
         return self.real.cursor_pos()
@@ -124,48 +123,6 @@ class Owned:
 
     def is_locked(self) -> bool:
         return self.real.is_locked()
-
-
-def launch_window(title: str, rect: Rect, kind: str) -> tuple[subprocess.Popen[str], int]:
-    process = subprocess.Popen(  # noqa: S603 - our own helper script, synthetic content only
-        [
-            sys.executable,
-            str(HELPER),
-            title,
-            str(rect.left),
-            str(rect.top),
-            str(rect.width),
-            str(rect.height),
-            kind,
-        ],
-        stdout=subprocess.PIPE,
-        text=True,
-    )
-    assert process.stdout is not None
-    return process, int(process.stdout.readline().strip())
-
-
-def bring_to_front(hwnd: int) -> bool:
-    """SetForegroundWindow is refused for background processes; attach input queues to get it."""
-    for _ in range(3):
-        foreground = user32.GetForegroundWindow()
-        this_thread = ctypes.windll.kernel32.GetCurrentThreadId()
-        other = user32.GetWindowThreadProcessId(foreground, None)
-        user32.keybd_event(0x87, 0, 0, 0)  # F24, bound to nothing: any input lifts the lock
-        user32.keybd_event(0x87, 0, 2, 0)
-        user32.AttachThreadInput(this_thread, other, True)  # noqa: FBT003
-        try:
-            user32.ShowWindow(hwnd, 5)
-            user32.SetForegroundWindow(hwnd)
-        finally:
-            user32.AttachThreadInput(this_thread, other, False)  # noqa: FBT003
-        deadline = time.monotonic() + 2
-        while time.monotonic() < deadline:
-            if user32.GetForegroundWindow() == hwnd:
-                time.sleep(0.8)  # keyboard focus follows the foreground window a moment later
-                return True
-            time.sleep(0.05)
-    return False
 
 
 @pytest.fixture
@@ -203,8 +160,8 @@ def test_focus_and_exclusion_transitions_on_three_mixed_dpi_monitors(  # noqa: P
     def box(m: dict[str, int], dx: int = 200, dy: int = 200, w: int = 900, h: int = 500) -> Rect:
         return Rect(m["left"] + dx, m["top"] + dy, m["left"] + dx + w, m["top"] + dy + h)
 
-    # A password window centred on the first monitor and wide enough to cover the centre of the
-    # right-hand monitor; a plain window on the left (negative-x) monitor; a manager-titled one.
+    # A sign-in window centred on the first monitor and wide enough to reach into the right-hand
+    # monitor; a plain window on the left (negative-x) monitor; a manager-titled one.
     centre_x = (first["left"] + first["right"]) // 2
     reach = (right_one["left"] + right_one["right"]) // 2 + 300
     spanning = Rect(2 * centre_x - reach, first["top"] + 300, reach, first["top"] + 900)
@@ -226,30 +183,49 @@ def test_focus_and_exclusion_transitions_on_three_mixed_dpi_monitors(  # noqa: P
     spy = SinkSpy(paths)
     spy.watch(conn)
     spy.install(monkeypatch)
-    clock = [1_000.0]
+    writer = ScreenWriter(
+        FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media"))),
+        MonitorLog(conn),
+        OcrGate(FakeOcr(text="")),
+    )
+    owned = Owned(hwnds)
     capture = ScreenCapture(
-        screen=GdiScreen(),
-        windows=Owned(hwnds),
+        displays=Win32Displays(),
+        windows=owned,
+        facts=owned,
+        events=Win32WindowEvents(),
+        captures=WgcCaptures(),
         uia=WindowsUia(),
-        gate=OcrGate(FakeOcr(text="")),
-        store=FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media"))),
+        writer=writer,
         exclusions=Exclusions(UserExclusions(), "http://127.0.0.1:5123"),
         settings=Settings(min_gap_s=0.2),
         browsers=BrowserState(),
         games=GameLog(conn),
+        on_own_address=lambda _own: None,
     )
     steps: dict[str, object] = {}
+    clock = [1_000.0]
 
     def step(name: str, which: str) -> None:
         focused = bring_to_front(windows[which][1])
-        before = dict(capture.stats)
+        before = conn.execute("SELECT count(*) FROM frames").fetchone()[0]
         clock[0] += 20.0
-        capture.tick(clock[0])
-        delta = {k: v - before.get(k, 0) for k, v in capture.stats.items() if v != before.get(k, 0)}
+        for _ in range(10):  # the first passes start the window captures, later ones paint them
+            capture.tick(clock[0])
+            clock[0] += 0.3
+            time.sleep(0.3)
+        stop = threading.Event()
+        stop.set()
+        writer.run(stop)  # store what the loop queued
+        total = conn.execute("SELECT count(*) FROM frames").fetchone()[0]
         steps[name] = {
             "focus_acquired": focused,
-            "outcomes": delta,
-            "frames_total": conn.execute("SELECT count(*) FROM frames").fetchone()[0],
+            "frames_stored": total - before,
+            "monitors_with_the_window": conn.execute(
+                "SELECT count(DISTINCT f.monitor_id) FROM frames f"
+                " JOIN frame_windows w ON w.frame_id = f.id WHERE w.title = ? AND f.id > ?",
+                (f"Akashic M01 synthetic {_TITLES[which]}", before),
+            ).fetchone()[0],
             "files_total": len(spy.files),
         }
 
@@ -259,64 +235,21 @@ def test_focus_and_exclusion_transitions_on_three_mixed_dpi_monitors(  # noqa: P
     step("4_manager_titled_window", "manager")
     step("5_password_window_again", "password")
     record("monitor_transitions", steps)
-    # The spanning window is stored only while it does not have the focus (the password check is
-    # for the focused window); the manager-titled window is excluded whether focused or not.
-    leaked = spy.leaks(conn, "Bitwarden")
-    record("leaks_of_excluded_titles", leaked)
+    capture.close()
     conn.close()
 
-    outcome = steps
-    assert all(s["focus_acquired"] for s in outcome.values()), "could not focus a synthetic window"  # type: ignore[attr-defined]
-    assert outcome["1_plain_window_on_negative_x_monitor"]["outcomes"].get("stored", 0) >= 1  # type: ignore[index, attr-defined]
-    password = outcome["2_password_window_spanning_monitors"]["outcomes"]  # type: ignore[index]
-    assert password.get("excluded:password_field", 0) == 1  # type: ignore[attr-defined]
-    assert password.get("stored", 0) == 0  # type: ignore[attr-defined]
-    # The same window is the topmost one at the centres of the other monitors: examined once.
-    assert password.get("duplicate_window", 0) >= 1  # type: ignore[attr-defined]
-    # Nothing was stored while the password window had the focus, here or the second time.
-    assert (
-        outcome["2_password_window_spanning_monitors"]["frames_total"]  # type: ignore[index]
-        == outcome["1_plain_window_on_negative_x_monitor"]["frames_total"]  # type: ignore[index]
-    )
-    assert (
-        outcome["5_password_window_again"]["frames_total"]  # type: ignore[index]
-        == outcome["4_manager_titled_window"]["frames_total"]  # type: ignore[index]
-    )
-    manager = outcome["4_manager_titled_window"]["outcomes"]  # type: ignore[index]
-    assert manager.get("excluded:password_manager", 0) == 1  # type: ignore[attr-defined]
-    assert leaked == []
+    # No title lists and no password-field outcome: these windows are judged by process only.
+    outcome = cast("dict[str, dict[str, Any]]", steps)
+    assert all(s["focus_acquired"] for s in outcome.values()), "could not focus a synthetic window"
+    assert outcome["1_plain_window_on_negative_x_monitor"]["frames_stored"] >= 1
+    password = outcome["2_password_window_spanning_monitors"]
+    assert password["frames_stored"] >= 1
+    # The window reaches into the right-hand monitor, so it is listed on at least two monitors.
+    assert password["monitors_with_the_window"] >= 2
+    assert outcome["4_manager_titled_window"]["frames_stored"] >= 1
 
 
-def test_real_ui_automation_password_states(synthetic: list[subprocess.Popen[str]]) -> None:
-    monitors = monitor_facts()
-    area = Rect(
-        monitors[0]["left"] + 150,
-        monitors[0]["top"] + 150,
-        monitors[0]["left"] + 800,
-        monitors[0]["top"] + 450,
-    )
-    uia = WindowsUia()
-    states: dict[str, object] = {}
-    for kind in ("password", "plain"):
-        process, hwnd = launch_window(f"Akashic M01 synthetic {kind}", area, kind)
-        synthetic.append(process)
-        time.sleep(1.0)
-        states[kind] = {
-            "foreground": bring_to_front(hwnd),
-            "focused_is_password": uia.focused_is_password(),
-        }
-        time.sleep(0.2)
-    states["no_focus_window"] = None
-    process, hwnd = launch_window("Akashic M01 synthetic none", area, "none")
-    synthetic.append(process)
-    time.sleep(1.0)
-    states["window_without_focusable_child"] = {
-        "foreground": bring_to_front(hwnd),
-        "focused_is_password": uia.focused_is_password(),
-    }
-    record("uia_password_states", states)
-    assert states["password"]["focused_is_password"] is True  # type: ignore[index]
-    assert states["plain"]["focused_is_password"] is False  # type: ignore[index]
+_TITLES = {"plain": "notes", "password": "sign in", "manager": "Bitwarden"}
 
 
 def test_hosted_app_resolves_to_its_own_process() -> None:
@@ -339,7 +272,7 @@ def test_hosted_app_resolves_to_its_own_process() -> None:
     if not opened:
         record("hosted_app", "UNAVAILABLE: Calculator did not open a new hosted window")
         pytest.skip("no hosted app window appeared")
-    resolved = {h: windows.inspect_window(h) for h, _ in opened}
+    resolved = {h: top_window(windows, h) for h, _ in opened}
     record(
         "hosted_app",
         {
@@ -353,6 +286,10 @@ def test_hosted_app_resolves_to_its_own_process() -> None:
             user32.PostMessageW(hwnd, 0x0010, 0, 0)  # WM_CLOSE: only the window this test opened
     assert any(w is not None and "calc" in w.process for w in resolved.values())
     assert all(w is not None and w.process != "applicationframehost.exe" for w in resolved.values())
+
+
+def top_window(windows: Win32Windows, hwnd: int) -> TopWindow | None:
+    return next((w for w in windows.windows() or [] if w.hwnd == hwnd), None)
 
 
 def enumerate_frame_windows() -> list[int]:  # window handles only; no titles are read
@@ -506,8 +443,7 @@ def test_real_browser_layouts_on_synthetic_pages(  # noqa: PLR0915, PLR0912, C90
         record(f"browser_{label}", "UNAVAILABLE: browser not installed")
         pytest.skip(f"{label} is not installed")
     set_dpi_aware()
-    monitors = monitor_facts()
-    area = monitors[0]
+    area = right_monitor()
     profile = tmp_path / f"{label}-profile"
     pages = {
         "normal": "data:text/html,<title>Bitwarden vs 1Password</title><p>synthetic",
@@ -523,7 +459,8 @@ def test_real_browser_layouts_on_synthetic_pages(  # noqa: PLR0915, PLR0912, C90
         f"--user-data-dir={profile}",
         "--no-first-run",
         "--no-default-browser-check",
-        f"--window-position={area['left'] + 100},{area['top'] + 100}",
+        "--disable-sync",
+        f"--window-position={area.left + 100},{area.top + 100}",
         "--window-size=900,600",
     ]
     launches: dict[str, list[str]] = {
@@ -556,8 +493,9 @@ def test_real_browser_layouts_on_synthetic_pages(  # noqa: PLR0915, PLR0912, C90
                 results[name] = "UNAVAILABLE: window did not appear"
                 continue
             hwnd, _, title = seen[0]
-            info = windows.inspect_window(hwnd)
-            assert info is not None
+            top = top_window(windows, hwnd)
+            assert top is not None
+            info = WindowInfo(top.hwnd, top.process, top.title, top.rect)
             url = uia.read_url(info, "chromium")
             caption = uia.browser_caption(info, "chromium")
             results[name] = {
@@ -569,7 +507,7 @@ def test_real_browser_layouts_on_synthetic_pages(  # noqa: PLR0915, PLR0912, C90
                 "omnibox_is_page_text": bool(
                     url and "paypal.com" in url.casefold() and name == "app"
                 ),
-                "check_browser": exclusions.check_browser(title, url),
+                "check_browser": exclusions.check_browser(url),
                 "frame_caption": caption,  # UI Automation name of the browser frame
                 "caption_is_private": caption is not None and exclusions.is_private_title(caption),
             }

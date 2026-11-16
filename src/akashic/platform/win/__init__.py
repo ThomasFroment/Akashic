@@ -8,9 +8,11 @@ from typing import TYPE_CHECKING
 
 from akashic.capture.ports import AudioPlatform, CapturePlatform
 from akashic.platform.win.audio import WindowsAudioDevices, WindowsAudioSessions
+from akashic.platform.win.displays import Win32Displays, set_dpi_aware
+from akashic.platform.win.events import Win32WindowEvents
 from akashic.platform.win.media import WindowsMedia
-from akashic.platform.win.screen import GdiScreen, set_dpi_aware
 from akashic.platform.win.uia import WindowsUia
+from akashic.platform.win.wgc import WgcCaptures
 from akashic.platform.win.windows import Win32Windows
 
 if TYPE_CHECKING:
@@ -30,9 +32,13 @@ def build_capture_platform(ocr_language: str) -> CapturePlatform:
     except Exception as exc:  # noqa: BLE001 - OCR is optional; capture must still run
         log.warning("OCR unavailable (%s); frames without UIA text get no text", type(exc).__name__)
         ocr = None
+    windows = Win32Windows()
     return CapturePlatform(
-        screen=GdiScreen(),
-        windows=Win32Windows(),
+        displays=Win32Displays(),
+        windows=windows,
+        facts=windows,
+        events=Win32WindowEvents(),
+        captures=WgcCaptures(),
         uia=WindowsUia(),
         ocr=ocr,
         media=WindowsMedia(),

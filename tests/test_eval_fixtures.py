@@ -140,7 +140,7 @@ def test_the_eval_indexes_through_the_embed_handler_like_production(
     for memory in memories.values():
         counts = memory.index
         assert counts["segment_passages"] > 0
-        assert counts["frame_passages"] > 0
+        assert counts["window_passages"] > 0
         assert counts["episode_vectors"] == len(memory.ids)
         assert counts["segment_vectors"] == 0  # no legacy whole-segment vectors
         conn = memory.conn
@@ -150,6 +150,20 @@ def test_the_eval_indexes_through_the_embed_handler_like_production(
         ).fetchone()[0]
         assert unembedded == 0
         assert conn.execute("SELECT count(*) FROM jobs WHERE state != 'done'").fetchone()[0] == 0
+
+
+def test_the_eval_store_has_no_frame_copy_columns(
+    memories: dict[tuple[int, int, int], Any],
+) -> None:
+    conn = memories[ev.DEFAULT_NOW].conn
+    columns = {r[1] for r in conn.execute("PRAGMA table_info(frames)")}
+    assert columns == {"id", "ts_ms", "monitor_id", "trigger", "image_path"}
+    assert (
+        conn.execute(
+            "SELECT count(*) FROM frame_windows WHERE focused AND process IS NOT NULL"
+        ).fetchone()[0]
+        > 0
+    )
 
 
 def test_every_video_has_frames(memories: dict[tuple[int, int, int], Any]) -> None:

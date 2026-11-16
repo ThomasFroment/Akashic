@@ -19,15 +19,16 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 import pytest
 from defects import known_defect
+from memory_data import add_monitor
 from oracles import HashEmbedder, Ranked, embedding_ranking, passage_ranking, ranking_problems
 
 from akashic.pipeline.embed import EMBED, EmbedHandler, enqueue_missing
-from akashic.pipeline.jobs import JobQueue
 from akashic.search import hybrid
 from akashic.search.hybrid import VECTOR_DEPTH, search_memory
 from akashic.search.planner import Plan
 from akashic.search.timeparse import TimeRange
 from akashic.storage import embeddings, passages
+from akashic.storage.jobs import JobQueue
 from akashic.storage.media import MediaStore
 from akashic.storage.retention import expire_embeddings, expire_frame_text
 
@@ -72,17 +73,24 @@ def add_owner(  # noqa: PLR0913 - a source row of either kind
             (owner, ts, ts + 1000, text),
         )
     else:
+        # One frame with one window, both numbered ``owner``; the hwnd differs per owner.
+        add_monitor(conn)
         conn.execute(
-            "INSERT INTO frames (id, ts_ms, monitor, process, window_title, url, text,"
-            " text_source, trigger) VALUES (?, ?, 0, ?, ?, ?, ?, 'uia', 'idle')",
-            (owner, ts, process, title, url, text),
+            "INSERT INTO frames (id, ts_ms, monitor_id, trigger) VALUES (?, ?, 0, 'idle')",
+            (owner, ts),
+        )
+        conn.execute(
+            "INSERT INTO frame_windows (id, frame_id, role, z, hwnd, x0, y0, x1, y1, process,"
+            " title, url, focused, text, text_source) VALUES (?, ?, 'app', 0, ?, 0, 0, 1, 1,"
+            " ?, ?, ?, 1, ?, ?)",
+            (owner, owner, owner, process, title, url, text, None if text is None else "uia"),
         )
 
 
 def add_passage(  # noqa: PLR0913 - one passages row
     conn: Connection, kind: str, owner: int, start_char: int, vector: Vector, *, model: str = "m"
 ) -> None:
-    table = "segment_passages" if kind == "segment" else "frame_passages"
+    table = "segment_passages" if kind == "segment" else "window_passages"
     conn.execute(
         f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?, ?)",  # noqa: S608 - literal table
         (owner, model, start_char, start_char + 400, len(vector), blob(vector)),
@@ -144,7 +152,7 @@ def passage_store(conn: Connection, rng: np.random.Generator, kind: str) -> list
     return owners
 
 
-@pytest.mark.parametrize("kind", ["segment", "frame"])
+@pytest.mark.parametrize("kind", ["segment", "window"])
 def test_passage_top_matches_brute_force(
     conn: Connection, monkeypatch: pytest.MonkeyPatch, kind: passages.Kind
 ) -> None:
@@ -152,7 +160,7 @@ def test_passage_top_matches_brute_force(
     busy = 0
     for seed in range(80):
         rng = np.random.default_rng(seed)
-        for table in ("segment_passages", "frame_passages", "audio_segments", "frames"):
+        for table in ("segment_passages", "window_passages", "audio_segments", "frames"):
             conn.execute(f"DELETE FROM {table}")  # noqa: S608 - literal table names
         owners = passage_store(conn, rng, kind)
         monkeypatch.setattr(embeddings, "CHUNK_ROWS", int(rng.choice([1, 2, 5, 4_000])))
@@ -162,7 +170,7 @@ def test_passage_top_matches_brute_force(
         only = None if rng.random() < 0.5 else {*rng.choice(owners, size=15).tolist(), 10_001}
         limit = int(rng.choice([1, 3, 10, 100]))
         apps: tuple[str, ...] = ()
-        if kind == "frame":
+        if kind == "window":
             apps = [(), ("zen",), ("ZEN.EXE",), ("chrome", "Discord.exe")][int(rng.integers(4))]
         got = passages.top(
             conn, "m", query, start_ms=start, end_ms=end, only=only, limit=limit, kind=kind,
@@ -233,10 +241,10 @@ def test_equal_scores_rank_by_owner_and_keep_the_first_passage(conn: Connection)
     query = np.ones(DIM, dtype=np.float32)
     same = np.full(DIM, 0.5, dtype=np.float32)
     for owner in (30, 10, 20):
-        add_owner(conn, "frame", owner, owner)
-        add_passage(conn, "frame", owner, 0, same)
-        add_passage(conn, "frame", owner, 300, same)
-    found = passages.top(conn, "m", query, start_ms=0, end_ms=100, limit=2, kind="frame")
+        add_owner(conn, "window", owner, owner)
+        add_passage(conn, "window", owner, 0, same)
+        add_passage(conn, "window", owner, 300, same)
+    found = passages.top(conn, "m", query, start_ms=0, end_ms=100, limit=2, kind="window")
     assert matches(found) == [(10, 8.0, 0, 400), (20, 8.0, 0, 400)]
 
 
@@ -465,7 +473,7 @@ def identical_frames(conn: Connection, count: int = 4) -> list[int]:
     """``count`` frames with byte-identical text at 1000, 2000, ... ms, embedded by the worker
     with the deterministic embedder."""
     for n in range(1, count + 1):
-        add_owner(conn, "frame", n, n * 1_000, text=SHARED, title="Player", url="https://v.test")
+        add_owner(conn, "window", n, n * 1_000, text=SHARED, title="Player", url="https://v.test")
     queue = JobQueue(conn)
     handler = EmbedHandler(conn, embedder := HashEmbedder(), lambda: True)
     while enqueue_missing(conn, queue, embedder.model, 1):
@@ -476,11 +484,11 @@ def identical_frames(conn: Connection, count: int = 4) -> list[int]:
     return list(range(1, count + 1))
 
 
-def frame_passages(conn: Connection) -> dict[int, list[tuple[int, int, bytes]]]:
+def window_passages(conn: Connection) -> dict[int, list[tuple[int, int, bytes]]]:
     out: dict[int, list[tuple[int, int, bytes]]] = {}
     for frame, start, end, vec in conn.execute(
-        "SELECT frame_id, start_char, end_char, vec FROM frame_passages"
-        " ORDER BY frame_id, start_char"
+        "SELECT window_id, start_char, end_char, vec FROM window_passages"
+        " ORDER BY window_id, start_char"
     ):
         out.setdefault(int(frame), []).append((int(start), int(end), bytes(vec)))
     return out
@@ -489,12 +497,14 @@ def frame_passages(conn: Connection) -> dict[int, list[tuple[int, int, bytes]]]:
 def found_frames(conn: Connection, start: int, end: int) -> list[tuple[int, int]]:
     query = HashEmbedder().vector("patch notes saison carte")
     plan = Plan(time=TimeRange(start, end, "window"))
-    return [(f.id, f.ts_ms) for f in search_memory(conn, plan, query, HashEmbedder.model).frames]
+    return [
+        (f.window_id, f.ts_ms) for f in search_memory(conn, plan, query, HashEmbedder.model).frames
+    ]
 
 
 def test_every_frame_with_identical_text_is_findable_at_its_own_time(conn: Connection) -> None:
     frames = identical_frames(conn)
-    stored = frame_passages(conn)
+    stored = window_passages(conn)
     windows = passages.windows(SHARED)
     assert set(stored) == set(frames)
     assert all([(s, e) for s, e, _ in stored[f]] == windows for f in frames)
@@ -508,17 +518,17 @@ def test_removing_one_identical_frame_removes_exactly_its_passages(
     conn: Connection, paths: Paths, removal: str
 ) -> None:
     frames = identical_frames(conn)
-    before = frame_passages(conn)
+    before = window_passages(conn)
     media = MediaStore(paths.media_dir, bytes(32))
     if removal == "delete-row":
         conn.execute("DELETE FROM frames WHERE id = 1")
     elif removal == "change-text":
-        conn.execute("UPDATE frames SET text = 'autre chose' WHERE id = 1")
+        conn.execute("UPDATE frame_windows SET text = 'autre chose' WHERE id = 1")
     elif removal == "expire-text":
         expire_frame_text(conn, media, 1_001)
     else:
         expire_embeddings(conn, media, 1_001)
-    after = frame_passages(conn)
+    after = window_passages(conn)
     assert after == {f: before[f] for f in frames[1:]}
     assert found_frames(conn, 0, 1_001) == []
     assert sorted(found_frames(conn, 0, 10_000)) == [(f, f * 1_000) for f in frames[1:]]
@@ -536,12 +546,12 @@ def test_identical_frames_do_not_crowd_out_other_screen_evidence(conn: Connectio
     query = np.zeros(DIM, dtype=np.float32)
     query[0] = 1
     for frame in range(1, 7):
-        add_owner(conn, "frame", frame, frame, text=SHARED, title="Player", url="https://v.test")
-        add_passage(conn, "frame", frame, 0, query)
+        add_owner(conn, "window", frame, frame, text=SHARED, title="Player", url="https://v.test")
+        add_passage(conn, "window", frame, 0, query)
     other = "Les sauvegardes sont sur un disque externe."
-    add_owner(conn, "frame", 7, 7, text=other, title="Notes")
-    add_passage(conn, "frame", 7, 0, np.array([0.75, 0.5, *([0] * (DIM - 2))], dtype=np.float32))
+    add_owner(conn, "window", 7, 7, text=other, title="Notes")
+    add_passage(conn, "window", 7, 0, np.array([0.75, 0.5, *([0] * (DIM - 2))], dtype=np.float32))
     found = search_memory(conn, Plan(), query, "m").frames
-    groups = [(f.window_title, f.url) for f in found]
-    assert 7 in [f.id for f in found]
+    groups = [(f.title, f.url) for f in found]
+    assert 7 in [f.window_id for f in found]
     assert len(groups) == len(set(groups))

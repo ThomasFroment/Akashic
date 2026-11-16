@@ -14,14 +14,10 @@ import sqlcipher3
 from audio_fakes import SETTINGS, T0, Clock, FakeDetector, FakeDevices, FakeSessions, speech
 from capture_fakes import (
     LONG_TEXT,
-    FakeMedia,
     FakeOcr,
-    FakeScreen,
-    FakeUia,
-    FakeWindows,
     blank,
-    window,
 )
+from screen_rig import fake_platform
 
 from akashic import child
 from akashic.capture import gaps as gaps_module
@@ -33,7 +29,7 @@ from akashic.capture.gaps import (
     CaptureGaps,
 )
 from akashic.capture.ocr_gate import OcrGate
-from akashic.capture.ports import AudioDevice, AudioError, AudioPlatform, CapturePlatform, Rect
+from akashic.capture.ports import AudioDevice, AudioError, AudioPlatform, CapturePlatform
 from akashic.config import Exclusions as UserExclusions
 from akashic.storage import db, state
 from akashic.storage.audio import AudioStore
@@ -291,11 +287,12 @@ class Rig:
         self.log = FlakyLog(conn)
         self.gaps = CaptureGaps(self.log, self.clock, start_ms)
         self.paused = threading.Event()
+        self.halted = threading.Event()  # paused, UI open or failsafe
         self.locked = False
 
     def tick(self, advance_ms: int = 1_000) -> None:
         self.clock.now += advance_ms
-        self.gaps._tick(self.paused, lambda: self.locked)
+        self.gaps._tick(self.paused, self.halted, lambda: self.locked)
 
 
 @pytest.fixture
@@ -313,6 +310,38 @@ def test_pause_and_resume_open_and_close_one_row(rig: Rig) -> None:
     rig.paused.clear()
     rig.tick()
     assert rows(rig.conn) == [("all", "paused", 12_000, 14_000)]
+
+
+def test_the_ui_open_halt_opens_one_ui_open_row_and_closes_when_it_ends(rig: Rig) -> None:
+    rig.halted.set()
+    rig.tick()
+    rig.tick()
+    assert rows(rig.conn) == [("all", "ui_open", 11_000, None)]
+    rig.halted.clear()
+    rig.tick()
+    assert rows(rig.conn) == [("all", "ui_open", 11_000, 13_000)]
+
+
+def test_a_pause_during_the_ui_halt_switches_the_row_to_paused_and_back_on_resume(
+    rig: Rig,
+) -> None:
+    rig.halted.set()
+    rig.tick()
+    rig.paused.set()
+    rig.tick()
+    assert [r[:2] for r in rows(rig.conn)] == [("all", "ui_open"), ("all", "paused")]
+    assert rows(rig.conn)[0][3] == 12_000  # closed as the pause row opened
+    rig.paused.clear()  # resume while the UI is still open: still halted
+    rig.tick()
+    assert [r[:2] for r in rows(rig.conn)] == [
+        ("all", "ui_open"),
+        ("all", "paused"),
+        ("all", "ui_open"),
+    ]
+    assert [r[3] for r in rows(rig.conn)] == [12_000, 13_000, None]
+    rig.halted.clear()
+    rig.tick()
+    assert all(end is not None for *_, end in rows(rig.conn))
 
 
 def test_pausing_again_while_paused_adds_no_second_row(rig: Rig) -> None:
@@ -363,7 +392,7 @@ def test_an_unreadable_lock_state_keeps_the_last_known_one(rig: Rig) -> None:
         raise OSError
 
     rig.clock.now += 1_000
-    rig.gaps._tick(rig.paused, broken)
+    rig.gaps._tick(rig.paused, rig.halted, broken)
     assert boom_calls
     assert rows(rig.conn) == [("screen", "locked", 11_000, None)]
 
@@ -525,7 +554,7 @@ def test_a_tick_that_raises_is_counted_and_the_loop_goes_on(
 
     monkeypatch.setattr(gaps_module, "TICK_S", 0.001)
     monkeypatch.setattr(rig.gaps, "_tick", tick)
-    rig.gaps.run(stop, rig.paused, lambda: False)
+    rig.gaps.run(stop, rig.paused, rig.halted, lambda: False)
     assert rig.gaps.stats["tick_failed"] == 3
 
 
@@ -534,7 +563,7 @@ def test_a_clock_jump_backwards_cannot_make_an_event_fail_forever(rig: Rig) -> N
     rig.tick()  # open at 11 000
     rig.paused.clear()
     rig.clock.now = 5_000
-    rig.gaps._tick(rig.paused, lambda: False)  # resume stamped before the pause
+    rig.gaps._tick(rig.paused, rig.halted, lambda: False)  # resume stamped before the pause
     assert rows(rig.conn) == [("all", "paused", 11_000, 11_000)]
     assert rig.gaps.stats["write_rejected"] == 0
 
@@ -608,7 +637,9 @@ def test_only_drops_are_bounded_and_overflow_is_counted(rig: Rig) -> None:
     rig.gaps.drop("system", "excluded", 99_999, 99_999, merge=True)
     assert rig.gaps.stats["drops_overflowed"] == 2
     rig.paused.set()
-    rig.gaps._watch(rig.clock.now, paused=True, locked=True)  # transitions are never refused
+    rig.gaps._watch(
+        rig.clock.now, paused=True, halted=True, locked=True
+    )  # transitions are never refused
     rig.gaps.open("mic", "device_failed", 5)
     rig.gaps.close("mic", 6)
     kinds = [type(e).__name__ for e in rig.gaps._events]
@@ -793,7 +824,7 @@ class Recorder:
         self.paused = threading.Event()
 
     def step(self) -> None:
-        self.recorder._iterate(self.stop, self.paused)
+        self.recorder._iterate(self.stop, self.paused, self.paused)
 
 
 def test_a_missing_device_opens_device_missing() -> None:
@@ -1109,13 +1140,7 @@ def test_a_gap_longer_than_thirty_seconds_between_drops_starts_a_new_row(
 
 
 def make_platform(*, ocr: FakeOcr | None, locked: bool = False) -> CapturePlatform:
-    return CapturePlatform(
-        screen=FakeScreen(),
-        windows=FakeWindows(focused=window(), locked=locked),
-        uia=FakeUia(texts={1: LONG_TEXT}),
-        ocr=ocr,
-        media=FakeMedia(),
-    )
+    return fake_platform(ocr=ocr, locked=locked, text=LONG_TEXT[0].text)
 
 
 class HeldStdin:
@@ -1273,7 +1298,7 @@ def test_capture_debug_data_carries_the_gap_counters(paths: Paths, keyed: DataKe
 def test_the_gate_without_an_engine_returns_no_text_and_never_recognizes() -> None:
     gate = OcrGate(None)
     image = blank(size=(200, 100))
-    result = gate.read("k", image, Rect(0, 0, 200, 100))
+    result = gate.read("k", image)
     assert (result.text, result.ocr_ran) == ("", False)
 
 
@@ -1281,7 +1306,7 @@ def test_the_gate_with_an_engine_still_recognizes_text() -> None:
     from capture_fakes import with_text_block  # noqa: PLC0415
 
     image = with_text_block(blank())
-    result = OcrGate(FakeOcr()).read("k", image, Rect(0, 0, 800, 600))
+    result = OcrGate(FakeOcr()).read("k", image)
     assert (result.text, result.ocr_ran) == ("recognized words", True)
 
 

@@ -21,13 +21,13 @@ from typing import TYPE_CHECKING, ClassVar, Final, Protocol
 import numpy as np
 
 from akashic.fold import fold
-from akashic.pipeline.jobs import PermanentJobError
+from akashic.storage.jobs import PermanentJobError
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-    from akashic.pipeline.jobs import Job
     from akashic.storage.audio import AudioStore
+    from akashic.storage.jobs import Job
 
 log = logging.getLogger(__name__)
 

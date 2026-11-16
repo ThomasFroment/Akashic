@@ -315,10 +315,11 @@ _PASSAGE_ROWS = {
         " s.transcript IS NOT NULL, NULL FROM segment_passages p"
         " JOIN audio_segments s ON s.id = p.segment_id ORDER BY p.rowid"
     ),
-    "frame": (
-        "SELECT p.frame_id, p.model, p.start_char, p.end_char, p.vec, f.ts_ms,"
-        " f.text IS NOT NULL, f.process FROM frame_passages p"
-        " JOIN frames f ON f.id = p.frame_id ORDER BY p.rowid"
+    "window": (
+        "SELECT p.window_id, p.model, p.start_char, p.end_char, p.vec, f.ts_ms,"
+        " w.text IS NOT NULL, w.process FROM window_passages p"
+        " JOIN frame_windows w ON w.id = p.window_id"
+        " JOIN frames f ON f.id = w.frame_id ORDER BY p.rowid"
     ),
 }
 

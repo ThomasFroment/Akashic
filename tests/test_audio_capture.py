@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from collections import Counter
 from dataclasses import replace
 from types import SimpleNamespace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from audio_fakes import (
@@ -67,7 +68,7 @@ def store(conn: Connection, media: MediaStore) -> AudioStore:
 
 def run_in_thread(rig: RecorderRig) -> tuple[threading.Event, threading.Event, threading.Thread]:
     stop, paused = threading.Event(), threading.Event()
-    thread = threading.Thread(target=rig.recorder.run, args=(stop, paused), daemon=True)
+    thread = threading.Thread(target=rig.recorder.run, args=(stop, paused, paused), daemon=True)
     thread.start()
     return stop, paused, thread
 
@@ -92,6 +93,27 @@ def test_pause_closes_the_device_and_drops_what_was_recorded(
     assert rig.detector.resets == 2
 
 
+def test_a_ui_halt_closes_the_device_and_stores_the_utterance_in_progress(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(audio_module, "READ_TIMEOUT_S", 0.01)
+    rig = RecorderRig(realtime=True)
+    rig.devices.scripts["mic"] += [script(speech(30)), script(speech(5), silence(30))]
+    stop, halt, paused = threading.Event(), threading.Event(), threading.Event()
+    thread = threading.Thread(target=rig.recorder.run, args=(stop, halt, paused), daemon=True)
+    thread.start()
+    assert wait_for(
+        lambda: len(rig.devices.opened) == 1 and not rig.devices.opened[0][1].script, 15
+    )
+    halt.set()
+    assert wait_for(lambda: rig.devices.opened[0][1].closed, 15)
+    assert len(rig.out) == 1  # the half-recorded segment was kept
+    halt.clear()
+    assert wait_for(lambda: len(rig.devices.opened) == 2, 15)
+    stop.set()
+    thread.join(timeout=5)
+
+
 def test_device_failure_closes_and_retries(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(audio_module, "RETRY_S", 0.01)
     rig = RecorderRig(realtime=True)
@@ -105,6 +127,27 @@ def test_device_failure_closes_and_retries(monkeypatch: pytest.MonkeyPatch) -> N
 
 
 # --- sources, writer, exclusions -----------------------------------------------------------
+
+
+def test_the_sampler_does_not_poll_while_halted() -> None:
+    polls: list[int] = []
+
+    class Counting:
+        def active_processes(self) -> frozenset[str]:
+            polls.append(1)
+            return frozenset()
+
+    sampler = SourceSampler(cast("Any", Counting()), Clock(T0), interval_s=0.01)
+    stop, halt = threading.Event(), threading.Event()
+    halt.set()
+    thread = threading.Thread(target=sampler.run, args=(stop, halt), daemon=True)
+    thread.start()
+    time.sleep(0.2)
+    assert polls == []
+    halt.clear()
+    assert wait_for(lambda: bool(polls), 5)
+    stop.set()
+    thread.join(timeout=5)
 
 
 def test_sampler_unions_what_was_audible_during_the_span() -> None:
@@ -248,7 +291,7 @@ def test_audio_capture_records_both_streams_end_to_end(store: AudioStore, conn: 
         settings=replace(SETTINGS, hangover_ms=320),
     )
     stop, paused = threading.Event(), threading.Event()
-    thread = threading.Thread(target=capture.run, args=(stop, paused))
+    thread = threading.Thread(target=capture.run, args=(stop, paused, paused))
     thread.start()
     assert wait_for(
         lambda: conn.execute("SELECT count(*) FROM audio_segments").fetchone() == (2,), 30
@@ -352,7 +395,7 @@ def test_a_stream_keeps_running_but_persists_nothing_while_sources_are_unknown(
         settings=replace(SETTINGS, hangover_ms=320),
     )
     stop, paused = threading.Event(), threading.Event()
-    thread = threading.Thread(target=capture.run, args=(stop, paused))
+    thread = threading.Thread(target=capture.run, args=(stop, paused, paused))
     thread.start()
     reached = wait_for(lambda: capture.stats["dropped_unknown_sources"] >= 2, 30)
     stop.set()
@@ -457,7 +500,7 @@ def test_audio_recorder_survives_a_detector_error(monkeypatch: pytest.MonkeyPatc
 
     def body() -> None:
         try:
-            recorder.run(stop, paused)
+            recorder.run(stop, paused, paused)
         except Exception as exc:  # noqa: BLE001 - recorded for the assertion below
             died.append(exc)
 
@@ -579,7 +622,7 @@ def test_a_fault_is_counted_and_the_stream_records_again(
     stats: Counter[str] = Counter()
     recorder = _recorder(devices, detector, out, stats)
     stop, paused = threading.Event(), threading.Event()
-    thread = threading.Thread(target=recorder.run, args=(stop, paused), daemon=True)
+    thread = threading.Thread(target=recorder.run, args=(stop, paused, paused), daemon=True)
     thread.start()
     try:
         if fault == "close":
@@ -604,7 +647,7 @@ def test_a_fault_waits_retry_s_stop_aware_then_reopens() -> None:
     devices = _FaultyDevices(fail_find=1)
     recorder = _recorder(devices)
     stop = _CountingStop(2)
-    recorder.run(stop, threading.Event())
+    recorder.run(stop, threading.Event(), threading.Event())
     assert stop.timeouts[0] == audio_module.RETRY_S
     assert len(devices.opened) == 1  # after the wait the device was opened again
 
@@ -615,7 +658,9 @@ def test_stop_ends_a_recorder_waiting_out_a_fault_at_once(monkeypatch: pytest.Mo
     stats: Counter[str] = Counter()
     recorder = _recorder(devices, stats=stats)
     stop = threading.Event()
-    thread = threading.Thread(target=recorder.run, args=(stop, threading.Event()), daemon=True)
+    thread = threading.Thread(
+        target=recorder.run, args=(stop, threading.Event(), threading.Event()), daemon=True
+    )
     thread.start()
     assert wait_for(lambda: stats["loop_error_mic"] == 1, 5)
     stop.set()
@@ -628,7 +673,7 @@ def test_the_log_of_a_fault_holds_only_the_type_and_the_kind(
 ) -> None:
     recorder = _recorder(_FaultyDevices(fail_find=1))
     with caplog.at_level(logging.DEBUG, logger="akashic.capture.audio"):
-        recorder.run(_CountingStop(3), threading.Event())
+        recorder.run(_CountingStop(3), threading.Event(), threading.Event())
     warnings = _fault_warnings(caplog)
     assert len(warnings) == 1
     assert "OSError" in warnings[0]
@@ -642,7 +687,7 @@ def test_a_repeating_fault_is_logged_once_per_interval(caplog: pytest.LogCapture
     stats: Counter[str] = Counter()
     recorder = _recorder(_FaultyDevices(fail_find=1000), stats=stats)
     with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
-        recorder.run(_CountingStop(200), threading.Event())
+        recorder.run(_CountingStop(200), threading.Event(), threading.Event())
     assert stats["loop_error_mic"] == 200
     assert len(_fault_warnings(caplog)) == 1
 
@@ -650,7 +695,7 @@ def test_a_repeating_fault_is_logged_once_per_interval(caplog: pytest.LogCapture
 def test_each_fault_type_has_its_own_log_budget(caplog: pytest.LogCaptureFixture) -> None:
     recorder = _recorder(_FaultyDevices(fail_find=1), _ResetFails(failures=1))
     with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
-        recorder.run(_CountingStop(6), threading.Event())
+        recorder.run(_CountingStop(6), threading.Event(), threading.Event())
     warnings = _fault_warnings(caplog)
     assert len(warnings) == 2
     assert sum("OSError" in w for w in warnings) == 1
@@ -670,7 +715,7 @@ def test_a_fault_type_is_logged_again_after_the_interval(
             return super().wait(timeout)
 
     with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
-        recorder.run(Advancing(6), threading.Event())
+        recorder.run(Advancing(6), threading.Event(), threading.Event())
     assert len(_fault_warnings(caplog)) == 3  # at 0, 300 and 600 s
 
 
@@ -693,7 +738,7 @@ def test_a_fault_while_paused_does_not_end_the_loop() -> None:
     assert recorder._acquire()
     paused = threading.Event()
     paused.set()
-    recorder.run(_CountingStop(3), paused)
+    recorder.run(_CountingStop(3), paused, paused)
     assert stats["loop_error_mic"] == 1
     assert recorder._input is None
 
@@ -718,7 +763,7 @@ def test_base_exceptions_are_not_swallowed() -> None:
 
     recorder = _recorder(Interrupting())
     with pytest.raises(KeyboardInterrupt):
-        recorder.run(_CountingStop(3), threading.Event())
+        recorder.run(_CountingStop(3), threading.Event(), threading.Event())
 
 
 # --- #160: stop, device change and device failure keep the utterance heard so far -----------
@@ -735,7 +780,7 @@ def _stop_now(rig: RecorderRig, *, paused: bool = False) -> None:
     stop.set()
     if paused:
         pause.set()
-    rig.recorder.run(stop, pause)
+    rig.recorder.run(stop, pause, pause)
 
 
 def test_stop_closes_the_open_utterance_at_once_and_hands_it_over_before_the_device_closes() -> (
@@ -773,6 +818,30 @@ def test_a_flushed_utterance_that_is_too_quiet_is_dropped_as_quiet() -> None:
     assert rig.stats["dropped_quiet"] == 1
 
 
+def _halted_iteration(rig: RecorderRig, *, paused: bool) -> None:
+    halt, pause = threading.Event(), threading.Event()
+    halt.set()
+    if paused:
+        pause.set()
+    rig.recorder._iterate(threading.Event(), halt, pause)
+
+
+def test_a_ui_halt_stores_the_open_utterance_and_closes_the_device() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(30))
+    _halted_iteration(rig, paused=False)
+    assert len(rig.out) == 1
+    assert rig.devices.opened[0][1].closed
+
+
+def test_a_pause_with_the_ui_halt_drops_the_open_utterance() -> None:
+    rig = _open_recorder()
+    rig.deliver(speech(30))
+    _halted_iteration(rig, paused=True)
+    assert rig.out == []
+    assert rig.devices.opened[0][1].closed
+
+
 def test_stop_with_no_open_utterance_hands_nothing_over() -> None:
     rig = _open_recorder()
     rig.deliver(silence(30))
@@ -801,7 +870,7 @@ def test_pause_then_stop_flushes_nothing() -> None:
     rig.deliver(speech(30))
     paused = threading.Event()
     paused.set()
-    rig.recorder.run(_CountingStop(1), paused)  # one paused iteration, then the loop stops
+    rig.recorder.run(_CountingStop(1), paused, paused)  # one paused iteration, then the loop stops
     _stop_now(rig, paused=True)
     assert rig.out == []
 
@@ -876,7 +945,7 @@ def _capture(
 
 def _run_until_speaking_then_stop(capture: AudioCapture, devices: FakeDevices) -> None:
     stop, paused = threading.Event(), threading.Event()
-    thread = threading.Thread(target=capture.run, args=(stop, paused))
+    thread = threading.Thread(target=capture.run, args=(stop, paused, paused))
     thread.start()
     assert wait_for(
         lambda: len(devices.opened) == 2 and all(not s.script for _, s in devices.opened), 30

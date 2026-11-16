@@ -173,7 +173,6 @@ def test_delete_all_keeps_the_paused_row_and_drops_other_state(
 ) -> None:
     state.set_int(conn, state.CAPTURE_PAUSED, value)
     state.set_int(conn, "conversations_since_ms", 5)
-    state.set_int(conn, state.LEVELS_WANTED_UNTIL, 9)
     delete_all_recorded_data(conn, media)
     assert conn.execute("SELECT key, value FROM state").fetchall() == [
         (state.CAPTURE_PAUSED, value)

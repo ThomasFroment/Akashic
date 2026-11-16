@@ -17,8 +17,8 @@ import logging
 import time
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol
 
-from akashic.pipeline.jobs import NewJob, PermanentJobError
 from akashic.storage import embeddings, passages
+from akashic.storage.jobs import NewJob, PermanentJobError
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
     from numpy.typing import NDArray
 
-    from akashic.pipeline.jobs import Job, JobQueue
+    from akashic.storage.jobs import Job, JobQueue
 
     type Vector = NDArray[np.float32]
 
@@ -74,7 +74,7 @@ def enqueue_missing(  # noqa: PLR0913 - the queue, the model and the retention c
     for kind, sql in (
         ("episode", _MISSING_EPISODES),
         ("segment", _MISSING_SEGMENTS),
-        ("frame", _MISSING_FRAMES),
+        ("window", _MISSING_WINDOWS),
     ):
         rows = conn.execute(
             sql, {"model": model, "since": since_ms, "limit": batch, "min": MIN_TEXT_CHARS}
@@ -104,11 +104,12 @@ _MISSING_SEGMENTS: Final = (
     "                 WHERE p.segment_id = s.id AND p.model = :model)"
     " ORDER BY s.start_ms, s.id LIMIT :limit"
 )
-_MISSING_FRAMES: Final = (
-    "SELECT f.id, f.ts_ms FROM frames f WHERE f.ts_ms >= :since AND length(f.text) >= :min"
-    " AND NOT EXISTS (SELECT 1 FROM frame_passages p"
-    "                 WHERE p.frame_id = f.id AND p.model = :model)"
-    " ORDER BY f.ts_ms, f.id LIMIT :limit"
+_MISSING_WINDOWS: Final = (
+    "SELECT w.id, f.ts_ms FROM frame_windows w JOIN frames f ON f.id = w.frame_id"
+    " WHERE f.ts_ms >= :since AND length(w.text) >= :min"
+    " AND NOT EXISTS (SELECT 1 FROM window_passages p"
+    "                 WHERE p.window_id = w.id AND p.model = :model)"
+    " ORDER BY f.ts_ms, w.id LIMIT :limit"
 )
 
 
@@ -146,7 +147,7 @@ class EmbedHandler:
     def run(self, job: Job) -> None:
         kind = str(job.payload.get("kind"))
         model = self._embedder.model
-        if kind not in {"episode", "segment", "frame"} or job.payload.get("model") != model:
+        if kind not in {"episode", "segment", "window"} or job.payload.get("model") != model:
             return  # queued for another model (the setting changed): nothing to do
         ids = _ids(job)
         marks = ",".join("?" * len(ids))
@@ -165,15 +166,16 @@ class EmbedHandler:
             texts = {int(r[0]): (int(r[1]), str(r[2])) for r in rows}
         else:
             rows = self._conn.execute(
-                f"SELECT id, ts_ms, text FROM frames WHERE id IN ({marks})"  # noqa: S608
-                " AND text IS NOT NULL",
+                f"SELECT w.id, f.ts_ms, w.text FROM frame_windows w"  # noqa: S608
+                f" JOIN frames f ON f.id = w.frame_id WHERE w.id IN ({marks})"
+                " AND w.text IS NOT NULL",
                 ids,
             ).fetchall()
             texts = {int(r[0]): (int(r[1]), str(r[2])) for r in rows}
         todo = [i for i in ids if i in texts]
         if not todo:
             return
-        if kind in {"segment", "frame"}:
+        if kind in {"segment", "window"}:
             offsets = {i: passages.windows(texts[i][1]) for i in todo}
             vectors = self._embedder.embed_documents(
                 [texts[i][1][start:end] for i in todo for start, end in offsets[i]]
@@ -189,7 +191,7 @@ class EmbedHandler:
                     model,
                     text,
                     vectors[at:end],
-                    kind="frame" if kind == "frame" else "segment",
+                    kind="window" if kind == "window" else "segment",
                 )
                 at = end
             return

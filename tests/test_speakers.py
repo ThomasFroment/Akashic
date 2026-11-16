@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from akashic.pipeline.jobs import Job
 from akashic.pipeline.speakers import LocalTurn as Local
 from akashic.pipeline.speakers import (
     OnnxVoiceModels,
@@ -20,6 +19,7 @@ from akashic.pipeline.speakers import (
 )
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import DataKey
+from akashic.storage.jobs import Job
 from akashic.storage.media import MediaStore
 from akashic.storage.opus import encode_opus
 from akashic.storage.speakers import NewTurn, SpeakerError, SpeakerStore, best_match

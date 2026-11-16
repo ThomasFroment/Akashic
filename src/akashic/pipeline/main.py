@@ -11,7 +11,6 @@ from akashic.child import ChildContext, run_child
 from akashic.pipeline.ask import ASK, AskHandler
 from akashic.pipeline.embed import EMBED_QUERY, EmbedHandler, QueryEmbedHandler, enqueue_missing
 from akashic.pipeline.episodes import build_episodes
-from akashic.pipeline.jobs import JobQueue
 from akashic.pipeline.llm import (
     CHAT_FLAGS,
     EMBEDDING_FLAGS,
@@ -21,7 +20,7 @@ from akashic.pipeline.llm import (
     Running,
 )
 from akashic.pipeline.models import LLAMA_RUNTIME, runtime_program
-from akashic.pipeline.ocr_frames import OcrFrameHandler
+from akashic.pipeline.ocr_windows import OcrWindowHandler
 from akashic.pipeline.retention import RetentionHandler, retention_job
 from akashic.pipeline.runner import Handler, JobRunner
 from akashic.pipeline.scheduler import LoadSource, Scheduler
@@ -34,6 +33,7 @@ from akashic.storage import embeddings
 from akashic.storage.audio import AudioStore
 from akashic.storage.debuginfo import ProcessInfo
 from akashic.storage.frames import FrameStore
+from akashic.storage.jobs import JobQueue
 from akashic.storage.media import MediaStore
 from akashic.storage.retention import DAY_MS
 from akashic.storage.sessions import gaming_now
@@ -227,7 +227,7 @@ def build_runner(
             ),
             STTCompareHandler(ctx.conn, audio, ctx.paths.models_dir),
             SpeakersHandler(audio, speakers, voices),
-            OcrFrameHandler(FrameStore(ctx.conn, media), windows_ocr(ctx.config.ocr_language)),
+            OcrWindowHandler(FrameStore(ctx.conn, media), windows_ocr(ctx.config.ocr_language)),
             RetentionHandler(ctx.conn, media, ctx.config.retention_days),
             EmbedHandler(ctx.conn, embedder, embedding_present),
             QueryEmbedHandler(ctx.conn, embedder, embedding_present),

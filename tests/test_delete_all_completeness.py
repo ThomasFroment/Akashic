@@ -13,7 +13,7 @@ import re
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
-from memory_data import NOW, add_frame, add_segment
+from memory_data import NOW, add_frame, add_segment, window_of
 
 from akashic.storage import embeddings
 from akashic.storage.retention import delete_all_recorded_data
@@ -115,7 +115,10 @@ def test_every_captured_row_is_gone_after_full_deletion(
 ) -> None:
     frame = add_frame(conn, NOW, "fictionalphrase écran", "Fenêtre")
     segment = add_segment(conn, NOW, text="fictionalphrase parole")
-    conn.execute("INSERT INTO frame_passages VALUES (?, 'm', 0, 5, 1, x'0000')", (frame,))
+    window = window_of(conn, frame)
+    conn.execute("INSERT INTO window_passages VALUES (?, 'm', 0, 5, 1, x'0000')", (window,))
+    question = conn.execute("INSERT INTO questions (asked_ms, text) VALUES (0, 'q')").lastrowid
+    conn.execute("INSERT INTO question_windows VALUES (?, ?)", (question, window))
     conn.execute("INSERT INTO segment_passages VALUES (?, 'm', 0, 5, 1, x'0000')", (segment,))
     embeddings.put(conn, "segment", segment, "m", np.ones(2, dtype=np.float32), NOW, NOW)
     media.write_unique("2026/11/08/120000_000_m0.webp", b"synthetic screenshot")
@@ -128,7 +131,7 @@ def test_every_captured_row_is_gone_after_full_deletion(
         and not any(name.endswith(s) for s in FTS_SHADOWS)
     }
     assert non_empty == set()
-    for fts in ("frames_fts", "audio_segments_fts"):
+    for fts in ("frame_windows_fts", "audio_segments_fts"):
         hits = conn.execute(f"SELECT count(*) FROM {fts} WHERE {fts} MATCH 'fictionalphrase'")  # noqa: S608
         assert hits.fetchone() == (0,)
     assert list(paths.media_dir.iterdir()) == []

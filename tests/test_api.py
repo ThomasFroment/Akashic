@@ -11,9 +11,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 import pytest
+from memory_data import add_monitor, add_visit, app_window, new_frame
 from PIL import Image
 
-from akashic.api import server as api_server
+from akashic.api import frames as api_frames
 from akashic.api.models import Downloads
 from akashic.api.server import (
     OPEN_CODE_TTL_S,
@@ -21,15 +22,15 @@ from akashic.api.server import (
     ApiServer,
     Controls,
     Services,
-    day_range_ms,
     new_token,
 )
+from akashic.api.timeline import day_range_ms
 from akashic.pipeline import models
 from akashic.pipeline.models import ModelSpec, Needed
 from akashic.storage import db
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import CryptoError, DataKey
-from akashic.storage.frames import FrameStore, NewFrame
+from akashic.storage.frames import FrameStore, NewFrame, NewWindow
 from akashic.storage.media import MediaStore
 
 if TYPE_CHECKING:
@@ -100,14 +101,26 @@ def api(paths: Paths) -> Iterator[Api]:
     conn = db.connect(paths.db_file, key.subkey("db"))
     db.migrate(conn)
     frames = FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media")))
+    add_monitor(conn, 0)
+    add_monitor(conn, 1)
     frames.add(
-        NewFrame(NOON + 1_000, 0, "click", "chrome.exe", "Café", None, "bonjour le monde", "uia")
-    )
-    frames.add(
-        NewFrame(
-            NOON + 2_000, 1, "idle", "code.exe", "main.py", None, "hello world", "ocr", _webp()
+        new_frame(
+            NOON + 1_000, 0, "click", process="chrome.exe", title="Café", text="bonjour le monde"
         )
     )
+    frames.add(
+        new_frame(
+            NOON + 2_000,
+            1,
+            "idle",
+            process="code.exe",
+            title="main.py",
+            text="hello world",
+            source="ocr",
+            image=_webp(),
+        )
+    )
+    add_visit(conn, "chrome.exe", "Café", NOON + 1_000, NOON + 2_000)
     audio = AudioStore(conn, MediaStore(paths.media_dir, key.subkey("media")))
     said = audio.add(
         NewSegment("mic", NOON + 3_000, NOON + 5_000, 1_500, ("discord.exe",)), b"OggS-fake", 0
@@ -216,7 +229,13 @@ def test_status(api: Api) -> None:
     assert status["frames"] == 2
     assert "latest_ts_ms" not in status
     assert status["paused"] is False
-    assert status["apps"] == ["chrome.exe", "code.exe"]
+    assert "apps" not in status
+
+
+def test_apps_lists_the_processes_seen(api: Api) -> None:
+    status, _, body = api.get("/api/apps")
+    assert status == 200
+    assert json.loads(body) == ["chrome.exe", "code.exe"]
 
 
 def test_pause_calls_the_controller(api: Api) -> None:
@@ -229,6 +248,22 @@ def test_pause_calls_the_controller(api: Api) -> None:
 def test_search_and_browse(api: Api) -> None:
     hits = api.rows("/api/search?q=hello")
     assert [h["id"] for h in hits] == [2]
+    assert set(hits[0]) == {
+        "id",
+        "window_id",
+        "ts_ms",
+        "monitor_id",
+        "process",
+        "title",
+        "url",
+        "has_image",
+        "snippet",
+    }
+    assert (hits[0]["process"], hits[0]["title"], hits[0]["monitor_id"]) == (
+        "code.exe",
+        "main.py",
+        1,
+    )
     assert hits[0]["has_image"] is True
     assert "\x02hello\x03" in str(hits[0]["snippet"])
     everything = api.rows("/api/search?q=")
@@ -240,10 +275,63 @@ def test_search_and_browse(api: Api) -> None:
 
 def test_frame_detail_and_neighbors(api: Api) -> None:
     first = api.obj("/api/frames/1")
-    assert first["text"] == "bonjour le monde"
-    assert (first["prev_id"], first["next_id"]) == (None, 2)
+    assert set(first) == {"id", "ts_ms", "monitor_id", "has_image", "prev_id", "next_id", "windows"}
+    assert (first["id"], first["monitor_id"]) == (1, 0)
+    assert (first["prev_id"], first["next_id"]) == (None, None)  # frame 2 is on another monitor
     assert first["has_image"] is False
+    (window,) = cast("list[dict[str, object]]", first["windows"])
+    assert set(window) == {
+        "id",
+        "role",
+        "process",
+        "title",
+        "url",
+        "rect",
+        "z",
+        "focused",
+        "painted",
+        "text",
+        "text_source",
+    }
+    assert window["text"] == "bonjour le monde"
+    assert (window["process"], window["title"], window["rect"], window["z"]) == (
+        "chrome.exe",
+        "Café",
+        [0, 0, 100, 100],
+        0,
+    )
+    assert (window["focused"], window["text_source"]) == (True, "uia")
     assert api.get("/api/frames/99")[0] == 404
+
+
+def test_frame_detail_lists_windows_front_to_back_without_the_hwnd(api: Api) -> None:
+    services = api.server._services
+    frame_id = services.frames.add(
+        NewFrame(
+            NOON + 9_000,
+            1,
+            "idle",
+            None,
+            (
+                NewWindow("shell", 3, 5, 0, 0, 800, 40),
+                app_window(process="code.exe", title="b", text="beta", z=1, hwnd=22, focused=False),
+                NewWindow("hidden", 2, None, 10, 10, 20, 20),
+                app_window(process="chrome.exe", title="a", text="alpha", z=0, hwnd=11),
+            ),
+        )
+    )
+    detail = api.obj(f"/api/frames/{frame_id}")
+    windows = cast("list[dict[str, object]]", detail["windows"])
+    assert [(w["z"], w["role"]) for w in windows] == [
+        (0, "app"),
+        (1, "app"),
+        (2, "hidden"),
+        (3, "shell"),
+    ]
+    assert set(windows[2]) == {"id", "role", "rect", "z"}
+    assert set(windows[3]) == {"id", "role", "rect", "z"}
+    assert windows[3]["rect"] == [0, 0, 800, 40]
+    assert "hwnd" not in json.dumps(detail)
 
 
 def test_frame_image_full_and_thumbnail(api: Api) -> None:
@@ -258,14 +346,18 @@ def test_frame_image_full_and_thumbnail(api: Api) -> None:
     assert api.get("/api/frames/2/image?w=5")[0] == 422
 
 
-def test_timeline_by_local_day(api: Api) -> None:
+def test_strip_by_local_day(api: Api) -> None:
     start, end = day_range_ms("2026-11-08")
     assert end - start in (23 * 3_600_000, 24 * 3_600_000, 25 * 3_600_000)
     assert start < NOON < end
-    assert [h["id"] for h in api.rows("/api/timeline?day=2026-11-08")] == [1, 2]
-    assert api.rows("/api/timeline?day=2026-11-09") == []
-    assert api.get("/api/timeline?day=nonsense")[0] == 422
-    assert api.get("/api/timeline?day=0001-01-01")[0] == 422
+    bands = api.obj("/api/strip?day=2026-11-08")["bands"]
+    assert bands == [
+        {"start_ms": NOON + 1_000, "end_ms": NOON + 2_000, "process": "chrome.exe", "title": "Café"}
+    ]
+    assert api.obj("/api/strip?day=2026-11-09") == {"bands": []}
+    assert api.get("/api/strip?day=nonsense")[0] == 422
+    assert api.get("/api/strip?day=0001-01-01")[0] == 422
+    assert api.get("/api/timeline?day=2026-11-08")[0] == 404
 
 
 def test_missing_image_file_is_a_404(api: Api, paths: Paths) -> None:
@@ -337,18 +429,18 @@ def test_image_decrypt_and_thumbnail_run_outside_the_db_lock(
 ) -> None:
     services = api.server._services
     seen: list[bool] = []
-    read, thumbnail = services.frames.image, api_server._thumbnail
+    read, render_real = services.frames.image, api_frames._render
 
     def image(frame: object) -> bytes | None:
         seen.append(_lock_is_free(api))
         return read(frame)  # type: ignore[arg-type]
 
-    def render(webp: bytes, width: int) -> bytes:
+    def render(webp: bytes, width: int | None, crop: object) -> bytes | None:
         seen.append(_lock_is_free(api))
-        return thumbnail(webp, width)
+        return render_real(webp, width, crop)  # type: ignore[arg-type]
 
     monkeypatch.setattr(services.frames, "image", image)
-    monkeypatch.setattr(api_server, "_thumbnail", render)
+    monkeypatch.setattr(api_frames, "_render", render)
     assert api.get("/api/frames/2/image?w=100")[0] == 200
     assert seen == [True, True]
 
@@ -386,12 +478,12 @@ def test_thumbnail_cache_hit_skips_decrypt_and_full_size_is_not_cached(
     api.get("/api/frames/2/image")
     api.get("/api/frames/2/image")
     assert len(reads) == 2
-    assert not any(key[2] == 0 for key in services._thumbs)
+    assert not any(key[3] == 0 for key in services._thumbs)
 
 
 def test_put_thumb_ignores_a_stale_generation(api: Api) -> None:
     services = api.server._services
-    key = (2, "p.webp", 100)
+    key = (2, "p.webp", 0, 100)
     stale = services.thumb_generation()
     services.clear_thumbs()
     assert services.thumb_generation() == stale + 1

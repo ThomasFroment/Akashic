@@ -42,13 +42,16 @@ class ChildContext:
     config: Config
     key: DataKey
     conn: Connection
-    api_port: int | None = None  # where the app's local server listens (capture excludes it)
+    api_port: int | None = None  # where the app's local server listens (its address halts capture)
     stop: threading.Event = field(default_factory=threading.Event)
-    paused: threading.Event = field(default_factory=threading.Event)
-    pause_epoch: int = 0  # counts pause and resume flips; guards status computed before a flip
+    paused: threading.Event = field(default_factory=threading.Event)  # the user's Pause
+    halt: threading.Event = field(default_factory=threading.Event)  # paused, UI open or failsafe
+    pause_epoch: int = 0  # counts halt flips; guards status computed before a flip
     resumed_at: float = field(default_factory=time.monotonic)  # last resume, else process start
-    resume_state: ipc.State = "ready"  # what _active falls back to when a pause clears the problems
-    _active: ipc.State = "ready"  # what to report while not paused
+    resume_state: ipc.State = "ready"  # what _active falls back to when a halt clears the problems
+    _active: ipc.State = "ready"  # what to report while not halted
+    _ui_open: bool = False
+    _own_address: bool = False
     _sent: ipc.State | None = None
     _status_out: IO[bytes] | None = None
     _status_lock: threading.Lock = field(default_factory=threading.Lock)
@@ -66,10 +69,30 @@ class ChildContext:
         except OSError:
             self.stop.set()  # parent is gone
 
+    def _reported(self) -> ipc.State:
+        if self.paused.is_set():
+            return "paused"
+        return "ui_paused" if self.halt.is_set() else self._active
+
+    def _update(self) -> None:
+        """Derive ``halt`` from its causes and report the state if it changed (lock held)."""
+        halted = self.paused.is_set() or self._ui_open or self._own_address
+        if halted != self.halt.is_set():
+            self.pause_epoch += 1
+            if halted:
+                self._active = self.resume_state
+                self.halt.set()
+            else:
+                self.resumed_at = time.monotonic()
+                self.halt.clear()
+        state = self._reported()
+        if state != self._sent:
+            self._send(state)
+
     def health_snapshot(self) -> tuple[int, bool, float]:
-        """``(pause_epoch, paused, resumed_at)`` as one consistent reading."""
+        """``(pause_epoch, halted, resumed_at)`` as one consistent reading."""
         with self._status_lock:
-            return self.pause_epoch, self.paused.is_set(), self.resumed_at
+            return self.pause_epoch, self.halt.is_set(), self.resumed_at
 
     def set_active(self, state: ipc.State, *, epoch: int | None = None) -> bool:
         """Set the state to report while running; False when the change was discarded: computed
@@ -78,38 +101,44 @@ class ChildContext:
             if self.stop.is_set() or (epoch is not None and epoch != self.pause_epoch):
                 return False
             self._active = state
-            if not self.paused.is_set() and state != self._sent:
+            if not self.halt.is_set() and state != self._sent:
                 self._send(state)
             return True
 
     def set_resume_state(self, state: ipc.State) -> None:
-        """Set what a pause falls back to. The state to report follows it too: sent now when
-        running, kept for the resume when already paused (a ``--paused`` start)."""
+        """Set what a halt falls back to. The state to report follows it too: sent now when
+        running, kept for the resume when already halted (a ``--paused`` or ``--ui-open`` start)."""
         with self._status_lock:
             self.resume_state = state
             self._active = state
-            if not self.paused.is_set() and state != self._sent:
+            if not self.halt.is_set() and state != self._sent:
                 self._send(state)
 
     def set_paused(self, *, paused: bool) -> None:
         """Pause or resume and report it, as one step, so a late "ready" can't hide a pause."""
         with self._status_lock:
-            if paused == self.paused.is_set():
-                return
-            self.pause_epoch += 1
             if paused:
                 self.paused.set()
-                self._active = self.resume_state
-                self._send("paused")
             else:
-                self.resumed_at = time.monotonic()
                 self.paused.clear()
-                self._send(self._active)
+            self._update()
+
+    def set_ui_open(self, *, ui_open: bool) -> None:
+        """Halt while Akashic's UI is open. Never clears the user's Pause."""
+        with self._status_lock:
+            self._ui_open = ui_open
+            self._update()
+
+    def set_own_address(self, *, visible: bool) -> None:
+        """Halt while a browser window shows Akashic's own address (the failsafe)."""
+        with self._status_lock:
+            self._own_address = visible
+            self._update()
 
     def announce_ready(self) -> None:
-        """The start-up "ready", unless a pause command already arrived (a restart while paused)."""
+        """The start-up "ready", or the halt that already applies (a restart while paused)."""
         with self._status_lock:
-            self._send("paused" if self.paused.is_set() else self._active)
+            self._send(self._reported())
 
 
 def _listen(ctx: ChildContext, stdin: ipc.LineReader, log: logging.Logger) -> None:
@@ -118,7 +147,10 @@ def _listen(ctx: ChildContext, stdin: ipc.LineReader, log: logging.Logger) -> No
             log.info("command %s", command)
             if command == "stop":
                 break
-            ctx.set_paused(paused=command == "pause")
+            if command in {"pause", "resume"}:
+                ctx.set_paused(paused=command == "pause")
+            else:
+                ctx.set_ui_open(ui_open=command == "ui_open")
     except (ipc.ProtocolError, OSError, ValueError) as exc:
         log.error("command channel failed: %s", type(exc).__name__)  # noqa: TRY400 - no message: may quote data
     ctx.stop.set()
@@ -134,6 +166,7 @@ def run_child(
     parser = argparse.ArgumentParser(prog=f"akashic-{name}")
     parser.add_argument("--data-dir", required=True, type=Path)
     parser.add_argument("--paused", action="store_true")
+    parser.add_argument("--ui-open", action="store_true")
     parser.add_argument("--api-port", type=int, default=None)
     args = parser.parse_args(argv)
     paths = Paths(args.data_dir)
@@ -158,10 +191,19 @@ def run_child(
             log.error("data key does not open the database")  # noqa: TRY400
             return EXIT_BAD_KEY
         ctx = ChildContext(
-            name, paths, config, key, conn, api_port=args.api_port, _status_out=stdout
+            name,
+            paths,
+            config,
+            key,
+            conn,
+            api_port=args.api_port,
+            _ui_open=args.ui_open,
+            _status_out=stdout,
         )
         if args.paused:
             ctx.paused.set()
+        if args.paused or args.ui_open:
+            ctx.halt.set()
         try:
             listener = threading.Thread(
                 target=_listen, args=(ctx, stdin, log), name="ipc", daemon=True

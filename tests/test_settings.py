@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import http.client
 import json
-import time
 import tomllib
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
@@ -13,18 +12,14 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import pytest
 from audio_fakes import RecorderRig, speech
+from memory_data import add_monitor, new_frame
 from store_reads import latest_frames
 from waits import wait_for
 
 from akashic.api.server import ApiServer, Controls, Services, new_token
 from akashic.api.settings import BY_KEY, SETTINGS, current_value
 from akashic.capture.audio import AudioSettings
-from akashic.capture.main import (
-    FAST_PUBLISH_S,
-    PUBLISH_INTERVAL_S,
-    audio_settings,
-    publish_interval,
-)
+from akashic.capture.main import audio_settings
 from akashic.config import (
     DEFAULT_CONFIG_TOML,
     Audio,
@@ -37,7 +32,7 @@ from akashic.storage import db
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import DataKey
 from akashic.storage.debuginfo import ProcessInfo
-from akashic.storage.frames import FrameStore, NewFrame
+from akashic.storage.frames import FrameStore
 from akashic.storage.media import MediaStore
 from akashic.supervisor import CHILDREN, Supervisor, spawn_module
 
@@ -168,6 +163,7 @@ def client(paths: Paths, restarts: list[bool]) -> Iterator[Client]:
     key = DataKey.generate()
     conn = db.connect(paths.db_file, key.subkey("db"))
     db.migrate(conn)
+    add_monitor(conn)
     paths.config_file.write_text(DEFAULT_CONFIG_TOML, encoding="utf-8")
     ProcessInfo(conn).publish(
         "capture",
@@ -201,6 +197,18 @@ def test_settings_are_listed_with_their_current_values_and_the_devices(client: C
     assert fields["log_level"]["choices"] == ["DEBUG", "INFO", "WARNING", "ERROR"]
     assert fields["theme"]["needs"] == "none"
     assert "path" not in out
+
+
+def test_window_titles_are_not_a_setting(client: Client, paths: Paths) -> None:
+    _, out = client.call("/api/settings")
+    assert "exclusions.window_titles" not in {f["key"] for f in out["fields"]}
+    assert not [f for f in out["fields"] if "window titles" in f["label"]]
+    old = DEFAULT_CONFIG_TOML.replace(
+        "[exclusions]\n", '[exclusions]\nwindow_titles = ["*Mon compte*"]\n', 1
+    )
+    paths.config_file.write_text(old, encoding="utf-8")
+    assert client.save({"theme": "dark"})[0] == 200
+    assert 'window_titles = ["*Mon compte*"]' in paths.config_file.read_text("utf-8")
 
 
 def test_model_choices_can_be_saved_and_are_described(client: Client, paths: Paths) -> None:
@@ -287,6 +295,7 @@ def test_bad_values_are_refused_and_the_file_is_untouched(client: Client, paths:
         ({"log_level": "LOUD"}, "one of"),
         ({"ocr_language": 5}, "must be text"),
         ({"nope.key": 1}, "unknown setting"),
+        ({"exclusions.window_titles": ["*x*"]}, "unknown setting"),
     ]
     for values, why in bad:
         status, out = client.save(values)
@@ -304,14 +313,11 @@ def test_a_broken_config_file_is_reported_not_overwritten(client: Client, paths:
     assert client.call("/api/status")[1]["theme"] == "system"
 
 
-def test_levels_restart_and_auth(client: Client, restarts: list[bool]) -> None:
-    status, levels = client.call("/api/settings/levels")
-    assert status == 200
-    assert levels["audio"]["available"]["mic"] == ["Wave:3"]
-    assert levels["age_ms"] > 0
-    now_ms = time.time_ns() // 1_000_000
-    assert publish_interval(client.conn, now_ms) == FAST_PUBLISH_S  # the meter is open
-    assert publish_interval(client.conn, now_ms + 60_000) == PUBLISH_INTERVAL_S  # closed since
+def test_the_levels_route_is_gone(client: Client) -> None:
+    assert client.call("/api/settings/levels")[0] == 404
+
+
+def test_restart_and_auth(client: Client, restarts: list[bool]) -> None:
     assert client.call("/api/settings/restart", "POST") == (200, {"restarting": True})
     assert restarts == [True]
     for method, path in (("GET", "/api/settings"), ("POST", "/api/settings/restart")):
@@ -470,8 +476,7 @@ def test_the_storage_report_lists_sizes_growth_and_free_space(client: Client, pa
 
 def test_one_kind_of_data_can_be_deleted_with_its_files(client: Client, paths: Paths) -> None:
     assert client.frames is not None
-    frame = NewFrame(1_000, 0, "click", "chrome.exe", "Tab", None, "text", "uia", b"webp")
-    client.frames.add(frame)
+    client.frames.add(new_frame(1_000, trigger="click", title="Tab", text="text", image=b"webp"))
     stored = latest_frames(client.conn, 1)[0]
     assert stored.image_path is not None
     assert (paths.media_dir / (stored.image_path + ".enc")).exists()
@@ -486,7 +491,7 @@ def test_everything_recorded_can_be_deleted_but_the_setup_stays(
     client: Client, paths: Paths
 ) -> None:
     assert client.frames is not None
-    client.frames.add(NewFrame(1_000, 0, "click", "chrome.exe", "Tab", None, "text", "uia", b"x"))
+    client.frames.add(new_frame(1_000, trigger="click", title="Tab", text="text", image=b"x"))
     client.conn.execute("INSERT INTO speakers (name, is_self, created_ms) VALUES ('Minlo', 0, 0)")
     client.conn.execute("INSERT INTO questions (asked_ms, text) VALUES (0, 'what?')")
     status, out = client.call("/api/settings/storage", "DELETE")
@@ -502,7 +507,7 @@ def test_everything_recorded_can_be_deleted_but_the_setup_stays(
 
 def test_media_only_deletion_keeps_searchable_text(client: Client, paths: Paths) -> None:
     assert client.frames is not None
-    frame = client.frames.add(NewFrame(1000, 0, "click", text="retained screen", image_webp=b"x"))
+    frame = client.frames.add(new_frame(1000, trigger="click", text="retained screen", image=b"x"))
     audio = AudioStore(client.conn, MediaStore(paths.media_dir, DataKey.generate().subkey("media")))
     segment = audio.add(NewSegment("system", 1000, 5000, 4000), b"opus", 0)
     audio.set_transcript(segment, "done", "en", "retained speech")
@@ -510,7 +515,9 @@ def test_media_only_deletion_keeps_searchable_text(client: Client, paths: Paths)
     assert client.call("/api/settings/storage/screenshots", "DELETE")[0] == 200
     assert client.call("/api/settings/storage/raw_audio", "DELETE")[0] == 200
     assert client.conn.execute(
-        "SELECT text, image_path FROM frames WHERE id = ?", (frame,)
+        "SELECT w.text, f.image_path FROM frames f JOIN frame_windows w ON w.frame_id = f.id"
+        " WHERE f.id = ?",
+        (frame,),
     ).fetchone() == ("retained screen", None)
     assert client.conn.execute(
         "SELECT transcript, audio_path FROM audio_segments WHERE id = ?", (segment,)

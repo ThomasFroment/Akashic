@@ -9,14 +9,14 @@ from typing import TYPE_CHECKING
 import pytest
 import sqlcipher3
 from clock_fakes import SWITCH, LocalParis
-from memory_data import NOW
+from memory_data import NOW, add_monitor, app_window, new_frame
 from store_reads import latest_frames
 
 from akashic.storage import audio as audio_storage
 from akashic.storage import frames
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import DataKey, DecryptionError
-from akashic.storage.frames import FrameStore, NewFrame, image_rel_path
+from akashic.storage.frames import FrameStore, NewFrame, NewWindow, image_rel_path
 from akashic.storage.media import MediaPathError, MediaStore
 from akashic.storage.retention import DAY_MS, expire_raw_audio, expire_screenshots
 
@@ -74,63 +74,140 @@ def test_media_failed_write_leaves_no_temp_file(
 
 
 def test_add_and_read_frame(conn: Connection, media: MediaStore) -> None:
+    add_monitor(conn, 1)
     store = FrameStore(conn, media)
     frame_id = store.add(
         NewFrame(
             ts_ms=1_700_000_000_123,
-            monitor=1,
+            monitor_id=1,
             trigger="click",
-            process="chrome.exe",
-            window_title="Bonjour",
-            url="https://example.com",
-            text="un café crème",
-            text_source="uia",
             image_webp=b"webp-bytes",
+            windows=(
+                app_window(
+                    title="Bonjour",
+                    url="https://example.com",
+                    text="un café crème",
+                    source="uia",
+                    painted=True,
+                ),
+            ),
         )
     )
     stored = store.get(frame_id)
     assert stored is not None
-    assert (stored.process, stored.url, stored.text_source) == (
-        "chrome.exe",
-        "https://example.com",
-        "uia",
+    assert (stored.id, stored.ts_ms, stored.monitor_id, stored.trigger) == (
+        frame_id,
+        1_700_000_000_123,
+        1,
+        "click",
     )
+    (window,) = stored.windows
+    assert (window.process, window.title, window.url) == (
+        "chrome.exe",
+        "Bonjour",
+        "https://example.com",
+    )
+    assert (window.text, window.text_source, window.painted) == ("un café crème", "uia", True)
     assert stored.image_path == image_rel_path(1_700_000_000_123, 1)
-    assert store.image(stored) == b"webp-bytes"
     assert stored.image_path is not None
     assert stored.image_path.endswith("/1700000000123_m1.webp")
+    assert store.image_path(frame_id) == stored.image_path
+    assert store.image(stored.image_path) == b"webp-bytes"
+    assert store.image_path(999) is None
 
 
-def test_frame_without_image_and_listing(conn: Connection, media: MediaStore) -> None:
+def test_frames_with_a_focused_window_without_one_and_with_none_store_the_same_columns(
+    conn: Connection, media: MediaStore
+) -> None:
+    add_monitor(conn)
     store = FrameStore(conn, media)
-    first = store.add(NewFrame(ts_ms=1000, monitor=0, trigger="idle"))
-    second = store.add(NewFrame(ts_ms=2000, monitor=0, trigger="focus", text="hello"))
+    focused = app_window(process="chrome.exe", title="Docs", url="https://x.test", z=1, hwnd=2)
+    unfocused = app_window(process="code.exe", title="main.py", hwnd=1, focused=False)
+    ids = [
+        store.add(NewFrame(1, 0, "idle", windows=(unfocused, focused))),
+        store.add(NewFrame(2, 0, "idle", windows=(unfocused,))),
+        store.add(NewFrame(3, 0, "idle")),
+    ]
+    for frame_id in ids:
+        row = conn.execute("SELECT * FROM frames WHERE id = ?", (frame_id,)).fetchone()
+        assert len(row) == 5
+    counts = [
+        conn.execute("SELECT count(*) FROM frame_windows WHERE frame_id = ?", (i,)).fetchone()[0]
+        for i in ids
+    ]
+    assert counts == [2, 1, 0]
+    assert conn.execute(
+        "SELECT process, title, url, focused FROM frame_windows WHERE frame_id = ? AND focused",
+        (ids[0],),
+    ).fetchall() == [("chrome.exe", "Docs", "https://x.test", 1)]
+
+
+def test_windows_come_back_in_z_order_with_every_field(conn: Connection, media: MediaStore) -> None:
+    add_monitor(conn)
+    store = FrameStore(conn, media)
+    back = NewWindow("hidden", 2, None, 0, 0, 50, 50)
+    shell = NewWindow("shell", 3, 5, 0, 0, 10, 10)
+    front = app_window(z=0, hwnd=7, text="devant", source="ocr")
+    frame_id = store.add(NewFrame(1, 0, "idle", windows=(back, shell, front)))
+    stored = store.get(frame_id)
+    assert stored is not None
+    assert [(w.role, w.z) for w in stored.windows] == [("app", 0), ("hidden", 2), ("shell", 3)]
+    assert stored.windows[0].hwnd == 7
+    assert (stored.windows[1].left, stored.windows[1].right) == (0, 50)
+    assert stored.windows[0].id != stored.windows[1].id
+    assert store.get(999) is None
+
+
+def test_a_frame_without_windows_or_image_is_accepted(conn: Connection, media: MediaStore) -> None:
+    add_monitor(conn)
+    store = FrameStore(conn, media)
+    first = store.add(NewFrame(ts_ms=1000, monitor_id=0, trigger="idle"))
+    second = store.add(new_frame(2000, 0, "focus", text="hello"))
     assert [f.id for f in latest_frames(conn)] == [second, first]
     assert latest_frames(conn, 1)[0].id == second
     plain = store.get(first)
     assert plain is not None
     assert plain.image_path is None
-    assert store.image(plain) is None
-    assert store.get(999) is None
+    assert plain.windows == ()
+    assert store.image_path(first) is None
+
+
+def test_a_windows_text_is_stored_again_on_every_frame(conn: Connection, media: MediaStore) -> None:
+    add_monitor(conn)
+    store = FrameStore(conn, media)
+    for ts in (1, 2, 3):
+        store.add(new_frame(ts, text="same words"))
+    assert conn.execute(
+        "SELECT count(*) FROM frame_windows WHERE text = 'same words'"
+    ).fetchone() == (3,)
 
 
 def test_full_text_search_ignores_diacritics(conn: Connection, media: MediaStore) -> None:
+    add_monitor(conn)
     store = FrameStore(conn, media)
-    frame_id = store.add(NewFrame(ts_ms=1, monitor=0, trigger="idle", text="Un café à Paris"))
-    rows = conn.execute("SELECT rowid FROM frames_fts WHERE frames_fts MATCH 'cafe'").fetchall()
-    assert rows == [(frame_id,)]
+    store.add(new_frame(1, text="Un café à Paris"))
+    window = conn.execute("SELECT id FROM frame_windows").fetchone()[0]
+    rows = conn.execute(
+        "SELECT rowid FROM frame_windows_fts WHERE frame_windows_fts MATCH 'cafe'"
+    ).fetchall()
+    assert rows == [(window,)]
 
 
+@pytest.mark.parametrize(
+    "windows",
+    [
+        (app_window(focused=True, hwnd=1, z=0), app_window(focused=True, hwnd=2, z=1)),
+        (NewWindow("hidden", 0, None, 0, 0, 1, 1, title="x"),),
+    ],
+    ids=["two focused", "hidden with a title"],
+)
 def test_failed_row_insert_removes_the_image(
-    conn: Connection, media: MediaStore, paths: Paths
+    conn: Connection, media: MediaStore, paths: Paths, windows: tuple[NewWindow, ...]
 ) -> None:
+    add_monitor(conn)
     store = FrameStore(conn, media)
-    bad = NewFrame(
-        ts_ms=5, monitor=0, trigger="idle", text_source="nope",  # pyright: ignore[reportArgumentType]
-        image_webp=b"pixels",
-    )  # fmt: skip
     with pytest.raises(sqlcipher3.IntegrityError):
-        store.add(bad)
+        store.add(NewFrame(5, 0, "idle", image_webp=b"pixels", windows=windows))
     assert not list(paths.media_dir.rglob("*.enc"))
     assert latest_frames(conn) == []
 
@@ -150,6 +227,12 @@ def audio_store(conn: Connection, media: MediaStore) -> AudioStore:
 
 def shot(ts_ms: int, monitor: int = 0, data: bytes = b"img") -> NewFrame:
     return NewFrame(ts_ms, monitor, "idle", image_webp=data)
+
+
+@pytest.fixture(autouse=True)
+def _monitors(conn: Connection) -> None:  # pyright: ignore[reportUnusedFunction] - autouse
+    add_monitor(conn, 0)
+    add_monitor(conn, 1)
 
 
 def clip(start_ms: int, stream: Stream = "mic") -> NewSegment:
@@ -189,11 +272,8 @@ def test_captures_one_real_hour_apart_at_the_fall_back_keep_their_own_bytes(
     one, two = frame_path(frame_store, first), frame_path(frame_store, second)
     assert one != two
     assert one.startswith("2026/10/25/")
-    stored_one, stored_two = frame_store.get(first), frame_store.get(second)
-    assert stored_one is not None
-    assert stored_two is not None
-    assert frame_store.image(stored_one) == b"summer"
-    assert frame_store.image(stored_two) == b"winter"
+    assert frame_store.image(one) == b"summer"
+    assert frame_store.image(two) == b"winter"
     seg_a = audio_store.add(clip(summer), b"summer-audio", NOW)
     seg_b = audio_store.add(clip(winter), b"winter-audio", NOW)
     assert segment_path(audio_store, seg_a) != segment_path(audio_store, seg_b)
@@ -212,9 +292,7 @@ def test_deleting_one_of_two_hour_apart_files_leaves_the_other(
     first = frame_store.add(shot(summer, data=b"summer"))
     second = frame_store.add(shot(summer + 3_600_000, data=b"winter"))
     assert expire_screenshots(conn, media, summer + 1) == 1
-    kept = frame_store.get(second)
-    assert kept is not None
-    assert frame_store.image(kept) == b"winter"
+    assert frame_store.image(frame_path(frame_store, second)) == b"winter"
     gone = frame_store.get(first)
     assert gone is not None
     assert gone.image_path is None
@@ -253,9 +331,7 @@ def test_frames_with_the_same_instant_and_monitor_get_their_own_files(
     all_paths = [frame_path(frame_store, i) for i in ids]
     assert len(set(all_paths)) == 3
     for i, frame_id in enumerate(ids):
-        stored = frame_store.get(frame_id)
-        assert stored is not None
-        assert frame_store.image(stored) == f"image-{i}".encode()
+        assert frame_store.image(frame_path(frame_store, frame_id)) == f"image-{i}".encode()
     media.delete(all_paths[1])  # independent delete
     assert not media.exists(all_paths[1])
     assert media.read(all_paths[0]) == b"image-0"
@@ -339,7 +415,7 @@ def test_old_format_paths_still_read_and_delete(
     media.write_unique(old_image, b"legacy image")
     media.write_unique(old_audio, b"legacy audio")
     conn.execute(
-        "INSERT INTO frames (ts_ms, monitor, trigger, image_path)"
+        "INSERT INTO frames (ts_ms, monitor_id, trigger, image_path)"
         " VALUES (1700000000123, 1, 'idle', ?)",
         (old_image,),
     )
@@ -349,7 +425,8 @@ def test_old_format_paths_still_read_and_delete(
         (old_audio,),
     )
     frame = latest_frames(conn, 1)[0]
-    assert frame_store.image(frame) == b"legacy image"
+    assert frame.image_path == old_image
+    assert frame_store.image(old_image) == b"legacy image"
     segment_id = conn.execute("SELECT id FROM audio_segments").fetchone()[0]
     segment = audio_store.get(segment_id)
     assert segment is not None

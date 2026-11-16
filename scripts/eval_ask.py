@@ -67,7 +67,6 @@ from eval_scoring import (
 from akashic.config import Paths, default_data_dir
 from akashic.pipeline.ask import AskHandler
 from akashic.pipeline.embed import EMBED, EmbedHandler, enqueue_missing
-from akashic.pipeline.jobs import Job, JobQueue
 from akashic.pipeline.llm import (
     CHAT_FLAGS,
     EMBEDDING_FLAGS,
@@ -78,6 +77,7 @@ from akashic.pipeline.llm import (
 from akashic.pipeline.main import windows_launcher
 from akashic.pipeline.models import LLAMA_RUNTIME, runtime_program
 from akashic.storage import db
+from akashic.storage.jobs import Job, JobQueue
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
@@ -667,6 +667,9 @@ def build_world(
     speakers["You"] = int(
         conn.execute("INSERT INTO speakers (name, is_self, created_ms) VALUES (NULL, 1, 0)").lastrowid or 0
     )  # fmt: skip
+    monitor_id = conn.execute(
+        "INSERT INTO monitors (key, name) VALUES ('index:0', 'Monitor 1') RETURNING id"
+    ).fetchone()[0]
     ids: dict[str, int] = {}
     for ep in world:
         start, end = ep_span(today, ep)
@@ -717,10 +720,15 @@ def build_world(
             )
         screen = ep.frame or (f"{ep.title} {CHANNELS.get(ep.key, '')}".strip() if ep.kind == "video" else "")  # fmt: skip
         if screen:
+            frame_id = conn.execute(
+                "INSERT INTO frames (ts_ms, monitor_id, trigger) VALUES (?, ?, 'idle')",
+                (start + 2 * MINUTE_MS, monitor_id),
+            ).lastrowid
             conn.execute(
-                "INSERT INTO frames (ts_ms, monitor, process, window_title, text, text_source,"
-                " trigger) VALUES (?, 0, ?, ?, ?, 'uia', 'idle')",
-                (start + 2 * MINUTE_MS, ep.app, ep.title, screen),
+                "INSERT INTO frame_windows (frame_id, role, z, hwnd, x0, y0, x1, y1, process,"
+                " title, focused, text, text_source)"
+                " VALUES (?, 'app', 0, 1, 0, 0, 1920, 1080, ?, ?, 1, ?, 'uia')",
+                (frame_id, ep.app, ep.title, screen),
             )
     return ids
 
@@ -740,7 +748,7 @@ def index_memory(conn: Connection, embedder: Embedder, at_ms: int) -> dict[str, 
         ("episode_vectors", "SELECT count(*) FROM embeddings WHERE owner_kind = 'episode'"),
         ("segment_vectors", "SELECT count(*) FROM embeddings WHERE owner_kind = 'segment'"),
         ("segment_passages", "SELECT count(*) FROM segment_passages"),
-        ("frame_passages", "SELECT count(*) FROM frame_passages"),
+        ("window_passages", "SELECT count(*) FROM window_passages"),
     ):
         counts[name] = int(conn.execute(sql).fetchone()[0])
     return counts

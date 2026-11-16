@@ -9,18 +9,19 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar
 
 import pytest
+from memory_data import add_monitor, new_frame
 from waits import wait_for
 
 from akashic.child import ChildContext
 from akashic.config import Config
 from akashic.config import Scheduler as SchedulerSettings
 from akashic.pipeline import main as worker
-from akashic.pipeline.jobs import Job, JobQueue, NewJob, PermanentJobError
 from akashic.pipeline.runner import BACKLOG_OFF, BACKLOG_ON, JobRunner
 from akashic.pipeline.scheduler import Scheduler
 from akashic.storage import db
 from akashic.storage.crypto import DataKey
-from akashic.storage.frames import FrameStore, NewFrame
+from akashic.storage.frames import FrameStore
+from akashic.storage.jobs import Job, JobQueue, NewJob, PermanentJobError
 from akashic.storage.sessions import GameLog
 
 if TYPE_CHECKING:
@@ -273,8 +274,9 @@ def test_worker_loop_derives_sessions_runs_jobs_and_reports_backlog(
     key = DataKey.generate()
     with closing(db.connect(paths.db_file, key.subkey("db"))) as conn:
         db.migrate(conn)
+        add_monitor(conn)
         FrameStore(conn, None).add(  # pyright: ignore[reportArgumentType] - no image is written
-            NewFrame(ts_ms=1000, monitor=0, trigger="focus", process="a.exe", window_title="T")
+            new_frame(1000, trigger="focus", process="a.exe", title="T")
         )
         handler = Handler()
         runner, queue = make_runner(conn, FakeLoad(), handler)

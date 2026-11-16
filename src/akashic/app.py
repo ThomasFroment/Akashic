@@ -63,6 +63,7 @@ def _overall_state(supervisor: Supervisor) -> str:
         "gaming": "gaming",
         "degraded": "degraded",
         "paused": "paused",
+        "ui_paused": "ui_open",
         "crashed": "restarting",
         "starting": "starting",
     }.get(state, "stopped")
@@ -162,7 +163,7 @@ def _remember_paused(services: Services | None, paused: bool) -> None:  # noqa: 
         log.warning("could not remember pause: %s", type(exc).__name__)
 
 
-def _run(paths: Paths, key: DataKey) -> Outcome:
+def _run(paths: Paths, key: DataKey, *, open_ui_at_start: bool) -> Outcome:
     """Everything that runs while the app is unlocked. Returns when the user quits or locks."""
     # No pause can arrive before `services` is assigned: nothing sends one before start().
     services: Services | None = None
@@ -195,6 +196,7 @@ def _run(paths: Paths, key: DataKey) -> Outcome:
             autostart_get=autostart.is_enabled,
             autostart_set=_set_autostart,
             while_stopped=supervisor.while_stopped,
+            set_ui_open=supervisor.set_ui_open,
         )
         debug = DebugSources(
             data_dir=paths.root,
@@ -214,6 +216,7 @@ def _run(paths: Paths, key: DataKey) -> Outcome:
             _ask_blocker(paths),
             Downloads(paths.models_dir, paths.runtime_dir, lambda: _required(paths)),
         )
+        presence = services.presence
         server = api = ApiServer(services)
         supervisor.set_api_port(server.port)
         supervisor.start(paused=start_paused)
@@ -239,11 +242,13 @@ def _run(paths: Paths, key: DataKey) -> Outcome:
         def monitor() -> None:
             while not quitting.wait(1.0):
                 supervisor.poll()
+                presence.expire()
                 tray.refresh()
             tray.stop()
 
         threading.Thread(target=monitor, name="monitor", daemon=True).start()
-        open_ui()
+        if open_ui_at_start:
+            open_ui()
         tray.run()
     except KeyboardInterrupt:
         log.info("interrupted")
@@ -266,14 +271,18 @@ def main() -> int:
     _crash_log = enable_crash_log(paths.logs_dir, "app")  # stays open
     log.info("starting")
 
+    first_run = not paths.keyfile.exists()
+
     def run(key: DataKey) -> Outcome:
-        outcome = _run(paths, key)
+        nonlocal first_run
+        outcome = _run(paths, key, open_ui_at_start=first_run)
+        first_run = False
         log.info("locked" if outcome == "lock" else "stopped")
         return outcome
 
     try:
         run_until_quit(lambda: unlock(paths, TkUnlockUI()), run)
-    except (UnlockError, KeyfileError) as exc:
+    except (UnlockError, KeyfileError, db.StaleSchemaError) as exc:
         show_error(str(exc))
         return 2
     return 0

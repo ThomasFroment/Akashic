@@ -10,10 +10,10 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from akashic.config import Paths, load_config
-from akashic.pipeline.jobs import NewJob, enqueue_in
 from akashic.pipeline.models import SPEECH_CANDIDATES, is_ready
 from akashic.pipeline.stt_compare import STT_COMPARE, term_score
 from akashic.storage import db
+from akashic.storage.jobs import NewJob, enqueue_in
 
 if TYPE_CHECKING:
     from akashic.api.server import Services

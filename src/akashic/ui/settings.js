@@ -1,8 +1,6 @@
 "use strict";
 // Settings: every option of config.toml worth changing from here, saved back into that file.
-// Uses the helpers of app.js (h, api, getJson, view, setActive, cleanup, applyTheme).
-// A live microphone meter sits with the voice settings so the energy floor can be set by looking
-// at your real voice level instead of guessing.
+// Uses the helpers of app.js (h, api, getJson, sendJson, view, setActive, cleanup, pageHead, applyTheme) and debugView.
 
 const SETTINGS_TABS = [
   ["general", "General"], ["capture", "Capture"], ["audio", "Audio"],
@@ -36,7 +34,6 @@ function build(root, data, tab) {
   const status = h("span", { class: "msg muted small" });
   const saveBtn = h("button", { type: "button", class: "primary", disabled: true }, "Save");
   const restartBtn = h("button", { type: "button", hidden: true }, "Restart recording now");
-  const meter = micMeter(() => Number(controls.get("audio.energy_floor")?.read() ?? 0));
   const storage = storagePanel();
   const deletePanel = dataDeletionPanel();
   const modelDownloads = tab === "models" ? modelsPanel() : null;
@@ -96,7 +93,7 @@ function build(root, data, tab) {
       groups.set(group, box);
       const section = h("section", { class: "settings-section", "data-group": group }, h("h2", {}, group), box);
       sections.push(section);
-      if (group === "Microphone and voice") box.append(meter.el);
+      if (group === "Microphone and voice") box.append(h("div", { class: "meter-box muted small" }, "Levels are not available while Akashic is open."));
       if (group === "Retention") box.append(storage.el);
     }
     const c = control(field);
@@ -186,7 +183,7 @@ function build(root, data, tab) {
     speechTests?.el,
     savebar].filter(Boolean));
   refresh();
-  return tab === "audio" ? meter.start() : speechTests ? speechTests.start() : 0;
+  return speechTests ? speechTests.start() : 0;
 }
 
 const STORAGE_KIND_LABELS = { screenshots: "Screenshots", frame_text: "Screen text", raw_audio: "Recorded audio", transcripts: "Transcripts", media_sessions: "Media sessions", app_sessions: "App sessions", episodes: "Episodes", embeddings: "Search vectors" };
@@ -294,41 +291,4 @@ function storagePanel() {
       s.low_space ? h("div", { class: "msg bad small" }, `Less than ${s.warn_below_gb} GB free. Nothing is deleted automatically: shorten a limit below, or pause screenshots.`) : null].filter(Boolean));
   }).catch(() => el.replaceChildren(h("div", { class: "muted small" }, "Cannot measure the disk use.")));
   return { el };
-}
-
-// The live voice level, from the capture process (about once a second).
-function micMeter(getFloor) {
-  const loudFill = h("div", { class: "fill" });
-  const voiceFill = h("div", { class: "fill" });
-  const voiceMark = h("div", { class: "mark", title: "Energy floor" });
-  const loudText = h("span", { class: "mono" });
-  const voiceText = h("span", { class: "mono" });
-  const hint = h("div", { class: "muted small" }, "Waiting for the recorder…");
-  const row = (label, fill, text, mark) => h("div", { class: "meter-row" }, h("span", {}, label),
-    h("div", { class: "meter" }, fill, mark || null), text);
-  const el = h("div", { class: "meter-box", "aria-live": "off" },
-    row("Loudest moment", loudFill, loudText),
-    row("Your voice", voiceFill, voiceText, voiceMark), hint);
-  // Levels are small numbers: a square-root scale makes quiet speech visible.
-  const pos = (v) => Math.min(100, Math.sqrt(Math.max(v, 0) / 0.4) * 100) + "%";
-
-  async function poll() {
-    let r;
-    try { r = await getJson("/api/settings/levels"); } catch { return; }
-    const mic = r.audio && r.audio.streams && r.audio.streams.mic;
-    if (r.age_ms === null || r.age_ms > 6000 || !mic) {
-      hint.textContent = "The recorder is not reporting (stopped, paused or restarting).";
-      return;
-    }
-    const floor = getFloor();
-    loudFill.style.width = pos(mic.level_max);
-    loudText.textContent = mic.level_max.toFixed(3);
-    voiceFill.style.width = pos(mic.speech_level ?? 0);
-    voiceText.textContent = mic.speech_level === null ? "–" : mic.speech_level.toFixed(3);
-    voiceMark.style.left = pos(floor);
-    if (mic.speech_level === null) hint.textContent = `Speak normally. No speech heard in the last second. The marker is the energy floor (${floor}); your voice must reach past it. Gain and sensitivity changes show here after restarting the recorder.`;
-    else if (mic.speech_level < floor) hint.textContent = `Your voice (${mic.speech_level.toFixed(3)}) is below the energy floor (${floor}): it would be dropped. Lower the floor or raise the gain.`;
-    else hint.textContent = `Your voice (${mic.speech_level.toFixed(3)}) is above the energy floor (${floor}): it is kept.`;
-  }
-  return { el, start() { poll(); return setInterval(poll, 1000); } };
 }

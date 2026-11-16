@@ -4,20 +4,23 @@ Each data type has its own age limit (``config.toml`` ``[retention]``; ``None`` 
 default). Age is the *capture* time of the data, never when it was processed. What each type
 removes, and what that leaves behind:
 
-- ``screenshots``: the encrypted image file; the frame row (text, window, URL) stays.
-- ``frame_text``: the text of a frame, and its full-text index entry; the screenshot stays.
+- ``screenshots``: the encrypted image file and the window captures whose OCR job is not queued
+  or running; the frame row and its window rows (text, window, URL) stay.
+- ``frame_text``: the text of each window of a frame, and its full-text index entry; the
+  screenshot stays.
 - ``raw_audio``: the encrypted Opus file; the segment row and its transcript stay.
 - ``transcripts``: the transcript of a segment, and its index entry; the audio stays.
 - ``media_sessions`` / ``app_sessions``: the closed session rows (and, for media, their events).
   Game sessions follow ``app_sessions``.
 
 A row with nothing left to keep is removed too, so nothing is orphaned: a frame goes once both its
-screenshot and its text have expired; an audio segment once both its audio and its transcript
-have (its speaker turns go with it; speaker profiles are not time-bound and stay).
+screenshot and the text of all its windows have expired (its window rows go with it); an audio
+segment once both its audio and its transcript have (its speaker turns go with it; speaker
+profiles are not time-bound and stay).
 
 Safety rules:
 
-- Work that is still queued is never taken away: a screenshot waiting for deferred OCR and audio
+- Work that is still queued is never taken away: a window capture waiting for deferred OCR and audio
   waiting for transcription or speaker identification are kept until the job has run.
 - The newest app session is always kept: it carries the watermark that stops the derivation from
   rebuilding sessions out of frames that still exist.
@@ -34,6 +37,12 @@ Safety rules:
   Closed rows are kept until the longest limit, and only when every type has one, so a gap never
   expires while evidence from its period can still exist. With any type on "forever" they are
   kept until Delete all. Open rows are never deleted.
+
+- monitor history (layout and state runs): follows the frame rows, so it is deleted when both
+  ``screenshots`` and ``frame_text`` have limits, at the earlier of the two cutoffs. State runs
+  go once last confirmed before it, except each monitor's current run; a layout run goes once a
+  later one has started by then, so the latest layout always stays. The ``monitors``
+  identity rows are never expired.
 
 Nothing is ever deleted to free disk space on its own: only these age limits delete anything.
 """
@@ -102,16 +111,38 @@ def _marks(ids: list[int]) -> str:
     return ",".join("?" * len(ids))
 
 
+def _clear_references(
+    conn: Connection, media: MediaStore, table: str, column: str, rows: _Rows
+) -> int:
+    """Delete the files of ``rows``, then set ``column`` to NULL for the ones that are gone."""
+    gone = _delete_files(media, rows)
+    if gone:
+        with db.transaction(conn):
+            conn.execute(
+                f"UPDATE {table} SET {column} = NULL WHERE id IN ({_marks(gone)})",  # noqa: S608
+                gone,
+            )
+    return len(gone)
+
+
 # --- screen ---------------------------------------------------------------------------------
 
 
 def _expirable_screenshots(conn: Connection, after: int, cutoff_ms: int) -> _Rows:
     return conn.execute(
         "SELECT id, image_path FROM frames f WHERE id > ? AND ts_ms < ?"
-        " AND image_path IS NOT NULL"
-        " AND NOT EXISTS (SELECT 1 FROM jobs WHERE key = 'ocr_frame:' || f.id"
+        " AND image_path IS NOT NULL ORDER BY id LIMIT ?",
+        (after, cutoff_ms, BATCH),
+    ).fetchall()
+
+
+def _expirable_captures(conn: Connection, after: int, cutoff_ms: int) -> _Rows:
+    return conn.execute(
+        "SELECT w.id, w.capture_path FROM frame_windows w JOIN frames f ON f.id = w.frame_id"
+        " WHERE w.id > ? AND f.ts_ms < ? AND w.capture_path IS NOT NULL"
+        " AND NOT EXISTS (SELECT 1 FROM jobs WHERE key = 'ocr_window:' || w.id"
         "                 AND state IN ('pending', 'running'))"
-        " ORDER BY id LIMIT ?",
+        " ORDER BY w.id LIMIT ?",
         (after, cutoff_ms, BATCH),
     ).fetchall()
 
@@ -128,20 +159,19 @@ def _expirable_audio(conn: Connection, after: int, cutoff_ms: int) -> _Rows:
 
 
 def expire_screenshots(conn: Connection, media: MediaStore, cutoff_ms: int) -> int:
-    def fetch(after: int) -> _Rows:
+    def fetch_images(after: int) -> _Rows:
         return _expirable_screenshots(conn, after, cutoff_ms)
 
-    def handle(rows: _Rows) -> int:
-        gone = _delete_files(media, rows)
-        if gone:
-            with db.transaction(conn):
-                conn.execute(
-                    f"UPDATE frames SET image_path = NULL WHERE id IN ({_marks(gone)})",  # noqa: S608
-                    gone,
-                )
-        return len(gone)
+    def fetch_captures(after: int) -> _Rows:
+        return _expirable_captures(conn, after, cutoff_ms)
 
-    return _batches(fetch, handle)
+    def clear_images(rows: _Rows) -> int:
+        return _clear_references(conn, media, "frames", "image_path", rows)
+
+    def clear_captures(rows: _Rows) -> int:
+        return _clear_references(conn, media, "frame_windows", "capture_path", rows)
+
+    return _batches(fetch_images, clear_images) + _batches(fetch_captures, clear_captures)
 
 
 def expire_frame_text(conn: Connection, _media: MediaStore, cutoff_ms: int) -> int:
@@ -149,8 +179,9 @@ def expire_frame_text(conn: Connection, _media: MediaStore, cutoff_ms: int) -> i
     while True:
         with db.transaction(conn):
             changed = conn.execute(
-                "UPDATE frames SET text = NULL, text_source = NULL WHERE id IN"
-                " (SELECT id FROM frames WHERE ts_ms < ? AND text IS NOT NULL LIMIT ?)",
+                "UPDATE frame_windows SET text = NULL, text_source = NULL WHERE id IN"
+                " (SELECT w.id FROM frame_windows w JOIN frames f ON f.id = w.frame_id"
+                " WHERE f.ts_ms < ? AND w.text IS NOT NULL LIMIT ?)",
                 (cutoff_ms, BATCH),
             ).rowcount
         total += changed
@@ -159,15 +190,20 @@ def expire_frame_text(conn: Connection, _media: MediaStore, cutoff_ms: int) -> i
 
 
 def delete_spent_frames(conn: Connection, cutoff_ms: int) -> int:
-    """Frames older than ``cutoff_ms`` whose screenshot is gone. Only called when the text has
-    expired for them too, so nothing but window metadata is lost with the row."""
+    """Frames older than ``cutoff_ms`` whose screenshot is gone and whose windows hold no text
+    and no capture.
+    Only called when the text has expired for them too, so nothing but window metadata is lost
+    with the row."""
     total = 0
     while True:
         with db.transaction(conn):
             changed = conn.execute(
                 "DELETE FROM frames WHERE id IN"
-                " (SELECT id FROM frames WHERE ts_ms < ? AND image_path IS NULL"
-                " AND text IS NULL LIMIT ?)",
+                " (SELECT id FROM frames f WHERE ts_ms < ? AND image_path IS NULL"
+                " AND NOT EXISTS (SELECT 1 FROM frame_windows w"
+                "                 WHERE w.frame_id = f.id"
+                "                 AND (w.text IS NOT NULL OR w.capture_path IS NOT NULL))"
+                " LIMIT ?)",
                 (cutoff_ms, BATCH),
             ).rowcount
         total += changed
@@ -183,14 +219,7 @@ def expire_raw_audio(conn: Connection, media: MediaStore, cutoff_ms: int) -> int
         return _expirable_audio(conn, after, cutoff_ms)
 
     def handle(rows: _Rows) -> int:
-        gone = _delete_files(media, rows)
-        if gone:
-            with db.transaction(conn):
-                conn.execute(
-                    f"UPDATE audio_segments SET audio_path = NULL WHERE id IN ({_marks(gone)})",  # noqa: S608
-                    gone,
-                )
-        return len(gone)
+        return _clear_references(conn, media, "audio_segments", "audio_path", rows)
 
     return _batches(fetch, handle)
 
@@ -280,6 +309,28 @@ def expire_capture_gaps(conn: Connection, cutoff_ms: int) -> int:
             return total
 
 
+def expire_monitor_history(conn: Connection, cutoff_ms: int) -> int:
+    total = 0
+    while True:
+        with db.transaction(conn):
+            changed = conn.execute(
+                "DELETE FROM monitor_states WHERE id IN"
+                " (SELECT id FROM monitor_states WHERE checked_ms < ?"
+                "  AND id NOT IN (SELECT MAX(id) FROM monitor_states GROUP BY monitor_id)"
+                "  LIMIT ?)",
+                (cutoff_ms, BATCH),
+            ).rowcount
+            changed += conn.execute(  # members go with each layout run
+                "DELETE FROM monitor_layouts WHERE id IN"
+                " (SELECT id FROM monitor_layouts WHERE start_ms <"
+                "  (SELECT MAX(start_ms) FROM monitor_layouts WHERE start_ms <= ?) LIMIT ?)",
+                (cutoff_ms, BATCH),
+            ).rowcount
+        total += changed
+        if changed < BATCH:
+            return total
+
+
 # --- search data ----------------------------------------------------------------------------
 
 
@@ -313,9 +364,10 @@ def expire_embeddings(conn: Connection, _media: MediaStore, cutoff_ms: int) -> i
                 (cutoff_ms, BATCH),
             ).rowcount
             frame_rows = conn.execute(
-                "DELETE FROM frame_passages WHERE rowid IN"
-                " (SELECT p.rowid FROM frame_passages p JOIN frames f"
-                " ON f.id = p.frame_id WHERE f.ts_ms < ? LIMIT ?)",
+                "DELETE FROM window_passages WHERE rowid IN"
+                " (SELECT p.rowid FROM window_passages p JOIN frame_windows w"
+                " ON w.id = p.window_id JOIN frames f ON f.id = w.frame_id"
+                " WHERE f.ts_ms < ? LIMIT ?)",
                 (cutoff_ms, BATCH),
             ).rowcount
         total += changed + passage_rows + frame_rows
@@ -323,9 +375,9 @@ def expire_embeddings(conn: Connection, _media: MediaStore, cutoff_ms: int) -> i
             return total
 
 
-_MEDIA_FETCHERS: Final[dict[str, Callable[[Connection, int, int], _Rows]]] = {
-    "screenshots": _expirable_screenshots,
-    "raw_audio": _expirable_audio,
+_MEDIA_FETCHERS: Final[dict[str, tuple[Callable[[Connection, int, int], _Rows], ...]]] = {
+    "screenshots": (_expirable_screenshots, _expirable_captures),
+    "raw_audio": (_expirable_audio,),
 }
 
 
@@ -336,15 +388,15 @@ def unreleased_media_references(
     references outside the media directory and files that could not be deleted. Both are
     empty for kinds that delete no files."""
     left = {BAD_MEDIA_PATHS: 0, LOCKED_MEDIA_FILES: 0}
-    fetch = _MEDIA_FETCHERS.get(kind)
-    last_id = 0
-    while fetch is not None:
-        rows = fetch(conn, last_id, cutoff_ms)
-        for _, rel_path in rows:
-            left[LOCKED_MEDIA_FILES if media.is_inside(rel_path) else BAD_MEDIA_PATHS] += 1
-        if len(rows) < BATCH:
-            break
-        last_id = max(row_id for row_id, _ in rows)
+    for fetch in _MEDIA_FETCHERS.get(kind, ()):
+        last_id = 0
+        while True:
+            rows = fetch(conn, last_id, cutoff_ms)
+            for _, rel_path in rows:
+                left[LOCKED_MEDIA_FILES if media.is_inside(rel_path) else BAD_MEDIA_PATHS] += 1
+            if len(rows) < BATCH:
+                break
+            last_id = max(row_id for row_id, _ in rows)
     return left
 
 
@@ -384,6 +436,7 @@ def apply_retention(
     if "screenshots" in cutoffs and "frame_text" in cutoffs:
         both = min(cutoffs["screenshots"], cutoffs["frame_text"])
         removed["frame_rows"] = delete_spent_frames(conn, both)
+        removed["monitor_history"] = expire_monitor_history(conn, both)
     if "raw_audio" in cutoffs and "transcripts" in cutoffs:
         both = min(cutoffs["raw_audio"], cutoffs["transcripts"])
         removed["audio_rows"] = delete_spent_segments(conn, both)
@@ -403,9 +456,10 @@ def delete_all_recorded_data(conn: Connection, media: MediaStore) -> dict[str, i
     with db.transaction(conn):
         removed = {
             "screenshots": int(
-                conn.execute("SELECT count(*) FROM frames WHERE image_path IS NOT NULL").fetchone()[
-                    0
-                ]
+                conn.execute(
+                    "SELECT (SELECT count(*) FROM frames WHERE image_path IS NOT NULL)"
+                    " + (SELECT count(*) FROM frame_windows WHERE capture_path IS NOT NULL)"
+                ).fetchone()[0]
             ),
             "raw_audio": int(
                 conn.execute(
@@ -422,6 +476,8 @@ def delete_all_recorded_data(conn: Connection, media: MediaStore) -> dict[str, i
             "stt_samples",
             "episodes",
             "frames",
+            "monitor_layouts",
+            "monitors",
             "audio_segments",
             "media_sessions",
             "app_sessions",

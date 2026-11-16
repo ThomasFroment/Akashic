@@ -1,5 +1,8 @@
 # Screen capture and encoding spike 2026-11-15
 
+Revised 2026-11-16: the "capture loads no CUDA" rule quoted below was dropped (commit ae9d7d3).
+Current rules: [CAPTURE.md](../CAPTURE.md), [DECISIONS.md](../DECISIONS.md).
+
 **Archived.** Whole-monitor capture was dropped in favour of per-window composition on
 2026-11-15. S1, S1b and the rules quoted below refer to the 2026-11-14 draft of the
 monitor-capture design.

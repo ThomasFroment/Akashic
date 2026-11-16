@@ -7,7 +7,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from akashic.pipeline.jobs import (
+from akashic.storage import db
+from akashic.storage.audio import AudioStore, NewSegment, audio_rel_path
+from akashic.storage.crypto import DataKey
+from akashic.storage.jobs import (
     BACKOFF_BASE_MS,
     BACKOFF_FACTOR,
     BACKOFF_MAX_MS,
@@ -15,9 +18,6 @@ from akashic.pipeline.jobs import (
     NewJob,
     enqueue_in,
 )
-from akashic.storage import db
-from akashic.storage.audio import AudioStore, NewSegment, audio_rel_path
-from akashic.storage.crypto import DataKey
 from akashic.storage.media import MediaStore
 from akashic.storage.opus import SAMPLE_RATE, decode_opus, encode_opus
 

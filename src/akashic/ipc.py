@@ -2,9 +2,12 @@
 
 Protocol, parent -> child (child's stdin):
   1. exactly 32 raw bytes: the data key (never in argv, environment or on disk);
-  2. then JSON lines: {"type": "command", "name": "stop" | "pause" | "resume"}.
+  2. then JSON lines: {"type": "command", "name": <command>}, a command being "stop", "pause",
+  "resume", "ui_open" or "ui_closed". The last two tell capture that Akashic's own UI is shown or
+  gone; capture halts while it is shown.
   EOF on stdin means the parent is gone: the child must stop.
 Child -> parent (child's stdout): JSON lines {"type": "status", "state": "<state>"}.
+  "ui_paused" means halted for the UI (or the own-address failsafe), not by the user's Pause.
 Children must never print to stdout; it is the status channel.
 """
 
@@ -19,8 +22,10 @@ from akashic.storage.crypto import KEY_BYTES, DataKey
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-type Command = Literal["stop", "pause", "resume"]
-type State = Literal["starting", "ready", "gaming", "degraded", "backlog", "paused", "stopping"]
+type Command = Literal["stop", "pause", "resume", "ui_open", "ui_closed"]
+type State = Literal[
+    "starting", "ready", "gaming", "degraded", "backlog", "paused", "ui_paused", "stopping"
+]
 COMMANDS: Final[tuple[str, ...]] = get_args(Command.__value__)
 STATES: Final[tuple[str, ...]] = get_args(State.__value__)
 MAX_LINE: Final = 4096

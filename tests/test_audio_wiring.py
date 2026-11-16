@@ -11,13 +11,9 @@ import pytest
 from audio_fakes import FakeDetector, FakeDevices, FakeSessions, speech
 from capture_fakes import (
     LONG_TEXT,
-    FakeMedia,
     FakeOcr,
-    FakeScreen,
-    FakeUia,
-    FakeWindows,
-    window,
 )
+from screen_rig import fake_platform
 
 from akashic import child, ipc
 from akashic.capture import main as capture_main
@@ -39,13 +35,7 @@ if TYPE_CHECKING:
 
 
 def _platform() -> CapturePlatform:
-    return CapturePlatform(
-        screen=FakeScreen(),
-        windows=FakeWindows(focused=window()),
-        uia=FakeUia(texts={1: LONG_TEXT}),
-        ocr=FakeOcr(),
-        media=FakeMedia(),
-    )
+    return fake_platform(ocr=FakeOcr(), text=LONG_TEXT[0].text)
 
 
 def _run_capture(paths: Paths, key: DataKey, **kw: object) -> int:

@@ -14,12 +14,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
-from PIL import Image
 
 from akashic.capture.ports import Rect
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+    from PIL import Image
 
 type Gray = NDArray[np.uint8]
 
@@ -27,11 +27,9 @@ SMALL_FACTOR: Final = 4  # change detection works on a 1/4-resolution frame
 PIXEL_DELTA: Final = 16  # gray levels a pixel must move to count as changed
 CHANGED_FRACTION: Final = 1e-4  # fraction of changed pixels that makes a frame "different"
 BLACK_MAX_LEVEL: Final = 10  # a frame whose brightest pixel is below this is black (DRM)
+# Stored screenshots keep their native resolution: 266 ms per 4K frame at quality 70, method 2
+# (docs/baselines/2026-11-15-window-composition.md).
 WEBP_QUALITY: Final = 70
-# Stored screenshots are shrunk to this long side (text is read from the full-size frame).
-# Measured on the 3-monitor PC: a 4K frame took 0.9 s to encode at method 4; 1920 px at method 2
-# takes ~90 ms including the resize and yields 50-100 KB, the research §3.7 estimate.
-STORED_MAX_SIDE: Final = 1920
 WEBP_METHOD: Final = 2
 TEXT_CELL: Final = 16  # text-region detection works on 16x16 cells of a half-size frame
 TEXT_EDGE: Final = 48  # horizontal gradient that counts as an edge
@@ -70,12 +68,7 @@ def is_black(image: Image.Image) -> bool:
 
 
 def encode_webp(image: Image.Image, quality: int = WEBP_QUALITY) -> bytes:
-    """WebP of ``image`` shrunk to at most ``STORED_MAX_SIDE`` on its long side."""
-    if max(image.size) > STORED_MAX_SIDE:
-        image = image.copy()
-        image.thumbnail(
-            (STORED_MAX_SIDE, STORED_MAX_SIDE), Image.Resampling.BILINEAR, reducing_gap=2.0
-        )
+    """WebP of ``image`` at its native resolution."""
     out = io.BytesIO()
     image.save(out, format="WEBP", quality=quality, method=WEBP_METHOD)
     return out.getvalue()

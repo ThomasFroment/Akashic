@@ -15,7 +15,6 @@ from stt_rows import insert_result, insert_run, insert_sample
 from akashic.api.server import ApiServer, Controls, Services, new_token
 from akashic.api.stt import comparison_scores
 from akashic.config import DEFAULT_CONFIG_TOML
-from akashic.pipeline.jobs import Job
 from akashic.pipeline.stt_compare import (
     STT_COMPARE,
     STTCompareHandler,
@@ -26,6 +25,7 @@ from akashic.pipeline.stt_compare import (
 from akashic.pipeline.transcribe import TranscribeHandler, Transcript, build_prompt
 from akashic.storage.audio import AudioStore
 from akashic.storage.frames import FrameStore
+from akashic.storage.jobs import Job
 from akashic.storage.media import MediaStore
 
 if TYPE_CHECKING:

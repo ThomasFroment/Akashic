@@ -58,7 +58,10 @@ function understood(plan, semantic) {
 // ---- answers: prose with [n] markers turned into chips that open the moment ----------------
 const STEP_LABEL = { searching: "Searching your memory…", planning: "Understanding the question…", answering: "Writing the answer…" };
 
-// A chip for source n: frames open the screenshot, episodes their page, a spoken line plays.
+// A frame whose moment is gone (frame_ms null) has no address to open.
+const sourceMoment = (s) => (s.frame_ms === null ? null : momentHref(s.frame_ms, s.monitor_id, s.window_id));
+
+// A chip for source n: frames open their moment, episodes their page, a spoken line plays.
 function citeChip(source) {
   const label = String(source.n);
   const title = `${source.label} · ${fmtTime(source.start_ms)}`;
@@ -67,7 +70,7 @@ function citeChip(source) {
     btn.addEventListener("click", () => playClip(btn, source.id, 0, Number.MAX_SAFE_INTEGER));
     return btn;
   }
-  const href = source.kind === "frame" ? `#/frame/${source.id}?from=memory` : `#/episode/${source.id}`;
+  const href = source.kind === "frame" ? sourceMoment(source) : `#/episode/${source.id}`;
   return h("a", { class: "cite", href, title, "aria-label": `Source ${label}: ${title}` }, label);
 }
 
@@ -86,11 +89,19 @@ function answerBody(text, sources) {
   return parts;
 }
 
+function sourceImage(s) {
+  if (!s.window_id) return null;
+  const frameId = s.kind === "frame" ? s.id : s.frame_id;
+  const img = lazyImg("thumb", `/api/frames/${frameId}/image?window=${s.window_id}&w=320`);
+  const href = sourceMoment(s);
+  return href ? h("a", { href, title: "Open this moment" }, img) : img;
+}
+
 function sourceRow(s) {
   return h("div", { class: "row source-row" }, citeChip(s),
     h("div", { class: "row-body" }, metaLine(s.label, fmtTime(s.start_ms)),
       s.text ? h("div", { class: "row-snippet clamp" }, s.text) : null),
-    s.kind === "frame" ? lazyImg("thumb", `/api/frames/${s.id}/image?w=320`) : null);
+    sourceImage(s));
 }
 
 // The plain matches for a question (no model): episodes, lines, screen moments.
@@ -203,7 +214,7 @@ function memoryView() {
     h("div", { class: "suggestions" }, SUGGESTIONS.map((s) => h("button", { type: "button", onclick: () => box.fill(s) }, s))),
     below);
   view.replaceChildren(home);
-  box.focus();
+  whenShown(() => box.focus());
   modelsBanner(box.el);
   let alive = true;
   cleanup = () => { alive = false; stopClip(); };
@@ -323,8 +334,8 @@ function mountChat(threadId, initial) {
 
   for (const q of initial) addTurn(q);
   refreshBusy();
-  requestAnimationFrame(toBottom);
-  box.focus();
+  whenShown(() => requestAnimationFrame(toBottom));
+  whenShown(() => box.focus());
 }
 
 // One answer: progress while it is written, then the text, its sources and the tools around it.
@@ -398,7 +409,7 @@ async function episodeView(id) {
   add("In", e.app ? appName(e.app) : "");
   add("Address", e.url || "");
   add("With", people(e).join(", "));
-  const shot = e.frame_id ? h("a", { href: `#/frame/${e.frame_id}?from=memory`, title: "Open this moment" }, lazyImg("shot", `/api/frames/${e.frame_id}/image?w=960`, "Screenshot")) : null;
+  const shot = e.frame_id && e.window_id ? h("a", { href: sourceMoment(e), title: "Open this moment" }, lazyImg("shot", `/api/frames/${e.frame_id}/image?window=${e.window_id}&w=960`, "Screenshot")) : null;
   view.replaceChildren(h("div", { class: "column" },
     h("div", { class: "viewer-bar" }, backButton("#/")),
     h("div", { class: "episode-head" }, kindBadge(e.kind), h("h1", {}, e.title || "(untitled)")),

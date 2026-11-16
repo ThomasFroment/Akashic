@@ -8,9 +8,10 @@ Only speech is kept. Segments are cut after ``hangover_ms`` of silence, or at ``
 with ``overlap_ms`` of overlap into the next one so no word is split. Every segment carries the
 wall-clock time its first sample was heard; nothing downstream may use processing time.
 
-Paused means nothing is captured: devices are closed (the microphone indicator goes off) and any
-half-recorded segment is dropped from memory. Stopping capture or a device change or failure keeps
-the half-recorded segment by closing it early; an unexpected fault drops it. Process exclusions
+Halted means nothing is captured: devices are closed (the microphone indicator goes off). The
+half-recorded segment is dropped from memory when the user paused, and kept (closed early) when the
+UI opened. Stopping capture or a device change or failure keeps the half-recorded segment by
+closing it early; an unexpected fault drops it. Process exclusions
 apply to the processes that were making sound: a segment during which an excluded process was
 audible is dropped, in memory.
 """
@@ -293,9 +294,9 @@ class SourceSampler:
                     found.update(names)
         return tuple(sorted(found)), succeeded and not failed
 
-    def run(self, stop: threading.Event, paused: threading.Event) -> None:
+    def run(self, stop: threading.Event, halt: threading.Event) -> None:
         while not stop.is_set():
-            if not paused.is_set():
+            if not halt.is_set():
                 try:
                     self.sample()
                 except Exception as exc:  # noqa: BLE001 - attribution is best effort
@@ -475,11 +476,11 @@ class StreamRecorder:
         self._speech_windows = 0
         return out
 
-    def run(self, stop: threading.Event, paused: threading.Event) -> None:
+    def run(self, stop: threading.Event, halt: threading.Event, paused: threading.Event) -> None:
         try:
             while not stop.is_set():
                 try:
-                    self._iterate(stop, paused)
+                    self._iterate(stop, halt, paused)
                 except Exception as exc:  # noqa: BLE001 - a recorder must outlive any one fault
                     self._recover_from_fault(type(exc).__name__, stop)
         finally:
@@ -488,10 +489,12 @@ class StreamRecorder:
             except Exception as exc:  # noqa: BLE001 - shutdown must not print the message
                 self._log_fault(type(exc).__name__)
 
-    def _iterate(self, stop: threading.Event, paused: threading.Event) -> None:
-        if paused.is_set():
+    def _iterate(
+        self, stop: threading.Event, halt: threading.Event, paused: threading.Event
+    ) -> None:
+        if halt.is_set():
             self._gaps.close(self.kind, self._clock_ms())
-            self._release(keep=False)
+            self._release(keep=not paused.is_set())
             stop.wait(0.2)
         elif self._input is None:
             if not self._acquire():
@@ -671,13 +674,13 @@ class AudioCapture:
             "streams": {r.kind: r.snapshot() for r in self._recorders},
         }
 
-    def run(self, stop: threading.Event, paused: threading.Event) -> None:
+    def run(self, stop: threading.Event, halt: threading.Event, paused: threading.Event) -> None:
         """Record until ``stop`` is set, then finish writing what is queued."""
         writer_stop = threading.Event()
         threads = [
-            threading.Thread(target=self._sampler.run, args=(stop, paused), name="audio-sources"),
+            threading.Thread(target=self._sampler.run, args=(stop, halt), name="audio-sources"),
             *(
-                threading.Thread(target=r.run, args=(stop, paused), name=f"audio-{r.kind}")
+                threading.Thread(target=r.run, args=(stop, halt, paused), name=f"audio-{r.kind}")
                 for r in self._recorders
             ),
         ]

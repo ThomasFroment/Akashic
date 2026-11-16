@@ -5,14 +5,16 @@ Windows OCR, GPU, speaker models and Whisper. Use this checklist for behavior th
 real apps or a real day of data. Run against a throwaway `AKASHIC_DATA_DIR` where practical.
 
 This lists checks to perform, not results that passed. Record scope/date with a result.
-Images are selected-window renders; episode images require app/time/URL/title constraints.
+Frames are monitor composites; evidence images are the cited window's visible part.
 
 ## Unlock, tray and local UI
 
 1. Create a store, confirm a wrong passphrase fails and cancelling exits without starting capture.
 2. After unlock, confirm the app, capture and worker processes run and all stop on Quit.
 3. Open the UI from the tray: it lands on Ask. Reusing its `/open?code=` URL returns 403, the
-   session cookie is HttpOnly, and Akashic's own browser tab produces `excluded:own_ui`.
+   session cookie is HttpOnly. While the tab is visible nothing is recorded and the sidebar says
+   "Not recording while Akashic is open"; closing or hiding the tab resumes recording. Open
+   Akashic's address from a bookmark: the failsafe halts capture. Autostart does not open the UI.
 4. Pause and resume from both the tray and sidebar. Lock must stop both child processes, forget the
    key and show the unlock dialog again; unlocking starts fresh processes and a new session.
 5. Toggle Settings > Startup and verify the `Akashic` HKCU Run value and a real sign-in start.
@@ -20,26 +22,39 @@ Images are selected-window renders; episode images require app/time/URL/title co
 ## Screen capture and Windows adapters
 
 1. On every monitor, switch windows, type, scroll and change browser tabs. Search > Screen should
-   show focus/input/title/idle frames, the correct monitor, title, process, URL and UIA/OCR text.
-2. Verify `screen.py` reports every monitor in physical-pixel order; `windows.py` reports the
-   focused window and the window under the pointer; Win+L produces only `locked` outcomes.
+   show per-window hits with the correct monitor, title, process, URL and UIA/OCR text, and the
+   timeline stage should show every monitor.
+2. Verify `displays.py` reports every monitor in physical-pixel order; `windows.py` reports the
+   focused window and the visible windows; Win+L produces only `locked` outcomes.
 3. Verify `uia.py` reads Notepad, browsers and Discord without making Discord stutter. Firefox/Zen
-   and Chromium URLs should work; a focused password field must produce `excluded:password_field`.
+   and Chromium URLs should work; a page with a focused password field is kept.
 4. Verify `ocr.py` reads an image or game menu. Without the French language pack, the log should
    report the fallback to English.
-5. Private windows, password managers, configured exclusions and finance sites must never create a
-   frame. DRM video may keep metadata but must drop a black image. Logs must contain counts and
+5. Private windows, password managers, configured exclusions and finance sites must show as a
+   blank area with no window row or text; a monitor showing only them stores nothing (Hidden).
+   DRM video keeps its window list and no image. Logs must contain counts and
    exception types only, never titles, URLs or captured text.
 6. Moving a high-rate gaming mouse should not raise capture CPU materially above idle.
-7. Cover the selected app with another app: its render must contain only the selected window.
-   Check Firefox/Zen, Discord, elevated windows, mixed-DPI monitors and games. Unsupported/hung
-   rendering must skip without monitor fallback or accumulating threads. Navigate/switch/lock
-   during capture: mismatched/excluded content must not be stored. Inspect multi-column text,
-   repeated chat messages and navigation controls for useful reading order.
+7. On three monitors, with a private or bank window excluded in each case, check that nothing of
+   it reaches the timeline or search:
+   - a private window on a side monitor, and a translucent window over it;
+   - Alt-Tab, Snap Assist, a taskbar preview and Win+Shift+S with a private window open;
+   - a password-manager extension popup;
+   - dropdowns, suggestions and tooltips on a private page;
+   - a page navigating to a bank address;
+   - a hung private window (its "Not Responding" ghost);
+   - a bank page, excluded by its readable address but kept while typing in its address bar;
+   - minimizing a private window;
+   - elevated windows, mixed DPI and negative coordinates;
+   - the evidence crop of a partly covered window and of one crossing a monitor edge;
+   - Chrome picture-in-picture is blank; Edge and Zen picture-in-picture follows its window.
+   Inspect multi-column text, repeated chat messages and navigation controls for useful reading
+   order.
 
 ## Audio and transcription
 
-1. In Settings, verify the real microphone/playback device lists and the live voice meter. Speak
+1. In Settings, verify the real microphone/playback device lists and the live voice meter (it
+   reads "Levels are not available while Akashic is open"). Speak
    quiet French and normal English; Search > Speech should show both, with uncertain lines dimmed.
 2. Play a video and hold a Discord call. Microphone lines must be You, system lines must name the
    audible processes, and music-player-only sound must not be stored.
@@ -59,13 +74,16 @@ Images are selected-window renders; episode images require app/time/URL/title co
 
 1. Play, pause, resume, change and close media in a browser and a desktop player. Timeline/search
    should reflect titles, played time and a URL where available. Include concurrent windows/sessions
-   and focused/background private playback; ownership and background-private playback have known
-   limitations recorded in CAPTURE.md and audit #145, not a blanket exclusion pass.
+   and focused/background private playback; the limitations are in SECURITY.md and audit #145,
+   not a blanket exclusion pass. A private window on a side monitor cuts that browser's media.
 2. Switch among normal windows and verify contiguous app sessions are built without excluded apps.
-3. Test borderless and exclusive-fullscreen games. The tray should show game mode, about one frame
-   per minute should be kept without live OCR, other monitors must not be walked, and deferred OCR
-   should make game text searchable after the game closes. F11 video and maximized windows must not
-   be mistaken for games.
+3. Test borderless and exclusive-fullscreen games. The tray should show game mode, the game
+   monitor should be kept at the game rate and the others at the side rate, without UIA and with
+   OCR deferred, and the text should be searchable after the game closes. F11 video and
+   maximized windows must not be mistaken for games.
+4. On three monitors, open the timeline: every monitor at its real position; states with the age
+   of the check; "Monitor N" labels matching the problem messages; hover lists a frame's
+   windows; an Ask video link opens its moment, and Back returns to it.
 
 ## Speakers
 

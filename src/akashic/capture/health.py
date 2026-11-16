@@ -1,6 +1,7 @@
 """What capture tells the app about its own health: ``ready``, ``gaming`` or ``degraded``.
 
-Problem codes are fixed strings, never captured content. The screen loop and the audio recorders
+Problem codes are fixed strings, never captured content; a screen problem is followed by the
+label of its monitor ("Monitor 2", counted left to right). The screen loop and the audio recorders
 detect problems; the publisher thread hands them to ``CaptureStatus``, which turns them into the
 one state the supervisor sees. Pausing clears every problem except ``audio_unavailable``.
 """
@@ -9,25 +10,57 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Final, Protocol
+from collections import deque
+from typing import TYPE_CHECKING, Final, Literal, Protocol
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable, Iterable, Mapping
 
     from akashic import ipc
 
 log = logging.getLogger(__name__)
 
 GRAB_FAILURE_RUN: Final = 3  # consecutive failed grabs that mean the screen cannot be read
-# Grab outcomes that say whether the screen can be read; every other outcome is neutral.
-FAILED_GRABS: Final = frozenset(
-    {"error", "loop_error", "image_unavailable", "stored_no_image", "unchanged_no_image"}
-)
-GOOD_GRABS: Final = frozenset({"stored", "stored_black", "unchanged", "game_stored", "game_black"})
 DEVICE_DOWN_S: Final = 60.0  # seconds without a device read that mean an audio device is gone
 AUDIO_UNAVAILABLE: Final = "audio_unavailable"
 SCREEN_IMAGES_FAILING: Final = "screen_images_failing"
+SCREEN_FRAMES_DROPPED: Final = "screen_frames_dropped"
+SCREEN_DISK_FULL: Final = "screen_disk_full"
+MONITOR_SEPARATOR: Final = "@"  # a screen problem reads "<code>@<monitor label>"
 DEVICE_DOWN_CODES: Final = {"mic": "mic_unavailable", "system": "system_audio_unavailable"}
+
+type RunKind = Literal["failure", "disk_full", "capture", "drop"]
+RUN_PROBLEMS: Final[dict[RunKind, str]] = {
+    "failure": SCREEN_IMAGES_FAILING,
+    "disk_full": SCREEN_DISK_FULL,
+    "capture": SCREEN_IMAGES_FAILING,
+    "drop": SCREEN_FRAMES_DROPPED,
+}
+
+
+class MonitorHealth:
+    """Per-monitor runs of failures, capture failures and drops. Not thread-safe."""
+
+    def __init__(self) -> None:
+        self._runs: dict[tuple[str, RunKind], deque[float]] = {}
+
+    def record(self, key: str, kind: RunKind, now: float) -> None:
+        self._runs.setdefault((key, kind), deque(maxlen=GRAB_FAILURE_RUN)).append(now)
+
+    def clear(self, key: str, kinds: Iterable[RunKind]) -> None:
+        for kind in kinds:
+            self._runs.pop((key, kind), None)
+
+    def problems(self, since: float, labels: Mapping[str, str]) -> list[str]:
+        """``code@monitor label`` of each run that holds ``GRAB_FAILURE_RUN`` events, all after
+        ``since``. A monitor without a label is named by its key."""
+        return sorted(
+            {
+                f"{RUN_PROBLEMS[kind]}{MONITOR_SEPARATOR}{labels.get(key, key)}"
+                for (key, kind), run in self._runs.items()
+                if len(run) == GRAB_FAILURE_RUN and run[0] >= since
+            }
+        )
 
 
 class ActiveSetter(Protocol):

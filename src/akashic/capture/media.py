@@ -9,10 +9,11 @@ database stays pending and is retried at every poll; the session gets nothing el
 closes. Rows still open at the next start are closed at their last heartbeat. On stop, ``run``
 returns within one interval plus one busy timeout per attempt still in flight.
 
-Exclusions apply before anything is written. A media title is not a window title: for a browser
+Exclusions apply before anything is written. A media title is matched by no rule. For a browser
 the screen loop's verdict on the browser's windows decides (private window, password manager,
-finance, user address rules, Akashic's own pages; see ``browser_state``), and an unknown or
-stale verdict rejects the session. Other apps are judged by process and the user's own rules.
+finance, user address rules; see ``browser_state``), and an unknown or stale verdict rejects the
+session. Other apps are judged by process rules only. Nothing is polled while capture is halted
+(Pause, the UI open, the own-address failsafe).
 Windows does not say which browser *window* publishes a session, so a private window in the
 background is the one case this cannot see.
 
@@ -155,15 +156,13 @@ class MediaTracker:
         self._name_retry: dict[str, tuple[int, int]] = {}  # app id -> (retry at ms, misses)
         self.stats: dict[str, int] = {}
 
-    def run(
-        self, stop: threading.Event, paused: threading.Event, locked: Callable[[], bool]
-    ) -> None:
-        """Poll until ``stop``. While paused or locked nothing is read and open rows are closed."""
+    def run(self, stop: threading.Event, halt: threading.Event, locked: Callable[[], bool]) -> None:
+        """Poll until ``stop``. While halted or locked nothing is read and open rows are closed."""
         stale_closed = False
         while not stop.is_set():
             stale_closed = stale_closed or self._close_stale()
             if stale_closed:
-                self._tick(paused, locked)
+                self._tick(halt, locked)
             stop.wait(self._interval_s)
         try:
             self.close_all()
@@ -179,9 +178,9 @@ class MediaTracker:
             return False
         return True
 
-    def _tick(self, paused: threading.Event, locked: Callable[[], bool]) -> None:
+    def _tick(self, halt: threading.Event, locked: Callable[[], bool]) -> None:
         try:
-            if paused.is_set() or locked():
+            if halt.is_set() or locked():
                 self.close_all()
             else:
                 self.poll()
@@ -235,8 +234,7 @@ class MediaTracker:
             return False
         process = process_for_app(app)
         known = known or process in BROWSERS  # "Chrome" names its browser even unresolved
-        # A process that cannot be told keeps every rule in force (D2): it may be a browser.
-        reason = self._exclusions.check_window(process if known else "", state.title, media=True)
+        reason = self._exclusions.check_process(process if known else "")
         if "private" in state.app_id.casefold():
             reason = "private_window"
         if reason is None and (not known or process in BROWSERS):

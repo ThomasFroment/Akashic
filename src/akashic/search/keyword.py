@@ -1,4 +1,4 @@
-"""Keyword search over frames (FTS5) and plain browsing by time.
+"""Keyword search over the windows of frames (FTS5) and plain browsing by time.
 
 User input never reaches FTS5 syntax: it is split into words, each word is quoted, and the last
 one is a prefix match so results appear while typing. Highlight markers in snippets are control
@@ -23,7 +23,14 @@ _WORD = re.compile(r"\w+", re.UNICODE)
 
 _FILTER_SQL = (
     " AND f.ts_ms >= :start_ms AND f.ts_ms < :end_ms"
-    " AND (:process IS NULL OR lower(f.process) = lower(:process))"
+    " AND (:process IS NULL OR lower(w.process) = lower(:process))"
+)
+
+# True for window row `c` when it does not repeat the previous row `p` of its hwnd (same process,
+# title, URL and text); a repeated row continues the run that `p` belongs to.
+STARTS_RUN_SQL: Final = (
+    "(p.id IS NULL OR c.process IS NOT p.process OR c.title IS NOT p.title"
+    " OR c.url IS NOT p.url OR c.text IS NOT p.text)"
 )
 
 
@@ -36,13 +43,14 @@ class Filters:
 
 @dataclass(frozen=True, slots=True)
 class Hit:
-    id: int
+    frame_id: int
+    window_id: int
     ts_ms: int
-    monitor: int
+    monitor_id: int
     process: str | None
-    window_title: str | None
+    title: str | None
     url: str | None
-    has_image: bool
+    has_image: bool  # the stored picture shows this window (its crop can be served)
     snippet: str  # text with HIGHLIGHT_START / HIGHLIGHT_END around matches
 
 
@@ -71,25 +79,38 @@ def _params(filters: Filters, limit: int, offset: int) -> dict[str, object]:
 
 
 def _hit(row: Sequence[Any]) -> Hit:
-    return Hit(row[0], row[1], row[2], row[3], row[4], row[5], bool(row[6]), row[7] or "")
+    return Hit(row[0], row[1], row[2], row[3], row[4], row[5], row[6], bool(row[7]), row[8] or "")
 
 
 def search(
     conn: Connection, query: str, filters: Filters | None = None, limit: int = 30, offset: int = 0
 ) -> list[Hit]:
-    """Frames matching ``query``, best match first, newest first among equals."""
+    """App windows matching ``query``, best match first, newest first among equals.
+
+    A window row that repeats the previous matching row of the same hwnd (same process, title,
+    URL and text) is dropped, so a run of identical captures shows as its first row.
+    """
     match = build_match(query)
     if match is None:
         return []
     params = _params(filters or Filters(), limit, offset)
     params["match"] = match
     rows = conn.execute(
-        "SELECT f.id, f.ts_ms, f.monitor, f.process, f.window_title, f.url,"  # noqa: S608
-        " f.image_path IS NOT NULL,"
-        f" snippet(frames_fts, -1, '{HIGHLIGHT_START}', '{HIGHLIGHT_END}', '…', 24)"
-        " FROM frames_fts JOIN frames f ON f.id = frames_fts.rowid"
-        f" WHERE frames_fts MATCH :match{_FILTER_SQL}"
-        " ORDER BY bm25(frames_fts, 1.0, 3.0, 2.0), f.ts_ms DESC LIMIT :limit OFFSET :offset",
+        "SELECT m.frame_id, m.window_id, m.ts_ms, m.monitor_id, c.process, c.title, c.url,"  # noqa: S608
+        " m.has_image, m.snippet"
+        " FROM (SELECT *, LAG(window_id) OVER run AS prev_id"
+        "  FROM (SELECT f.id AS frame_id, w.id AS window_id, f.ts_ms, f.monitor_id,"
+        "   f.image_path IS NOT NULL AND w.painted = 1 AS has_image, w.hwnd,"
+        f"   snippet(frame_windows_fts, -1, '{HIGHLIGHT_START}', '{HIGHLIGHT_END}', '…', 24)"
+        "   AS snippet, bm25(frame_windows_fts, 1.0, 3.0, 2.0) AS score"
+        "   FROM frame_windows_fts JOIN frame_windows w ON w.id = frame_windows_fts.rowid"
+        "   JOIN frames f ON f.id = w.frame_id"
+        f"   WHERE frame_windows_fts MATCH :match{_FILTER_SQL})"
+        "  WINDOW run AS (PARTITION BY hwnd ORDER BY ts_ms, window_id))"
+        " AS m JOIN frame_windows c ON c.id = m.window_id"
+        " LEFT JOIN frame_windows p ON p.id = m.prev_id"
+        f" WHERE {STARTS_RUN_SQL}"
+        " ORDER BY m.score, m.ts_ms DESC LIMIT :limit OFFSET :offset",
         params,
     ).fetchall()
     return [_hit(r) for r in rows]
@@ -100,35 +121,37 @@ def browse(
     filters: Filters | None = None,
     limit: int = 60,
     offset: int = 0,
-    *,
-    newest_first: bool = True,
 ) -> list[Hit]:
-    """Frames in a time window without a text query (the Timeline)."""
+    """App windows of frames in a time window without a text query, newest first."""
     params = _params(filters or Filters(), limit, offset)
-    order = "DESC" if newest_first else "ASC"
     rows = conn.execute(
-        "SELECT f.id, f.ts_ms, f.monitor, f.process, f.window_title, f.url,"  # noqa: S608
-        " f.image_path IS NOT NULL, substr(coalesce(f.text, ''), 1, 160)"
-        f" FROM frames f WHERE 1 = 1{_FILTER_SQL}"
-        f" ORDER BY f.ts_ms {order}, f.id {order} LIMIT :limit OFFSET :offset",
+        "SELECT f.id, w.id, f.ts_ms, f.monitor_id, w.process, w.title, w.url,"  # noqa: S608
+        " f.image_path IS NOT NULL AND w.painted = 1, substr(coalesce(w.text, ''), 1, 160)"
+        " FROM frame_windows w JOIN frames f ON f.id = w.frame_id"
+        f" WHERE w.role = 'app'{_FILTER_SQL}"
+        " ORDER BY f.ts_ms DESC, f.id DESC, w.z LIMIT :limit OFFSET :offset",
         params,
     ).fetchall()
     return [_hit(r) for r in rows]
 
 
 def neighbors(conn: Connection, frame_id: int) -> tuple[int | None, int | None]:
-    """Ids of the frame just before and just after ``frame_id`` in time (previous, next)."""
-    row = conn.execute("SELECT ts_ms FROM frames WHERE id = ?", (frame_id,)).fetchone()
+    """Ids of the frame just before and just after ``frame_id`` in time on the same monitor
+    (previous, next), so stepping never jumps to another screen."""
+    row = conn.execute("SELECT ts_ms, monitor_id FROM frames WHERE id = ?", (frame_id,)).fetchone()
     if row is None:
         return None, None
     ts_ms: int = row[0]
+    monitor_id: int = row[1]
     prev = conn.execute(
-        "SELECT id FROM frames WHERE (ts_ms, id) < (?, ?) ORDER BY ts_ms DESC, id DESC LIMIT 1",
-        (ts_ms, frame_id),
+        "SELECT id FROM frames WHERE monitor_id = ? AND (ts_ms, id) < (?, ?)"
+        " ORDER BY ts_ms DESC, id DESC LIMIT 1",
+        (monitor_id, ts_ms, frame_id),
     ).fetchone()
     nxt = conn.execute(
-        "SELECT id FROM frames WHERE (ts_ms, id) > (?, ?) ORDER BY ts_ms, id LIMIT 1",
-        (ts_ms, frame_id),
+        "SELECT id FROM frames WHERE monitor_id = ? AND (ts_ms, id) > (?, ?)"
+        " ORDER BY ts_ms, id LIMIT 1",
+        (monitor_id, ts_ms, frame_id),
     ).fetchone()
     return (prev[0] if prev else None, nxt[0] if nxt else None)
 
@@ -136,6 +159,7 @@ def neighbors(conn: Connection, frame_id: int) -> tuple[int | None, int | None]:
 def processes(conn: Connection) -> list[str]:
     """Distinct app names seen so far, for the filter dropdown."""
     rows = conn.execute(
-        "SELECT DISTINCT process FROM frames WHERE process IS NOT NULL ORDER BY lower(process)"
+        "SELECT DISTINCT process FROM frame_windows WHERE process IS NOT NULL"
+        " ORDER BY lower(process)"
     ).fetchall()
     return [r[0] for r in rows]

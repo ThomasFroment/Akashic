@@ -89,7 +89,6 @@ class Exclusions:
     with the exclusion logic, not here."""
 
     processes: tuple[str, ...] = ()
-    window_titles: tuple[str, ...] = ()
     urls: tuple[str, ...] = ()
 
 
@@ -223,7 +222,6 @@ cpu_busy_percent = 85
 [exclusions]
 # Added to the built-in lists. Globs are case-insensitive, e.g. "*bank*".
 processes = []
-window_titles = []
 urls = []
 """
 
@@ -367,6 +365,7 @@ def parse_config(text: str) -> Config:
         msg = f"theme must be one of {', '.join(THEMES)}"
         raise ConfigError(msg)
     excl = _table(doc, "exclusions")
+    # older config.toml files may still have window_titles; accepted and ignored
     _expect_keys(excl, {"processes", "window_titles", "urls"}, "[exclusions]")
     game = _table(doc, "gaming")
     _expect_keys(game, {"screenshot_interval_s", "games", "not_games"}, "[gaming]")
@@ -400,7 +399,6 @@ def parse_config(text: str) -> Config:
         retention_days=_retention(_table(doc, "retention")),
         exclusions=Exclusions(
             processes=_str_tuple(excl, "processes", "exclusions"),
-            window_titles=_str_tuple(excl, "window_titles", "exclusions"),
             urls=_str_tuple(excl, "urls", "exclusions"),
         ),
         gaming=Gaming(

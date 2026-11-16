@@ -15,6 +15,7 @@ from memory_data import (
     add_frame,
     add_segment,
     add_speaker,
+    window_of,
 )
 
 from akashic.api import memory as memory_api
@@ -76,6 +77,13 @@ NOON_MS: Final = int(
 @pytest.fixture(autouse=True)
 def _fixed_clock(monkeypatch: pytest.MonkeyPatch) -> None:  # pyright: ignore[reportUnusedFunction] - autouse
     monkeypatch.setattr(memory_api, "_now_ms", lambda: NOON_MS)
+
+
+def paint(conn: Connection, *frames: int) -> None:
+    """Give the frames an image path and mark their app rows as painted."""
+    for frame in frames:
+        conn.execute("UPDATE frames SET image_path = 'x.enc' WHERE id = ?", (frame,))
+        conn.execute("UPDATE frame_windows SET painted = 1 WHERE frame_id = ?", (frame,))
 
 
 def today_ms() -> int:
@@ -145,12 +153,13 @@ def test_frame_only_semantic_search_returns_matching_excerpt_and_link(
     fact = "Les sauvegardes sont chiffrées sur un disque externe."
     text = "Introduction. " * 100 + fact
     target = add_frame(conn, today_ms(), text)
+    window = window_of(conn, target)
     vector = np.array([1, 0], dtype=np.float32)
     values = [
         vector if "sauvegardes" in text[a:b] else np.array([0, 1], dtype=np.float32)
         for a, b in passages.windows(text)
     ]
-    passages.publish(conn, target, DEFAULT_EMBEDDING_MODEL, text, values, kind="frame")
+    passages.publish(conn, window, DEFAULT_EMBEDDING_MODEL, text, values, kind="window")
     embeddings.put(
         conn,
         "query",
@@ -165,7 +174,18 @@ def test_frame_only_semantic_search_returns_matching_excerpt_and_link(
     found = cast("Json", data)
     assert found["semantic"] is True
     (hit,) = cast("list[Json]", found["frames"])
-    assert hit["id"] == target
+    assert (hit["id"], hit["window_id"]) == (target, window)
+    assert set(hit) == {
+        "id",
+        "window_id",
+        "ts_ms",
+        "monitor_id",
+        "process",
+        "title",
+        "url",
+        "has_image",
+        "snippet",
+    }
     assert fact in str(hit["snippet"])
 
 
@@ -194,12 +214,12 @@ def test_an_episode_comes_with_what_was_said_and_a_picture_to_open(
         conn.execute("INSERT INTO episode_items VALUES (?, 'video_segment', ?)", (episode, s))
     frame = add_frame(conn, 5_000, "text", "Video - Chrome")
     conn.execute("UPDATE episodes SET app = 'Google Chrome' WHERE id = ?", (episode,))
-    conn.execute("UPDATE frames SET image_path = 'x.enc' WHERE id = ?", (frame,))
+    paint(conn, frame)
     status, found = client.get(f"/api/episodes/{episode}")
     assert status == 200
     out = cast("Json", found)
     assert out["title"] == "Video"
-    assert out["frame_id"] == frame
+    assert (out["frame_id"], out["window_id"]) == (frame, window_of(conn, frame))
     assert [line["text"] for line in cast("list[Json]", out["lines"])] == [
         "première phrase",
         "deuxième phrase",
@@ -213,6 +233,7 @@ def test_an_unknown_episode_is_a_404_and_one_without_picture_has_none(
     episode = add_episode(conn, "work", 1, 2, "Quiet")
     _, found = client.get(f"/api/episodes/{episode}")
     assert cast("Json", found)["frame_id"] is None
+    assert cast("Json", found)["window_id"] is None
     assert cast("Json", found)["lines"] == []
 
 
@@ -221,11 +242,14 @@ def test_episode_image_requires_the_episodes_app(client: Client, conn: Connectio
     conn.execute("UPDATE episodes SET app = 'discord.exe' WHERE id = ?", (episode,))
     unrelated = add_frame(conn, 2_000, "task manager")
     matching = add_frame(conn, 4_000, "call")
-    conn.execute("UPDATE frames SET image_path = 'x.enc' WHERE id IN (?, ?)", (unrelated, matching))
-    conn.execute("UPDATE frames SET process = 'taskmgr.exe' WHERE id = ?", (unrelated,))
-    conn.execute("UPDATE frames SET process = 'discord.exe' WHERE id = ?", (matching,))
+    paint(conn, unrelated, matching)
+    conn.execute(
+        "UPDATE frame_windows SET process = 'taskmgr.exe' WHERE frame_id = ?", (unrelated,)
+    )
+    conn.execute("UPDATE frame_windows SET process = 'discord.exe' WHERE frame_id = ?", (matching,))
     _, found = client.get(f"/api/episodes/{episode}")
     assert cast("Json", found)["frame_id"] == matching
+    assert cast("Json", found)["window_id"] == window_of(conn, matching)
     conn.execute("DELETE FROM frames WHERE id = ?", (matching,))
     _, found = client.get(f"/api/episodes/{episode}")
     assert cast("Json", found)["frame_id"] is None
@@ -238,15 +262,18 @@ def test_video_image_requires_its_url_not_another_tab(client: Client, conn: Conn
         (episode,),
     )
     frame = add_frame(conn, 2_000, "unrelated tab")
+    paint(conn, frame)
     conn.execute(
-        "UPDATE frames SET image_path = 'x.enc', url = 'https://example.org/other' WHERE id = ?",
-        (frame,),
+        "UPDATE frame_windows SET url = 'https://example.org/other' WHERE frame_id = ?", (frame,)
     )
     _, found = client.get(f"/api/episodes/{episode}")
-    assert cast("Json", found)["frame_id"] is None
-    conn.execute("UPDATE frames SET url = 'https://example.org/video' WHERE id = ?", (frame,))
+    assert (cast("Json", found)["frame_id"], cast("Json", found)["window_id"]) == (None, None)
+    conn.execute(
+        "UPDATE frame_windows SET url = 'https://example.org/video' WHERE frame_id = ?", (frame,)
+    )
     _, found = client.get(f"/api/episodes/{episode}")
     assert cast("Json", found)["frame_id"] == frame
+    assert cast("Json", found)["window_id"] == window_of(conn, frame)
 
 
 def test_the_memory_endpoints_need_the_token(client: Client) -> None:

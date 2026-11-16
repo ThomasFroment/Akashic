@@ -7,6 +7,7 @@ writer and the media tracker retry beyond it.
 
 from __future__ import annotations
 
+import errno
 import re
 import sqlite3
 from contextlib import contextmanager, suppress
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
 BUSY_TIMEOUT_MS: Final = 5_000
 SQLITE_BUSY: Final = 5
 SQLITE_LOCKED: Final = 6
+SQLITE_FULL: Final = 13
 _PRIMARY_CODE_MASK: Final = 0xFF
 _MIGRATION_NAME = re.compile(r"^(\d{4})_[a-z0-9_]+\.sql$")
 
@@ -96,6 +98,18 @@ def is_busy(exc: BaseException) -> bool:
     return code is None or code & _PRIMARY_CODE_MASK in (SQLITE_BUSY, SQLITE_LOCKED)
 
 
+def is_disk_full(exc: BaseException) -> bool:
+    """True when a write failed because the disk is full."""
+    if isinstance(exc, OSError):
+        return exc.errno == errno.ENOSPC
+    if not isinstance(exc, sqlcipher3.OperationalError | sqlite3.OperationalError):
+        return False
+    code: int | None = getattr(exc, "sqlite_errorcode", None)
+    if code is None:  # the driver sets no code
+        return "disk is full" in str(exc)
+    return code & _PRIMARY_CODE_MASK == SQLITE_FULL
+
+
 def _rollback_if_open(conn: Connection) -> None:
     """Roll back unless SQLite already did; a failing rollback must not mask the real error."""
     if not conn.in_transaction:
@@ -146,4 +160,20 @@ def migrate(conn: Connection, migrations: list[Migration] | None = None) -> int:
             if conn.in_transaction:
                 conn.execute("ROLLBACK")
             raise
+    _refuse_stale_schema(conn)
     return schema_version(conn)
+
+
+class StaleSchemaError(RuntimeError):
+    """The store was made by an older 0001 schema, which A9 edited in place (no migration)."""
+
+
+def _refuse_stale_schema(conn: Connection) -> None:
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(frames)")}
+    if columns and "monitor_id" not in columns:
+        msg = (
+            "This data folder was created by an older Akashic whose database layout has since"
+            " changed (monitor capture). Move the folder aside to start a new one, or set"
+            " AKASHIC_DATA_DIR to another folder. Nothing was changed."
+        )
+        raise StaleSchemaError(msg)

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import inspect
+import io
+
 import pytest
-from capture_fakes import blank, with_text_block
+from capture_fakes import FakeOcr, blank, with_text_block
+from PIL import Image
 
 from akashic.capture import imaging
-from akashic.capture.ocr_gate import pick_language
+from akashic.capture.ocr_gate import OcrGate, pick_language
 
 
 def test_find_text_box() -> None:
@@ -22,7 +26,21 @@ def test_find_text_box() -> None:
     assert box.height < 600
 
 
+def test_encode_webp_keeps_native_resolution() -> None:
+    assert not hasattr(imaging, "STORED_MAX_SIDE")
+    for size in ((3840, 2160), (5120, 1440)):
+        data = imaging.encode_webp(blank(size=size))
+        assert Image.open(io.BytesIO(data)).size == size
+
+
 # --- OCR gate -----------------------------------------------------------------------------
+
+
+def test_ocr_gate_read_takes_only_a_key_and_a_frame() -> None:
+    assert list(inspect.signature(OcrGate.read).parameters) == ["self", "key", "image"]
+    ocr = FakeOcr()
+    result = OcrGate(ocr).read("k", with_text_block(blank()))
+    assert (result.text, result.ocr_ran, ocr.calls) == ("recognized words", True, 1)
 
 
 @pytest.mark.parametrize(

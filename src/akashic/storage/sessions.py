@@ -76,15 +76,17 @@ class MediaLog:
             return conn.execute("UPDATE media_sessions SET closed = 1 WHERE closed = 0").rowcount
 
     def tab_frames(self, process: str, title: str, since_ms: int) -> list[tuple[str, str]]:
-        """(window title, address) of recent frames of ``process`` whose window title contains
-        ``title``, newest first.
+        """(window title, address) of recent windows of ``process`` whose title contains
+        ``title``, focused or not, newest first.
 
-        Frames already went through exclusions, so this can only return URLs we are allowed to
-        keep. ``instr`` is case-sensitive, which is right: the tab title repeats the media title.
+        Window rows exist only for windows that passed exclusions, so this can only return URLs
+        we are allowed to keep. ``instr`` is case-sensitive on purpose: the tab title repeats the
+        media title.
         """
         rows = self._conn.execute(
-            "SELECT window_title, url FROM frames WHERE ts_ms >= ? AND process = ?"
-            " AND url IS NOT NULL AND instr(window_title, ?) > 0 ORDER BY ts_ms DESC",
+            "SELECT w.title, w.url FROM frame_windows w JOIN frames f ON f.id = w.frame_id"
+            " WHERE f.ts_ms >= ? AND w.process = ? AND w.url IS NOT NULL"
+            " AND instr(w.title, ?) > 0 ORDER BY f.ts_ms DESC, w.id DESC",
             (since_ms, process, title),
         ).fetchall()
         return [(str(window_title), str(url)) for window_title, url in rows]

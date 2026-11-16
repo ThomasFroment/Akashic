@@ -18,12 +18,12 @@ from memory_data import HOUR, MINUTE, NOW, add_media, add_segment, add_speaker
 
 from akashic.pipeline.ask import AskHandler, ask_job
 from akashic.pipeline.episodes import build_episodes
-from akashic.pipeline.jobs import Job
 from akashic.pipeline.llm import LlamaError
 from akashic.search import answer
 from akashic.search.hybrid import episode_lines, search_memory
 from akashic.search.planner import PLAN_SYSTEM, Plan, heuristic_plan, plan_from_model
 from akashic.storage import db
+from akashic.storage.jobs import Job
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping

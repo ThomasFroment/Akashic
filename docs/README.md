@@ -19,13 +19,13 @@ and its tests to establish current behaviour before changing an area.
 | Persistence, retention and deletion | [STORAGE.md](STORAGE.md) |
 | Threat model and security boundaries | [SECURITY.md](SECURITY.md) |
 | Distribution | [PACKAGING.md](PACKAGING.md) |
-| Product interaction and visual direction | [UI.md](UI.md) |
+| Product interaction, timeline and visual direction | [UI.md](UI.md) |
 
 ## Evidence and maintenance
 
 The [audit synthesis](audits/2026-11-11-synthesis/synthesis.md) explains the findings, and
 [TODO.md](../TODO.md) assigns them to milestones.
-[Designs](designs/) are dated briefs for a planned milestone, deleted once it lands.
+`docs/designs/` holds dated briefs for a planned milestone, deleted once it lands.
 [Audits](audits/), [method reports](solutions/) and [baselines](baselines/) are dated evidence,
 not specifications of today's code. Use them for rationale and comparisons; a proposed method or
 a passing synthetic evaluation does not establish daily-use quality.

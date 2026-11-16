@@ -21,6 +21,7 @@ from memory_data import (
     HOUR,
     MINUTE,
     NOW,
+    add_frame,
     add_game,
     add_job,
     add_media,
@@ -482,11 +483,7 @@ def test_a_suspend_while_playing_ends_the_row_at_the_last_poll(rig: Rig) -> None
 
 
 def _frame(conn: Connection, ts_ms: int, process: str, title: str, url: str) -> None:
-    conn.execute(
-        "INSERT INTO frames (ts_ms, monitor, process, window_title, url, trigger)"
-        " VALUES (?, 0, ?, ?, ?, 'idle')",
-        (ts_ms, process, title, url),
-    )
+    add_frame(conn, ts_ms, None, title, process=process, url=url)
 
 
 def test_a_search_page_seen_first_does_not_become_the_video_address(rig: Rig) -> None:
@@ -577,7 +574,7 @@ def test_the_address_lookup_stops_after_two_minutes(rig: Rig) -> None:
 def test_a_lookup_that_finds_nothing_keeps_the_stored_address(rig: Rig) -> None:
     _frame(rig.conn, 400, "chrome.exe", "Elden Ring - YouTube", "https://youtube.com/watch?v=a")
     rig.at(1, "playing")
-    rig.conn.execute("UPDATE frames SET window_title = 'Other'")
+    rig.conn.execute("UPDATE frame_windows SET title = 'Other'")
     for second in range(3, 30, 2):
         rig.at(second, "playing")
     assert rig.rows()[0][3] == "https://youtube.com/watch?v=a"

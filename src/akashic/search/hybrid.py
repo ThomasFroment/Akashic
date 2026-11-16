@@ -20,13 +20,13 @@ from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
 
 from akashic.pipeline.transcribe import UNCLEAR_BELOW
-from akashic.search.keyword import HIGHLIGHT_END, HIGHLIGHT_START, Hit, build_match
+from akashic.search.keyword import HIGHLIGHT_END, HIGHLIGHT_START, STARTS_RUN_SQL, Hit, build_match
 from akashic.search.timeparse import normalize
 from akashic.storage import embeddings, passages
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
-    from sqlite3 import Connection
+    from sqlite3 import Connection, Row
 
     import numpy as np
     from numpy.typing import NDArray
@@ -506,7 +506,7 @@ def _ranked_frames(conn: Connection, scope: _Scope, limit: int) -> list[Hit]:
     filters = " AND f.ts_ms >= :start AND f.ts_ms < :end"
     if scope.plan.apps:
         filters += (
-            " AND replace(lower(f.process), '.exe', '')"
+            " AND replace(lower(w.process), '.exe', '')"
             " IN (SELECT replace(lower(value), '.exe', '') FROM json_each(:apps))"
         )
     words: dict[int, str] = {}
@@ -514,11 +514,13 @@ def _ranked_frames(conn: Connection, scope: _Scope, limit: int) -> list[Hit]:
     if match:
         params["match"] = match
         rows = conn.execute(
-            "SELECT f.id, snippet(frames_fts, -1, :open, :close, '…', 24)"  # noqa: S608
-            " FROM frames_fts JOIN frames f ON f.id = frames_fts.rowid"
-            " WHERE frames_fts MATCH :match"
+            "SELECT w.id, snippet(frame_windows_fts, -1, :open, :close, '…', 24)"  # noqa: S608
+            " FROM frame_windows_fts JOIN frame_windows w ON w.id = frame_windows_fts.rowid"
+            " JOIN frames f ON f.id = w.frame_id"
+            " WHERE frame_windows_fts MATCH :match"
             + filters
-            + " ORDER BY bm25(frames_fts, 1.0, 3.0, 2.0), f.ts_ms DESC, f.id DESC LIMIT :depth",
+            + " ORDER BY bm25(frame_windows_fts, 1.0, 3.0, 2.0), f.ts_ms DESC, w.id DESC"
+            " LIMIT :depth",
             {**params, "open": HIGHLIGHT_START, "close": HIGHLIGHT_END},
         ).fetchall()
         words = {int(r[0]): str(r[1] or "") for r in rows}
@@ -532,42 +534,48 @@ def _ranked_frames(conn: Connection, scope: _Scope, limit: int) -> list[Hit]:
                 scope.qvec,
                 start_ms=scope.start_ms,
                 end_ms=scope.end_ms,
-                kind="frame",
+                kind="window",
                 apps=scope.plan.apps,
                 limit=VECTOR_DEPTH,
             )
         }
     fused = fuse(list(words), list(meaning))
     order = sorted(fused, key=lambda i: -fused[i])
-    ids = _semantic_coverage(order, list(meaning), latest=scope.plan.latest)[:limit]
+    ids = _semantic_coverage(order, list(meaning), latest=scope.plan.latest)
     if not ids:
         return []
+    # Runs are formed among the candidates only; the run's best-ranked row is the hit
+    # (keyword search keeps the run's first row).
     rows = conn.execute(
-        "SELECT id, ts_ms, monitor, process, window_title, url, image_path IS NOT NULL,"
-        " coalesce(text, '') FROM frames"
-        " WHERE id IN (SELECT value FROM json_each(?))",
+        "SELECT c.id, c.frame_id, c.ts_ms, c.monitor_id, c.process, c.title, c.url, c.has_image,"  # noqa: S608
+        f" {STARTS_RUN_SQL}, c.text"
+        " FROM (SELECT w.id, w.frame_id, f.ts_ms, f.monitor_id, w.process, w.title, w.url,"
+        "  w.text, w.hwnd, f.image_path IS NOT NULL AND w.painted = 1 AS has_image,"
+        "  LAG(w.id) OVER (PARTITION BY w.hwnd ORDER BY f.ts_ms, w.id) AS prev_id"
+        "  FROM frame_windows w JOIN frames f ON f.id = w.frame_id"
+        "  WHERE w.id IN (SELECT value FROM json_each(?))) AS c"
+        " LEFT JOIN frame_windows p ON p.id = c.prev_id"
+        " ORDER BY c.hwnd, c.ts_ms, c.id",
         (json.dumps(ids),),
     ).fetchall()
-    found: dict[int, Hit] = {}
+    rank = {window_id: n for n, window_id in enumerate(ids)}
+    runs: list[list[Row]] = []
     for row in rows:
-        frame_id = int(row[0])
-        passage = meaning.get(frame_id)
-        snippet = (
-            str(row[7])[passage.start_char : passage.end_char]
-            if passage is not None
-            else words[frame_id]
+        if row[8]:
+            runs.append([])
+        runs[-1].append(row)
+    winners = sorted((min(run, key=lambda r: rank[r[0]]) for run in runs), key=lambda r: rank[r[0]])
+    hits: list[Hit] = []
+    for row in winners[:limit]:
+        passage = meaning.get(row[0])
+        if passage is None:
+            snippet = words[row[0]]
+        else:
+            snippet = str(row[9] or "")[passage.start_char : passage.end_char]
+        hits.append(
+            Hit(row[1], row[0], row[2], row[3], row[4], row[5], row[6], bool(row[7]), snippet)
         )
-        found[frame_id] = Hit(
-            frame_id,
-            row[1],
-            row[2],
-            row[3],
-            row[4],
-            row[5],
-            bool(row[6]),
-            snippet,
-        )
-    return [found[i] for i in ids if i in found]
+    return hits
 
 
 def search_memory(

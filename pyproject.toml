@@ -27,11 +27,17 @@ dependencies = [
     "winrt-windows-foundation>=4!10.0.28000.2957",  # needed at runtime by the projections: IAsyncOperation/Rect from recognize_async, request_async, bounding_rect
     "winrt-windows-foundation-collections>=4!10.0.28000.2957",  # needed at runtime by the projections: IVectorView from OcrResult.lines, line.words, the media session lists
     "winrt-windows-globalization>=4!10.0.28000.2957",
+    "winrt-windows-graphics>=4!10.0.28000.2957",  # needed at runtime by the projections: SizeInt32 from GraphicsCaptureItem.size and CaptureFrame.content_size
+    "winrt-windows-graphics-capture>=4!10.0.28000.2957",
+    "winrt-windows-graphics-directx>=4!10.0.28000.2957",
+    "winrt-windows-graphics-directx-direct3d11>=4!10.0.28000.2957",
+    "winrt-windows-graphics-directx-direct3d11-interop>=4.1.0",
     "winrt-windows-graphics-imaging>=4!10.0.28000.2957",
     "winrt-windows-media-control>=4!10.0.28000.2957",
     "winrt-windows-media-ocr>=4!10.0.28000.2957",
     "winrt-windows-security-cryptography>=4!10.0.28000.2957",
     "winrt-windows-storage-streams>=4!10.0.28000.2957",  # needed at runtime by the projections: IBuffer from CryptographicBuffer.create_from_byte_array, passed to SoftwareBitmap.create_copy_from_buffer
+    "winrt-windows-ui>=4!10.0.28000.2957",  # needed at runtime by the projections: WindowId from GraphicsCaptureItem.try_create_from_window_id
 ]
 
 [project.scripts]

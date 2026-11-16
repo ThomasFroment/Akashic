@@ -9,9 +9,11 @@ from fastapi import APIRouter, HTTPException, Query
 
 from akashic.capture.media import process_for_app
 from akashic.search import hybrid, planner, semantic
+from akashic.storage import monitors
 
 if TYPE_CHECKING:
     from akashic.api.server import Services
+    from akashic.search.keyword import Hit
 
 type Json = dict[str, object]
 
@@ -21,6 +23,21 @@ KINDS: Final = ("video", "music", "conversation", "browsing", "work", "game")
 
 def _now_ms() -> int:
     return time.time_ns() // 1_000_000
+
+
+def hit_json(hit: Hit) -> Json:
+    """A screen search hit; ``id`` is the frame, ``window_id`` the window that matched."""
+    return {
+        "id": hit.frame_id,
+        "window_id": hit.window_id,
+        "ts_ms": hit.ts_ms,
+        "monitor_id": hit.monitor_id,
+        "process": hit.process,
+        "title": hit.title,
+        "url": hit.url,
+        "has_image": hit.has_image,
+        "snippet": hit.snippet,
+    }
 
 
 def _episode_json(e: hybrid.EpisodeHit) -> Json:
@@ -81,17 +98,7 @@ def memory_routes(services: Services) -> APIRouter:
             "semantic": found.semantic,
             "episodes": [_episode_json(e) for e in found.episodes],
             "lines": [_line_json(line) for line in found.lines],
-            "frames": [
-                {
-                    "id": f.id,
-                    "ts_ms": f.ts_ms,
-                    "process": f.process,
-                    "window_title": f.window_title,
-                    "snippet": f.snippet,
-                    "has_image": f.has_image,
-                }
-                for f in found.frames
-            ],
+            "frames": [hit_json(f) for f in found.frames],
         }
 
     @router.get("/episodes")
@@ -119,29 +126,15 @@ def memory_routes(services: Services) -> APIRouter:
             if not found:
                 raise HTTPException(404, "no such episode")
             lines = hybrid.episode_lines(conn, episode_id, MAX_LINES)
-            episode = found[0]
-            process = process_for_app(episode.app) if episode.app else None
-            frame = conn.execute(
-                "SELECT f.id FROM frames f WHERE f.ts_ms >= :start AND f.ts_ms < :end"
-                " AND f.image_path IS NOT NULL"
-                " AND lower(f.process) = :process"
-                " AND (:url IS NULL OR f.url = :url)"
-                " AND (:media = 0 OR :url IS NOT NULL"
-                "      OR instr(lower(coalesce(f.window_title, '')), lower(:title)) > 0)"
-                " ORDER BY f.ts_ms, f.id LIMIT 1",
-                {
-                    "start": episode.start_ms,
-                    "end": episode.end_ms,
-                    "process": process,
-                    "url": episode.url,
-                    "title": episode.title,
-                    "media": int(episode.kind in {"video", "music"}),
-                },
-            ).fetchone()
+            evidence = monitors.episode_evidence(conn, episode_id, _now_ms(), process_for_app)
+            moment = None if evidence is None else monitors.frame_moment(conn, evidence[0])
         return {
             **_episode_json(found[0]),
             "lines": [_line_json(line) for line in lines],
-            "frame_id": None if frame is None else int(frame[0]),
+            "frame_id": None if evidence is None else evidence[0],
+            "window_id": None if evidence is None else evidence[1],
+            "frame_ms": None if moment is None else moment[0],
+            "monitor_id": None if moment is None else moment[1],
         }
 
     return router

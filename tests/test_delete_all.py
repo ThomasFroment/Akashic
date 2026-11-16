@@ -14,20 +14,31 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-from memory_data import NOW, add_episode, add_game, add_media, add_speaker, add_visit
+from memory_data import (
+    NOW,
+    add_episode,
+    add_frame,
+    add_game,
+    add_media,
+    add_monitor,
+    add_speaker,
+    add_visit,
+    new_frame,
+    window_of,
+)
 from PIL import Image
 from store_reads import latest_frames
 from stt_rows import insert_result, insert_run, insert_sample
 from waits import wait_for
 
-from akashic.api import server as api_server
+from akashic.api import frames as api_frames
 from akashic.api.server import ApiServer, Controls, Services, new_token
 from akashic.config import DEFAULT_CONFIG_TOML
 from akashic.pipeline.episodes import build_episodes
 from akashic.pipeline.sessions import derive_app_sessions
 from akashic.storage import embeddings
 from akashic.storage.audio import AudioStore, NewSegment
-from akashic.storage.frames import FrameStore, NewFrame
+from akashic.storage.frames import FrameStore
 from akashic.storage.retention import delete_all_recorded_data
 from akashic.supervisor import Supervisor
 
@@ -43,7 +54,11 @@ if TYPE_CHECKING:
 
 def seed_history(conn: Connection, media: MediaStore) -> None:
     future = NOW + 365 * 86_400_000
-    FrameStore(conn, media).add(NewFrame(future, 0, "game", image_webp=b"synthetic screenshot"))
+    add_monitor(conn)
+    FrameStore(conn, media).add(new_frame(future, trigger="game", image=b"synthetic screenshot"))
+    text_frame = add_frame(conn, NOW, "fictionalphrase écran", "Fenêtre")
+    window = window_of(conn, text_frame)
+    conn.execute("INSERT INTO window_passages VALUES (?, 'm', 0, 5, 1, x'0000')", (window,))
     audio = AudioStore(conn, media)
     audio.add(NewSegment("mic", future, future + 1000, 1000), b"pending audio", 0)
     done = audio.add(NewSegment("system", NOW, NOW + 4000, 4000), b"finished audio", 0)
@@ -71,6 +86,7 @@ def seed_history(conn: Connection, media: MediaStore) -> None:
         " VALUES (0, 'An invented question', 'done', 'fictionalphrase answer', '[]')"
     ).lastrowid
     conn.execute("INSERT INTO question_segments VALUES (?, ?)", (question, done))
+    conn.execute("INSERT INTO question_windows VALUES (?, ?)", (question, window))
     insert_sample(conn, done, "fictionalphrase reference")
     run = insert_run(conn, "[]")
     insert_result(
@@ -100,7 +116,12 @@ def assert_empty(conn: Connection, paths: Paths) -> None:
     ]
     for table in tables:
         assert conn.execute(f'SELECT count(*) FROM "{table}"').fetchone() == (0,), table  # noqa: S608
-    for table in ("frames_fts", "audio_segments_fts", "episodes_fts", "media_sessions_fts"):
+    for table in (
+        "frame_windows_fts",
+        "audio_segments_fts",
+        "episodes_fts",
+        "media_sessions_fts",
+    ):
         assert conn.execute(
             f"SELECT count(*) FROM {table} WHERE {table} MATCH 'fictionalphrase'"  # noqa: S608
         ).fetchone() == (0,)
@@ -133,10 +154,12 @@ def test_full_deletion_ignores_pending_open_and_future_guards_and_keeps_setup(
     assert not any(build_episodes(conn, NOW).values())
     assert conn.execute("SELECT count(*) FROM episodes").fetchone() == (0,)
     assert conn.execute("SELECT count(*) FROM frames").fetchone() == (0,)
+    assert conn.execute("SELECT count(*) FROM frame_windows").fetchone() == (0,)
     assert conn.execute("SELECT count(*) FROM audio_segments").fetchone() == (0,)
     # New capture starts from an empty history, without stale watermarks suppressing it.
     store = FrameStore(conn, media)
-    store.add(NewFrame(NOW, 0, "click", process="app.exe", text="fresh capture"))
+    add_monitor(conn)
+    store.add(new_frame(NOW, trigger="click", process="app.exe", text="fresh capture"))
     assert latest_frames(conn, 1)[0].text == "fresh capture"
 
 
@@ -228,7 +251,7 @@ def test_full_api_deletion_stops_real_children_and_restores_their_state(
             config_file=paths.config_file,
         )
         services.put_thumb(
-            (1, "2026/01/01/x.webp", 200), b"old decrypted image", services.thumb_generation()
+            (1, "2026/01/01/x.webp", 0, 200), b"old decrypted image", services.thumb_generation()
         )
         server = ApiServer(services)
         server.start()
@@ -236,7 +259,7 @@ def test_full_api_deletion_stops_real_children_and_restores_their_state(
         status, result = call(server, token)
         assert status == 200, result
         assert observed == [True]
-        assert services.thumb((1, "2026/01/01/x.webp", 200)) is None
+        assert services.thumb((1, "2026/01/01/x.webp", 0, 200)) is None
         assert wait_for(
             lambda: set(sup.states().values()) == ({"paused"} if paused else {"ready"}), 30
         )
@@ -265,7 +288,7 @@ def test_api_refuses_deletion_without_writer_shutdown_and_reports_file_failure(
     server.start()
     try:
         assert call(server, token)[0] == 503
-        assert conn.execute("SELECT count(*) FROM frames").fetchone() == (1,)
+        assert conn.execute("SELECT count(*) FROM frames").fetchone() == (2,)
 
         def no_children(work: Callable[[], None]) -> None:
             work()
@@ -276,10 +299,12 @@ def test_api_refuses_deletion_without_writer_shutdown_and_reports_file_failure(
             raise PermissionError("synthetic failure")
 
         monkeypatch.setattr(media, "delete_all", fail)
-        services.put_thumb((1, "2026/01/01/x.webp", 200), b"old image", services.thumb_generation())
+        services.put_thumb(
+            (1, "2026/01/01/x.webp", 0, 200), b"old image", services.thumb_generation()
+        )
         assert call(server, token)[0] == 409
-        assert services.thumb((1, "2026/01/01/x.webp", 200)) is None
-        assert conn.execute("SELECT count(*) FROM frames").fetchone() == (1,)
+        assert services.thumb((1, "2026/01/01/x.webp", 0, 200)) is None
+        assert conn.execute("SELECT count(*) FROM frames").fetchone() == (2,)
     finally:
         server.stop()
 
@@ -312,7 +337,7 @@ def test_api_deletion_after_supervisor_shutdown_is_409_and_keeps_data(
         status, body = call(server, token)
         assert status == 409, body
         assert body.get("deleted") != 0
-        assert conn.execute("SELECT count(*) FROM frames").fetchone() == (1,)
+        assert conn.execute("SELECT count(*) FROM frames").fetchone() == (2,)
         assert spawned == []
     finally:
         server.stop()
@@ -375,19 +400,20 @@ def blocked_render(
     def add_image(color: str) -> int:
         data = io.BytesIO()
         Image.new("RGB", (100, 100), color).save(data, "WEBP")
-        return frames.add(NewFrame(NOW, 0, "click", image_webp=data.getvalue()))
+        add_monitor(conn)  # full deletion removes the monitors too
+        return frames.add(new_frame(NOW, trigger="click", image=data.getvalue()))
 
     first = add_image("red")
     entered, release = threading.Event(), threading.Event()
-    thumbnail = api_server._thumbnail
+    render_real = api_frames._render
 
-    def rendering(webp: bytes, width: int) -> bytes:
+    def rendering(webp: bytes, width: int | None, crop: object) -> bytes | None:
         if width == 50:
             entered.set()
             assert release.wait(10)
-        return thumbnail(webp, width)
+        return render_real(webp, width, crop)  # type: ignore[arg-type]
 
-    monkeypatch.setattr(api_server, "_thumbnail", rendering)
+    monkeypatch.setattr(api_frames, "_render", rendering)
     token = new_token()
     # no capture/worker here; the subprocess test covers shutdown
     services = Services(
@@ -420,7 +446,7 @@ def test_inflight_thumbnail_cannot_restore_cache_after_deletion_and_id_reuse(
         finally:
             b.release.set()
         old_image = render.result(timeout=15)
-    assert b.services.thumb((b.first, first_path, 50)) is None
+    assert b.services.thumb((b.first, first_path, 0, 50)) is None
     assert b.add_image("blue") == b.first
     assert b.image() != old_image
 
@@ -433,12 +459,12 @@ def test_other_requests_complete_while_a_thumbnail_renders(blocked_render: Block
         try:
             assert b.entered.wait(10)
             assert b.get("/api/status")[0] == 200
-            assert b.get("/api/timeline?day=2026-01-01")[0] == 200
+            assert b.get("/api/strip?day=2026-01-01")[0] == 200
             assert b.get(f"/api/frames/{b.first}/image?w=60")[0] == 200
             assert b.get("/api/settings/storage/screenshots", "DELETE")[0] == 200
-            assert b.services.thumb((b.first, first_path, 60)) is None
+            assert b.services.thumb((b.first, first_path, 0, 60)) is None
             assert b.get("/api/settings/storage", "DELETE")[0] == 200
         finally:
             b.release.set()
         render.result(timeout=15)
-    assert b.services.thumb((b.first, first_path, 50)) is None
+    assert b.services.thumb((b.first, first_path, 0, 50)) is None

@@ -1,9 +1,5 @@
 # Security design
 
-> **Being replaced in part** by the [monitor-capture design](designs/2026-11-14-monitor-capture.md)
-> (TODO A9). Where they differ, the design and the 2026-11-14 and 2026-11-15 rows of DECISIONS.md
-> win.
-
 ## Threat model
 
 Encryption protects recorded files and backups while the app is locked or stopped. It does not
@@ -11,7 +7,8 @@ protect against malware acting as the user while unlocked, a keylogger, or physi
 an unlocked session. Python key wiping is best effort, not a guarantee of removing all copies.
 
 The hard privacy rules are in [AGENTS.md](../AGENTS.md). A mechanism described here is not proof
-that every implementation path satisfies them; the [audits](audits/) record known gaps.
+that every implementation path satisfies them; [TODO.md](../TODO.md) (planned work) and
+[OPEN.md](../OPEN.md) (leftovers) record known gaps.
 
 ## Keys and compatibility
 
@@ -41,6 +38,12 @@ Unlock precedes capture. Lock and quit must stop writers, invalidate the session
 concurrent lifecycle actions from restarting capture. Child processes and model servers must
 not outlive their owner or retain untracked access to keys and content.
 
+Recording halts while a UI page is visible (the page holds a presence lease with the local
+server), and the pages show nothing recorded until the halt is confirmed. The UI opens only from
+the tray or on the first run, never at autostart. As a failsafe, a visible browser window whose
+readable address is Akashic's own port halts capture too, for a page opened some other way, such
+as a bookmark.
+
 Only explicit public-file downloads may use external connections. They carry no captured or
 identifying data, use pinned artifacts and verify integrity before publication. Libraries must
 remain offline during inference; startup must not download missing models. Development tools
@@ -52,25 +55,43 @@ Captured text, audio, model inputs and outputs, and identifying derivatives stay
 encrypted. Exclusions apply before persistence. Content-free logs may remain plaintext, so
 exception messages or third-party logging that quote inputs must not reach them.
 
-Exclusion decisions fail closed for an unreadable window, process, audio source, focus state or
-Chromium private caption, instead of storing content as "unclear". Writer-spy tests watch every
-SQL write, encrypted file and log record for forbidden content. [CAPTURE.md](CAPTURE.md) has the
-rules.
+Exclusion decisions fail closed, instead of storing content as "unclear", for: an unknown process
+or UWP host; an unreadable private marker; unreadable child windows; an unresolved ghost window;
+a browser window with no known main window; a Chrome or Brave window whose address was never
+read and whose caption is unreadable; and an unreadable audio source. Writer-spy tests watch
+every SQL write, encrypted file and log record for forbidden content. [CAPTURE.md](CAPTURE.md)
+has the rules.
 
 The accepted exceptions, the only ones:
 
-- A browser whose address cannot be read is kept when the user has no address rules and its
-  title names no built-in host. Its title cannot prove anything either way.
-- Background browser media can escape the browser-window rules: a playing tab in a browser
-  window the screen loop has not examined (minimized, fully covered) has no verdict, so its
-  media title and artist are logged even when the page is private, a bank, a password manager
-  or matches a user address rule. An excluding verdict lapses 60 s after the window was last
-  seen, including when a game takes the foreground (gaming mode publishes verdicts only for the
-  browser windows it examines on other monitors; a browser covered by the game, or on the game's
-  monitor, still lapses after 60 s). Process and media-title rules still apply. Accepted by the
-  user on 2026-11-12 to keep background videos answerable; reproduced live with Edge and Zen.
-- Firefox layouts and Brave's caption are unverified on this PC (Zen, Chrome and Edge were checked
-  live on 2026-11-12).
+- **Titles are never checked.** A bank, password-manager or other sensitive page is excluded only
+  through its readable address or its app, never by its title.
+- **An address read once and now unreadable is kept**: the user typing in the address bar, a
+  failed read or a hung window. Such a page is recorded while the user types in its bar.
+- **Password fields are not checked.** A page or app is recorded while the user types a
+  password; it normally shows as dots, but the page around it is kept.
+- **Copies of windows outside the shell.** A kept app that shows a copy of another window's
+  pixels or text is captured as it appears: screen-share and OBS previews, remote desktop, the
+  Magnifier and zoom tools, clipboard history, jump lists, Live Captions, or an app displaying a
+  screenshot of an excluded window. The shell's own copy surfaces are excluded.
+- **Notifications** are captured like any other window.
+- **The taskbar is painted** in monitor frames, and its labels can show an excluded window's
+  title. It is never OCR'd or listed.
+- **Background browser media** stays logged for a browser window that is minimized, fully covered
+  or on another virtual desktop, and for a background tab of a kept window (only the active
+  tab's address can be read), even when the page is private, a bank, a password manager or
+  matches a user address rule. An excluding verdict lapses 60 s after the window was last seen,
+  including when a game takes the foreground. Process rules still apply. Accepted by the user on
+  2026-11-12 to keep background videos answerable.
+- **A user path rule blanks its whole site**, so a rule whose host is only a wildcard (`*/x`)
+  blanks every site.
+- **In-page repaints** are protected by grab-then-judge and by site-wide path rules; host rules
+  cannot be crossed in-page, so they need no more.
+- **Pending and held windows are blank** while their verdict is read. The hold is bounded; after
+  it an unreadable address is kept.
+- **Windows whose address was never read** (picture-in-picture, DevTools): in Edge, Zen and
+  Firefox they follow their browser's main windows; in Chrome and Brave they need a clean
+  caption, so Chrome and Brave picture-in-picture is blank.
 
 Captured instructions are untrusted data. The answering model has no action tools; output must
 be rendered safely and source references validated. These boundaries do not establish immunity

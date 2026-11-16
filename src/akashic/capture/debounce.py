@@ -16,6 +16,7 @@ DEBOUNCE_S: Final[dict[str, float]] = {
     "focus": 0.3,
     "title": 0.5,
     "input": 0.4,  # keyboard or mouse activity (GetLastInputInfo changed)
+    "window": 0.3,
 }
 MAX_WAIT_S: Final = 2.0
 
@@ -29,13 +30,6 @@ class Debouncer:
     def note(self, trigger: Trigger, now: float) -> None:
         first = self._first.setdefault(trigger, now)
         self._due[trigger] = min(now + self._delays.get(trigger, 0.0), first + MAX_WAIT_S)
-
-    def defer(self, trigger: Trigger, until: float) -> None:
-        """Push a trigger later (e.g. the per-monitor minimum gap has not elapsed)."""
-        self._due[trigger] = max(until, self._due.get(trigger, until))
-
-    def next_due(self) -> float | None:
-        return min(self._due.values(), default=None)
 
     def pop_due(self, now: float) -> list[Trigger]:
         ready: list[Trigger] = [t for t, due in self._due.items() if due <= now]

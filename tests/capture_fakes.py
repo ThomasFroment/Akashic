@@ -7,12 +7,21 @@ from typing import TYPE_CHECKING
 
 from PIL import Image, ImageDraw
 
-from akashic.capture.ports import Rect, TextBlock, WindowInfo
+from akashic.capture.ports import (
+    CapturedFrame,
+    MonitorInfo,
+    Rect,
+    TextBlock,
+    TopWindow,
+    WindowChanges,
+    WindowEvent,
+    WindowInfo,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    from akashic.capture.ports import BrowserFamily, MediaState
+    from akashic.capture.ports import BrowserFamily, MediaState, WindowChange
 
 SCREEN = Rect(0, 0, 800, 600)
 
@@ -41,55 +50,155 @@ def window(
     return WindowInfo(hwnd, process, title, rect)
 
 
+def monitor(
+    *,
+    key: str = "m1",
+    name: str = "Monitor 1",
+    rect: Rect = SCREEN,
+    scale: float = 1.0,
+    primary: bool = True,
+) -> MonitorInfo:
+    return MonitorInfo(key, name, rect, scale, primary)
+
+
+def top_window(  # noqa: PLR0913 - one TopWindow, every field defaulted
+    *,
+    hwnd: int = 1,
+    pid: int = 100,
+    process: str = "notepad.exe",
+    uwp_unresolved: bool = False,
+    class_name: str = "Notepad",
+    title: str = "Notes",
+    rect: Rect = SCREEN,
+    minimized: bool = False,
+    cloaked: bool = False,
+    owner: int | None = None,
+    popup: bool = False,
+    tool: bool = False,
+    alpha: int | None = None,
+    is_ghost: bool = False,
+    ghost_of: int | None = None,
+    foreign_children: tuple[str, ...] | None = (),
+    has_frame: bool = True,
+) -> TopWindow:
+    return TopWindow(
+        hwnd=hwnd,
+        pid=pid,
+        process=process,
+        uwp_unresolved=uwp_unresolved,
+        class_name=class_name,
+        title=title,
+        rect=rect,
+        minimized=minimized,
+        cloaked=cloaked,
+        owner=owner,
+        popup=popup,
+        tool=tool,
+        alpha=alpha,
+        is_ghost=is_ghost,
+        ghost_of=ghost_of,
+        foreign_children=foreign_children,
+        has_frame=has_frame,
+    )
+
+
 @dataclass
-class FakeScreen:
-    rects: list[Rect] = field(default_factory=lambda: [SCREEN])
-    frames: dict[int, Image.Image] = field(default_factory=dict[int, Image.Image])
-    grabs: int = 0
-    fail: bool = False
-    unavailable: bool = False
-    on_grab: Callable[[], None] | None = None
+class FakeDisplays:
+    monitor_list: list[MonitorInfo] | None = field(default_factory=lambda: [monitor()])
+    reads: int = 0
 
-    def monitors(self) -> list[Rect]:
-        return self.rects
+    def monitors(self) -> list[MonitorInfo] | None:
+        self.reads += 1
+        return None if self.monitor_list is None else list(self.monitor_list)
 
-    def grab(self, rect: Rect) -> Image.Image:
-        if self.fail:
-            msg = "grab failed"
-            raise OSError(msg)
-        self.grabs += 1
-        index = self.rects.index(rect)
-        return self.frames.get(index, blank()).copy()
 
-    def grab_window(self, window: WindowInfo) -> Image.Image | None:
-        if self.on_grab:
-            self.on_grab()
-        if self.unavailable:
-            return None
-        monitor = next((r for r in self.rects if r.contains(*window.rect.center)), None)
-        if monitor is None:
-            return None
-        image = self.grab(monitor)
-        rect = window.rect.translate(-monitor.left, -monitor.top)
-        return image.crop((rect.left, rect.top, rect.right, rect.bottom))
+@dataclass
+class FakeWindowFacts:
+    window_list: list[TopWindow] | None = field(default_factory=list[TopWindow])
+    reads: int = 0
+
+    def windows(self) -> list[TopWindow] | None:
+        self.reads += 1
+        return None if self.window_list is None else list(self.window_list)
+
+
+@dataclass
+class FakeWindowEvents:
+    healthy: bool = True
+    queued: list[WindowEvent] = field(default_factory=list[WindowEvent])
+    starts: int = 0
+    closes: int = 0
+    drains: int = 0
+
+    def push(self, hwnd: int, change: WindowChange, at: float) -> None:
+        self.queued.append(WindowEvent(hwnd, change, at))
+
+    def start(self) -> None:
+        self.starts += 1
+
+    def drain(self) -> WindowChanges:
+        self.drains += 1
+        changes = WindowChanges(tuple(self.queued), self.healthy)
+        self.queued.clear()
+        return changes
+
+    def close(self) -> None:
+        self.closes += 1
+
+
+@dataclass
+class FakeWindowCaptures:
+    refuse: set[int] = field(default_factory=set[int])
+    failures: set[int] = field(default_factory=set[int])
+    intervals: dict[int, int] = field(default_factory=dict[int, int])
+    frames: dict[int, CapturedFrame] = field(default_factory=dict[int, CapturedFrame])
+    starts: list[int] = field(default_factory=list[int])
+    stops: list[int] = field(default_factory=list[int])
+    seq_counter: int = 0
+
+    def start(self, hwnd: int, min_interval_ms: int) -> bool:
+        if hwnd in self.refuse:
+            return False
+        self.starts.append(hwnd)
+        self.intervals[hwnd] = min_interval_ms
+        return True
+
+    def push(self, hwnd: int, image: Image.Image, at: float) -> None:
+        if hwnd in self.intervals:
+            self.seq_counter += 1
+            self.frames[hwnd] = CapturedFrame(self.seq_counter, at, image)
+
+    def stop(self, hwnd: int) -> None:
+        self.stops.append(hwnd)
+        self.intervals.pop(hwnd, None)
+        self.failures.discard(hwnd)
+        self.frames.pop(hwnd, None)
+
+    def latest_seq(self, hwnd: int) -> int | None:
+        frame = self.frames.get(hwnd)
+        return None if frame is None else frame.seq
+
+    def grab(self, hwnd: int) -> CapturedFrame | None:
+        frame = self.frames.get(hwnd)
+        return None if frame is None else CapturedFrame(frame.seq, frame.at, frame.image.copy())
+
+    def failed(self) -> frozenset[int]:
+        return frozenset(self.failures & self.intervals.keys())
+
+    def close(self) -> None:
+        for hwnd in list(self.intervals):
+            self.stop(hwnd)
 
 
 @dataclass
 class FakeWindows:
     focused: WindowInfo | None = None
-    at: dict[tuple[int, int], WindowInfo] = field(default_factory=dict[tuple[int, int], WindowInfo])
     cursor: tuple[int, int] = (10, 10)
     locked: bool = False
     last_input: int = 0
 
     def focused_window(self) -> WindowInfo | None:
         return self.focused
-
-    def inspect_window(self, hwnd: int) -> WindowInfo | None:
-        return next((w for w in [self.focused, *self.at.values()] if w and w.hwnd == hwnd), None)
-
-    def window_at(self, x: int, y: int) -> WindowInfo | None:
-        return self.at.get((x, y))
 
     def cursor_pos(self) -> tuple[int, int]:
         return self.cursor
@@ -106,20 +215,20 @@ class FakeUia:
     """Plain strings in ``texts`` are shorthand for content blocks; ``read_text`` always returns
     ``TextBlock``s, as the production UIA reader does."""
 
-    password: bool | None = False  # None: UI Automation failed, the state is unknown
     texts: dict[int, Sequence[TextBlock | str] | None] = field(
         default_factory=dict[int, "Sequence[TextBlock | str] | None"]
     )
     urls: dict[int, str | None] = field(default_factory=dict[int, str | None])
     captions: dict[int, str | None] = field(default_factory=dict[int, str | None])
     text_reads: list[int] = field(default_factory=list[int])
-
-    def focused_is_password(self) -> bool | None:
-        return self.password
+    url_reads: int = 0
+    on_read: Callable[[], None] | None = None  # runs while a text read is in progress
 
     def read_text(self, window: WindowInfo, max_nodes: int) -> list[TextBlock] | None:
         del max_nodes
         self.text_reads.append(window.hwnd)
+        if self.on_read is not None:
+            self.on_read()
         parts = self.texts.get(window.hwnd)
         if parts is None:
             return None
@@ -132,6 +241,7 @@ class FakeUia:
 
     def read_url(self, window: WindowInfo, family: BrowserFamily) -> str | None:
         del family
+        self.url_reads += 1
         return self.urls.get(window.hwnd)
 
 
@@ -163,20 +273,5 @@ class FakeMedia:
 
 
 LONG_TEXT = [TextBlock("A line of text that is long enough to count as real window text.")]
-
-HOSTED_TITLES = {
-    "keepass.exe": "KeePass",
-    "keepassxc.exe": "KeePassXC",
-    "bitwarden.exe": "Bitwarden",
-    "1password.exe": "1Password",
-    "lastpass.exe": "LastPass",
-    "dashlane.exe": "Dashlane",
-    "enpass.exe": "Enpass",
-    "nordpass.exe": "NordPass",
-    "proton pass.exe": "Proton Pass",
-    "protonpass.exe": "ProtonPass",
-    "roboform.exe": "RoboForm Password Manager",
-    "keeper.exe": "Keeper Password Manager",
-}
 
 AUMID = "308046B0AF4A39CB"  # a browser's app id, as Windows reports it for media sessions

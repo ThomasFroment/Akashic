@@ -15,14 +15,14 @@ import time
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, ClassVar, Final
 
-from akashic.pipeline.jobs import NewJob
+from akashic.storage.jobs import NewJob
 from akashic.storage.retention import apply_retention
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
     from sqlite3 import Connection
 
-    from akashic.pipeline.jobs import Job
+    from akashic.storage.jobs import Job
     from akashic.storage.media import MediaStore
 
 log = logging.getLogger(__name__)

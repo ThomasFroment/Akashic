@@ -33,6 +33,25 @@ Past answers provide conversational context, not new evidence. Captured content 
 untrusted data; it must not grant the model instructions or actions. Missing evidence should
 produce an honest limitation rather than a fabricated answer.
 
+## Screen evidence
+
+The window, not the frame, is the unit of screen text. Keyword hits, the app filter (on the
+window's process) and `window_passages` work on each window's text, so a match in one window is
+never returned under another window's app and a phrase never matches across windows. Repeated
+identical rows of one window collapse. An Ask source carries its window's app, title and address,
+and "on screen in <app>" names the cited window's app. App sessions and the timeline's bands still
+follow the focused window.
+
+An evidence image shows only what the user saw of the cited app: the cited window intersected with
+its monitor, with everything in front of it masked (not blurred). It is computed when displayed;
+the stored frame is unchanged. There is no image for a hidden, shell or pending row, or when the
+window was not visible on the frame.
+
+An episode's image is the earliest painted matching window in the episode's span. Unchanged frames
+are not stored, so otherwise it is the monitor's latest earlier frame, valid only if the monitor
+stayed shown at every check since and the window is on it. No other nearby frame substitutes.
+Ask and episode links open the moment on the timeline ([UI.md](UI.md)).
+
 ## Evaluation
 
 Compare source availability, answer correctness, citation support and uncertainty separately.

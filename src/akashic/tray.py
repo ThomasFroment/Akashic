@@ -30,6 +30,7 @@ LABELS: Final = {
     "degraded": "Recording (with problems)",
     "backlog": "Recording (catching up on transcripts)",
     "paused": "Paused",
+    "ui_open": "Not recording while Akashic is open",
     "starting": "Starting…",
     "restarting": "Restarting…",
     "stopped": "Stopped",

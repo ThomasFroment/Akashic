@@ -1,9 +1,10 @@
 """What the screen loop learned about browser windows, handed to the media tracker.
 
 Windows does not say which browser tab publishes a media session, and the address of a tab is
-only read by the screen loop (UI Automation). So the screen loop publishes, for every browser
-window it examines, whether that window was excluded and why; the media tracker asks before it
-writes a session. Both run in the capture process, on different threads.
+only read by the capture code (UI Automation). So it publishes, for every browser window it
+judges (``capture/verdicts.py`` publishes each visible or focused one), whether that window was
+excluded and why; the media tracker asks before it writes a session. Both run in the capture
+process, on different threads.
 
 The state is conservative about what it does not know:
 
@@ -29,7 +30,7 @@ from akashic.capture.ports import BROWSERS
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from akashic.capture.ports import WindowInfo
+    from akashic.capture.ports import TopWindow, WindowInfo
 
 FRESH_S: Final = 30.0  # a focused window's verdict must be at most this old
 HOLD_S: Final = 60.0  # an excluding verdict keeps applying this long after the window was seen
@@ -49,7 +50,7 @@ class BrowserState:
         self._lock = threading.Lock()
         self._windows: dict[int, _Verdict] = {}
 
-    def publish(self, window: WindowInfo, reason: str | None) -> None:
+    def publish(self, window: WindowInfo | TopWindow, reason: str | None) -> None:
         """Record the verdict on a browser window (``reason`` is the exclusion category)."""
         if window.process not in BROWSERS:
             return

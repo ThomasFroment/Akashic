@@ -100,9 +100,9 @@ def storage_report(conn: Connection, paths: Paths, now_ms: int) -> Report:
     shots, audio = media_usage(paths.media_dir, now_ms)
     text = _text_usage(
         conn,
-        "SELECT coalesce(sum(length(CAST(text AS BLOB))), 0),"
-        " coalesce(sum(CASE WHEN ts_ms >= ? THEN length(CAST(text AS BLOB)) END), 0)"
-        " FROM frames WHERE text IS NOT NULL",
+        "SELECT coalesce(sum(length(CAST(w.text AS BLOB))), 0),"
+        " coalesce(sum(CASE WHEN f.ts_ms >= ? THEN length(CAST(w.text AS BLOB)) END), 0)"
+        " FROM frame_windows w JOIN frames f ON f.id = w.frame_id WHERE w.text IS NOT NULL",
         "frame_text",
         now_ms,
     )
@@ -121,8 +121,8 @@ def storage_report(conn: Connection, paths: Paths, now_ms: int) -> Report:
         " FROM (SELECT vec, start_ms FROM embeddings WHERE owner_kind != 'query'"
         " UNION ALL SELECT p.vec, s.start_ms FROM segment_passages p"
         " JOIN audio_segments s ON s.id = p.segment_id"
-        " UNION ALL SELECT p.vec, f.ts_ms FROM frame_passages p"
-        " JOIN frames f ON f.id = p.frame_id)",
+        " UNION ALL SELECT p.vec, f.ts_ms FROM window_passages p"
+        " JOIN frame_windows w ON w.id = p.window_id JOIN frames f ON f.id = w.frame_id)",
         "embeddings",
         now_ms,
     )

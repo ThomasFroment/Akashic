@@ -22,10 +22,10 @@ from akashic.pipeline.embed import (
     episode_text,
     query_job,
 )
-from akashic.pipeline.jobs import Job, JobQueue, PermanentJobError
 from akashic.pipeline.main import housekeeping, model_folder_has_gguf
 from akashic.search.semantic import query_vector, semantic_ready
 from akashic.storage import embeddings
+from akashic.storage.jobs import Job, JobQueue, PermanentJobError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

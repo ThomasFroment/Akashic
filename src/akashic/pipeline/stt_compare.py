@@ -6,19 +6,19 @@ import json
 import time
 from typing import TYPE_CHECKING, ClassVar
 
-from akashic.pipeline.jobs import PermanentJobError
 from akashic.pipeline.speech import make_transcriber
 from akashic.pipeline.transcribe import decode_segment, normalize
 from akashic.storage import db
+from akashic.storage.jobs import PermanentJobError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
     from sqlite3 import Connection
 
-    from akashic.pipeline.jobs import Job
     from akashic.pipeline.transcribe import Transcriber
     from akashic.storage.audio import AudioStore
+    from akashic.storage.jobs import Job
 
 STT_COMPARE = "stt_compare"
 

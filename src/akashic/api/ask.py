@@ -15,14 +15,15 @@ from __future__ import annotations
 import json
 import re
 import time
-from typing import TYPE_CHECKING, Annotated, Final
+from typing import TYPE_CHECKING, Annotated, Final, cast
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from akashic.capture.media import process_for_app
 from akashic.pipeline.ask import ask_job
-from akashic.pipeline.jobs import enqueue_in
-from akashic.storage import db
+from akashic.storage import db, monitors
+from akashic.storage.jobs import enqueue_in
 
 if TYPE_CHECKING:
     from sqlite3 import Connection
@@ -64,6 +65,31 @@ def _row_json(r: tuple[object, ...]) -> Json:
         "error": r[9],
         "thread": r[10],
     }
+
+
+def _with_evidence(conn: Connection, row: Json) -> Json:
+    """Episode sources of a question gain the frame and window that show them, found when read.
+
+    Frame and episode sources also gain the moment (``frame_ms``, ``monitor_id``) of that frame.
+    """
+    sources = row["sources"]
+    if isinstance(sources, list):
+        for source in cast("list[Json]", sources):
+            frame_id = None
+            if source["kind"] == "episode":
+                evidence = monitors.episode_evidence(
+                    conn, cast("int", source["id"]), _now_ms(), process_for_app
+                )
+                source["frame_id"], source["window_id"] = evidence or (None, None)
+                frame_id = source["frame_id"]
+            elif source["kind"] == "frame":
+                frame_id = source["id"]
+            if source["kind"] in {"episode", "frame"}:
+                moment = (
+                    None if frame_id is None else monitors.frame_moment(conn, cast("int", frame_id))
+                )
+                source["frame_ms"], source["monitor_id"] = moment or (None, None)
+    return row
 
 
 def _conversation_of(conn: Connection, question_id: int) -> int:
@@ -131,9 +157,9 @@ def ask_routes(services: Services) -> APIRouter:
                 f"SELECT {_COLUMNS} FROM questions WHERE id = ?",  # noqa: S608 - constant columns
                 (question_id,),
             ).fetchone()
-        if row is None:
-            raise HTTPException(404, "no such question")
-        return _row_json(row)
+            if row is None:
+                raise HTTPException(404, "no such question")
+            return _with_evidence(conn, _row_json(row))
 
     @router.get("/ask/thread/{thread_id}")
     def thread(thread_id: int) -> list[Json]:  # pyright: ignore[reportUnusedFunction]
@@ -145,7 +171,7 @@ def ask_routes(services: Services) -> APIRouter:
                 " WHERE id = ? OR thread_id = ? ORDER BY id",
                 (root, root),
             ).fetchall()
-        return [_row_json(r) for r in rows]
+            return [_with_evidence(conn, _row_json(r)) for r in rows]
 
     @router.get("/ask")
     def past(  # pyright: ignore[reportUnusedFunction]

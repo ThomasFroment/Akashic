@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from capture_fakes import AUMID, FakeMedia, window
+from memory_data import add_frame
 
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
@@ -224,37 +225,37 @@ def test_a_private_window_of_another_browser_does_not_matter(make_rig: Callable[
     assert len(rig.rows()) == 1
 
 
-def test_user_and_built_in_exclusions_apply_to_the_media_title(
+def test_only_process_rules_apply_to_the_media_title_of_a_known_app(
     make_rig: Callable[..., Rig],
 ) -> None:
-    rig = make_rig(UserExclusions(window_titles=("*secret*",), processes=("zen.exe",)))
-    rig.source.states = [playing("My Secret video")]
+    rig = make_rig(UserExclusions(processes=("zen.exe",)))
+    rig.source.states = [playing("Fine title")]  # the user excluded zen.exe altogether
     rig.at(0)
-    rig.source.states = [playing("Fine title")]  # but the user excluded zen.exe altogether
-    rig.at(2)
     assert rig.rows() == []
-    rig2 = make_rig(UserExclusions(window_titles=("*secret*",)))
-    # D2: a video named like a password manager is a video; the user's own title rule still wins.
+    rig2 = make_rig()
     rig2.source.states = [playing("My Secret thing", app_id="C1"), playing("Bitwarden vault tour")]
     rig2.at(0)
-    assert [r[1] for r in rig2.rows()] == ["Bitwarden vault tour"]
+    assert [r[1] for r in rig2.rows()] == ["My Secret thing", "Bitwarden vault tour"]
 
 
-def test_excluded_title_change_closes_the_open_row(make_rig: Callable[..., Rig]) -> None:
-    rig = make_rig(UserExclusions(window_titles=("*secret*",)))
-    rig.source.states = [playing("Fine")]
+def test_the_own_ui_title_is_not_a_reason_to_skip_a_session(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.source.states = [playing("Akashic · local memory", app_id="UNRESOLVED")]
     rig.at(0)
-    rig.source.states = [playing("secret now")]
-    rig.at(2)
-    assert [(r[1], r[6]) for r in rig.rows()] == [("Fine", 1)]
+    assert [r[1] for r in rig.rows()] == ["Akashic · local memory"]
 
 
 def test_url_is_matched_from_recent_browser_frames(make_rig: Callable[..., Rig]) -> None:
     rig = make_rig()
-    rig.conn.execute(
-        "INSERT INTO frames (ts_ms, monitor, process, window_title, url, trigger)"
-        " VALUES (500, 0, 'zen.exe', 'Video A - YouTube',"
-        " 'https://youtube.com/watch?v=abc', 'focus')"
+    add_frame(
+        rig.conn,
+        500,
+        None,
+        "Video A - YouTube",
+        process="zen.exe",
+        url="https://youtube.com/watch?v=abc",
     )
     rig.source.states = [playing("Video A")]
     rig.at(1)
@@ -268,10 +269,13 @@ def test_url_appearing_later_is_picked_up_then_search_stops(make_rig: Callable[.
     rig.source.states = [playing("Video A")]
     rig.at(1)
     assert rig.conn.execute("SELECT url FROM media_sessions").fetchone() == (None,)
-    rig.conn.execute(
-        "INSERT INTO frames (ts_ms, monitor, process, window_title, url, trigger)"
-        " VALUES (3000, 0, 'zen.exe', 'Video A - YouTube',"
-        " 'https://youtube.com/watch?v=abc', 'idle')"
+    add_frame(
+        rig.conn,
+        3000,
+        None,
+        "Video A - YouTube",
+        process="zen.exe",
+        url="https://youtube.com/watch?v=abc",
     )
     rig.at(7)
     assert rig.conn.execute("SELECT url FROM media_sessions").fetchone() == (

@@ -8,18 +8,17 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
-from capture_fakes import SCREEN, FakeUia, blank, window, with_text_block
+from capture_fakes import LONG_TEXT, SCREEN, FakeUia, blank, window, with_text_block
 from screen_rig import MON_B, Rig
 from store_reads import latest_frames
 
-from akashic.capture import screen as capture_screen
-from akashic.capture.ports import WindowInfo
-from akashic.capture.uia_budget import UiaBudget
+from akashic.capture import uia_budget
+from akashic.capture.uia_budget import BudgetedUia, UiaBudget
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from akashic.capture.ports import BrowserFamily, TextBlock
+    from akashic.capture.ports import BrowserFamily, TextBlock, WindowInfo
 
 
 @dataclass
@@ -47,10 +46,6 @@ class SlowUia(FakeUia):
     def count(self, name: str, hwnd: int | None = None) -> int:
         return sum(1 for n, h in self.calls if n == name and hwnd in (None, h))
 
-    def focused_is_password(self) -> bool | None:
-        scripted, value = self._step("password", 0)
-        return value if scripted else super().focused_is_password()  # type: ignore[return-value]
-
     def browser_caption(self, window: WindowInfo, family: BrowserFamily) -> str | None:
         scripted, value = self._step("caption", window.hwnd)
         return value if scripted else super().browser_caption(window, family)  # type: ignore[return-value]
@@ -67,14 +62,12 @@ class SlowUia(FakeUia):
 @pytest.fixture
 def slow_rig(make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch) -> Callable[..., Rig]:
     def build(**kwargs: object) -> Rig:
-        rig = make_rig(**kwargs)
-        slow = SlowUia(texts=rig.uia.texts)
-        rig.uia = slow
-        rig.capture._uia = slow
+        slow = SlowUia(texts={1: LONG_TEXT})
+        rig = make_rig(uia=slow, **kwargs)
         fake_time = SimpleNamespace(
             monotonic=time.monotonic, time_ns=time.time_ns, perf_counter=lambda: slow.perf[0]
         )
-        monkeypatch.setattr(capture_screen, "time", fake_time)
+        monkeypatch.setattr(uia_budget, "time", fake_time)
         return rig
 
     return build
@@ -88,134 +81,100 @@ def slow_uia(rig: Rig) -> SlowUia:
 def test_a_slow_none_url_read_backs_the_window_off_and_skips_the_rest(
     slow_rig: Callable[..., Rig],
 ) -> None:
-    rig = slow_rig()
+    rig = slow_rig(shown=False)
     uia = slow_uia(rig)
-    rig.windows.focused = window(process="msedge.exe", title="Page - Edge")
+    rig.show(1, "msedge.exe", "Page - Edge")
     uia.delay_ms["url"] = 1000
-    rig.capture.tick(0.0)
-    assert rig.capture.stats["uia_backoff"] == 1
+    uia.urls[1] = None
+    rig.tick(0.0)
+    assert rig.capture.stats_snapshot()["uia_backoff"] == 1
     assert uia.count("url") == 1
     calls_after_first = len(uia.calls)
-    rig.capture.tick(10.0)
+    rig.tick(10.0)
     assert len(uia.calls) == calls_after_first  # no UIA call for a backed-off window
-    assert rig.capture.stats["excluded:password_unknown"] == 1
-    assert latest_frames(rig.conn) == []
 
 
 def test_a_slow_call_that_returns_a_value_never_backs_off(slow_rig: Callable[..., Rig]) -> None:
-    rig = slow_rig()
+    rig = slow_rig(shown=False)
     uia = slow_uia(rig)
-    rig.windows.focused = window(process="chrome.exe", title="Page - Google Chrome")
-    rig.uia.urls[1] = "https://example.org/page"
+    rig.show(1, "chrome.exe", "Page - Google Chrome", url="https://example.org/page")
     uia.delay_ms["url"] = 1500
-    rig.capture.tick(0.0)
-    assert rig.capture.stats["uia_backoff"] == 0
-    assert len(latest_frames(rig.conn)) == 1
+    rig.settle(0.0)
+    assert rig.capture.stats_snapshot().get("uia_backoff", 0) == 0
+    assert len(rig.pictures()) == 1
 
 
 def test_a_fast_none_never_backs_off(slow_rig: Callable[..., Rig]) -> None:
-    rig = slow_rig()
-    rig.windows.focused = window(process="msedge.exe", title="Page - Edge")
+    rig = slow_rig(shown=False)
+    rig.show(1, "msedge.exe", "Page - Edge")
     rig.uia.urls[1] = None  # no omnibox found, instantly
-    rig.capture.tick(0.0)
-    assert rig.capture.stats["uia_backoff"] == 0
+    rig.tick(0.0)
+    assert rig.capture.stats_snapshot().get("uia_backoff", 0) == 0
     first = slow_uia(rig).count("url")
-    rig.capture.tick(10.0)
+    rig.tick(10.0)
     assert slow_uia(rig).count("url") > first  # still read
 
 
-def test_a_slow_none_caption_on_chrome_is_caption_unknown_then_skipped(
+def test_a_slow_none_caption_on_chrome_hides_the_window_and_the_text_is_not_read(
     slow_rig: Callable[..., Rig],
 ) -> None:
-    rig = slow_rig()
+    rig = slow_rig(shown=False)
     uia = slow_uia(rig)
-    rig.windows.focused = window(process="chrome.exe", title="Page - Google Chrome")
-    rig.uia.captions[1] = None
+    rig.show(1, "chrome.exe", "Page - Google Chrome", url="https://example.org/page")
+    uia.captions[1] = None
     uia.delay_ms["caption"] = 1000
-    rig.capture.tick(0.0)
-    assert rig.capture.stats["uia_backoff"] == 1
-    assert rig.capture.stats["excluded:caption_unknown"] == 1
-    assert uia.count("url") == 0
-    rig.capture.tick(10.0)
+    rig.tick(0.0)
+    assert rig.capture.stats_snapshot()["uia_backoff"] == 1
+    assert rig.last_note() == "hidden"  # caption unknown: excluded
+    rig.tick(10.0)  # backed off: the caption is not asked again, the window stays hidden
     assert uia.count("caption") == 1
-    assert rig.capture.stats["excluded:password_unknown"] == 1
+    assert uia.text_reads == []
 
 
-def test_a_slow_none_password_check_fails_closed_and_skips_the_rest(
+def test_a_backed_off_window_skips_its_text_read_and_the_writer_uses_ocr(
     slow_rig: Callable[..., Rig],
 ) -> None:
-    rig = slow_rig()
-    uia = slow_uia(rig)
-    rig.uia.password = None
-    uia.delay_ms["password"] = 1000
-    rig.capture.tick(0.0)
-    assert rig.capture.stats["uia_backoff"] == 1
-    assert rig.capture.stats["excluded:password_unknown"] == 1
-    assert latest_frames(rig.conn) == []
-    assert uia.count("text") == 0
+    budget = UiaBudget()
+    budget.record_failure(1, 1000.0, 0.0)
+    rig = slow_rig(budget=budget, shown=False)
+    rig.show(1, image=with_text_block(blank()))
+    rig.settle(0.0)
+    rig.drain()
+    assert slow_uia(rig).count("text") == 0
+    assert rig.pictures()[0].uia_text is None
+    frame = latest_frames(rig.conn)[0]
+    assert (frame.text, frame.text_source) == ("recognized words", "ocr")
 
 
-def test_a_url_that_turns_unreadable_after_a_backoff_rejects_the_frame(
-    slow_rig: Callable[..., Rig],
-) -> None:
-    rig = slow_rig()
-    uia = slow_uia(rig)
-    rig.windows.focused = window(process="chrome.exe", title="Page - Google Chrome")
-    uia.script["url"] = [(0.0, "https://example.org/page"), (1000.0, None)]
-    rig.capture.tick(0.0)
-    assert rig.capture.stats["uia_backoff"] == 1
-    assert rig.capture.stats["window_changed"] == 1
-    assert latest_frames(rig.conn) == []
-
-
-def test_the_backoff_is_per_window_and_recovers_on_the_tick_clock(
+def test_the_backoff_is_per_window_and_a_side_window_is_read_again_at_t_plus_30(
     slow_rig: Callable[..., Rig],
 ) -> None:
     rig = slow_rig(monitors=[SCREEN, MON_B])
     uia = slow_uia(rig)
-    side = window(hwnd=7, process="zen.exe", title="Side - Zen", rect=MON_B)
-    other = window(hwnd=9, process="zen.exe", title="Other - Zen", rect=MON_B)
-    rig.windows.at[MON_B.center] = side
+    rig.show(7, "zen.exe", "Side - Zen", MON_B, focus=False, url="https://example.org/side")
     uia.script["url"] = [(1000.0, None)]  # the side window hangs once
-    rig.capture.tick(0.0)
-    assert rig.capture.stats["uia_backoff"] == 1
-    assert uia.count("password") >= 1  # the focused window was still read
+    rig.settle(0.0)
+    assert rig.capture.stats_snapshot()["uia_backoff"] == 1
+    assert uia.count("text", 1) >= 1  # the focused window was still read
     assert uia.count("url", 7) == 1
-    rig.capture.tick(15.0)  # next side check is inside the backoff
+    rig.tick(15.0)  # the next side check is inside the backoff
     assert uia.count("url", 7) == 1
-    rig.windows.at[MON_B.center] = other  # another window on that monitor is unaffected
-    rig.capture.tick(30.0)
-    assert uia.count("url", 9) >= 1
-    rig.windows.at[MON_B.center] = side
-    rig.capture.tick(60.0)
-    assert uia.count("url", 7) > 1  # backoff over
-
-
-def test_a_backed_off_side_window_is_read_again_at_t_plus_30(
-    slow_rig: Callable[..., Rig],
-) -> None:
-    rig = slow_rig(monitors=[SCREEN, MON_B])
-    uia = slow_uia(rig)
-    rig.windows.at[MON_B.center] = window(hwnd=7, process="zen.exe", title="S - Zen", rect=MON_B)
-    uia.script["url"] = [(1000.0, None)]
-    rig.capture.tick(0.0)
-    rig.capture.tick(15.0)
-    assert uia.count("url", 7) == 1
-    rig.capture.tick(30.0)
+    rig.tick(30.0)  # the backoff ends at 0 + 30
     assert uia.count("url", 7) > 1
 
 
 def test_a_second_slow_failure_after_recovery_starts_a_new_backoff(
     slow_rig: Callable[..., Rig],
 ) -> None:
-    rig = slow_rig()
+    rig = slow_rig(shown=False)
     uia = slow_uia(rig)
-    rig.windows.focused = window(process="msedge.exe", title="Page - Edge")
+    rig.show(1, "msedge.exe", "Page - Edge")
+    uia.urls[1] = None
     uia.delay_ms["url"] = 1000
-    rig.capture.tick(0.0)
-    rig.capture.tick(10.0)
-    rig.capture.tick(30.0)
-    assert rig.capture.stats["uia_backoff"] == 2
+    rig.tick(0.0)
+    rig.tick(10.0)
+    rig.tick(30.0)
+    assert rig.capture.stats_snapshot()["uia_backoff"] == 2
     assert uia.count("url") == 2
 
 
@@ -223,36 +182,68 @@ def test_a_slow_read_text_never_backs_off(slow_rig: Callable[..., Rig]) -> None:
     rig = slow_rig()
     uia = slow_uia(rig)
     uia.delay_ms["text"] = 1900
-    rig.capture.tick(0.0)
-    assert rig.capture.stats["uia_backoff"] == 0
+    rig.settle(0.0)
+    assert rig.capture.stats_snapshot().get("uia_backoff", 0) == 0
     assert uia.count("text") == 1
-    assert len(latest_frames(rig.conn)) == 1
+    assert len(rig.pictures()) == 1
 
 
-def test_a_backed_off_game_window_fails_the_game_frame_password_check(
-    slow_rig: Callable[..., Rig],
-) -> None:
+def test_a_backed_off_game_window_asks_uia_for_nothing(slow_rig: Callable[..., Rig]) -> None:
     budget = UiaBudget()
     budget.record_failure(7, 1000.0, 0.0)
-    rig = slow_rig(budget=budget)
-    rig.windows.focused = WindowInfo(7, "game.exe", "The Game", SCREEN, has_frame=False)
-    rig.capture.tick(0.0)
-    assert slow_uia(rig).count("password") == 0
-    assert rig.capture.stats["window_changed"] == 1
-    assert latest_frames(rig.conn) == []
+    rig = slow_rig(budget=budget, shown=False)
+    rig.show(7, "game.exe", "The Game", has_frame=False)
+    rig.settle(0.0)
+    assert slow_uia(rig).calls == []
 
 
-def test_a_backed_off_side_window_is_not_read_in_gaming_mode(slow_rig: Callable[..., Rig]) -> None:
+@pytest.mark.parametrize("backed_off", [True, False])
+def test_in_gaming_mode_a_side_browser_is_judged_unless_it_is_backed_off(
+    slow_rig: Callable[..., Rig], *, backed_off: bool
+) -> None:
     budget = UiaBudget()
-    budget.record_failure(8, 1000.0, 0.0)
-    rig = slow_rig(monitors=[SCREEN, MON_B], budget=budget)
-    rig.windows.focused = WindowInfo(7, "game.exe", "The Game", SCREEN, has_frame=False)
-    rig.windows.at[MON_B.center] = window(
-        hwnd=8, process="chrome.exe", title="Side - Google Chrome", rect=MON_B
-    )
-    rig.capture.tick(0.0)
-    assert slow_uia(rig).count("caption", 8) == 0
-    assert rig.capture.stats["excluded:caption_unknown"] == 1
+    if backed_off:
+        budget.record_failure(8, 1000.0, 0.0)
+    rig = slow_rig(monitors=[SCREEN, MON_B], budget=budget, shown=False)
+    rig.show(8, "chrome.exe", "Side - Google Chrome", MON_B, focus=False, url="https://a.org/")
+    rig.show(7, "game.exe", "The Game", has_frame=False)
+    rig.tick(0.0)
+    uia = slow_uia(rig)
+    assert (uia.count("caption", 8), uia.count("url", 8)) == ((0, 0) if backed_off else (1, 1))
+    assert uia.text_reads == []
+
+
+def _assert_no_leak(rig: Rig, caplog: pytest.LogCaptureFixture, secrets: list[str]) -> None:
+    assert rig.capture.stats_snapshot()["uia_backoff"] == 1
+    assert isinstance(rig.capture.stats_snapshot()["uia_backoff"], int)
+    logged = "\n".join(r.getMessage() for r in caplog.records)
+    stats = " ".join(f"{k} {v}" for k, v in rig.capture.stats_snapshot().items())
+    for secret in secrets:
+        assert secret not in logged
+        assert secret not in stats
+
+
+def test_a_started_backoff_logs_and_counts_nothing_identifying(
+    slow_rig: Callable[..., Rig], caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level("DEBUG", logger="akashic")
+    rig = slow_rig(shown=False)
+    rig.show(424242, "msedge.exe", "ZZ-Sentinel-Title")
+    rig.uia.urls[424242] = None
+    slow_uia(rig).delay_ms["url"] = 1000
+    rig.tick(0.0)
+    _assert_no_leak(rig, caplog, ["ZZ-Sentinel-Title", "424242"])
+
+
+def test_a_started_url_backoff_logs_and_counts_no_url_or_title(
+    slow_rig: Callable[..., Rig], caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level("DEBUG", logger="akashic")
+    rig = slow_rig(shown=False)
+    rig.show(424243, "chrome.exe", "ZZ-Sentinel-Title - Google Chrome")
+    slow_uia(rig).script["url"] = [(1000.0, None)]
+    rig.tick(0.0)
+    _assert_no_leak(rig, caplog, ["zz-sentinel", "ZZ-Sentinel-Title", "424243"])
 
 
 def test_expired_backoffs_are_pruned() -> None:
@@ -265,65 +256,74 @@ def test_expired_backoffs_are_pruned() -> None:
     assert budget.window_allowed(1, 0.0)  # hwnd 1's entry is gone, not just expired
 
 
-def _backed_off_rig(slow_rig: Callable[..., Rig]) -> Rig:
+def _budgeted(
+    slow_rig: Callable[..., Rig], budget: UiaBudget | None = None
+) -> tuple[BudgetedUia, SlowUia]:
+    slow = slow_uia(slow_rig(budget=budget))
+    return BudgetedUia(slow, budget), slow
+
+
+def test_address_returns_the_raw_bar_text_and_counts_the_read(
+    slow_rig: Callable[..., Rig],
+) -> None:
+    uia, slow = _budgeted(slow_rig)
+    slow.script["url"] = [(40.0, "  example.org/page ")]
+    assert uia.address(window(process="zen.exe"), "firefox", 0.0) == "  example.org/page "
+    assert uia.stats["uia_reads:zen.exe"] == 1
+    assert uia.stats["uia_ms:zen.exe"] == 40
+
+
+def test_a_backed_off_hwnd_gets_none_from_caption_and_address_without_a_call(
+    slow_rig: Callable[..., Rig],
+) -> None:
+    uia, slow = _budgeted(slow_rig)
+    slow.script["url"] = [(1000.0, None)]
+    chrome = window(hwnd=5, process="chrome.exe")
+    assert uia.address(chrome, "chromium", 10.0) is None
+    assert uia.stats["uia_backoff"] == 1
+    calls = len(slow.calls)
+    assert uia.caption(chrome, "chromium", 39.9) is None
+    assert uia.address(chrome, "chromium", 39.9) is None
+    assert len(slow.calls) == calls
+    assert uia.caption(chrome, "chromium", 40.0) == "Notes"  # backoff ended at now + 30
+
+
+def test_a_slow_none_caption_backs_off_and_a_fast_one_does_not(
+    slow_rig: Callable[..., Rig],
+) -> None:
+    uia, slow = _budgeted(slow_rig)
+    slow.script["caption"] = [(850.0, None), (950.0, None)]
+    assert uia.caption(window(hwnd=1), "chromium", 0.0) is None
+    assert uia.stats["uia_backoff"] == 0
+    assert uia.caption(window(hwnd=2), "chromium", 0.0) is None
+    assert uia.stats["uia_backoff"] == 1
+
+
+def test_text_skips_the_reader_when_backed_off_or_over_budget(
+    slow_rig: Callable[..., Rig],
+) -> None:
     budget = UiaBudget()
     budget.record_failure(1, 1000.0, 0.0)
-    return slow_rig(budget=budget)
+    uia, slow = _budgeted(slow_rig, budget)
+    assert uia.text(window(hwnd=1), 5.0) is None
+    budget.record(window(hwnd=2).process, 300.0, 5.0)  # critical cost: next walk 20 s later
+    assert uia.text(window(hwnd=2), 6.0) is None
+    assert slow.count("text") == 0
 
 
-def test_a_backed_off_window_with_pixels_skips_read_text_and_uses_ocr(
-    slow_rig: Callable[..., Rig],
-) -> None:
-    rig = _backed_off_rig(slow_rig)
-    target = capture_screen._Target(window(), is_focused=True)
-    image = with_text_block(blank())
-    text, source, _ = rig.capture._read_text(target, image, black=False, ocr=True, now=0.0)
-    assert slow_uia(rig).count("text") == 0
-    assert (text, source) == ("recognized words", "ocr")
-    assert rig.ocr.calls == 1
+def test_text_reads_records_the_cost_and_never_backs_off(slow_rig: Callable[..., Rig]) -> None:
+    budget = UiaBudget()
+    uia, slow = _budgeted(slow_rig, budget)
+    slow.delay_ms["text"] = 1500
+    assert uia.text(window(hwnd=3), 0.0) is None  # no texts configured: a None read
+    assert slow.count("text") == 1
+    assert budget.average_ms("notepad.exe") == pytest.approx(1500)
+    assert budget.window_allowed(3, 0.0)
+    assert uia.stats["uia_backoff"] == 0
 
 
-def test_a_backed_off_window_without_pixels_stores_empty_text(
-    slow_rig: Callable[..., Rig],
-) -> None:
-    rig = _backed_off_rig(slow_rig)
-    target = capture_screen._Target(window(), is_focused=True)
-    text, source, gate = rig.capture._read_text(target, None, black=False, ocr=True, now=0.0)
-    assert slow_uia(rig).count("text") == 0
-    assert (text, source, gate) == ("", None, None)
-    assert rig.ocr.calls == 0
-
-
-def _assert_no_leak(rig: Rig, caplog: pytest.LogCaptureFixture, secrets: list[str]) -> None:
-    assert rig.capture.stats["uia_backoff"] == 1
-    assert isinstance(rig.capture.stats["uia_backoff"], int)
-    logged = "\n".join(r.getMessage() for r in caplog.records)
-    stats = " ".join(f"{k} {v}" for k, v in rig.capture.stats.items())
-    for secret in secrets:
-        assert secret not in logged
-        assert secret not in stats
-
-
-def test_a_started_backoff_logs_and_counts_nothing_identifying(
-    slow_rig: Callable[..., Rig], caplog: pytest.LogCaptureFixture
-) -> None:
-    caplog.set_level("DEBUG", logger="akashic")
-    rig = slow_rig()
-    rig.windows.focused = window(hwnd=424242, process="zzsentinel.exe", title="ZZ-Sentinel-Title")
-    rig.uia.password = None
-    slow_uia(rig).delay_ms["password"] = 1000
-    rig.capture.tick(0.0)
-    _assert_no_leak(rig, caplog, ["zzsentinel", "ZZ-Sentinel-Title", "424242"])
-
-
-def test_a_started_url_backoff_logs_and_counts_no_url_or_title(
-    slow_rig: Callable[..., Rig], caplog: pytest.LogCaptureFixture
-) -> None:
-    caplog.set_level("DEBUG", logger="akashic")
-    rig = slow_rig()
-    rig.windows.focused = window(
-        hwnd=424243, process="chrome.exe", title="ZZ-Sentinel-Title - Google Chrome"
-    )
-    slow_uia(rig).script["url"] = [(0.0, "https://zz-sentinel.example/secret"), (1000.0, None)]
-    rig.capture.tick(0.0)
-    _assert_no_leak(rig, caplog, ["zz-sentinel", "ZZ-Sentinel-Title", "424243"])
+def test_stats_are_keyed_by_browser_exe_only(slow_rig: Callable[..., Rig]) -> None:
+    uia, _ = _budgeted(slow_rig)
+    uia.caption(window(hwnd=424244, process="firefox.exe", title="Secret"), "firefox", 0.0)
+    assert set(uia.stats) <= {"uia_reads:firefox.exe", "uia_ms:firefox.exe"}
+    assert not [k for k in uia.stats if "424244" in k or "Secret" in k]

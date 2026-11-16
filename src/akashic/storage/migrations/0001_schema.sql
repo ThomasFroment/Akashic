@@ -10,51 +10,121 @@
 -- Screen frames
 -- ============================================================================================
 
--- One capture = one row; screenshot and text share the timestamp.
+-- One capture of one monitor; its windows, their identity and text live on frame_windows.
 CREATE TABLE frames (
     id           INTEGER PRIMARY KEY,
     ts_ms        INTEGER NOT NULL,
-    monitor      INTEGER NOT NULL,
-    process      TEXT,
-    window_title TEXT,
-    url          TEXT,
-    text         TEXT,
-    text_source  TEXT CHECK (text_source IN ('uia', 'ocr')),
+    monitor_id   INTEGER NOT NULL REFERENCES monitors (id),
     trigger      TEXT NOT NULL,
-    image_path   TEXT,         -- relative to media/; NULL when dropped (e.g. DRM black frame)
-    -- Whether the frame shows the window that had keyboard focus (frames of other monitors do
-    -- not). App sessions are derived from focused frames only.
-    focused      INTEGER NOT NULL DEFAULT 1
+    image_path   TEXT          -- relative to media/; NULL when dropped (e.g. DRM black frame)
 );
 
 CREATE INDEX frames_ts ON frames (ts_ms);
+CREATE INDEX frames_monitor_ts ON frames (monitor_id, ts_ms);
 
--- remove_diacritics 2: "cafe" matches "café" (French OCR and typing).
-CREATE VIRTUAL TABLE frames_fts USING fts5 (
+-- The windows a frame shows, front to back (z = 0 is the front). Only app rows carry content;
+-- hidden (covered, unreadable) and shell (desktop, taskbar) rows keep a rectangle only.
+CREATE TABLE frame_windows (
+    id          INTEGER PRIMARY KEY,
+    frame_id    INTEGER NOT NULL REFERENCES frames (id) ON DELETE CASCADE,
+    role        TEXT NOT NULL CHECK (role IN ('app', 'hidden', 'shell')),
+    z           INTEGER NOT NULL,
+    hwnd        INTEGER,
+    x0          INTEGER NOT NULL,   -- rectangle in virtual-desktop pixels
+    y0          INTEGER NOT NULL,
+    x1          INTEGER NOT NULL,
+    y1          INTEGER NOT NULL,
+    process     TEXT,
+    title       TEXT,
+    url         TEXT,
+    focused     INTEGER NOT NULL DEFAULT 0 CHECK (focused IN (0, 1)),
+    painted     INTEGER NOT NULL DEFAULT 0 CHECK (painted IN (0, 1)),
+    text        TEXT,
+    text_source TEXT CHECK (text_source IN ('uia', 'ocr', 'ocr_deferred')),
+    capture_path TEXT,  -- encrypted whole-window capture waiting for deferred OCR, relative to media/; NULL once read or expired
+    UNIQUE (frame_id, z),
+    CHECK (role = 'app' OR (process IS NULL AND title IS NULL AND url IS NULL AND text IS NULL
+                            AND text_source IS NULL AND focused = 0 AND capture_path IS NULL)),
+    CHECK (role <> 'app' OR hwnd IS NOT NULL),
+    CHECK (role <> 'hidden' OR hwnd IS NULL),
+    CHECK (capture_path IS NULL OR text IS NULL)
+);
+
+CREATE UNIQUE INDEX frame_windows_focused ON frame_windows (frame_id) WHERE focused = 1;
+CREATE INDEX frame_windows_capture ON frame_windows (id) WHERE capture_path IS NOT NULL;
+
+-- remove_diacritics 2: "cafe" matches "café" (French OCR and typing). One entry per window, so
+-- a phrase never matches across two windows.
+CREATE VIRTUAL TABLE frame_windows_fts USING fts5 (
     text,
-    window_title,
+    title,
     url,
-    content = 'frames',
+    content = 'frame_windows',
     content_rowid = 'id',
     tokenize = 'unicode61 remove_diacritics 2'
 );
 
-CREATE TRIGGER frames_ai AFTER INSERT ON frames BEGIN
-    INSERT INTO frames_fts (rowid, text, window_title, url)
-    VALUES (new.id, new.text, new.window_title, new.url);
+CREATE TRIGGER frame_windows_ai AFTER INSERT ON frame_windows WHEN new.role = 'app' BEGIN
+    INSERT INTO frame_windows_fts (rowid, text, title, url)
+    VALUES (new.id, new.text, new.title, new.url);
 END;
 
-CREATE TRIGGER frames_ad AFTER DELETE ON frames BEGIN
-    INSERT INTO frames_fts (frames_fts, rowid, text, window_title, url)
-    VALUES ('delete', old.id, old.text, old.window_title, old.url);
+CREATE TRIGGER frame_windows_ad AFTER DELETE ON frame_windows WHEN old.role = 'app' BEGIN
+    INSERT INTO frame_windows_fts (frame_windows_fts, rowid, text, title, url)
+    VALUES ('delete', old.id, old.text, old.title, old.url);
 END;
 
-CREATE TRIGGER frames_au AFTER UPDATE ON frames BEGIN
-    INSERT INTO frames_fts (frames_fts, rowid, text, window_title, url)
-    VALUES ('delete', old.id, old.text, old.window_title, old.url);
-    INSERT INTO frames_fts (rowid, text, window_title, url)
-    VALUES (new.id, new.text, new.window_title, new.url);
+CREATE TRIGGER frame_windows_au AFTER UPDATE OF text, title, url ON frame_windows WHEN new.role = 'app' BEGIN
+    INSERT INTO frame_windows_fts (frame_windows_fts, rowid, text, title, url)
+    VALUES ('delete', old.id, old.text, old.title, old.url);
+    INSERT INTO frame_windows_fts (rowid, text, title, url)
+    VALUES (new.id, new.text, new.title, new.url);
 END;
+
+
+-- ============================================================================================
+-- Monitors
+-- ============================================================================================
+
+-- A physical monitor, known by a stable key. The name is the latest one seen.
+CREATE TABLE monitors (
+    id   INTEGER PRIMARY KEY,
+    key  TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL
+);
+
+-- A layout run: from start_ms the desk is the set of members, until the next run starts.
+CREATE TABLE monitor_layouts (
+    id       INTEGER PRIMARY KEY,
+    start_ms INTEGER NOT NULL
+);
+
+CREATE INDEX monitor_layouts_start ON monitor_layouts (start_ms);
+
+CREATE TABLE layout_monitors (
+    layout_id  INTEGER NOT NULL REFERENCES monitor_layouts (id) ON DELETE CASCADE,
+    monitor_id INTEGER NOT NULL REFERENCES monitors (id) ON DELETE CASCADE,
+    x0         INTEGER NOT NULL,   -- rectangle in virtual-desktop pixels
+    y0         INTEGER NOT NULL,
+    x1         INTEGER NOT NULL,
+    y1         INTEGER NOT NULL,
+    scale      REAL NOT NULL,
+    is_main    INTEGER NOT NULL,
+    PRIMARY KEY (layout_id, monitor_id)
+);
+
+CREATE INDEX layout_monitors_monitor ON layout_monitors (monitor_id);
+
+-- A state run: the monitor was in this state from start_ms and last confirmed so at checked_ms.
+CREATE TABLE monitor_states (
+    id         INTEGER PRIMARY KEY,
+    monitor_id INTEGER NOT NULL REFERENCES monitors (id) ON DELETE CASCADE,
+    state      TEXT NOT NULL CHECK (state IN ('shown', 'hidden', 'dropped', 'failed')),
+    start_ms   INTEGER NOT NULL,
+    checked_ms INTEGER NOT NULL CHECK (checked_ms >= start_ms)
+);
+
+CREATE INDEX monitor_states_start ON monitor_states (monitor_id, start_ms);
 
 
 -- ============================================================================================
@@ -116,7 +186,7 @@ CREATE TRIGGER media_sessions_au AFTER UPDATE OF title, artist, app ON media_ses
     VALUES (new.id, new.title, new.artist, new.app);
 END;
 
--- Contiguous focus periods, derived from focused frames by the worker.
+-- Contiguous focus periods, derived from focused window rows by the worker.
 CREATE TABLE app_sessions (
     id            INTEGER PRIMARY KEY,
     process       TEXT,
@@ -239,8 +309,8 @@ CREATE TABLE process_info (
     data       TEXT NOT NULL   -- JSON object
 );
 
--- Small named integers the processes keep between passes: watermarks and short-lived flags
--- (e.g. how far the conversation builder has looked, until when the mic meter is wanted).
+-- Small named integers the processes keep between passes: watermarks
+-- (e.g. how far the conversation builder has looked).
 CREATE TABLE state (
     key   TEXT PRIMARY KEY,
     value INTEGER NOT NULL
@@ -259,7 +329,7 @@ CREATE TABLE capture_gaps (
     reason   TEXT NOT NULL CHECK (reason IN (
         'paused', 'stopped', 'crashed', 'stalled', 'locked', 'ocr_unavailable',
         'audio_unavailable', 'disabled', 'device_missing', 'device_failed', 'excluded',
-        'unknown_sources', 'music', 'backlog', 'write_failed'
+        'unknown_sources', 'music', 'backlog', 'write_failed', 'ui_open'
     )),
     start_ms INTEGER NOT NULL CHECK (typeof(start_ms) = 'integer'),
     end_ms   INTEGER CHECK (
@@ -593,21 +663,21 @@ END;
 -- ============================================================================================
 
 -- Screen text uses the same bounded passage strategy. No copied text or image embeddings.
-CREATE TABLE frame_passages (
-    frame_id   INTEGER NOT NULL REFERENCES frames (id) ON DELETE CASCADE,
+CREATE TABLE window_passages (
+    window_id  INTEGER NOT NULL REFERENCES frame_windows (id) ON DELETE CASCADE,
     model      TEXT NOT NULL,
     start_char INTEGER NOT NULL CHECK (start_char >= 0),
     end_char   INTEGER NOT NULL CHECK (end_char > start_char),
     dim        INTEGER NOT NULL CHECK (dim > 0),
     vec        BLOB NOT NULL CHECK (length(vec) = dim * 2),
-    PRIMARY KEY (frame_id, model, start_char)
+    PRIMARY KEY (window_id, model, start_char)
 );
 
-CREATE INDEX frame_passages_model ON frame_passages (model, frame_id);
+CREATE INDEX window_passages_model ON window_passages (model, window_id);
 
-CREATE TRIGGER frames_passages_au AFTER UPDATE OF text ON frames
+CREATE TRIGGER frame_windows_passages_au AFTER UPDATE OF text ON frame_windows
 WHEN old.text IS NOT new.text BEGIN
-    DELETE FROM frame_passages WHERE frame_id = new.id;
+    DELETE FROM window_passages WHERE window_id = new.id;
 END;
 
 -- Draft-derived references and copied context are transcript-derived text, so they are cleared
@@ -628,37 +698,37 @@ WHEN old.transcript IS NOT NULL BEGIN
 END;
 
 -- Keeps screen-text provenance independently of frame retention, like question_segments.
--- No frame foreign key: deletion must still find its saved copies in the AFTER trigger.
-CREATE TABLE question_frames (
+-- No window foreign key: deletion must still find its saved copies in the AFTER trigger.
+CREATE TABLE question_windows (
     question_id INTEGER NOT NULL REFERENCES questions (id) ON DELETE CASCADE,
-    frame_id    INTEGER NOT NULL,
-    PRIMARY KEY (question_id, frame_id)
+    window_id   INTEGER NOT NULL,
+    PRIMARY KEY (question_id, window_id)
 );
 
-CREATE INDEX question_frames_frame ON question_frames (frame_id, question_id);
+CREATE INDEX question_windows_window ON question_windows (window_id, question_id);
 
 -- Both triggers run in the original write transaction: a failed write restores every copy.
 -- Questions still queued or working may hold the old text in memory: they must not publish it.
-CREATE TRIGGER frame_text_copies_au AFTER UPDATE OF text ON frames
+CREATE TRIGGER window_text_copies_au AFTER UPDATE OF text ON frame_windows
 WHEN old.text IS NOT NULL AND old.text IS NOT new.text BEGIN
     UPDATE questions SET state = 'failed', step = '', plan = NULL, answer = '', sources = '[]',
         model = NULL, error = 'Source screen text changed. Ask again.', finished_ms = NULL
     WHERE state IN ('queued', 'working') OR id IN (
-        SELECT later.id FROM question_frames p JOIN questions affected ON affected.id = p.question_id
+        SELECT later.id FROM question_windows p JOIN questions affected ON affected.id = p.question_id
         JOIN questions later ON coalesce(later.thread_id, later.id) = coalesce(affected.thread_id, affected.id)
-        AND later.id >= affected.id WHERE p.frame_id = old.id
+        AND later.id >= affected.id WHERE p.window_id = old.id
     );
-    DELETE FROM question_frames WHERE frame_id = old.id;
+    DELETE FROM question_windows WHERE window_id = old.id;
 END;
 
-CREATE TRIGGER frame_text_copies_ad AFTER DELETE ON frames BEGIN
+CREATE TRIGGER window_text_copies_ad AFTER DELETE ON frame_windows BEGIN
     UPDATE questions SET state = 'failed', step = '', plan = NULL, answer = '', sources = '[]',
         model = NULL, error = 'Source screen text changed. Ask again.', finished_ms = NULL
     WHERE old.text IS NOT NULL AND (state IN ('queued', 'working') OR id IN (
-        SELECT later.id FROM question_frames p JOIN questions affected ON affected.id = p.question_id
+        SELECT later.id FROM question_windows p JOIN questions affected ON affected.id = p.question_id
         JOIN questions later ON coalesce(later.thread_id, later.id) = coalesce(affected.thread_id, affected.id)
-        AND later.id >= affected.id WHERE p.frame_id = old.id
+        AND later.id >= affected.id WHERE p.window_id = old.id
     ));
-    -- Always: a reused frame id must inherit no lineage.
-    DELETE FROM question_frames WHERE frame_id = old.id;
+    -- Always: a reused window id must inherit no lineage.
+    DELETE FROM question_windows WHERE window_id = old.id;
 END;

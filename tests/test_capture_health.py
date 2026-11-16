@@ -6,29 +6,21 @@ import io
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-import pytest
-from capture_fakes import FakeOcr, FakeScreen, FakeUia, FakeWindows, blank, window
-
 from akashic import child, ipc
-from akashic.capture.browser_state import BrowserState
-from akashic.capture.exclusions import Exclusions
-from akashic.capture.health import AUDIO_UNAVAILABLE, SCREEN_IMAGES_FAILING, CaptureStatus
-from akashic.capture.ocr_gate import OcrGate
-from akashic.capture.screen import GRAB_FAILURE_RUN, ScreenCapture
-from akashic.config import Exclusions as UserExclusions
-from akashic.storage import db
-from akashic.storage.crypto import DataKey
-from akashic.storage.frames import FrameStore
-from akashic.storage.media import MediaStore
-from akashic.storage.sessions import GameLog
+from akashic.capture.health import (
+    AUDIO_UNAVAILABLE,
+    GRAB_FAILURE_RUN,
+    SCREEN_IMAGES_FAILING,
+    CaptureStatus,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable
 
-    from akashic.config import Paths
+    import pytest
+    from screen_rig import Rig
 
-CaptureParts = tuple[ScreenCapture, FakeScreen, FakeWindows]
-IDLE_STEP_S = 20.0  # past the idle interval, so every tick grabs again
+IDLE_STEP_S = 20.0  # past the idle interval, so every tick checks again
 
 
 def sent_states(out: io.BytesIO) -> list[str]:
@@ -221,80 +213,43 @@ def test_a_discarded_change_is_not_logged(caplog: pytest.LogCaptureFixture) -> N
     assert caplog.records == []
 
 
-# --- the screen loop's grab record -----------------------------------------------------------
+# --- the screen loop's capture failures reach the writer's health ------------------------------
 
 
-@pytest.fixture
-def make_capture(paths: Paths) -> Iterator[Callable[[], CaptureParts]]:
-    key = DataKey.generate()
-    conn = db.connect(paths.db_file, key.subkey("db"))
-    db.migrate(conn)
-
-    def build() -> CaptureParts:
-        screen = FakeScreen(frames={0: blank("gray")})
-        windows = FakeWindows(focused=window())
-        capture = ScreenCapture(
-            screen=screen,
-            windows=windows,
-            uia=FakeUia(texts={1: ["x" * 80]}),
-            gate=OcrGate(FakeOcr()),
-            store=FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media"))),
-            exclusions=Exclusions(UserExclusions()),
-            browsers=BrowserState(),
-            games=GameLog(conn),
-        )
-        return capture, screen, windows
-
-    yield build
-    conn.close()
-
-
-def fail_grabs(capture: ScreenCapture, screen: FakeScreen, count: int) -> None:
-    screen.unavailable = True
+def fail_captures(rig: Rig, count: int) -> None:
+    rig.captures.refuse.add(1)  # the window capture will not start: each check reports one failure
     for step in range(count):
-        capture.tick(step * IDLE_STEP_S)
+        rig.tick(step * IDLE_STEP_S)
 
 
-def test_three_failed_grabs_in_a_row_are_a_problem(
-    make_capture: Callable[[], CaptureParts],
-) -> None:
-    capture, screen, _ = make_capture()
-    fail_grabs(capture, screen, GRAB_FAILURE_RUN - 1)
-    assert not capture.images_failing(float("-inf"))
-    capture.tick(GRAB_FAILURE_RUN * IDLE_STEP_S)
-    assert capture.images_failing(float("-inf"))
+def test_three_failed_captures_in_a_row_are_a_problem(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    fail_captures(rig, GRAB_FAILURE_RUN - 1)
+    assert rig.writer.problems(float("-inf")) == []
+    rig.tick(GRAB_FAILURE_RUN * IDLE_STEP_S)
+    assert rig.writer.problems(float("-inf")) == [f"{SCREEN_IMAGES_FAILING}@Monitor 1"]
 
 
-def test_failures_before_the_resume_do_not_count(make_capture: Callable[[], CaptureParts]) -> None:
-    capture, screen, _ = make_capture()
-    fail_grabs(capture, screen, GRAB_FAILURE_RUN)
-    assert capture.images_failing(float("-inf"))
-    assert not capture.images_failing(float("inf"))
+def test_failures_before_the_resume_do_not_count(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    fail_captures(rig, GRAB_FAILURE_RUN)
+    assert rig.writer.problems(float("-inf")) == [f"{SCREEN_IMAGES_FAILING}@Monitor 1"]
+    assert rig.writer.problems(float("inf")) == []
 
 
-def test_a_successful_grab_clears_the_record(make_capture: Callable[[], CaptureParts]) -> None:
-    capture, screen, windows = make_capture()
-    fail_grabs(capture, screen, GRAB_FAILURE_RUN)
-    screen.unavailable = False
-    windows.focused = window(title="Another window")
-    capture.tick(GRAB_FAILURE_RUN * IDLE_STEP_S)
-    assert not capture.images_failing(float("-inf"))
+def test_a_good_check_clears_the_record(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    fail_captures(rig, GRAB_FAILURE_RUN)
+    rig.captures.refuse.clear()
+    rig.settle(GRAB_FAILURE_RUN * IDLE_STEP_S)
+    assert rig.writer.problems(float("-inf")) == []
 
 
-def test_reset_clears_the_record(make_capture: Callable[[], CaptureParts]) -> None:
-    capture, screen, _ = make_capture()
-    fail_grabs(capture, screen, GRAB_FAILURE_RUN)
-    capture.reset()
-    assert not capture.images_failing(float("-inf"))
-
-
-def test_a_locked_session_does_not_touch_the_record(
-    make_capture: Callable[[], CaptureParts],
-) -> None:
-    capture, screen, windows = make_capture()
-    fail_grabs(capture, screen, GRAB_FAILURE_RUN - 1)
-    windows.locked = True
-    capture.tick(GRAB_FAILURE_RUN * IDLE_STEP_S)
-    windows.locked = False
-    capture.tick((GRAB_FAILURE_RUN + 1) * IDLE_STEP_S)
-    assert capture.images_failing(float("-inf"))
+def test_a_locked_session_does_not_touch_the_record(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    fail_captures(rig, GRAB_FAILURE_RUN - 1)
+    rig.windows.locked = True
+    rig.tick(GRAB_FAILURE_RUN * IDLE_STEP_S)
+    rig.windows.locked = False
+    rig.tick((GRAB_FAILURE_RUN + 1) * IDLE_STEP_S)
+    assert rig.writer.problems(float("-inf")) == [f"{SCREEN_IMAGES_FAILING}@Monitor 1"]
