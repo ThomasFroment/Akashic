@@ -221,9 +221,12 @@ def _always(conn: Connection, sql: str, params: dict[str, int]) -> bool:
     return bool(flags) and all(flag for (flag,) in flags)
 
 
+# The stored picture of frame `f` shows window `w`, so its crop can be served.
+SHOWN_SQL: Final = "f.image_path IS NOT NULL AND w.painted = 1"
+
 # A painted app window of the episode's app (and url, or title for media without a url).
 _MATCH: Final = (
-    "w.role = 'app' AND w.painted = 1 AND f.image_path IS NOT NULL"
+    f"w.role = 'app' AND {SHOWN_SQL}"
     " AND lower(w.process) = :process"
     " AND (:url IS NULL OR w.url = :url)"
     " AND (:media = 0 OR :url IS NOT NULL"
@@ -277,3 +280,13 @@ def frame_moment(conn: Connection, frame_id: int) -> tuple[int, int] | None:
     """The (ts_ms, monitor id) of a frame, or None when it is gone."""
     row = conn.execute("SELECT ts_ms, monitor_id FROM frames WHERE id = ?", (frame_id,)).fetchone()
     return None if row is None else (int(row[0]), int(row[1]))
+
+
+def window_shown(conn: Connection, window_id: int) -> bool:
+    """True when the stored picture of the window's frame shows that window."""
+    row = conn.execute(
+        f"SELECT {SHOWN_SQL}"  # noqa: S608 - constant fragment
+        " FROM frame_windows w JOIN frames f ON f.id = w.frame_id WHERE w.id = ?",
+        (window_id,),
+    ).fetchone()
+    return row is not None and bool(row[0])

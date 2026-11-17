@@ -37,7 +37,7 @@ class FakeSupervisor:
 
 
 def overall(**states: str) -> str:
-    return app._overall_state(cast("Supervisor", FakeSupervisor(states)))  # pyright: ignore[reportPrivateUsage]
+    return app._overall_state(cast("Supervisor", FakeSupervisor(states)), None)  # pyright: ignore[reportPrivateUsage]
 
 
 # --- the tray word -------------------------------------------------------------------------

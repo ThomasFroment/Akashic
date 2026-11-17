@@ -15,15 +15,18 @@ from __future__ import annotations
 
 import logging
 import re
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol
 
 import numpy as np
 
 from akashic.fold import fold
-from akashic.storage.jobs import PermanentJobError
+from akashic.storage.jobs import DEFER_MS, DeferJob, PermanentJobError
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
+
     from numpy.typing import NDArray
 
     from akashic.storage.audio import AudioStore
@@ -84,6 +87,41 @@ class Transcriber(Protocol):
     def unload_if_idle(self, *, force: bool = False) -> None:
         """Free the model's VRAM after the configured idle time."""
         ...
+
+    def load_error(self) -> str | None:
+        """Why the model failed to load, for ``DEFER_MS`` after the failure; else None."""
+        ...
+
+
+class LoadFailure:
+    """The last model load failure of a transcriber: the exception type name only, reported
+    for ``DEFER_MS`` and forgotten on a successful load."""
+
+    def __init__(self, clock: Callable[[], float]) -> None:
+        self._clock = clock
+        self._failed_at: float | None = None
+        self._reason = ""
+
+    def record(self, exc: Exception) -> None:
+        self._failed_at = self._clock()
+        self._reason = f"model failed to load ({type(exc).__name__})"
+
+    def clear(self) -> None:
+        self._failed_at = None
+
+    @contextmanager
+    def watch(self) -> Generator[None]:
+        """Around a model build: a failure is recorded and re-raised, a success clears it."""
+        try:
+            yield
+        except Exception as exc:
+            self.record(exc)
+            raise
+        self.clear()
+
+    def reason(self) -> str | None:
+        recent = self._failed_at is not None and self._clock() - self._failed_at < DEFER_MS / 1000
+        return self._reason if recent else None
 
 
 def normalize(text: str) -> str:
@@ -202,14 +240,16 @@ class TranscribeHandler:
         transcriber: Transcriber,
         vocabulary: tuple[str, ...],
         model_key: str,
+        speakers_ready: Callable[[], bool],
     ) -> None:
         self._audio = audio
         self._transcriber = transcriber
         self._vocabulary = vocabulary
         self._model_key = model_key
+        self._speakers_ready = speakers_ready
 
     def blocked(self) -> str | None:
-        return None if self._transcriber.available() else "model missing"
+        return self._transcriber.load_error() if self._transcriber.available() else "model missing"
 
     def run(self, job: Job) -> None:
         segment_id = job.payload.get("segment_id")
@@ -233,13 +273,19 @@ class TranscribeHandler:
         earlier = (
             self._audio.get(segment.continues_id) if segment.continues_id is not None else None
         )
-        result = decode_segment(
-            self._transcriber,
-            samples,
-            self._vocabulary,
-            previous,
-            earlier.transcript if earlier else None,
-        )
+        try:
+            result = decode_segment(
+                self._transcriber,
+                samples,
+                self._vocabulary,
+                previous,
+                earlier.transcript if earlier else None,
+            )
+        except Exception as exc:
+            reason = self._transcriber.load_error()
+            if reason is None:
+                raise
+            raise DeferJob(reason) from exc
         if result is None:
             self._audio.set_transcript(segment_id, "empty", None, None, model=self._model_key)
             return
@@ -250,6 +296,7 @@ class TranscribeHandler:
             result.text,
             result.confidence,
             model=self._model_key,
+            queue_speakers=segment.stream == "mic" or self._speakers_ready(),
         )
 
     def give_up(self, job: Job) -> None:

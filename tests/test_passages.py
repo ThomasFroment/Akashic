@@ -17,7 +17,7 @@ from akashic.search.hybrid import search_memory
 from akashic.search.planner import Plan
 from akashic.search.timeparse import TimeRange
 from akashic.storage import embeddings, passages
-from akashic.storage.jobs import JobQueue
+from akashic.storage.jobs import BACKOFF_BASE_MS, JobQueue
 from akashic.storage.media import MediaStore
 from akashic.storage.retention import expire_embeddings
 from akashic.storage.speakers import NewTurn, SpeakerStore
@@ -120,8 +120,8 @@ def test_worker_retry_keeps_legacy_evidence_until_a_complete_set_exists(
             EmbedHandler(conn, model, lambda: True).run(job)
     assert conn.execute("SELECT count(*) FROM segment_passages").fetchone()[0] == 0
     np.testing.assert_array_equal(embeddings.get(conn, "segment", segment, "m"), old)
-    assert queue.release_running() == 1
-    retried = queue.claim([EMBED], 2)
+    assert queue.release_running(1) == []
+    retried = queue.claim([EMBED], 1 + BACKOFF_BASE_MS)
     assert retried is not None
     EmbedHandler(conn, model, lambda: True).run(retried)
     queue.complete(retried.id, 2)

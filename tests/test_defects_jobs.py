@@ -42,7 +42,7 @@ from akashic.pipeline.transcribe import TranscribeHandler, Transcript
 from akashic.storage import db
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.frames import FrameStore
-from akashic.storage.jobs import MAX_ATTEMPTS, Job, JobQueue, NewJob
+from akashic.storage.jobs import BACKOFF_MAX_MS, MAX_ATTEMPTS, Job, JobQueue, NewJob
 from akashic.storage.opus import encode_opus
 from akashic.storage.retention import expire_raw_audio
 from akashic.storage.speakers import SpeakerStore
@@ -117,7 +117,6 @@ class AbsentVoiceModels:
         del force
 
 
-@known_defect(30, "mic speakers jobs wait forever for absent models and block raw-audio retention")
 def test_microphone_audio_expires_even_without_speaker_models(
     conn: sqlite3.Connection, audio: AudioStore, media: MediaStore
 ) -> None:
@@ -143,7 +142,6 @@ def test_games_become_episodes_when_no_speech_job_is_waiting(conn: sqlite3.Conne
     assert build_episodes(conn, NOW)["games"] == 1
 
 
-@known_defect(31, "the transcript horizon also holds back games and app runs, which read no speech")
 @pytest.mark.parametrize("kind", ["speakers", "transcribe"])
 def test_games_become_episodes_while_an_older_speech_job_waits(
     conn: sqlite3.Connection, kind: str
@@ -350,7 +348,6 @@ class CudaMissingModel:
         raise RuntimeError(msg)
 
 
-@known_defect(41, "a model load failure fails each job 5 times, then the segments for good")
 def test_a_model_load_failure_keeps_segments_waiting(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, conn: sqlite3.Connection, audio: AudioStore
 ) -> None:
@@ -362,7 +359,7 @@ def test_a_model_load_failure_keeps_segments_waiting(
     transcriber = whisper.WhisperTranscriber(model_dir, 600.0)
     segment = audio.add(NewSegment("mic", NOW - HOUR, NOW - HOUR + 1_000, 900), speech_opus(), NOW)
     clock = ManualClock()
-    handler = TranscribeHandler(audio, transcriber, (), "test-model")
+    handler = TranscribeHandler(audio, transcriber, (), "test-model", lambda: True)
     runner, _ = make_runner(conn, [handler], clock)
     for _ in range(3 * MAX_ATTEMPTS):
         runner.step()
@@ -376,20 +373,21 @@ def test_a_model_load_failure_keeps_segments_waiting(
 # --- #154: a job that crashes the worker is retried first, forever ---------------------------
 
 
-@known_defect(154, "attempts are counted but never checked when crashed jobs are released")
 def test_a_job_that_keeps_crashing_the_worker_is_given_up(conn: sqlite3.Connection) -> None:
     queue = JobQueue(conn)
     queue.enqueue(NewJob("transcribe", "transcribe:1", NOW - DAY, {"segment_id": 1}), NOW)
     queue.enqueue(NewJob("transcribe", "transcribe:2", NOW, {"segment_id": 2}), NOW)
     claimed: list[str] = []
+    when = NOW + DAY
     for _ in range(MAX_ATTEMPTS + 2):  # each claim is followed by a worker crash and restart
-        job = queue.claim(["transcribe"], NOW + DAY)
+        job = queue.claim(["transcribe"], when)
         if job is None:
             break
         claimed.append(job.key)
         if job.key == "transcribe:2":
             break
-        queue.release_running()
+        queue.release_running(when)
+        when += BACKOFF_MAX_MS  # past the backoff
     assert "transcribe:2" in claimed
     assert job_state(conn, "transcribe")[0][0] == "failed"
 
@@ -397,9 +395,11 @@ def test_a_job_that_keeps_crashing_the_worker_is_given_up(conn: sqlite3.Connecti
 def test_released_jobs_keep_their_attempt_count(conn: sqlite3.Connection) -> None:
     queue = JobQueue(conn)
     queue.enqueue(NewJob("work", "work:1", NOW), NOW)
+    when = NOW
     for _ in range(3):
-        assert queue.claim(["work"], NOW) is not None
-        queue.release_running()
+        assert queue.claim(["work"], when) is not None
+        assert queue.release_running(when) == []
+        when += BACKOFF_MAX_MS
     assert job_state(conn, "work") == [("pending", 3)]
 
 
@@ -412,6 +412,9 @@ class WorkingTranscriber:
 
     def available(self) -> bool:
         return True
+
+    def load_error(self) -> str | None:
+        return None
 
     def transcribe(self, samples: NDArray[np.float32], prompt: str | None) -> Transcript | None:
         del samples, prompt
@@ -433,7 +436,6 @@ def post(server: ApiServer, token: str, path: str) -> int:
         request.close()
 
 
-@known_defect(155, "retrying resets the job but not the failed segment, so nothing is transcribed")
 def test_run_waiting_jobs_now_retranscribes_failed_segments(
     conn: sqlite3.Connection, audio: AudioStore, media: MediaStore, paths: Paths
 ) -> None:
@@ -461,7 +463,7 @@ def test_run_waiting_jobs_now_retranscribes_failed_segments(
         raise RuntimeError(msg)
     transcriber = WorkingTranscriber()
     runner, _ = make_runner(
-        conn, [TranscribeHandler(audio, transcriber, (), "test-model")], ManualClock()
+        conn, [TranscribeHandler(audio, transcriber, (), "test-model", lambda: True)], ManualClock()
     )
     runner.step()
     stored = audio.get(segment)
@@ -494,7 +496,6 @@ class QuickHandler:
         del force
 
 
-@known_defect(156, "complete() and fail() are unguarded; 'database is locked' leaves it running")
 @pytest.mark.parametrize("step", ["complete", "fail"])
 def test_a_locked_database_never_leaves_a_job_running(
     conn: sqlite3.Connection, monkeypatch: pytest.MonkeyPatch, step: str
@@ -516,6 +517,7 @@ def test_a_locked_database_never_leaves_a_job_running(
     with suppress(Exception):
         runner.step()
     assert calls[0] >= 1
+    runner.step()
     assert job_state(conn, "work")[0][0] != "running"
 
 
@@ -539,7 +541,7 @@ def test_a_failing_episode_builder_does_not_stop_the_other_housekeeping_steps(
 
     monkeypatch.setattr(worker, "build_episodes", broken)
     with suppress(RuntimeError):
-        worker.housekeeping(ctx, JobQueue(conn), NOW)
+        worker.housekeeping(ctx, JobQueue(conn), NOW, lambda: False)
     kinds = {str(r[0]) for r in conn.execute("SELECT kind FROM jobs")}
     assert {"embed", "retention"} <= kinds
 
@@ -549,7 +551,8 @@ def test_housekeeping_queues_embedding_and_retention(
 ) -> None:
     add_episode(conn, "work", NOW - 3 * HOUR, NOW - 2 * HOUR, "Travail", "un résumé assez long")
     config = replace(Config(), retention_days={**Config().retention_days, "screenshots": 30})
-    worker.housekeeping(ChildContext("worker", paths, config, key, conn), JobQueue(conn), NOW)
+    ctx = ChildContext("worker", paths, config, key, conn)
+    worker.housekeeping(ctx, JobQueue(conn), NOW, lambda: False)
     kinds = {str(r[0]) for r in conn.execute("SELECT kind FROM jobs")}
     assert {"embed", "retention"} <= kinds
 

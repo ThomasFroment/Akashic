@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from akashic.capture.ports import VOICE_APPS
 from akashic.pipeline.episodes import (
     BROWSER_PROCESSES,
     CLOSE_GAP_MS,
@@ -28,7 +29,6 @@ from akashic.pipeline.episodes import (
     MIC_MARGIN_MS,
     MIN_BROWSING_MS,
     MIN_WORK_MS,
-    VOICE_APPS,
     app_label,
 )
 

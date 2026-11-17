@@ -112,15 +112,95 @@ def test_newer_schema_is_refused(tmp_path: Path, key: bytes, open_db: OpenDb) ->
         db.migrate(conn)
 
 
-def test_a_store_from_the_old_frames_schema_is_refused_unchanged(
+def test_a_store_from_an_earlier_0001_schema_is_refused_unchanged(
+    tmp_path: Path, key: bytes, open_db: OpenDb
+) -> None:
+    # (a) frames without monitor_id; (b) frame_windows without its process index
+    stale = {
+        "frames": "CREATE TABLE frames (id INTEGER PRIMARY KEY, ts_ms INTEGER, monitor INTEGER)",
+        "frame_windows": "CREATE TABLE frame_windows (id INTEGER PRIMARY KEY, process TEXT)",
+    }
+    messages: list[str] = []
+    for table, ddl in stale.items():
+        conn = open_db(tmp_path / f"{table}.db", key)
+        conn.execute(ddl)
+        conn.execute("PRAGMA user_version = 1")  # an earlier 0001, before it was edited in place
+        before = list(conn.execute("SELECT type, name, sql FROM sqlite_master"))
+        with pytest.raises(db.StaleSchemaError, match="older Akashic") as raised:
+            db.migrate(conn)
+        messages.append(str(raised.value))
+        assert list(conn.execute("SELECT type, name, sql FROM sqlite_master")) == before
+        assert db.schema_version(conn) == 1
+    assert messages[0] == messages[1]
+    for text in ("database layout has since changed", "AKASHIC_DATA_DIR", "Nothing was changed"):
+        assert text in messages[0]
+    assert "monitor" not in messages[0]
+
+
+@pytest.mark.parametrize("present", ["frame_windows_process", "frame_windows_hwnd"])
+def test_a_store_lacking_one_frame_windows_index_is_refused_unchanged(
+    tmp_path: Path, key: bytes, open_db: OpenDb, present: str
+) -> None:
+    conn = open_db(tmp_path / "a.db", key)
+    conn.execute("CREATE TABLE frame_windows (id INTEGER PRIMARY KEY, process TEXT, hwnd INTEGER)")
+    column = "process" if present.endswith("process") else "hwnd"
+    conn.execute(f"CREATE INDEX {present} ON frame_windows ({column})")
+    conn.execute("PRAGMA user_version = 1")
+    before = list(conn.execute("SELECT type, name, sql FROM sqlite_master"))
+    with pytest.raises(db.StaleSchemaError, match="older Akashic") as raised:
+        db.migrate(conn)
+    assert "database layout has since changed" in str(raised.value)
+    assert list(conn.execute("SELECT type, name, sql FROM sqlite_master")) == before
+    assert db.schema_version(conn) == 1
+
+
+def test_a_fresh_store_indexes_frame_windows_by_hwnd(
     tmp_path: Path, key: bytes, open_db: OpenDb
 ) -> None:
     conn = open_db(tmp_path / "a.db", key)
-    conn.execute("CREATE TABLE frames (id INTEGER PRIMARY KEY, ts_ms INTEGER, monitor INTEGER)")
-    conn.execute("PRAGMA user_version = 1")  # the old 0001, before A9 edited it in place
-    with pytest.raises(db.StaleSchemaError, match="older Akashic"):
-        db.migrate(conn)
-    assert [r[1] for r in conn.execute("PRAGMA table_info(frames)")] == ["id", "ts_ms", "monitor"]
+    db.migrate(conn)
+    row = conn.execute(
+        "SELECT type, tbl_name FROM sqlite_master WHERE name = 'frame_windows_hwnd'"
+    ).fetchone()
+    assert tuple(row) == ("index", "frame_windows")
+
+
+def test_db_errors_cover_both_sqlite_trees() -> None:
+    assert issubclass(sqlite3.OperationalError, db.DB_ERRORS)
+    assert issubclass(sqlcipher3.OperationalError, db.DB_ERRORS)
+    assert not issubclass(ValueError, db.DB_ERRORS)
+
+
+def test_a_store_without_frame_windows_is_not_stale(
+    tmp_path: Path, key: bytes, open_db: OpenDb
+) -> None:
+    conn = open_db(tmp_path / "a.db", key)
+    assert db.migrate(conn, [Migration(1, "0001_ok.sql", "CREATE TABLE a (x);")]) == 1
+    assert db.migrate(open_db(tmp_path / "b.db", key), []) == 0
+
+
+def test_a_fresh_store_indexes_frame_windows_by_process(
+    tmp_path: Path, key: bytes, open_db: OpenDb
+) -> None:
+    conn = open_db(tmp_path / "a.db", key)
+    db.migrate(conn)
+    row = conn.execute(
+        "SELECT type, tbl_name FROM sqlite_master WHERE name = 'frame_windows_process'"
+    ).fetchone()
+    assert tuple(row) == ("index", "frame_windows")
+    assert [r[2] for r in conn.execute("PRAGMA index_info(frame_windows_process)")] == ["process"]
+
+
+@pytest.mark.parametrize("kind", ["all", "screen", "screen_text", "mic", "system"])
+def test_voice_elsewhere_is_an_accepted_gap_reason_and_bogus_is_not(
+    tmp_path: Path, key: bytes, open_db: OpenDb, kind: str
+) -> None:
+    conn = open_db(tmp_path / "a.db", key)
+    db.migrate(conn)
+    sql = "INSERT INTO capture_gaps (kind, reason, start_ms, end_ms) VALUES (?, ?, 1, 2)"
+    conn.execute(sql, (kind, "voice_elsewhere"))
+    with pytest.raises(sqlcipher3.IntegrityError):
+        conn.execute(sql, (kind, "bogus"))
 
 
 def test_migration_files_are_sequential() -> None:

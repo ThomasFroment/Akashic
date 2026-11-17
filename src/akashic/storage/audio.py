@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, Literal
 
 from akashic.jsonish import as_list
-from akashic.storage import db
+from akashic.storage import db, state
 from akashic.storage.jobs import NewJob, enqueue_in
 from akashic.storage.opus import decode_opus
 
@@ -92,10 +92,60 @@ def _row(row: tuple[object, ...]) -> StoredSegment:
     )
 
 
+def _requeue_in(conn: Connection, segment_id: int, start_ms: int, now_ms: int) -> None:
+    conn.execute(
+        "UPDATE audio_segments SET status = 'pending', language = NULL, transcript = NULL,"
+        " confidence = NULL, transcription_model = NULL WHERE id = ?",
+        (segment_id,),
+    )
+    key = f"{TRANSCRIBE}:{segment_id}"
+    conn.execute("DELETE FROM jobs WHERE key = ?", (key,))
+    enqueue_in(conn, NewJob(TRANSCRIBE, key, start_ms, {"segment_id": segment_id}), now_ms)
+
+
+def retry_failed_transcriptions(conn: Connection, now_ms: int) -> int:
+    """Queue every failed segment that still has its audio for transcription again."""
+    with db.transaction(conn):
+        rows: list[tuple[int, int]] = conn.execute(
+            "SELECT id, start_ms FROM audio_segments"
+            " WHERE status = 'failed' AND audio_path IS NOT NULL"
+        ).fetchall()
+        for segment_id, start_ms in rows:
+            _requeue_in(conn, segment_id, start_ms, now_ms)
+    return len(rows)
+
+
+def _speakers_job(segment_id: int, start_ms: int) -> NewJob:
+    return NewJob(SPEAKERS, f"{SPEAKERS}:{segment_id}", start_ms, {"segment_id": segment_id})
+
+
+def enqueue_missing_speakers(conn: Connection, now_ms: int) -> int:
+    """Queue the speakers job of each transcribed segment that has audio but never got one.
+    Runs once per unset ``SPEAKERS_BACKFILLED`` watermark; returns how many were queued."""
+    if state.get_int(conn, state.SPEAKERS_BACKFILLED, 0) != 0:
+        return 0
+    with db.transaction(conn):
+        rows: list[tuple[int, int]] = conn.execute(
+            "SELECT s.id, s.start_ms FROM audio_segments s"
+            " WHERE s.status = 'done' AND s.audio_path IS NOT NULL"
+            " AND NOT EXISTS (SELECT 1 FROM speaker_turns t WHERE t.segment_id = s.id)"
+        ).fetchall()
+        queued = sum(
+            enqueue_in(conn, _speakers_job(segment_id, start_ms), now_ms)
+            for segment_id, start_ms in rows
+        )
+        state.set_int_in(conn, state.SPEAKERS_BACKFILLED, 1)
+    return queued
+
+
 class AudioStore:
     def __init__(self, conn: Connection, media: MediaStore) -> None:
         self._conn = conn
         self._media = media
+
+    @property
+    def conn(self) -> Connection:
+        return self._conn
 
     def add(self, segment: NewSegment, opus: bytes, now_ms: int) -> int:
         """Write the audio file, then the row and its transcription job in one transaction.
@@ -151,9 +201,11 @@ class AudioStore:
         confidence: float | None = None,
         *,
         model: str | None = None,
+        queue_speakers: bool = True,
     ) -> None:
         """Store the outcome of transcription. A segment with a transcript also gets its
-        ``speakers`` job, in the same transaction."""
+        ``speakers`` job, in the same transaction. Without ``queue_speakers`` it leaves the
+        backfill watermark unset instead, so ``enqueue_missing_speakers`` picks it up later."""
         with db.transaction(self._conn) as conn:
             row: tuple[int] | None = conn.execute(
                 "SELECT start_ms FROM audio_segments WHERE id = ?", (segment_id,)
@@ -165,11 +217,12 @@ class AudioStore:
                 " WHERE id = ?",
                 (status, language, transcript, confidence, model, segment_id),
             )
-            if status == "done" and row is not None:
-                job = NewJob(
-                    SPEAKERS, f"{SPEAKERS}:{segment_id}", row[0], {"segment_id": segment_id}
-                )
-                enqueue_in(conn, job, time.time_ns() // 1_000_000)
+            if status != "done":
+                return
+            if not queue_speakers:
+                state.set_int_in(conn, state.SPEAKERS_BACKFILLED, 0)
+            elif row is not None:
+                enqueue_in(conn, _speakers_job(segment_id, row[0]), time.time_ns() // 1_000_000)
 
     def requeue(self, segment_id: int, now_ms: int) -> bool:
         """Forget the transcript and queue the segment for Whisper again. False if unknown."""
@@ -179,14 +232,7 @@ class AudioStore:
             ).fetchone()
             if row is None:
                 return False
-            conn.execute(
-                "UPDATE audio_segments SET status = 'pending', language = NULL, transcript = NULL,"
-                " confidence = NULL, transcription_model = NULL WHERE id = ?",
-                (segment_id,),
-            )
-            key = f"{TRANSCRIBE}:{segment_id}"
-            conn.execute("DELETE FROM jobs WHERE key = ?", (key,))
-            enqueue_in(conn, NewJob(TRANSCRIBE, key, row[0], {"segment_id": segment_id}), now_ms)
+            _requeue_in(conn, segment_id, row[0], now_ms)
         return True
 
     def previous_transcript(self, stream: str, before_ms: int, within_ms: int) -> str | None:

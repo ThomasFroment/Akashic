@@ -19,7 +19,16 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pytest
-from audio_fakes import WINDOW_MS, Clock, FakeDetector, FakeDevices, FakeSessions, silence, speech
+from audio_fakes import (
+    SYSTEM,
+    WINDOW_MS,
+    Clock,
+    FakeDetector,
+    FakeDevices,
+    FakeSessions,
+    silence,
+    speech,
+)
 from capture_fakes import (
     SCREEN,
     FakeMedia,
@@ -135,7 +144,6 @@ CUT_WINDOWS = -(-AudioSettings().max_segment_ms // WINDOW_MS)  # 938 windows rea
 OVERLAP_MS = AudioSettings().overlap_ms // WINDOW_MS * WINDOW_MS  # whole windows: 1,984 ms
 
 
-@known_defect(131, "a continuation is gated on its fresh speech only and drops as 'short'")
 def test_a_word_spoken_just_after_the_30_s_cut_is_kept() -> None:
     rig = SegmenterRig()
     rig.feed(speech(CUT_WINDOWS))  # "... je l'aime" up to the cut
@@ -210,6 +218,9 @@ class RecordingTranscriber:
     def available(self) -> bool:
         return True
 
+    def load_error(self) -> str | None:
+        return None
+
     def transcribe(self, samples: NDArray[np.float32], prompt: str | None) -> Transcript | None:
         del samples
         self.prompts.append(prompt)
@@ -232,7 +243,9 @@ def test_a_continuation_is_prompted_with_the_segment_it_continues(audio: AudioSt
     audio.set_transcript(first, "done", "fr", "on parlait du nouveau jeu de Minlo", 0.9)
     later = add_segment(audio, T0 + 28_000, 10.0, continues_id=first)  # 2 s of overlap
     transcriber = RecordingTranscriber("de Minlo, il sort demain")
-    TranscribeHandler(audio, transcriber, (), "test-model").run(job("transcribe", later))
+    TranscribeHandler(audio, transcriber, (), "test-model", lambda: True).run(
+        job("transcribe", later)
+    )
     (prompt,) = transcriber.prompts
     assert prompt is not None
     assert "nouveau jeu de Minlo" in prompt
@@ -246,7 +259,9 @@ def test_a_segment_after_a_pause_is_prompted_with_what_was_just_said(
     audio.set_transcript(first, "done", "fr", "on parlait du nouveau jeu", 0.9)
     later = add_segment(audio, T0 + 5_000, 3.0)
     transcriber = RecordingTranscriber("il sort demain")
-    TranscribeHandler(audio, transcriber, (), "test-model").run(job("transcribe", later))
+    TranscribeHandler(audio, transcriber, (), "test-model", lambda: True).run(
+        job("transcribe", later)
+    )
     assert transcriber.prompts == ["on parlait du nouveau jeu"]
     assert stored(conn, later)[:2] == ("done", "il sort demain")
 
@@ -257,9 +272,9 @@ def test_a_prompt_echo_on_noise_is_not_stored_as_a_confident_line(
 ) -> None:
     segment = add_segment(audio, T0)  # game noise: Whisper answers with its prompt
     vocabulary = ("Minlo", "Elden Ring", "Valorant", "Akashic")
-    TranscribeHandler(audio, RecordingTranscriber(None), vocabulary, "test-model").run(
-        job("transcribe", segment)
-    )
+    TranscribeHandler(
+        audio, RecordingTranscriber(None), vocabulary, "test-model", lambda: True
+    ).run(job("transcribe", segment))
     status, text, confidence = stored(conn, segment)
     assert text == "Minlo, Elden Ring, Valorant, Akashic" or status != "done"
     assert status != "done" or (confidence is not None and confidence < UNCLEAR_BELOW)
@@ -275,7 +290,7 @@ def test_a_prompt_echo_on_noise_is_not_stored_as_a_confident_line(
 def test_a_spoken_outro_is_kept_verbatim(conn: Connection, audio: AudioStore, heard: str) -> None:
     """A real sentence is never deleted by phrase matching, whatever it resembles."""
     segment = add_segment(audio, T0)
-    TranscribeHandler(audio, RecordingTranscriber(heard), (), "test-model").run(
+    TranscribeHandler(audio, RecordingTranscriber(heard), (), "test-model", lambda: True).run(
         job("transcribe", segment)
     )
     assert stored(conn, segment)[:2] == ("done", heard)
@@ -288,7 +303,7 @@ def test_an_edge_credit_line_is_removed_or_not_stored_as_clear(
     credit = "Sous-titres réalisés par la communauté d'Amara.org"
     segment = add_segment(audio, T0)
     heard = f"On se retrouve demain pour la partie. {credit}"
-    TranscribeHandler(audio, RecordingTranscriber(heard), (), "test-model").run(
+    TranscribeHandler(audio, RecordingTranscriber(heard), (), "test-model", lambda: True).run(
         job("transcribe", segment)
     )
     _, text, confidence = stored(conn, segment)
@@ -303,7 +318,7 @@ def test_an_empty_or_credit_only_transcript_is_empty(
 ) -> None:
     """Baseline for #138: the whole-transcript rule works."""
     segment = add_segment(audio, T0)
-    TranscribeHandler(audio, RecordingTranscriber(heard), (), "test-model").run(
+    TranscribeHandler(audio, RecordingTranscriber(heard), (), "test-model", lambda: True).run(
         job("transcribe", segment)
     )
     assert stored(conn, segment)[:2] == ("empty", None)
@@ -314,7 +329,9 @@ def test_the_names_given_to_voices_are_in_the_prompt(conn: Connection, audio: Au
     conn.execute("INSERT INTO speakers (name, is_self, created_ms) VALUES ('Minlo', 0, 0)")
     segment = add_segment(audio, T0)
     transcriber = RecordingTranscriber("salut Minlo")
-    TranscribeHandler(audio, transcriber, (), "test-model").run(job("transcribe", segment))
+    TranscribeHandler(audio, transcriber, (), "test-model", lambda: True).run(
+        job("transcribe", segment)
+    )
     (prompt,) = transcriber.prompts
     assert prompt is not None
     assert "Minlo" in prompt
@@ -546,6 +563,8 @@ def _diarize(
     module.SessionOptions = _OnnxOptions  # type: ignore[attr-defined]
     module.InferenceSession = _OnnxSession  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "onnxruntime", module)
+    (tmp_path / "seg.onnx").write_bytes(b"x")  # present, so the models are available
+    (tmp_path / "emb.onnx").write_bytes(b"x")
     models = OnnxVoiceModels(tmp_path / "seg.onnx", tmp_path / "emb.onnx", idle_unload_s=60)
     segment = add_segment(audio, T0, seconds)
     SpeakersHandler(audio, SpeakerStore(conn), models, now_ms=lambda: 1).run(
@@ -699,13 +718,15 @@ def utterance(start_ms: int, windows: int = 40) -> Utterance:
 @known_defect(152, "two 1 Hz samples that only saw Spotify drop a short remark as music")
 def test_a_short_remark_over_music_is_not_dropped_on_two_samples(audio: AudioStore) -> None:
     clock = Clock(T0)
-    sampler = SourceSampler(FakeSessions(frozenset({"spotify.exe"})), clock)
+    sampler = SourceSampler(
+        FakeSessions(frozenset({"spotify.exe"})), clock, Exclusions(UserExclusions())
+    )
     sampler.sample()
     clock.now = T0 + 1_000
     sampler.sample()  # Minlo's 1.3 s remark fell between the samples that saw Discord
     stats: Counter[str] = Counter()
     writer = SegmentWriter(audio, sampler, Exclusions(UserExclusions()), clock, stats)
-    assert writer.write("system", utterance(T0, 40)) is not None
+    assert writer.write("system", utterance(T0, 40), SYSTEM) is not None
     assert stats["dropped_music"] == 0
 
 
@@ -718,7 +739,7 @@ class RecorderRig:
             devices=self.devices,
             detector=FakeDetector(),
             settings=SETTINGS,
-            sink=lambda k, u: self.out.append((k, u)),
+            sink=lambda k, u, _d: self.out.append((k, u)),
             clock_ms=Clock(T0),
             stats=Counter(),
         )
@@ -792,13 +813,15 @@ class FlakyAudioStore(AudioStore):
 def test_a_segment_is_written_once_the_database_is_free(conn: Connection, paths: Paths) -> None:
     store = FlakyAudioStore(conn, MediaStore(paths.media_dir, DataKey.generate().subkey("media")))
     clock = Clock(T0 + 1_000)
-    sampler = SourceSampler(FakeSessions(frozenset({"discord.exe"})), clock)
+    sampler = SourceSampler(
+        FakeSessions(frozenset({"discord.exe"})), clock, Exclusions(UserExclusions())
+    )
     sampler.sample()
     writer = SegmentWriter(store, sampler, Exclusions(UserExclusions()), clock, Counter())
     stop = threading.Event()
     thread = threading.Thread(target=writer.run, args=(stop,), daemon=True)
     thread.start()
-    writer.submit("system", utterance(T0))
+    writer.submit("system", utterance(T0), SYSTEM)
     try:
         assert wait_for(
             lambda: conn.execute("SELECT count(*) FROM audio_segments").fetchone()[0] == 1, 5

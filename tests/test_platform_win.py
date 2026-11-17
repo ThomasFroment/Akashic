@@ -288,7 +288,7 @@ def test_a_com_error_is_unknown_and_nothing_audible_is_empty(
     assert sessions.active_processes() is None
     monkeypatch.setattr(sessions, "_refresh_managers", lambda: None)
     sessions._managers = []
-    assert sessions.active_processes() == frozenset()
+    assert sessions.active_processes() == {}
 
 
 def test_a_failure_while_walking_one_device_is_unknown_for_the_whole_poll(
@@ -296,7 +296,7 @@ def test_a_failure_while_walking_one_device_is_unknown_for_the_whole_poll(
 ) -> None:
     sessions = win_audio.WindowsAudioSessions()
     monkeypatch.setattr(sessions, "_refresh_managers", lambda: None)
-    sessions._managers = ["a", "b"]
+    sessions._managers = [("id-a", "a"), ("id-b", "b")]
 
     def audible(manager: str) -> set[str]:
         if manager == "b":
@@ -305,6 +305,82 @@ def test_a_failure_while_walking_one_device_is_unknown_for_the_whole_poll(
 
     monkeypatch.setattr(sessions, "_audible", audible)
     assert sessions.active_processes() is None  # not {"discord.exe"}: device b is unknown
+
+
+class _Endpoint:
+    def __init__(self, device_id: str, names: set[str], *, fails: bool = False) -> None:
+        self.device_id = device_id
+        self.names = names
+        self.fails = fails
+
+    def Activate(self, *_args: object) -> _Endpoint:  # noqa: N802 - the COM method name
+        if self.fails:
+            raise com_error(-2004287480, "AUDCLNT_E_DEVICE_INVALIDATED")
+        return self
+
+    def QueryInterface(self, _iid: object) -> _Endpoint:  # noqa: N802
+        return self
+
+
+class _Endpoints:
+    def __init__(self, items: list[_Endpoint]) -> None:
+        self.items = items
+        self.enumerations = 0
+
+    def EnumAudioEndpoints(self, *_args: object) -> _Endpoints:  # noqa: N802
+        self.enumerations += 1
+        return self
+
+    def GetCount(self) -> int:  # noqa: N802
+        return len(self.items)
+
+    def Item(self, i: int) -> _Endpoint:  # noqa: N802
+        return self.items[i]
+
+
+def _endpoints(monkeypatch: pytest.MonkeyPatch, *items: _Endpoint) -> _Endpoints:
+    enumerator = _Endpoints(list(items))
+    monkeypatch.setattr(win_audio, "_enumerator", lambda: enumerator)
+
+    def device_id(item: _Endpoint) -> str:
+        return item.device_id
+
+    def audible(_sessions: object, manager: _Endpoint) -> set[str]:
+        return manager.names
+
+    monkeypatch.setattr(win_audio, "_device_id", device_id)
+    monkeypatch.setattr(win_audio.WindowsAudioSessions, "_audible", audible)
+    return enumerator
+
+
+def test_audible_processes_are_keyed_by_endpoint_id_and_a_failing_endpoint_is_left_out(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _endpoints(
+        monkeypatch,
+        _Endpoint("a", {"game.exe"}),
+        _Endpoint("b", set()),
+        _Endpoint("c", {"x.exe"}, fails=True),
+    )
+    result = win_audio.WindowsAudioSessions().active_processes()
+    assert result == {"a": frozenset({"game.exe"}), "b": frozenset()}
+
+
+def test_refresh_reenumerates_inside_the_reuse_window_and_nothing_else_does(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    enumerator = _endpoints(monkeypatch, _Endpoint("a", set()))
+    sessions = win_audio.WindowsAudioSessions()
+    sessions.active_processes()
+    sessions.active_processes()
+    assert enumerator.enumerations == 1
+    enumerator.items.append(_Endpoint("b", {"discord.exe"}))
+    assert sessions.active_processes() == {"a": frozenset()}
+    assert sessions.active_processes(refresh=True) == {
+        "a": frozenset(),
+        "b": frozenset({"discord.exe"}),
+    }
+    assert enumerator.enumerations == 2
 
 
 # --- hosted (UWP) apps: the real process behind the frame host -------------------------------

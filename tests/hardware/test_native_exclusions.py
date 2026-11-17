@@ -317,8 +317,10 @@ def test_audio_endpoint_enumeration_and_failure(monkeypatch: pytest.MonkeyPatch)
     endpoints = len(list(sessions._managers))  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
     facts: dict[str, object] = {
         "active_render_endpoints": endpoints,
-        "enumeration_returned": "None" if result is None else "frozenset",
-        "audible_process_count": None if result is None else len(result),  # names are not recorded
+        "enumeration_returned": "None" if result is None else "dict",
+        "audible_process_count": None  # names are not recorded
+        if result is None
+        else sum(len(names) for names in result.values()),
     }
 
     def broken() -> None:

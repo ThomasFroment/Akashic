@@ -4,21 +4,36 @@ from __future__ import annotations
 
 import io
 import logging
+import threading
+import time
+from pathlib import Path
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 
+import pytest
+from audio_fakes import MIC, SYSTEM, RecorderRig, speech
+from test_capture_gaps import MUSIC, Spy, WriterRig
+
 from akashic import child, ipc
+from akashic.capture.audio import WRITER_QUEUE, AudioCapture, Utterance
 from akashic.capture.health import (
     AUDIO_UNAVAILABLE,
+    DROP_PROBLEM_S,
     GRAB_FAILURE_RUN,
+    RUN_LENGTHS,
     SCREEN_IMAGES_FAILING,
     CaptureStatus,
+    MonitorHealth,
 )
+from akashic.storage.audio import AudioStore
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from sqlite3 import Connection
 
-    import pytest
     from screen_rig import Rig
+
+    from akashic.storage.media import MediaStore
 
 IDLE_STEP_S = 20.0  # past the idle interval, so every tick checks again
 
@@ -253,3 +268,134 @@ def test_a_locked_session_does_not_touch_the_record(make_rig: Callable[..., Rig]
     rig.windows.locked = False
     rig.tick((GRAB_FAILURE_RUN + 1) * IDLE_STEP_S)
     assert rig.writer.problems(float("-inf")) == [f"{SCREEN_IMAGES_FAILING}@Monitor 1"]
+
+
+# --- how many events make each kind of screen run a problem -------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("kind", "length"),
+    [("failure", 1), ("disk_full", 1), ("capture", GRAB_FAILURE_RUN), ("drop", GRAB_FAILURE_RUN)],
+)
+def test_each_run_kind_has_its_own_length(kind: Any, length: int) -> None:  # noqa: ANN401
+    assert RUN_LENGTHS[kind] == length
+    health = MonitorHealth()
+    for i in range(length - 1):
+        health.record("m", kind, float(i))
+    assert health.problems(0.0, {}) == []
+    health.record("m", kind, float(length))
+    assert len(health.problems(0.0, {})) == 1
+
+
+# --- audio segments dropped by the writer ------------------------------------------------------
+
+
+def audio_capture(dropped_at: dict[str, float], *, down: bool = False) -> AudioCapture:
+    capture = object.__new__(AudioCapture)
+    rigs = [RecorderRig("mic"), RecorderRig("system")]
+    if not down:
+        for rig in rigs:
+            rig.recorder._ok_at = 1000.0  # pyright: ignore[reportPrivateUsage]
+    capture._recorders = [r.recorder for r in rigs]  # pyright: ignore[reportPrivateUsage]
+
+    def dropped_since(t: float) -> frozenset[str]:
+        return frozenset(k for k, v in dropped_at.items() if v >= t)
+
+    capture._writer = cast("Any", SimpleNamespace(dropped_since=dropped_since))  # pyright: ignore[reportPrivateUsage]
+    return capture
+
+
+def test_a_drop_time_of_one_stream_names_that_stream() -> None:
+    assert audio_capture({"mic": 995.0}).problems(1000.0, 0.0) == ("mic_segments_dropped",)
+    assert audio_capture({"system": 995.0}).problems(1000.0, 0.0) == ("system_segments_dropped",)
+
+
+def test_a_drop_is_a_problem_from_exactly_the_window_start() -> None:
+    assert DROP_PROBLEM_S == 60.0
+    assert audio_capture({"mic": 940.0}).problems(1000.0, 0.0) == ("mic_segments_dropped",)
+    assert audio_capture({"mic": 939.9}).problems(1000.0, 0.0) == ()
+
+
+def test_a_drop_before_the_resume_is_not_a_problem() -> None:
+    assert audio_capture({"mic": 990.0}).problems(1000.0, 990.0) == ("mic_segments_dropped",)
+    assert audio_capture({"mic": 989.9}).problems(1000.0, 990.0) == ()
+
+
+def test_down_codes_come_first_then_dropped_mic_then_system() -> None:
+    capture = audio_capture({"system": 999.0, "mic": 999.0}, down=True)
+    assert capture.problems(1000.0, 0.0) == (
+        "mic_unavailable",
+        "system_audio_unavailable",
+        "mic_segments_dropped",
+        "system_segments_dropped",
+    )
+
+
+@pytest.fixture
+def store(conn: Connection, media: MediaStore) -> AudioStore:
+    return AudioStore(conn, media)
+
+
+def test_a_full_writer_queue_sets_the_drop_time(store: AudioStore) -> None:
+    w = WriterRig(store, Spy())
+    utterance = Utterance(0, 1_000, speech(10), 800, continues=False)
+    for _ in range(WRITER_QUEUE):
+        w.writer.submit("mic", utterance, MIC)
+    assert w.writer.dropped_since(float("-inf")) == frozenset()
+    before = time.monotonic()
+    w.writer.submit("mic", utterance, MIC)
+    assert w.writer.dropped_since(before) == {"mic"}
+
+
+def test_a_failed_store_sets_the_drop_time(
+    store: AudioStore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    w = WriterRig(store, Spy())
+
+    def boom(*_a: object) -> int:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(w.writer, "_add_with_retry", boom)
+    w.sessions.names = frozenset({"discord.exe"})
+    w.clock.now = w.clock.now + 500
+    w.sampler.sample()
+    stop = threading.Event()
+    stop.set()
+    before = time.monotonic()
+    start = w.clock.now - 500
+    w.writer.submit(
+        "system", Utterance(start, start + 2_000, speech(60), 1_500, continues=False), SYSTEM
+    )
+    w.writer.run(stop)
+    assert w.writer.dropped_since(before) == {"system"}
+
+
+@pytest.mark.parametrize("audible", [frozenset({"keepassxc.exe", "discord.exe"}), None, MUSIC])
+def test_excluded_unknown_and_music_drops_are_not_problems(
+    store: AudioStore, audible: frozenset[str] | None
+) -> None:
+    w = WriterRig(store, Spy())
+    assert w.write(0, audible) is None
+    assert w.writer.dropped_since(float("-inf")) == frozenset()
+
+
+def test_segments_thrown_away_at_stop_do_not_set_a_drop_time(store: AudioStore) -> None:
+    w = WriterRig(store, Spy())
+    w.writer.submit("mic", Utterance(0, 1_000, speech(10), 800, continues=False), MIC)
+    w.writer._drop_queued()  # pyright: ignore[reportPrivateUsage]
+    assert w.writer.dropped_since(float("-inf")) == frozenset()
+
+
+# --- the sidebar words --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("code", "words"),
+    [
+        ("mic_segments_dropped", "some microphone speech could not be saved in the last minute"),
+        ("system_segments_dropped", "some system audio could not be saved in the last minute"),
+    ],
+)
+def test_the_sidebar_words_each_dropped_code(code: str, words: str) -> None:
+    js = (Path(__file__).parents[1] / "src" / "akashic" / "ui" / "app.js").read_text("utf-8")
+    assert f'{code}: "{words}"' in js

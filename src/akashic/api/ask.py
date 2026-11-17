@@ -71,6 +71,7 @@ def _with_evidence(conn: Connection, row: Json) -> Json:
     """Episode sources of a question gain the frame and window that show them, found when read.
 
     Frame and episode sources also gain the moment (``frame_ms``, ``monitor_id``) of that frame.
+    Frame sources gain ``has_image``: whether the stored picture shows their window.
     """
     sources = row["sources"]
     if isinstance(sources, list):
@@ -84,6 +85,7 @@ def _with_evidence(conn: Connection, row: Json) -> Json:
                 frame_id = source["frame_id"]
             elif source["kind"] == "frame":
                 frame_id = source["id"]
+                source["has_image"] = monitors.window_shown(conn, cast("int", source["window_id"]))
             if source["kind"] in {"episode", "frame"}:
                 moment = (
                     None if frame_id is None else monitors.frame_moment(conn, cast("int", frame_id))

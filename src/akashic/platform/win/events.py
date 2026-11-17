@@ -5,7 +5,8 @@ Out-of-context hooks only fire on the message loop of the thread that installed 
 one dedicated thread that installs the hooks and pumps messages.
 
 Health: ``drain`` reports unhealthy while the hook is down, in the first drain after (re)install
-and in the drain that reports a queue overflow. A down hook is reinstalled by the next drain.
+and in the drain that reports a queue overflow. A down hook is reinstalled by a later drain,
+with a delay that doubles from 1 s to 60 s between attempts and resets on a healthy drain.
 """
 
 from __future__ import annotations
@@ -83,6 +84,8 @@ _WM_USER = 0x0400
 _MAX_EVENTS = 10_000
 _INSTALL_WAIT_S = 1.0
 _JOIN_WAIT_S = 2.0
+_RETRY_FIRST_S = 1.0
+_RETRY_MAX_S = 60.0
 
 _EVENT_SYSTEM_FOREGROUND = 0x0003
 _EVENT_SYSTEM_MINIMIZESTART = 0x0016
@@ -154,6 +157,8 @@ class Win32WindowEvents:
         self._overflowed = False
         self._warned = False
         self._thread: threading.Thread | None = None
+        self._retry_at = float("-inf")
+        self._retry_delay = _RETRY_FIRST_S
         self._proc = _WINEVENTPROC(self._on_event)
 
     def start(self) -> None:
@@ -171,9 +176,12 @@ class Win32WindowEvents:
             healthy = self._installed and not self._lost and not overflowed
             if self._installed:
                 self._lost = False
+            if healthy:
+                self._retry_at = float("-inf")
+                self._retry_delay = _RETRY_FIRST_S
         if overflowed:
             log.warning("window event queue overflowed; the oldest events were dropped")
-        if not self._installed and not self._thread_alive():
+        if not self._installed and not self._thread_alive() and time.monotonic() >= self._retry_at:
             self._spawn()
         return WindowChanges(events, healthy)
 
@@ -190,6 +198,8 @@ class Win32WindowEvents:
         return self._thread is not None and self._thread.is_alive()
 
     def _spawn(self) -> None:
+        self._retry_at = time.monotonic() + self._retry_delay
+        self._retry_delay = min(self._retry_delay * 2, _RETRY_MAX_S)
         ready = threading.Event()
         thread = threading.Thread(
             target=self._run, args=(ready,), name="window-events", daemon=True

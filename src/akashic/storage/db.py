@@ -73,6 +73,12 @@ def connect(path: Path, db_key: bytes) -> Connection:
     return conn
 
 
+def limit_wait(conn: Connection, busy_timeout_ms: int) -> None:
+    """Shorten how long a statement on ``conn`` waits for a busy database. Call it only from the
+    thread that uses ``conn``."""
+    conn.execute(f"PRAGMA busy_timeout = {int(busy_timeout_ms)}")
+
+
 @contextmanager
 def transaction(conn: Connection) -> Generator[Connection]:
     """A short write transaction. Takes the write lock up front to avoid upgrade deadlocks."""
@@ -87,6 +93,9 @@ def transaction(conn: Connection) -> Generator[Connection]:
     except BaseException:
         _rollback_if_open(conn)
         raise
+
+
+DB_ERRORS: Final = (sqlite3.Error, sqlcipher3.Error)
 
 
 def is_busy(exc: BaseException) -> bool:
@@ -165,15 +174,19 @@ def migrate(conn: Connection, migrations: list[Migration] | None = None) -> int:
 
 
 class StaleSchemaError(RuntimeError):
-    """The store was made by an older 0001 schema, which A9 edited in place (no migration)."""
+    """The store was made by an earlier version of the 0001 schema, which is edited in place."""
 
 
 def _refuse_stale_schema(conn: Connection) -> None:
-    columns = {row[1] for row in conn.execute("PRAGMA table_info(frames)")}
-    if columns and "monitor_id" not in columns:
+    frames_columns = {row[1] for row in conn.execute("PRAGMA table_info(frames)")}
+    names = {row[0] for row in conn.execute("SELECT name FROM sqlite_master")}
+    lacks_monitor_id = bool(frames_columns) and "monitor_id" not in frames_columns
+    window_indexes = {"frame_windows_process", "frame_windows_hwnd"}
+    lacks_window_indexes = "frame_windows" in names and not window_indexes <= names
+    if lacks_monitor_id or lacks_window_indexes:
         msg = (
             "This data folder was created by an older Akashic whose database layout has since"
-            " changed (monitor capture). Move the folder aside to start a new one, or set"
-            " AKASHIC_DATA_DIR to another folder. Nothing was changed."
+            " changed. Move the folder aside to start a new one, or set AKASHIC_DATA_DIR to"
+            " another folder. Nothing was changed."
         )
         raise StaleSchemaError(msg)

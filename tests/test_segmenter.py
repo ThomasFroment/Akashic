@@ -155,3 +155,56 @@ def test_a_dropped_first_part_does_not_make_the_next_a_continuation() -> None:
     rig.feed(silence(15))
     assert rig.out == []
     assert rig.stats["dropped_quiet"] >= 1
+
+
+def _assert_short_continuation_kept(rig: Rig, fresh: int) -> None:
+    first, second = rig.out
+    assert not first.continues
+    assert second.continues
+    assert second.start_ms == first.end_ms - 20 * WINDOW_MS
+    assert second.speech_ms == (20 + fresh) * WINDOW_MS  # overlap and fresh voiced windows
+    assert rig.stats["dropped_short"] == 0
+
+
+def test_a_continuation_with_little_fresh_speech_is_kept_when_the_hangover_closes_it() -> None:
+    rig = Rig()
+    rig.feed(speech(102))  # 2 fresh windows, under min_speech_ms
+    rig.feed(silence(15))
+    _assert_short_continuation_kept(rig, 2)
+
+
+def test_a_continuation_with_little_fresh_speech_is_kept_when_flush_closes_it() -> None:
+    rig = Rig()
+    rig.feed(speech(102))
+    rig.out.extend(rig.seg.flush(rig.ts + 400))
+    _assert_short_continuation_kept(rig, 2)
+
+
+def test_a_continuation_with_little_fresh_speech_is_kept_when_finish_closes_it() -> None:
+    rig = Rig()
+    rig.feed(speech(101))
+    rig.out.extend(rig.seg.finish())
+    _assert_short_continuation_kept(rig, 1)
+
+
+def test_a_quiet_continuation_with_little_fresh_speech_is_dropped_quiet() -> None:
+    rig = Rig()
+    rig.feed(speech(80))
+    rig.feed(speech(20, amplitude=0.01), probability=0.9)  # fills the whole overlap
+    rig.feed(speech(3, amplitude=0.01), probability=0.9)  # fresh
+    rig.feed(silence(15), probability=0.0)
+    (first,) = rig.out
+    assert not first.continues
+    assert rig.stats["dropped_quiet"] == 1
+    assert rig.stats["dropped_short"] == 0
+    assert [d.reason for d in rig.seg.drops] == ["quiet"]
+
+
+def test_a_short_tail_after_a_dropped_first_part_is_dropped_short_not_continued() -> None:
+    rig = Rig(replace(SETTINGS, energy_floor=0.9))
+    rig.feed(speech(102))
+    rig.feed(silence(15))
+    assert rig.out == []
+    assert rig.stats["dropped_quiet"] == 1  # the first part
+    assert rig.stats["dropped_short"] == 1  # the tail, not a continuation
+    assert [d.reason for d in rig.seg.drops] == ["quiet", "short"]

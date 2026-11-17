@@ -7,10 +7,31 @@ naming the item it came from.
 When a point is done, delete its line in the commit that does it. When it turns into planned
 work, move it to TODO.md as a task and delete it here. Drop a milestone heading once it is empty.
 
+## B1. Evaluation
+
+- #118 No Ask eval run since split-only reporting
+
+## B3. Job queue
+
+- #156 A dead worker's `running` jobs are released only at the next start
+- #30 Conversations built without voice models keep their `episode_people` after the backfill
+- #41 A CUDA error at a fresh model's first decode counts as a failed attempt; "Run waiting jobs now" doesn't retry a failed load
+- F9 (Recording readiness): api/debug.py keeps inline job SQL (counts, list, Run waiting jobs now) instead of `JobQueue` methods (B10 #4)
+
 ## B4. Storage integrity and deletion
 
 - #10 The completeness test counts a conditional `DELETE ... WHERE` as full coverage; only `state` (keeps `capture_paused`) relies on it today. An unconditional-only rule plus an explicit row-level keep for `state` would stop a future conditional delete from passing.
 - #10 An external-content FTS table counts as covered without checking it has a delete trigger; the end-to-end MATCH check covers only `frames_fts` and `audio_segments_fts`, and the shadow skip matches by suffix, not by owning FTS table.
+
+## B6. Search and answers
+
+- #143 The Not recorded line isn't shown in the Ask page; no Ask baseline rerun
+- F13 (Recording readiness) Moment and Window texts links not checked in a browser; `frameView`, `episodeView` and `chatView` have no stale-route guard
+
+## B9. Disk and processing status
+
+- #157 No hysteresis for a crash-looping worker; a stale worker row (`updated_ms`) is not treated as unknown
+- #157 Processing line and tray states not seen in the running app; Debug has no processing view
 
 ## A4. Screen coverage
 
@@ -26,13 +47,37 @@ work, move it to TODO.md as a task and delete it here. Drop a milestone heading 
 - #162 Thresholds (3 failed grabs, 60 s without a device read) unmeasured; not checked with a real unplugged mic in the running app
 - #161 Not checked against a real long retention or Delete-all lock in the running app
 - #161 Play/pause events of a live session are lost on a busy database (matters for #167)
-- #161 A database still busy at stop can exceed the supervisor's 10 s kill: queued audio is lost and an `.opus.enc` written before the kill may be orphaned; open media rows wait for close_stale
+- #161 A database busy past the 8 s stop deadline drops the queued pictures, audio segments and gap events (`stop_dropped`); an abandoned audio write may orphan an `.opus.enc`; open media and game rows wait for `close_stale`
+- F3 (Recording readiness) The stop deadline starts when the screen loop returns, not at the stop request. Not checked against a real long lock in the running app
+- F4 (Recording readiness) The 60 s drop window and the one-failure rule are chosen, not measured; not seen in the running app
+- F1 (Recording readiness) WGC fault counts are not in the Debug data. Sampler and segment-writer warnings and wgc's "no D3D device" are not on a `FaultLog`. Settings > Debug does not show the audio `faults` or `gaps` entries
+
+## A5. Audio sources
+
+- #151 `MIXER_PROCESSES` (`elgato.wavelink.exe`) unconfirmed: the 2026-11-17 read-only run saw five playback endpoints (Elgato Wave:3 virtual, Voice Chat virtual, DT-770 PRO, System virtual, Headphones Wave:3) with nothing audible
+- #151 Discord's real routing not checked
+- #151 `voice_elsewhere` is no health problem; only Ask's line shows it
+- #131 Not checked on real speech
+
+## A6. Media and game sessions
+
+- #146 A UAC prompt shorter than one 2 s media poll is not seen as locked, so a `url_unknown` row may close (BrowserState generation counter)
+- #142 A game row is not split on a wake with no lock screen and the game still in front; a media-thread stall over 10 s splits a row
+- #146 #167 Lock/UAC during a video not checked in the running app
 
 ## A7. Capture gaps
 
-- #143 A stop that exceeds the supervisor's 10 s kill (busy database) is recorded as `crashed` from the last heartbeat instead of `stopped`
+- #143 A stop whose database stays busy past the 8 s deadline is still recorded as `crashed` from the last heartbeat (up to ~30 s off); a clean-stop marker written at the deadline would date it exactly
 - #143 Not checked in the running app: pause, lock, unplugging the mic, default-device switch, Quit and a kill, each against the rows written
 - #143 A write that fails for a reason other than a busy database drops that one gap row (counted as `write_rejected` in the Debug data)
+
+## A8. Export
+
+- Not run on the real store or in a browser; cancel during VACUUM not run
+- VACUUM with `temp_store=MEMORY` needs RAM of about the db size; past a few GB consider `VACUUM INTO`
+- Rebuilt bodies use `retained_episode_bodies` (rtrim vs `rstrip()`, B5 #3); a mismatch counts as changed and drops the vector
+- An export run as a data folder lets the worker rebuild excluded derived categories
+- The export's table scope map could replace Delete all's completeness list (B4 #10)
 
 ## A2. Capture stops when asked
 
@@ -52,12 +97,13 @@ work, move it to TODO.md as a task and delete it here. Drop a milestone heading 
 - F10 Not measured: how often the `OBJID_CLIENT` (-4) `NAMECHANGE` that F5 now reports as `title` leaves a window held (Chrome sends it on every navigation, also with an unchanged title), and what reading the address of every ownerless browser window costs on real profiles with many windows
 - F8 Edge's first spike launches (before `--disable-sync`) signed the throwaway profile in with the PC's Microsoft account; local test pages may be in that account's sync history
 - F6 `WgcCaptures` abandons a close after 0.3 s, but the earlier hang of `session.close()` after the target process died did not reproduce: 0 of 10 hangs in each of kill, WM_CLOSE exit and window destroyed with the process alive, in both close orders, static and animated windows; the pool now closes first (0 of 10 blocked per case), so an abandoned close would leak only the session and its thread, none seen
-- F17 LATER: a `Snapshot` does not flag a monitor that showed a pending or held window, so it is re-checked only at its next trigger or rate (up to 15 s on a side monitor), not sooner
-- F17 LATER: if the window event hook never installs, every drain is unhealthy: every tick makes every monitor due (one check per second each) and `Verdicts` restarts holds at every judge, so kept browsers stay blank; needs a bound
 - F19 Not run: real-browser timing of the presence loop (a page shown by Zen, Chrome and Edge: time from the tab becoming visible to recording halted and to content shown; the 6 s lease and the 250 ms/2 s schedule are chosen, not measured; a background or occluded tab may be throttled by the browser)
 - F19 Not run: the own-address failsafe on Zen, Chrome and Edge (address read of a visible window on Akashic's port, with and without a scheme; a page not opened through the tray, such as a bookmarked address)
-- F23 LATER: a link from the enlarged monitor to its window texts (the frame page)
 - A9 Hardware run 2026-11-16 (all hardware tests, three monitors, 96 and 120 DPI, one at negative x): all passed, except the Edge case of `test_real_browser_layouts_on_synthetic_pages`, not run because a fresh Edge profile may sign in to the PC's Microsoft account even with `--disable-sync`; the French OCR and French SAPI checks skipped (no French OCR language pack, no French SAPI voice installed)
-- A9 UI review 2026-11-16, not fixed: Search without a query lists every window row of every frame (no run collapsing, by test); an Ask frame source whose window was not painted shows an empty grey box (the source has no image flag); a slow `/api/apps` (`SELECT DISTINCT process` over `frame_windows`, no index) can paint Search over a later page; "starting" after Restart or Delete all hides the page behind "Pausing recording…" until capture reports `ui_paused`
 - A9 Capture border: none on build 26200 for this unpackaged process, but Microsoft documents turning it off as needing a capability; re-check after each Windows update.
 - A9 Ghost mapping uses the undocumented `HungWindowFromGhostWindow`; if it stops resolving, every ghost window is blank; re-check after each Windows update.
+
+## Epic: Recording readiness
+
+- Exit-139 crashes of check.ps1 with coverage (seen while another agent edited, or after a failing test) did not recur in two quiet full runs; cause unknown
+- tests/test_llm.py stream transport test failed once (RST on Windows) before the fake read the request body; not seen since

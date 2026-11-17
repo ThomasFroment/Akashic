@@ -52,6 +52,9 @@ CREATE TABLE frame_windows (
 
 CREATE UNIQUE INDEX frame_windows_focused ON frame_windows (frame_id) WHERE focused = 1;
 CREATE INDEX frame_windows_capture ON frame_windows (id) WHERE capture_path IS NOT NULL;
+CREATE INDEX frame_windows_process ON frame_windows (process);
+-- The previous capture of a window, to collapse runs of identical captures without a full scan.
+CREATE INDEX frame_windows_hwnd ON frame_windows (hwnd, frame_id) WHERE role = 'app';
 
 -- remove_diacritics 2: "cafe" matches "café" (French OCR and typing). One entry per window, so
 -- a phrase never matches across two windows.
@@ -329,7 +332,8 @@ CREATE TABLE capture_gaps (
     reason   TEXT NOT NULL CHECK (reason IN (
         'paused', 'stopped', 'crashed', 'stalled', 'locked', 'ocr_unavailable',
         'audio_unavailable', 'disabled', 'device_missing', 'device_failed', 'excluded',
-        'unknown_sources', 'music', 'backlog', 'write_failed', 'ui_open'
+        'unknown_sources', 'music', 'backlog', 'write_failed', 'ui_open',
+        'voice_elsewhere'
     )),
     start_ms INTEGER NOT NULL CHECK (typeof(start_ms) = 'integer'),
     end_ms   INTEGER CHECK (

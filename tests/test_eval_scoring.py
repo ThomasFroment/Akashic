@@ -14,8 +14,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from memory_data import NOW
 
 from akashic.search.answer import no_evidence
+from akashic.storage.gaps import GapSpan
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
@@ -160,6 +162,8 @@ def test_a_fabricated_answer_is_no_longer_an_abstention() -> None:
     [
         no_evidence("Quel film ai-je regardé hier ?"),
         no_evidence("What film did I watch yesterday?"),
+        no_evidence("Quel film hier ?", [GapSpan("all", "paused", NOW, NOW + 60_000)]),
+        no_evidence("What film did I watch?", [GapSpan("mic", "backlog", NOW, NOW + 60_000)]),
         "I couldn't find anything about Minlo's holidays in Japan.",
         "Sorry, there is no record of a Netflix film last night.",
         "Based on your memory, I found no mention of Japan [1].",
@@ -237,7 +241,6 @@ def test_a_correct_answer_with_a_wrong_plan_fails_acceptance() -> None:
     q = Q("Who did I talk to?", (("minlo",),), cite=("call",))
     verdict = scoring.judge(q, "Minlo [1].", ("call",), plan_ok=False)
     assert not verdict.ok
-    assert not verdict.ok_with_plan
     row = scoring.verdict_json(verdict)
     assert row["plan_ok"] is False
     assert row["ok"] is False
@@ -327,7 +330,7 @@ def test_compare_prints_per_question_changes() -> None:
         },
     }
     lines = scoring.compare(base, new)
-    assert lines[0] == "m: 3/4 -> 2/4 passed runs"
+    assert lines[0] == "m unknown: 3/4 -> 2/4 passed runs"
     assert "     1 2/2 -> 1/2  question 1" in lines
     assert not any(line.strip().startswith("2 ") for line in lines)  # unchanged
     assert "    h1 added  question h1" in lines
@@ -336,8 +339,44 @@ def test_compare_prints_per_question_changes() -> None:
     assert scoring.compare({"heldout_sha256": "b"}, new)[0].startswith("warning: the held-out")
     assert scoring.compare({}, {"models": "broken"}) == []
     assert scoring.compare(base, {"heldout_sha256": "a", "models": {"m": ["junk"]}}) == [
-        "m: 3/4 -> 0/0 passed runs",
+        "m unknown: 3/4 -> 0/0 passed runs",
         "     1 removed  question 1",
         "     2 removed  question 2",
         "     3 removed  question 3",
     ]
+
+
+def test_compare_totals_each_split_apart() -> None:
+    def split_row(qid: str, split: str, *, ok: bool) -> dict[str, object]:
+        return {**row(qid, ok=ok), "split": split}
+
+    base = {
+        "models": {
+            "m": [
+                split_row("1", "dev", ok=True),
+                split_row("2", "dev", ok=True),
+                split_row("3", "dev", ok=True),
+                split_row("4", "dev", ok=False),
+                split_row("h1", "heldout", ok=True),
+                split_row("h2", "heldout", ok=False),
+            ]
+        }
+    }
+    new = {
+        "models": {
+            "m": [
+                split_row("1", "dev", ok=True),
+                split_row("2", "dev", ok=True),
+                split_row("3", "dev", ok=False),
+                split_row("4", "dev", ok=False),
+                split_row("h1", "heldout", ok=True),
+                split_row("h2", "heldout", ok=True),
+                split_row("f1", "fresh", ok=True),
+            ]
+        }
+    }
+    lines = scoring.compare(base, new)
+    assert "m dev: 3/4 -> 2/4 passed runs" in lines
+    assert "m heldout: 1/2 -> 2/2 passed runs" in lines
+    assert "m fresh: 0/0 -> 1/1 passed runs" in lines  # a split on one side only
+    assert not any(line.startswith("m:") for line in lines)  # no pooled total

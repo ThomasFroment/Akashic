@@ -32,7 +32,7 @@ from akashic.pipeline.models import (
     SEGMENTATION_MODEL,
 )
 from akashic.storage.embeddings import unit
-from akashic.storage.jobs import PermanentJobError
+from akashic.storage.jobs import DeferJob, PermanentJobError
 from akashic.storage.opus import SAMPLE_RATE
 from akashic.storage.speakers import MIN_IDENTIFY_MS, NewTurn
 
@@ -266,7 +266,8 @@ def model_paths(models_dir: Path) -> tuple[Path, Path]:
 
 
 class SpeakersHandler:
-    """Job handler for ``speakers``, queued when a segment's transcript is done."""
+    """Job handler for ``speakers``, queued when a segment's transcript is done. It is never
+    blocked: a mic job needs no voice model, and a system job without them defers itself."""
 
     kind: ClassVar[str] = SPEAKERS
     heavy: ClassVar[bool] = True
@@ -284,7 +285,7 @@ class SpeakersHandler:
         self._now_ms = now_ms
 
     def blocked(self) -> str | None:
-        return None if self._models.available() else "speaker models missing"
+        return None
 
     def run(self, job: Job) -> None:
         segment_id = job.payload.get("segment_id")
@@ -301,6 +302,9 @@ class SpeakersHandler:
             length_ms = segment.end_ms - segment.start_ms
             self._speakers.record_self(segment_id, segment.speech_ms, length_ms, self._now_ms())
             return
+        if not self._models.available():
+            msg = "speaker models missing"
+            raise DeferJob(msg)
         samples = self._audio.read_samples(segment)
         if samples is None:
             msg = "raw audio is gone"

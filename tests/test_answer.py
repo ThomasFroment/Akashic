@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
+from typing import get_args
 
 from memory_data import NOW
 
@@ -23,6 +25,7 @@ from akashic.search.hybrid import ContextLine, EpisodeHit, LineHit, Results
 from akashic.search.keyword import Hit
 from akashic.search.planner import Plan
 from akashic.search.timeparse import resolve
+from akashic.storage.gaps import GapReason, GapSpan
 
 
 def episode(i: int, title: str = "A video", snippet: str = "about cats") -> EpisodeHit:
@@ -227,3 +230,86 @@ def test_summary_prompt_covers_multiple_topics_and_discloses_sampling() -> None:
     assert "This is a sample" in user
     assert "discussion/proposals from actions completed" in user
     assert "one to four sentences" not in system
+
+
+def at(hour: int, minute: int = 0) -> int:
+    return int(datetime(2026, 11, 17, hour, minute).astimezone().timestamp() * 1000)
+
+
+def span(kind: str, reason: str, start: tuple[int, int], end: tuple[int, int]) -> GapSpan:
+    return GapSpan(kind, reason, at(*start), at(*end))  # type: ignore[arg-type]
+
+
+def test_the_prompt_lists_not_recorded_spans_right_after_searched() -> None:
+    plan = Plan(time=resolve("yesterday", NOW))
+    gap = span("mic", "backlog", (14, 5), (14, 15))
+    _, user = answer_prompt("what happened?", plan, [], NOW, gaps=[gap])
+    lines = user.splitlines()
+    i = next(n for n, text in enumerate(lines) if text.startswith("Searched:"))
+    assert lines[i + 1].startswith("Not recorded (")
+    assert "never say nothing happened then" in lines[i + 1]
+    assert "2026-11-17 14:05 - 14:15 (microphone: speech lost, audio writer fell behind)" in user
+
+
+def test_a_prompt_without_gaps_has_no_line() -> None:
+    plan = Plan(time=resolve("yesterday", NOW))
+    _, user = answer_prompt("what happened?", plan, [], NOW)
+    assert "Not recorded" not in user
+    assert user == answer_prompt("what happened?", plan, [], NOW, gaps=())[1]
+
+
+def test_a_span_ending_another_day_shows_the_full_end() -> None:
+    gap = GapSpan("all", "paused", at(23, 0), at(23, 0) + 2 * 3_600_000)
+    reply = no_evidence("What happened?", [gap])
+    assert "2026-11-17 23:00 - 2026-11-18 01:00 (everything: recording paused)" in reply
+
+
+def test_no_evidence_adds_the_spans_in_the_language_of_the_question() -> None:
+    gap = span("system", "voice_elsewhere", (14, 30), (14, 50))
+    english = no_evidence("What did Minlo say?", [gap])
+    assert english.startswith(no_evidence("What did Minlo say?"))
+    assert english.endswith(
+        "Not recorded: 2026-11-17 14:30 - 14:50"
+        " (system sound: speech lost, voice chat on another device)"
+    )
+    french = no_evidence("Qu'est-ce que Minlo a dit ?", [gap])
+    assert french.startswith("Je n'ai rien trouvé dans ta mémoire qui réponde à cette question.")
+    assert french.endswith(
+        "Non enregistré : 2026-11-17 14:30 - 14:50"
+        " (son du système: paroles perdues, voix sur un autre périphérique)"
+    )
+
+
+def test_no_evidence_without_gaps_is_unchanged() -> None:
+    assert (
+        no_evidence("Which video?", ())
+        == "I found nothing in your memory that answers that question."
+    )
+
+
+def test_the_word_table_covers_every_kind_and_reason_in_both_languages() -> None:
+    kinds = ("all", "screen", "screen_text", "mic", "system")
+    listed = set(get_args(GapReason.__value__)) - {"excluded", "music"}
+    reasons = sorted(listed)
+    for kind in kinds:
+        for reason in reasons:
+            gap = span(kind, reason, (14, 0), (14, 10))
+            assert "Not recorded:" in no_evidence("What?", [gap])
+            assert "Non enregistré :" in no_evidence("Qu'est-ce que ?", [gap])
+    assert "speech lost, audio writer fell behind" in no_evidence(
+        "What?", [span("mic", "backlog", (14, 0), (14, 10))]
+    )
+    assert "paroles perdues, écriture audio en retard" in no_evidence(
+        "Qu'est-ce que ?", [span("mic", "backlog", (14, 0), (14, 10))]
+    )
+
+
+def test_at_most_ten_longest_spans_are_listed_in_start_order_then_a_count() -> None:
+    gaps = [span("mic", "paused", (h, 0), (h, 1 + h)) for h in range(1, 13)]  # 12 spans, growing
+    reply = no_evidence("What?", gaps)
+    assert reply.endswith("(+2 more)")
+    assert reply.count(" - ") == answer.MAX_GAPS
+    assert "2026-11-17 01:00" not in reply
+    assert "2026-11-17 02:00" not in reply
+    assert reply.index("03:00") < reply.index("12:00")
+    assert "(+2 autres)" in no_evidence("Qu'est-ce que ?", gaps)

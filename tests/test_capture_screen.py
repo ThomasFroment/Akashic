@@ -12,6 +12,7 @@ import io
 import logging
 import sqlite3
 import threading
+import time
 from typing import TYPE_CHECKING
 
 import pytest
@@ -38,8 +39,14 @@ from waits import wait_for
 
 from akashic import child, ipc
 from akashic.capture import main as capture_main
-from akashic.capture.ports import CapturePlatform, Rect, TextBlock
-from akashic.capture.screen import STATS_LOG_INTERVAL_S, ScreenCapture, Settings
+from akashic.capture.health import HOOK_DOWN_PROBLEM_S, WINDOW_EVENTS_DOWN
+from akashic.capture.ports import CapturePlatform, Rect, TextBlock, WindowChanges
+from akashic.capture.screen import (
+    HOOK_DOWN_RECHECK_S,
+    STATS_LOG_INTERVAL_S,
+    ScreenCapture,
+    Settings,
+)
 from akashic.capture.screen_writer import Picture, ScreenWriter
 from akashic.capture.text import MAX_TEXT_CHARS
 from akashic.capture.uia_budget import UiaBudget
@@ -50,8 +57,10 @@ from akashic.storage.media import MediaStore
 from akashic.storage.sessions import GameLog
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
+    from akashic.capture.ports import MonitorInfo
+    from akashic.capture.screen import _Tick  # pyright: ignore[reportPrivateUsage]
     from akashic.config import Paths
 
 TWO = [SCREEN, MON_B]
@@ -309,6 +318,148 @@ def test_lost_window_events_make_every_monitor_due(make_rig: Callable[..., Rig])
     assert (rig.count("m1"), rig.count("m2")) == (m1, m2 + 1)
     rig.tick(2.1)
     assert (rig.count("m1"), rig.count("m2")) == (m1 + 1, m2 + 1)
+
+
+class _Seen:
+    """What the verdicts and the request collection were handed, per tick."""
+
+    def __init__(self, rig: Rig) -> None:
+        self.verdicts: list[WindowChanges] = []
+        self.requests: list[WindowChanges] = []
+        capture = rig.capture
+        note = capture._verdicts.note_events  # pyright: ignore[reportPrivateUsage]
+        collect = capture._collect_requests  # pyright: ignore[reportPrivateUsage]
+
+        def note_events(changes: WindowChanges) -> None:
+            self.verdicts.append(changes)
+            note(changes)
+
+        def collect_requests(
+            monitors: Sequence[MonitorInfo], changes: WindowChanges, tick: _Tick
+        ) -> bool:
+            self.requests.append(changes)
+            return collect(monitors, changes, tick)
+
+        capture._verdicts.note_events = note_events  # pyright: ignore[reportPrivateUsage]
+        capture._collect_requests = collect_requests  # pyright: ignore[reportPrivateUsage]
+
+
+def test_the_first_unhealthy_drain_acts_at_once(make_rig: Callable[..., Rig]) -> None:
+    rig = two_monitors(make_rig)
+    rig.quiet()
+    m2 = rig.count("m2")
+    seen = _Seen(rig)
+    rig.events.healthy = False
+    rig.tick(2.0)
+    assert seen.verdicts[-1].healthy is False
+    assert rig.count("m2") == m2 + 1
+
+
+def test_a_drain_soon_after_an_acting_one_is_treated_as_healthy(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = two_monitors(make_rig)
+    rig.quiet()
+    seen = _Seen(rig)
+    rig.events.healthy = False
+    rig.tick(2.0)
+    rig.tick(2.1)
+    done = (rig.count("m1"), rig.count("m2"))
+    rig.tick(2.0 + HOOK_DOWN_RECHECK_S - 0.5)
+    assert seen.verdicts[-1].healthy is True
+    assert (rig.count("m1"), rig.count("m2")) == done
+
+
+def test_events_in_a_bounded_drain_are_still_handled_and_both_consumers_see_one_object(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.show(1, "chrome.exe", "Page", url="https://example.org/one")
+    rig.quiet()
+    seen = _Seen(rig)
+    rig.events.healthy = False
+    rig.tick(2.0)
+    rig.events.push(1, "title", 3.0)
+    rig.tick(3.0)
+    bounded = seen.verdicts[-1]
+    assert bounded.healthy is True
+    assert [e.hwnd for e in bounded.events] == [1]
+    assert seen.requests[-1] is bounded
+    rig.tick(3.3)
+    rig.tick(3.4)
+    assert rig.capture.stats_snapshot()["pending"] >= 1  # the title event started a hold
+
+
+def test_an_unhealthy_drain_after_the_recheck_interval_acts_again(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = two_monitors(make_rig)
+    rig.quiet()
+    seen = _Seen(rig)
+    rig.events.healthy = False
+    rig.tick(2.0)
+    rig.tick(2.0 + HOOK_DOWN_RECHECK_S - 0.5)
+    m2 = rig.count("m2")
+    rig.tick(2.0 + HOOK_DOWN_RECHECK_S)
+    assert seen.verdicts[-1].healthy is False
+    assert rig.count("m2") == m2 + 1
+    rig.tick(2.0 + HOOK_DOWN_RECHECK_S + 1.0)  # the count started over from the acting drain
+    assert seen.verdicts[-1].healthy is True
+
+
+def test_a_healthy_drain_ends_the_run_so_the_next_unhealthy_one_acts_at_once(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = two_monitors(make_rig)
+    rig.quiet()
+    seen = _Seen(rig)
+    rig.events.healthy = False
+    rig.tick(2.0)
+    rig.events.healthy = True
+    rig.tick(2.5)
+    rig.events.healthy = False
+    rig.tick(3.0)
+    assert seen.verdicts[-1].healthy is False
+
+
+def test_the_drain_is_filtered_before_the_no_monitors_return(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.quiet()
+    seen = _Seen(rig)
+    rig.events.healthy = False
+    rig.tick(2.0)
+    rig.displays.monitor_list = []
+    rig.tick(6.0)  # the monitor list refreshes every 5 s
+    assert seen.verdicts[-1].healthy is True
+    assert len(seen.requests) == 1  # nothing collected without monitors
+
+
+def test_the_window_events_problem_appears_after_thirty_seconds_of_unhealthy_drains(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.quiet()
+    assert rig.capture.problems(100.0) == []
+    rig.events.healthy = False
+    rig.tick(2.0)
+    rig.tick(10.0)
+    assert rig.capture.problems(2.0 + HOOK_DOWN_PROBLEM_S - 0.1) == []
+    assert rig.capture.problems(2.0 + HOOK_DOWN_PROBLEM_S) == [WINDOW_EVENTS_DOWN]
+    rig.events.healthy = True
+    rig.tick(40.0)
+    assert rig.capture.problems(41.0) == []
+
+
+def test_reset_clears_the_window_events_problem(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.quiet()
+    rig.events.healthy = False
+    rig.tick(2.0)
+    assert rig.capture.problems(100.0) == [WINDOW_EVENTS_DOWN]
+    rig.capture.reset()
+    assert rig.capture.problems(100.0) == []
+    rig.tick(101.0)  # the first drain after a reset acts at once
+    assert rig.capture.problems(101.0) == []
 
 
 def test_a_triggered_check_waits_for_the_gap_after_the_previous_check(
@@ -955,7 +1106,8 @@ def test_a_failing_tick_is_counted_logged_by_type_and_reported_on_every_monitor(
     assert ("m2", 1) in rig.writer.failures
     warnings = loop_warnings(caplog)
     assert len(warnings) == 1
-    assert "RuntimeError" in warnings[0]
+    assert "screen loop iteration failed: RuntimeError (1 so far)" in warnings[0]
+    assert rig.capture.stats_snapshot()["screen loop iteration: RuntimeError"] == 1
     assert "secret" not in caplog.text
     assert "private.example" not in caplog.text
     assert all(r.exc_info is None for r in caplog.records)
@@ -999,6 +1151,7 @@ def test_a_persistent_fault_neither_spins_nor_floods_the_log(
     assert rig.capture.stats_snapshot()["loop_error"] == 299
     assert set(stop.timeouts) == {0.1}
     assert len(loop_warnings(caplog)) == 1
+    assert rig.capture.stats_snapshot()["screen loop iteration: OSError"] == 299
 
 
 def test_alternating_fault_types_are_each_logged_once_per_interval(
@@ -1329,6 +1482,10 @@ def test_body_stays_idle_when_capture_is_disabled(
 # --- shutdown of the writer ----------------------------------------------------------------------
 
 
+def _deadline(seconds: float = 5.0) -> capture_main.StopDeadline:
+    return capture_main.StopDeadline(time.monotonic() + seconds)
+
+
 class _FailingCapture:
     def close(self) -> None:
         msg = "boom"
@@ -1344,7 +1501,14 @@ def test_the_writer_stores_what_is_queued_before_its_connection_closes_even_if_c
     thread = threading.Thread(target=rig.writer.run, args=(stop,), name="screen-writer")
     thread.start()
     with caplog.at_level(logging.WARNING, logger="capture"):
-        capture_main._close_capture(_FailingCapture(), rig.writer, stop, thread, rig.conn)  # type: ignore[arg-type]
+        capture_main._close_capture(
+            _FailingCapture(),  # type: ignore[arg-type]
+            rig.writer,
+            stop,
+            thread,
+            rig.conn,
+            _deadline(),
+        )
     assert "closing screen capture failed: RuntimeError" in caplog.text
     assert not thread.is_alive()
     with pytest.raises(sqlcipher3.ProgrammingError):
@@ -1366,7 +1530,7 @@ def test_the_writer_outlives_the_screen_loop_until_its_own_stop_is_set(
     thread.join(timeout=0.3)
     assert thread.is_alive()  # idle, and the context's stop is not this event
     rig.settle(0.0)  # the loop's last tick submits after everything else stopped
-    capture_main._stop_writer(rig.writer, stop, thread, rig.conn)
+    capture_main._stop_writer(rig.writer, stop, thread, rig.conn, _deadline())
     reopened = db.connect(paths.db_file, key.subkey("db"))
     try:
         assert len(latest_frames(reopened)) == 1
@@ -1374,24 +1538,19 @@ def test_the_writer_outlives_the_screen_loop_until_its_own_stop_is_set(
         reopened.close()
 
 
-def test_a_writer_that_will_not_stop_is_logged_and_its_queue_dropped(
-    make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+def test_a_writer_that_will_not_stop_is_abandoned_with_its_connection_left_open(
+    make_rig: Callable[..., Rig], caplog: pytest.LogCaptureFixture
 ) -> None:
     rig = make_rig()
-    rig.settle(0.0)
-    monkeypatch.setattr(capture_main, "WRITER_JOIN_S", 0.05)
     release = threading.Event()
-    thread = threading.Thread(target=release.wait, daemon=True)
+    thread = threading.Thread(target=release.wait, name="screen-writer", daemon=True)
     thread.start()
     with caplog.at_level(logging.WARNING, logger="capture"):
-        capture_main._stop_writer(rig.writer, threading.Event(), thread, rig.conn)
+        capture_main._stop_writer(rig.writer, threading.Event(), thread, rig.conn, _deadline(0.05))
     release.set()
     thread.join(timeout=5)
-    assert "screen writer did not stop" in caplog.text
-    stop = threading.Event()
-    stop.set()
-    rig.writer.run(stop)
-    assert latest_frames(rig.conn) == []  # close() dropped what was queued
+    assert "screen-writer still running at the stop deadline; abandoned" in caplog.text
+    rig.conn.execute("SELECT 1")  # not closed by the main thread
 
 
 def test_writer_problems_reach_the_capture_health(make_rig: Callable[..., Rig]) -> None:
@@ -1405,10 +1564,14 @@ def test_writer_problems_reach_the_capture_health(make_rig: Callable[..., Rig]) 
     status = CaptureStatus(_accept, lambda: 0, audio_failed=False)
     for _ in range(3):
         rig.writer.capture_failures("m1", 1)
-    problems = capture_main._active_problems(status, rig.writer, None, halted=False, since=0.0)
+    problems = capture_main._active_problems(
+        status, rig.writer, None, rig.capture, halted=False, since=0.0
+    )
     assert f"{SCREEN_IMAGES_FAILING}@m1" in problems
     assert not any(p.startswith(SCREEN_FRAMES_DROPPED) for p in problems)
-    paused = capture_main._active_problems(status, rig.writer, None, halted=True, since=0.0)
+    paused = capture_main._active_problems(
+        status, rig.writer, None, rig.capture, halted=True, since=0.0
+    )
     assert not any(p.startswith(SCREEN_IMAGES_FAILING) for p in paused)
 
 
@@ -1419,18 +1582,28 @@ def test_the_debug_screen_data_is_the_capture_stats(make_rig: Callable[..., Rig]
 
     rig = make_rig()
     rig.settle(0.0)
+    from akashic.log import FaultLog  # noqa: PLC0415
+
     ctx = SimpleNamespace(health_snapshot=lambda: (0, False, 0.0))
     status = CaptureStatus(_accept, lambda: 0, audio_failed=False)
+    media_faults = FaultLog(logging.getLogger("test.media"))
+    media_faults.note("media poll", OSError("x"))
+    gaps_faults = FaultLog(logging.getLogger("test.gaps"))
+    gaps_faults.note("capture gap tick", ValueError("x"))
+    gaps_faults.note("capture gap tick", ValueError("x"))
     collected = capture_main._collect(
         ctx,  # type: ignore[arg-type]
         status,
         rig.capture,
         rig.writer,
         None,
-        SimpleNamespace(stats={}),  # type: ignore[arg-type]
-        SimpleNamespace(stats={}),  # type: ignore[arg-type]
+        SimpleNamespace(stats_snapshot=lambda: {"close_failed": 2} | media_faults.counts()),  # type: ignore[arg-type]
+        SimpleNamespace(stats_snapshot=lambda: {"tick_failed": 2} | gaps_faults.counts()),  # type: ignore[arg-type]
     )
     assert collected is not None
+    assert collected[2]["media"] == {"close_failed": 2, "media poll: OSError": 1}
+    assert collected[2]["gaps"] == {"capture gap tick: ValueError": 2, "tick_failed": 2}
+    assert collected[2]["writer"] == dict(sorted(rig.writer.stats.items()))
     assert collected[2]["screen"] == dict(sorted(rig.capture.stats_snapshot().items()))
     assert "images_failing" not in str(rig.capture.stats_snapshot())
     assert isinstance(rig.writer.pictures[0], Picture)

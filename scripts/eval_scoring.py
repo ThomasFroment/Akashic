@@ -355,10 +355,6 @@ class Verdict:
             and self.plan_ok
         )
 
-    @property
-    def ok_with_plan(self) -> bool:
-        return self.ok and self.plan_ok
-
 
 def judge(  # noqa: PLR0913 - independent scoring dimensions
     q: Q,
@@ -418,7 +414,11 @@ def compare(baseline: Mapping[str, object], current: Mapping[str, object]) -> li
             lines.append(f"{model}: not in the baseline")
             continue
         before, after = pass_rates(before_models[model]), pass_rates(rows)
-        lines.append(f"{model}: {_total(before)} -> {_total(after)} passed runs")
+        old_splits, new_splits = _by_split(before_models[model]), _by_split(rows)
+        for split in dict.fromkeys([*old_splits, *new_splits]):
+            old_total = _total(pass_rates(old_splits.get(split, [])))
+            new_total = _total(pass_rates(new_splits.get(split, [])))
+            lines.append(f"{model} {split}: {old_total} -> {new_total} passed runs")
         for key in [*after, *(k for k in before if k not in after)]:
             old, new = before.get(key), after.get(key)
             if old is None or new is None:
@@ -447,6 +447,13 @@ def _row(raw: object) -> Mapping[str, object] | None:
     return {str(k): v for k, v in cast("dict[object, object]", raw).items()}
 
 
+def _by_split(rows: Iterable[Mapping[str, object]]) -> dict[str, list[Mapping[str, object]]]:
+    groups: dict[str, list[Mapping[str, object]]] = {}
+    for row in rows:
+        groups.setdefault(str(row.get("split", "unknown")), []).append(row)
+    return groups
+
+
 def _total(rates: Mapping[str, tuple[int, int, str]]) -> str:
     return f"{sum(r[0] for r in rates.values())}/{sum(r[1] for r in rates.values())}"
 
@@ -454,7 +461,6 @@ def _total(rates: Mapping[str, tuple[int, int, str]]) -> str:
 def verdict_json(v: Verdict) -> dict[str, object]:
     return {
         "ok": v.ok,
-        "ok_with_plan": v.ok_with_plan,
         "facts": v.facts,
         "fact_recall": v.fact_recall,
         "cites": v.citations.ok,

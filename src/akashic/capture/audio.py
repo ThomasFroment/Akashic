@@ -12,8 +12,10 @@ Halted means nothing is captured: devices are closed (the microphone indicator g
 half-recorded segment is dropped from memory when the user paused, and kept (closed early) when the
 UI opened. Stopping capture or a device change or failure keeps the half-recorded segment by
 closing it early; an unexpected fault drops it. Process exclusions
-apply to the processes that were making sound: a segment during which an excluded process was
-audible is dropped, in memory.
+apply to the processes that were making sound on any playback device: a segment during which an
+excluded process was audible is dropped, in memory. A system segment's stored sources are the
+processes audible on the recorded device; voice chat audible only on another device is reported
+as a ``voice_elsewhere`` gap.
 """
 
 from __future__ import annotations
@@ -29,11 +31,17 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from akashic.capture.gaps import NO_GAPS
-from akashic.capture.health import DEVICE_DOWN_CODES, DEVICE_DOWN_S
-from akashic.capture.ports import AudioError
+from akashic.capture.gaps import NO_GAPS, limit_wait_at_stop
+from akashic.capture.health import (
+    DEVICE_DOWN_CODES,
+    DEVICE_DOWN_S,
+    DROP_PROBLEM_S,
+    SEGMENTS_DROPPED_CODES,
+)
+from akashic.capture.ports import VOICE_APPS, AudioError
 from akashic.capture.vad import WINDOW
 from akashic.config import Audio
+from akashic.log import FaultLog
 from akashic.storage import db
 from akashic.storage.audio import NewSegment
 from akashic.storage.opus import SAMPLE_RATE, encode_opus
@@ -62,12 +70,12 @@ WINDOW_MS: Final = WINDOW * 1000 // SAMPLE_RATE  # 32
 TAIL_MS: Final = 200  # silence kept after the last speech window
 READ_TIMEOUT_S: Final = 0.1
 RETRY_S: Final = 5.0  # between attempts to open a missing device
-FAULT_LOG_S: Final = 300.0  # per exception type and stream, so a repeating fault cannot flood
 DEVICE_LIST_S: Final = 10.0  # how often the list of selectable devices is refreshed
 DEVICE_CHECK_S: Final = 5.0  # how often to ask whether the default device changed
 REANCHOR_MS: Final = 100  # clock error beyond which window timestamps are re-anchored
 SAMPLER_INTERVAL_S: Final = 1.0
 SAMPLER_KEEP_MS: Final = 300_000
+VOICE_ELSEWHERE_NOTE_EVERY_MS: Final = 300_000
 WRITER_QUEUE: Final = 64
 WRITE_RETRY_S: Final = (0.5, 1.0, 2.0, 4.0, 8.0)  # waits after a busy database, per segment
 # System sound made only by these is music, never worth transcribing. Browser music (YouTube
@@ -78,6 +86,9 @@ MUSIC_PROCESSES: Final = frozenset(
         "foobar2000.exe", "musicbee.exe", "aimp.exe",
     }
 )  # fmt: skip
+# A virtual mixer on the recorded endpoint carries the other apps: what it holds says nothing
+# about which of them is audible there.
+MIXER_PROCESSES: Final = frozenset({"elgato.wavelink.exe"})
 
 
 VAD_CONTINUE_RATIO: Final = 0.7  # a segment stays open at a lower bar than the one that opens it
@@ -207,7 +218,9 @@ class Segmenter:
         fresh = sum(speech[self._seeded :])
         voiced = [w for w, s in zip(windows, speech, strict=True) if s]
         rms = float(np.sqrt(np.mean(np.square(np.concatenate(voiced))))) if voiced else 0.0
-        if fresh * WINDOW_MS < self._s.min_speech_ms:
+        # A continuation's fresh speech finishes a sentence already kept, so any of it counts.
+        short = fresh == 0 if self._continues else fresh * WINDOW_MS < self._s.min_speech_ms
+        if short:
             self._drop("short", rms, sum(speech) * WINDOW_MS)
             return None
         if rms < self._s.energy_floor:
@@ -241,62 +254,138 @@ class Segmenter:
         return [utterance] if utterance else []
 
 
-class SourceSampler:
-    """Polls which processes are making sound and remembers the last few minutes."""
+type Poll = dict[str, frozenset[str]]  # audible process names per playback endpoint id
 
-    def __init__(
+
+def _voice_elsewhere(poll: Poll, recorded: str, exclusions: Exclusions) -> bool:
+    """A voice app is audible on another endpoint but not on the recorded one. A mixer on the
+    recorded endpoint carries every app, so nothing is elsewhere then. Excluded processes count
+    as silent."""
+    if recorded not in poll or poll[recorded] & MIXER_PROCESSES:
+        return False
+    heard_elsewhere = {
+        name
+        for e, names in poll.items()
+        if e != recorded
+        for name in names
+        if not exclusions.check_process(name)
+    }
+    return bool((heard_elsewhere & VOICE_APPS) - poll[recorded])
+
+
+@dataclass(frozen=True, slots=True)
+class SourceCheck:
+    recorded: tuple[str, ...]  # heard on the recorded endpoint (empty for the microphone)
+    everywhere: tuple[str, ...]  # heard on any playback endpoint
+    complete: bool  # False when what was audible is unknown
+
+
+class SourceSampler:
+    """Polls which processes are making sound on each playback endpoint and remembers the last
+    few minutes. Reports voice chat that is audible on an endpoint other than the recorded one."""
+
+    def __init__(  # noqa: PLR0913, PLR0917 - the tests tune the interval and the memory
         self,
         sessions: AudioSessions,
         clock_ms: Callable[[], int],
+        exclusions: Exclusions,
         interval_s: float = SAMPLER_INTERVAL_S,
         keep_ms: int = SAMPLER_KEEP_MS,
+        gaps: GapSink = NO_GAPS,
     ) -> None:
         self._sessions = sessions
         self._clock_ms = clock_ms
+        self._exclusions = exclusions
         self._interval_s = interval_s
         self._keep_ms = keep_ms
+        self._gaps = gaps
         # None marks a poll that failed: nobody knows what was audible then.
-        self._samples: deque[tuple[int, frozenset[str] | None]] = deque()
+        self._samples: deque[tuple[int, Poll | None]] = deque()
         self._lock = threading.Lock()
+        self._recorded: str | None = None
+        self._refresh = False  # the next poll re-reads the endpoints
+        self._previous: tuple[int, bool] | None = None  # last poll's time, voice_elsewhere
+        self._noted_at = -VOICE_ELSEWHERE_NOTE_EVERY_MS  # when voice_elsewhere was last logged
+
+    def set_recorded(self, endpoint_id: str | None) -> None:
+        """The playback endpoint being recorded, None when none is."""
+        with self._lock:
+            self._recorded = endpoint_id
 
     def sample(self) -> None:
         now = self._clock_ms()
-        names: frozenset[str] | None
+        with self._lock:
+            refresh, self._refresh = self._refresh, False
+        poll: Poll | None
         try:
-            names = self._sessions.active_processes()
+            poll = self._sessions.active_processes(refresh=refresh)
         except Exception as exc:  # noqa: BLE001 - a failed poll is an unknown, never "silence"
             log.warning("audio source sampling failed: %s", type(exc).__name__)
-            names = None
+            poll = None
         with self._lock:
-            self._samples.append((now, names))
+            self._samples.append((now, poll))
             while self._samples and self._samples[0][0] < now - self._keep_ms:
                 self._samples.popleft()
+            recorded = self._recorded
+            if poll is not None and recorded is not None and recorded not in poll:
+                self._refresh = True
+        self._report_voice_elsewhere(now, poll, recorded)
 
-    def between(self, start_ms: int, end_ms: int) -> tuple[str, ...]:
-        """Processes heard during the span, give or take one polling interval."""
-        return self.check(start_ms, end_ms)[0]
+    def _report_voice_elsewhere(self, now: int, poll: Poll | None, recorded: str | None) -> None:
+        interval_ms = int(self._interval_s * 1000)
+        previous = self._previous
+        if previous is not None and now - previous[0] > 2 * interval_ms:
+            previous = None
+        elsewhere = (
+            poll is not None
+            and recorded is not None
+            and _voice_elsewhere(poll, recorded, self._exclusions)
+        )
+        self._previous = (now, elsewhere)
+        if not elsewhere:
+            return
+        continued = previous is not None and previous[1]
+        if not continued and now - self._noted_at >= VOICE_ELSEWHERE_NOTE_EVERY_MS:
+            self._noted_at = now
+            log.info("voice chat audible on a playback device that is not recorded")
+        start = previous[0] if previous is not None else now - interval_ms
+        self._gaps.drop("system", "voice_elsewhere", start, now, merge=continued)
 
-    def check(self, start_ms: int, end_ms: int) -> tuple[tuple[str, ...], bool]:
-        """Processes heard during the span and whether that is the whole story. The span is
-        not ``complete`` when a poll inside it failed or when no poll succeeded inside it
-        (the sampler was stalled or the samples are gone): what was audible is unknown."""
+    def check(self, start_ms: int, end_ms: int, endpoint_id: str | None) -> SourceCheck:
+        """Processes heard during the span, give or take one polling interval, and whether that
+        is the whole story. The span is not ``complete`` when a poll inside it failed, when no
+        poll succeeded inside it (the sampler was stalled or the samples are gone) or when a
+        poll lacks ``endpoint_id``: what was audible is unknown."""
         slack = int(self._interval_s * 1000)
-        found: set[str] = set()
-        succeeded = failed = False
+        recorded: set[str] = set()
+        everywhere: set[str] = set()
+        succeeded = missing = failed = False
         with self._lock:
-            for ts, names in self._samples:
+            for ts, poll in self._samples:
                 if not start_ms - slack <= ts <= end_ms + slack:
                     continue
-                if names is None:
+                if poll is None:
                     failed = True
+                    continue
+                succeeded = True
+                for names in poll.values():
+                    everywhere.update(names)
+                if endpoint_id is None:
+                    continue
+                if endpoint_id in poll:
+                    recorded.update(poll[endpoint_id])
                 else:
-                    succeeded = True
-                    found.update(names)
-        return tuple(sorted(found)), succeeded and not failed
+                    missing = True
+            if missing:
+                self._refresh = True
+        complete = succeeded and not failed and not missing
+        return SourceCheck(tuple(sorted(recorded)), tuple(sorted(everywhere)), complete)
 
     def run(self, stop: threading.Event, halt: threading.Event) -> None:
         while not stop.is_set():
-            if not halt.is_set():
+            if halt.is_set():
+                self._previous = None
+            else:
                 try:
                     self.sample()
                 except Exception as exc:  # noqa: BLE001 - attribution is best effort
@@ -323,49 +412,93 @@ class SegmentWriter:
         self._clock_ms = clock_ms
         self._stats = stats
         self._gaps = gaps
-        self._queue: queue.Queue[tuple[AudioKind, Utterance]] = queue.Queue(WRITER_QUEUE)
+        self._queue: queue.Queue[tuple[AudioKind, Utterance, AudioDevice]] = queue.Queue(
+            WRITER_QUEUE
+        )
         self._last_id: dict[str, int | None] = {}
         self._last_drop: dict[str, GapReason | None] = {}  # the writer's last decision, per stream
         self._stop = threading.Event()
+        self._dropped_at: dict[AudioKind, float] = {}  # monotonic time of the last drop
+        self._dropped_lock = threading.Lock()
 
-    def submit(self, kind: AudioKind, utterance: Utterance) -> None:
+    def dropped_since(self, t: float) -> frozenset[AudioKind]:
+        """Streams that lost a segment (backlog or failed write) at a ``time.monotonic`` time
+        of ``t`` or later."""
+        with self._dropped_lock:
+            return frozenset(kind for kind, at in self._dropped_at.items() if at >= t)
+
+    def _note_dropped(self, kind: AudioKind) -> None:
+        with self._dropped_lock:
+            self._dropped_at[kind] = time.monotonic()
+
+    def submit(self, kind: AudioKind, utterance: Utterance, device: AudioDevice) -> None:
         try:
-            self._queue.put_nowait((kind, utterance))
+            self._queue.put_nowait((kind, utterance, device))
         except queue.Full:
+            self._note_dropped(kind)
             self._stats["dropped_backlog"] += 1
             self._gaps.drop(kind, "backlog", utterance.start_ms, utterance.end_ms)
             log.warning("audio writer is behind; dropped a %s segment", kind)
 
     def run(self, stop: threading.Event) -> None:
-        """Write until told to stop, then finish what is already queued."""
+        """Write until told to stop, then finish what is already queued. Once stopping, the first
+        write that meets a busy database drops what is still queued."""
         self._stop = stop
+        stopping = False
         while True:
             try:
-                kind, utterance = self._queue.get(timeout=0.2)
+                kind, utterance, device = self._queue.get(timeout=0.2)
             except queue.Empty:
                 if stop.is_set():
                     return
                 continue
+            if stop.is_set() and not stopping:
+                stopping = True
+                limit_wait_at_stop(self._store.conn)
             try:
-                self.write(kind, utterance)
+                self.write(kind, utterance, device)
             except Exception as exc:  # noqa: BLE001 - one bad segment must not stop recording
+                self._note_dropped(kind)
                 self._stats["write_failed"] += 1
                 self._last_id[kind] = None
                 self._report_drop(kind, "write_failed", utterance)
                 log.warning("storing a %s segment failed: %s", kind, type(exc).__name__)
+                if stopping and db.is_busy(exc):
+                    self._drop_queued()
+                    return
 
-    def write(self, kind: AudioKind, utterance: Utterance) -> int | None:
-        sources, complete = self._sampler.check(utterance.start_ms, utterance.end_ms)
-        if any(self._exclusions.check_process(name) for name in sources):
+    def _drop_queued(self) -> None:
+        dropped = 0
+        while True:
+            try:
+                kind, utterance, _ = self._queue.get_nowait()
+            except queue.Empty:
+                break
+            self._report_drop(kind, "write_failed", utterance)
+            dropped += 1
+        self._stats["stop_dropped"] += dropped
+        log.warning("database busy at stop; dropped %d queued audio segments", dropped)
+
+    def write(self, kind: AudioKind, utterance: Utterance, device: AudioDevice) -> int | None:
+        endpoint_id = device.device_id if kind == "system" else None
+        check = self._sampler.check(utterance.start_ms, utterance.end_ms, endpoint_id)
+        if any(self._exclusions.check_process(name) for name in check.everywhere):
             self._stats["dropped_excluded"] += 1
             self._last_id[kind] = None
             self._report_drop(kind, "excluded", utterance)
             return None
-        if not complete:  # unknown sources: nothing unclear is kept, the RAM copy is dropped
+        if not check.complete:  # unknown sources: nothing unclear is kept, the RAM copy is dropped
             self._stats["dropped_unknown_sources"] += 1
             self._last_id[kind] = None
             self._report_drop(kind, "unknown_sources", utterance)
             return None
+        # The recorded endpoint alone says what was recorded, unless a mixer on it hides the apps.
+        own = kind == "system" and not MIXER_PROCESSES.intersection(check.recorded)
+        sources = tuple(
+            name
+            for name in (check.recorded if own else check.everywhere)
+            if name not in MIXER_PROCESSES
+        )
         if kind == "system" and sources and set(sources) <= MUSIC_PROCESSES:
             self._stats["dropped_music"] += 1  # song lyrics: the media session logs the song
             self._last_id[kind] = None
@@ -406,6 +539,10 @@ class SegmentWriter:
         return self._store.add(segment, opus, self._clock_ms())
 
 
+def _no_device(_device_id: str | None) -> None:
+    pass
+
+
 class StreamRecorder:
     """Reads one device, finds speech, hands utterances to ``sink``. One thread per stream."""
 
@@ -416,10 +553,11 @@ class StreamRecorder:
         devices: AudioDevices,
         detector: SpeechDetector,
         settings: AudioSettings,
-        sink: Callable[[AudioKind, Utterance], None],
+        sink: Callable[[AudioKind, Utterance, AudioDevice], None],
         clock_ms: Callable[[], int],
         stats: Counter[str],
         gaps: GapSink = NO_GAPS,
+        on_device: Callable[[str | None], None] = _no_device,
     ) -> None:
         self.kind: AudioKind = kind
         self._devices = devices
@@ -430,6 +568,7 @@ class StreamRecorder:
         self._clock_ms = clock_ms
         self._stats = stats
         self._gaps = gaps
+        self._on_device = on_device
         self.segmenter = Segmenter(settings, stats, kind)
         self._input: AudioInput | None = None
         self._device: AudioDevice | None = None
@@ -437,7 +576,7 @@ class StreamRecorder:
         self._pending_start_ms = 0
         self._next_device_check = 0.0
         self._warned = False
-        self._fault_logged: dict[str, float] = {}  # exception type -> monotonic time last logged
+        self._faults = FaultLog(log)
         self._level_max = 0.0  # loudest 32 ms window since the last snapshot()
         self._speech_sq = 0.0  # mean square of the windows the detector called speech
         self._speech_windows = 0
@@ -469,6 +608,7 @@ class StreamRecorder:
                 }
                 for d in list(self.segmenter.drops)
             ],
+            "faults": self._faults.counts(),
         }
         self._level_max = 0.0
         self._probability_max = 0.0
@@ -482,12 +622,12 @@ class StreamRecorder:
                 try:
                     self._iterate(stop, halt, paused)
                 except Exception as exc:  # noqa: BLE001 - a recorder must outlive any one fault
-                    self._recover_from_fault(type(exc).__name__, stop)
+                    self._recover_from_fault(exc, stop)
         finally:
             try:
                 self._release(keep=not paused.is_set())
             except Exception as exc:  # noqa: BLE001 - shutdown must not print the message
-                self._log_fault(type(exc).__name__)
+                self._faults.note(f"{self.kind} audio loop iteration", exc)
 
     def _iterate(
         self, stop: threading.Event, halt: threading.Event, paused: threading.Event
@@ -502,19 +642,13 @@ class StreamRecorder:
         else:
             self._step()
 
-    def _recover_from_fault(self, name: str, stop: threading.Event) -> None:
+    def _recover_from_fault(self, exc: Exception, stop: threading.Event) -> None:
         self._stats[f"loop_error_{self.kind}"] += 1
         self._gaps.open(self.kind, "device_failed", self._clock_ms())
-        self._log_fault(name)
+        self._faults.note(f"{self.kind} audio loop iteration", exc)
         with contextlib.suppress(Exception):  # _release clears its state even if close() raises
             self._release(keep=False)
         stop.wait(RETRY_S)
-
-    def _log_fault(self, name: str) -> None:
-        now = time.monotonic()
-        if now - self._fault_logged.get(name, float("-inf")) >= FAULT_LOG_S:
-            self._fault_logged[name] = now
-            log.warning("%s audio loop iteration failed: %s", self.kind, name)
 
     def _acquire(self) -> bool:
         device = self._devices.find(self.kind, self._wanted)
@@ -529,6 +663,7 @@ class StreamRecorder:
             self._warn_once(f"cannot open the {self.kind} audio device: {exc}")
             return False
         self._device = device
+        self._on_device(device.device_id)
         self._warned = False
         self._pending = np.zeros(0, dtype=np.float32)
         self._detector.reset()
@@ -546,9 +681,9 @@ class StreamRecorder:
         """Close the device. The open utterance is handed to the sink when ``keep`` is set (stop,
         device change, device failure) and dropped otherwise (pause, fault)."""
         try:
-            if keep:
+            if keep and self._device is not None:
                 for utterance in self.segmenter.finish():
-                    self._sink(self.kind, utterance)
+                    self._sink(self.kind, utterance, self._device)
         finally:
             try:
                 if self._input is not None:
@@ -556,11 +691,14 @@ class StreamRecorder:
             finally:
                 self._input = None
                 self._device = None
+                self._on_device(None)
                 self._pending = np.zeros(0, dtype=np.float32)
                 self.segmenter.reset()
 
     def _step(self) -> None:
         assert self._input is not None  # noqa: S101 - narrowing for the type checker
+        assert self._device is not None  # noqa: S101 - narrowing for the type checker
+        device = self._device
         try:
             block = self._input.read(READ_TIMEOUT_S)
         except AudioError as exc:
@@ -572,9 +710,9 @@ class StreamRecorder:
         self._gaps.close(self.kind, now)
         if block is None:
             for utterance in self.segmenter.flush(now):
-                self._sink(self.kind, utterance)
+                self._sink(self.kind, utterance, device)
         else:
-            self._consume(block, now)
+            self._consume(block, now, device)
         self._ok_at = time.monotonic()
         if time.monotonic() >= self._next_device_check:
             self._next_device_check = time.monotonic() + DEVICE_CHECK_S
@@ -586,7 +724,7 @@ class StreamRecorder:
             log.info("%s audio device changed; reopening", self.kind)
             self._release(keep=True)
 
-    def _consume(self, block: NDArray[np.float32], now_ms: int) -> None:
+    def _consume(self, block: NDArray[np.float32], now_ms: int, device: AudioDevice) -> None:
         """Cut ``block`` into VAD windows stamped with the time they were heard."""
         if self.kind == "mic" and self._settings.mic_gain != 1.0:
             block = np.clip(block * np.float32(self._settings.mic_gain), -1.0, 1.0)
@@ -608,7 +746,7 @@ class StreamRecorder:
                 self._speech_windows += 1
             self._probability_max = max(self._probability_max, probability)
             for utterance in self.segmenter.feed(ts, window, probability):
-                self._sink(self.kind, utterance)
+                self._sink(self.kind, utterance, device)
         self._pending = self._pending[cursor:].copy()
         self._pending_start_ms += cursor * 1000 // SAMPLE_RATE
 
@@ -629,7 +767,7 @@ class AudioCapture:
         gaps: GapSink = NO_GAPS,
     ) -> None:
         self.stats: Counter[str] = Counter()
-        sampler = SourceSampler(sessions, clock_ms)
+        sampler = SourceSampler(sessions, clock_ms, exclusions, gaps=gaps)
         self._sampler = sampler
         self._writer = SegmentWriter(store, sampler, exclusions, clock_ms, self.stats, gaps)
         self._energy_floor = settings.energy_floor
@@ -646,6 +784,7 @@ class AudioCapture:
                 clock_ms=clock_ms,
                 stats=self.stats,
                 gaps=gaps,
+                on_device=sampler.set_recorded if kind == "system" else _no_device,
             )
             for kind in ("mic", "system")
         ]
@@ -658,12 +797,19 @@ class AudioCapture:
         return self._names
 
     def problems(self, now: float, since: float) -> tuple[str, ...]:
-        """The down code of each recorder that has read nothing for too long."""
-        return tuple(
+        """The down code of each recorder that has read nothing for too long, then the dropped
+        code of each stream that lost a segment within ``DROP_PROBLEM_S`` and after ``since``."""
+        recent = max(since, now - DROP_PROBLEM_S)
+        down = tuple(
             DEVICE_DOWN_CODES[r.kind]
             for r in self._recorders
             if r.down_s(now, since) >= DEVICE_DOWN_S
         )
+        dropped_kinds = self._writer.dropped_since(recent)
+        dropped = tuple(
+            code for kind, code in SEGMENTS_DROPPED_CODES.items() if kind in dropped_kinds
+        )
+        return down + dropped
 
     def snapshot(self) -> dict[str, object]:
         """Counters, device names, levels and recent drops, for the Debug page."""
@@ -678,13 +824,19 @@ class AudioCapture:
         """Record until ``stop`` is set, then finish writing what is queued."""
         writer_stop = threading.Event()
         threads = [
-            threading.Thread(target=self._sampler.run, args=(stop, halt), name="audio-sources"),
+            threading.Thread(
+                target=self._sampler.run, args=(stop, halt), name="audio-sources", daemon=True
+            ),
             *(
-                threading.Thread(target=r.run, args=(stop, halt, paused), name=f"audio-{r.kind}")
+                threading.Thread(
+                    target=r.run, args=(stop, halt, paused), name=f"audio-{r.kind}", daemon=True
+                )
                 for r in self._recorders
             ),
         ]
-        writer = threading.Thread(target=self._writer.run, args=(writer_stop,), name="audio-writer")
+        writer = threading.Thread(
+            target=self._writer.run, args=(writer_stop,), name="audio-writer", daemon=True
+        )
         writer.start()
         for t in threads:
             t.start()
@@ -692,6 +844,6 @@ class AudioCapture:
             stop.wait()
         finally:
             for t in threads:
-                t.join(timeout=10)
+                t.join()
             writer_stop.set()
-            writer.join(timeout=30)
+            writer.join()

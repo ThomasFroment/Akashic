@@ -348,16 +348,6 @@ SETTINGS: Final = (
         1,
     ),
     Setting(
-        "disk_warning_free_gb",
-        "Warn when free disk space is below (GB)",
-        "int",
-        OTHER,
-        "",
-        1,
-        100000,
-        1,
-    ),
-    Setting(
         "log_level",
         "Log detail",
         "choice",
@@ -622,7 +612,6 @@ def settings_routes(services: Services, path: Path) -> APIRouter:
         now_ms = time.time_ns() // 1_000_000
         with services.db() as conn:
             report = storage_report(conn, Paths(path.parent), now_ms)
-        free_gb = None if report.free_bytes is None else report.free_bytes / 1e9
         return {
             "types": [
                 {
@@ -636,8 +625,6 @@ def settings_routes(services: Services, path: Path) -> APIRouter:
             "database_bytes": report.database_bytes,
             "total_bytes": report.total_bytes,
             "free_bytes": report.free_bytes,
-            "warn_below_gb": config.disk_warning_free_gb,
-            "low_space": free_gb is not None and free_gb < config.disk_warning_free_gb,
         }
 
     @router.post("/restart")

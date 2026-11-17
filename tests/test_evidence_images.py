@@ -658,14 +658,22 @@ def test_ask_episode_sources_gain_frame_and_window_and_others_are_unchanged(env:
     frame = add_frame(env.conn, 12_000, "t", "A", process="code.exe", monitor_id=env.ids["a"])
     paint(env.conn, frame)
     line = {"n": 1, "kind": "line", "id": 9}
-    framed = {"n": 4, "kind": "frame", "id": frame, "window_id": 3}
-    gone = {"n": 5, "kind": "frame", "id": 99_999, "window_id": 3}
+    unpainted = add_frame(env.conn, 13_000, "t", "B", process="code.exe", monitor_id=env.ids["a"])
+    framed = {"n": 4, "kind": "frame", "id": frame, "window_id": window_of(env.conn, frame)}
+    pending = {
+        "n": 6,
+        "kind": "frame",
+        "id": unpainted,
+        "window_id": window_of(env.conn, unpainted),
+    }
+    gone = {"n": 5, "kind": "frame", "id": 99_999, "window_id": 999_999}
     sources = [
         line,
         {"n": 2, "kind": "episode", "id": shown},
         {"n": 3, "kind": "episode", "id": bare},
         framed,
         gone,
+        pending,
     ]
     env.conn.execute(
         "INSERT INTO questions (id, asked_ms, text, state, answer, sources)"
@@ -697,13 +705,27 @@ def test_ask_episode_sources_gain_frame_and_window_and_others_are_unchanged(env:
             "frame_ms": None,
             "monitor_id": None,
         },
-        {**framed, "frame_ms": 12_000, "monitor_id": env.ids["a"]},
-        {**gone, "frame_ms": None, "monitor_id": None},
+        {**framed, "has_image": True, "frame_ms": 12_000, "monitor_id": env.ids["a"]},
+        {**gone, "has_image": False, "frame_ms": None, "monitor_id": None},
+        {**pending, "has_image": False, "frame_ms": 13_000, "monitor_id": env.ids["a"]},
     ]
     one = json.loads(env.get("/api/ask/5")[1])
     assert one["sources"] == expected
     thread = json.loads(env.get("/api/ask/thread/5")[1])
     assert [t["sources"] for t in thread] == [expected, expected]
+
+
+def test_window_shown_needs_a_painted_window_of_a_stored_picture(env: Env) -> None:
+    shown = add_frame(env.conn, 12_000, "t", "A", monitor_id=env.ids["a"])
+    paint(env.conn, shown)
+    unpainted = add_frame(env.conn, 13_000, "t", "B", monitor_id=env.ids["a"])
+    env.conn.execute("UPDATE frames SET image_path = 'x.enc' WHERE id = ?", (unpainted,))
+    bare = add_frame(env.conn, 14_000, "t", "C", monitor_id=env.ids["a"])
+    env.conn.execute("UPDATE frame_windows SET painted = 1 WHERE frame_id = ?", (bare,))
+    assert monitors.window_shown(env.conn, window_of(env.conn, shown)) is True
+    assert monitors.window_shown(env.conn, window_of(env.conn, unpainted)) is False
+    assert monitors.window_shown(env.conn, window_of(env.conn, bare)) is False
+    assert monitors.window_shown(env.conn, 999_999) is False
 
 
 # --- UI URLs ---------------------------------------------------------------------------------
@@ -718,7 +740,7 @@ def test_search_hits_ask_sources_and_episode_page_ask_for_the_window_crop() -> N
     memory = ui("memory.js")
     assert "image?window=${s.window_id}&w=320`" in memory
     assert 'const frameId = s.kind === "frame" ? s.id : s.frame_id;' in memory
-    assert "if (!s.window_id) return null;" in memory
+    assert 'if (s.kind === "frame" ? !s.has_image : !s.window_id) return null;' in memory
     assert "`/api/frames/${e.frame_id}/image?window=${e.window_id}&w=960`" in memory
     assert "e.frame_id && e.window_id ?" in memory
 

@@ -21,10 +21,13 @@
       <div class="recents" id="recents" aria-labelledby="recents-label"></div>
       <div class="sidebar-foot">
         <div class="status-line">
-          <span class="dot" id="status-dot"></span><span id="status-text">…</span>
+          <span class="dot" id="status-dot"></span><span class="status-text" id="status-text">…</span>
           <button type="button" id="pause-btn" hidden>Pause</button>
         </div>
         <div class="status-count" id="status-count"></div>
+        <div class="status-line" id="processing-line" hidden>
+          <span class="dot warn"></span><span class="status-text" id="processing-text"></span>
+        </div>
         <a class="nav-link" data-route="settings" href="#/settings"><span data-i="sliders"></span>Settings</a>
       </div>
     </nav>

@@ -159,7 +159,6 @@ class Config:
     speakers: Speakers = Speakers()
     search: Search = Search()
     scheduler: Scheduler = Scheduler()
-    disk_warning_free_gb: int = 50
     model_idle_unload_minutes: int = 5
 
 
@@ -169,7 +168,6 @@ DEFAULT_CONFIG_TOML: Final = """\
 log_level = "INFO"          # DEBUG, INFO, WARNING, ERROR (logs never contain captured content)
 theme = "system"          # web interface: system, light or dark
 ocr_language = "fr"         # Windows OCR recognizer; French also reads English well
-disk_warning_free_gb = 50   # warn when free space on the data drive drops below this
 model_idle_unload_minutes = 5
 
 [retention]
@@ -338,6 +336,7 @@ def parse_config(text: str) -> Config:
     except tomllib.TOMLDecodeError as exc:
         msg = f"config.toml is not valid TOML: {exc}"
         raise ConfigError(msg) from exc
+    # older config.toml files may still have disk_warning_free_gb; accepted and ignored
     _expect_keys(
         doc,
         {
@@ -429,7 +428,6 @@ def parse_config(text: str) -> Config:
             gpu_busy_percent=_percent(sched, "gpu_busy_percent", 75),
             cpu_busy_percent=_percent(sched, "cpu_busy_percent", 85),
         ),
-        disk_warning_free_gb=_positive_int(doc, "disk_warning_free_gb", 50),
         model_idle_unload_minutes=_positive_int(doc, "model_idle_unload_minutes", 5),
     )
 

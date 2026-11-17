@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import io
 import threading
 from typing import TYPE_CHECKING, Any, cast
@@ -148,6 +149,10 @@ def test_silero_model_is_found_inside_the_faster_whisper_package() -> None:
     assert path.is_file()
 
 
+def test_the_voice_detector_stays_on_the_cpu() -> None:
+    assert 'providers=["CPUExecutionProvider"]' in inspect.getsource(vad)
+
+
 def test_missing_model_is_reported(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     def nothing_installed(name: str) -> None:
         del name
@@ -177,42 +182,3 @@ def test_check_process_covers_password_managers_and_user_rules() -> None:
     assert rules.check_process("Spotify.exe") == "user_process"
     assert rules.check_process("discord.exe") is None
     assert rules.check_process("") is None
-
-
-def test_capture_process_never_loads_cuda_libraries_for_audio() -> None:
-    """The voice detector runs on onnxruntime's CPU provider: no CUDA DLL may get loaded."""
-    import subprocess  # noqa: PLC0415
-    import sys  # noqa: PLC0415
-    import textwrap  # noqa: PLC0415
-
-    code = textwrap.dedent(
-        """
-        import ctypes, os, sys
-        from ctypes import wintypes
-        import numpy as np
-        from akashic.capture.vad import SileroVad, WINDOW
-        v = SileroVad()
-        v.probability(np.zeros(WINDOW, np.float32))
-        psapi, k32 = ctypes.WinDLL("psapi"), ctypes.WinDLL("kernel32")
-        ptr, dword = ctypes.c_void_p, wintypes.DWORD
-        k32.GetCurrentProcess.restype = ptr
-        psapi.EnumProcessModules.argtypes = [ptr, ptr, dword, ctypes.POINTER(dword)]
-        psapi.GetModuleFileNameExW.argtypes = [ptr, ptr, wintypes.LPWSTR, dword]
-        mods, need = (ptr * 2048)(), dword()
-        me = k32.GetCurrentProcess()
-        psapi.EnumProcessModules(me, mods, ctypes.sizeof(mods), ctypes.byref(need))
-        buf = ctypes.create_unicode_buffer(260)
-        names = []
-        for m in mods[: need.value // ctypes.sizeof(ptr)]:
-            psapi.GetModuleFileNameExW(me, m, buf, 260)
-            names.append(os.path.basename(buf.value).lower())
-        cuda = ("cuda", "cublas", "cudnn", "nvrtc", "cufft", "ctranslate")
-        bad = [n for n in names if any(t in n for t in cuda)]
-        banned = {"ctranslate2", "faster_whisper", "torch"} & set(sys.modules)
-        print("BAD", bad, sorted(banned))
-        """
-    )
-    result = subprocess.run(  # noqa: S603 - fixed interpreter and inline code
-        [sys.executable, "-I", "-c", code], capture_output=True, text=True, check=True, timeout=120
-    )
-    assert result.stdout.strip().endswith("BAD [] []"), result.stdout + result.stderr

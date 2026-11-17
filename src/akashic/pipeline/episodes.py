@@ -1,9 +1,10 @@
 """Build episodes from captured rows: videos, calls, games, browsing, work.
 
 Pure SQL and Python, no model: a pass is cheap and runs in the worker's housekeeping. Episodes
-are built only from *closed* periods (the horizon below) and each source row is used once, so a
-pass is incremental and repeating it changes nothing. ``body`` (a digest of the evidence) is
-what search and the answering model see; no language-model summary is written.
+are built only from *closed* periods (the horizon below; games and app runs wait for no job)
+and each source row is used once, so a pass is incremental and repeating it changes nothing.
+``body`` (a digest of the evidence) is what search and the answering model see; no
+language-model summary is written.
 
 What becomes an episode:
 
@@ -29,6 +30,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
+from akashic.capture.ports import VOICE_APPS
 from akashic.storage import db, state
 
 if TYPE_CHECKING:
@@ -46,14 +48,6 @@ MIN_WORK_MS: Final = 5 * 60_000
 MAX_BODY_CHARS: Final = 6_000
 MAX_TITLES: Final = 8
 
-# Lower-case executable names whose sound means people are talking to each other.
-VOICE_APPS: Final = frozenset(
-    {
-        "discord.exe", "discordptb.exe", "discordcanary.exe", "teams.exe", "ms-teams.exe",
-        "zoom.exe", "skype.exe", "telegram.exe", "whatsapp.exe", "teamspeak.exe",
-        "ts3client_win64.exe", "mumble.exe", "guilded.exe", "slack.exe", "signal.exe",
-    }
-)  # fmt: skip
 BROWSER_PROCESSES: Final = frozenset(
     {"chrome.exe", "brave.exe", "msedge.exe", "firefox.exe", "zen.exe", "opera.exe", "vivaldi.exe"}
 )
@@ -474,9 +468,10 @@ def build_app_runs(conn: Connection, horizon: int) -> int:
 def build_episodes(conn: Connection, now_ms: int) -> dict[str, int]:
     """One incremental pass over every source. Returns how many episodes each step made."""
     horizon = horizon_ms(conn, now_ms)
+    closed = now_ms - CLOSE_GAP_MS  # games and app runs use no transcript, so no job holds them
     return {
         "media": build_media(conn, horizon),
-        "games": build_games(conn, horizon),
+        "games": build_games(conn, closed),
         "conversations": build_conversations(conn, horizon),
-        "app_runs": build_app_runs(conn, horizon),
+        "app_runs": build_app_runs(conn, closed),
     }

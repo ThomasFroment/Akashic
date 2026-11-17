@@ -38,6 +38,7 @@ type GapReason = Literal[
     "backlog",
     "write_failed",
     "ui_open",
+    "voice_elsewhere",
 ]
 
 _CLOSE_OPEN = "UPDATE capture_gaps SET end_ms = MAX(?, start_ms) WHERE end_ms IS NULL"
@@ -101,6 +102,10 @@ class GapLog:
     def __init__(self, conn: Connection) -> None:
         self._conn = conn
 
+    @property
+    def conn(self) -> Connection:
+        return self._conn
+
     def recover(self, start_ms: int) -> None:
         """Settle what the previous run left behind, in one transaction.
 
@@ -143,10 +148,6 @@ class GapLog:
                 "UPDATE capture_gaps SET end_ms = MAX(?, end_ms, start_ms) WHERE id = ?",
                 (end_ms, gap_id),
             )
-
-    def limit_wait(self, busy_timeout_ms: int) -> None:
-        """Shorten how long a statement waits for a busy database, for the bounded stop."""
-        self._conn.execute(f"PRAGMA busy_timeout = {int(busy_timeout_ms)}")
 
     def heartbeat(self, ts_ms: int) -> None:
         state.set_int(self._conn, state.CAPTURE_ALIVE, ts_ms)

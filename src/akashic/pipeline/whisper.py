@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
 from akashic.pipeline.models import SPEECH_CANDIDATES, is_complete
-from akashic.pipeline.transcribe import LANGUAGES, Transcript
+from akashic.pipeline.transcribe import LANGUAGES, LoadFailure, Transcript
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -83,6 +83,10 @@ class WhisperTranscriber:
         self._clock = clock
         self._model: Any = None
         self._last_used = 0.0
+        self._load_failure = LoadFailure(clock)
+
+    def load_error(self) -> str | None:
+        return self._load_failure.reason()
 
     def available(self) -> bool:
         """The pinned model files are in place (fetch_models.py has run)."""
@@ -91,12 +95,13 @@ class WhisperTranscriber:
 
     def _load(self) -> Any:  # noqa: ANN401 - faster_whisper.WhisperModel, imported lazily
         if self._model is None:
-            add_cuda_dll_directories()
-            fw: Any = importlib.import_module("faster_whisper")
             started = self._clock()
-            self._model = fw.WhisperModel(
-                str(self._dir), device="cuda", compute_type="float16", local_files_only=True
-            )
+            with self._load_failure.watch():
+                add_cuda_dll_directories()
+                fw: Any = importlib.import_module("faster_whisper")
+                self._model = fw.WhisperModel(
+                    str(self._dir), device="cuda", compute_type="float16", local_files_only=True
+                )
             log.info("whisper model loaded in %.1f s", self._clock() - started)
         return self._model
 

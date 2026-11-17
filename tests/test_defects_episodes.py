@@ -449,7 +449,6 @@ def _play_one_minute(rig: Rig) -> None:
         rig.at(second, "playing")
 
 
-@known_defect(167, "a paused video's end_ms keeps advancing and it closes at 'now'")
 def test_a_paused_video_ends_when_it_was_paused(rig: Rig) -> None:
     _play_one_minute(rig)
     for second in range(62, 62 + 5 * 60, 2):
@@ -462,7 +461,6 @@ def test_a_paused_video_ends_when_it_was_paused(rig: Rig) -> None:
     assert end_ms <= 62_000
 
 
-@known_defect(142, "a paused video closes at the wake time after a suspend")
 def test_a_paused_video_does_not_span_the_night_after_a_suspend(rig: Rig) -> None:
     _play_one_minute(rig)
     rig.at(62, "paused")
@@ -473,7 +471,6 @@ def test_a_paused_video_does_not_span_the_night_after_a_suspend(rig: Rig) -> Non
     assert end_ms <= 64_000
 
 
-@known_defect(142, "a playing video seen again after a suspend continues the same row")
 def test_a_suspend_while_playing_ends_the_row_at_the_last_poll(rig: Rig) -> None:
     _play_one_minute(rig)
     rig.at(9 * 3600, "playing")
@@ -606,7 +603,6 @@ def test_a_session_outside_a_browser_never_looks_up_an_address(rig: Rig) -> None
     assert rig.rows()[0][3] is None
 
 
-@known_defect(146, "a lock (or a UAC prompt) closes every media row while audio still records")
 def test_a_brief_uac_prompt_does_not_split_a_video(rig: Rig) -> None:
     rig.source.states = [MediaState("C1", "Elden Ring", "Chan", "playing")]
     stop, paused = threading.Event(), threading.Event()

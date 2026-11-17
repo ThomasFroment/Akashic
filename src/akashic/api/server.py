@@ -19,7 +19,7 @@ import socket
 import threading
 from collections import OrderedDict
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import monotonic
 from typing import TYPE_CHECKING, Annotated, Final, cast
@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 
 from akashic.api.ask import ask_routes
 from akashic.api.debug import debug_routes
+from akashic.api.export import export_routes
 from akashic.api.frames import frame_routes
 from akashic.api.memory import hit_json, memory_routes
 from akashic.api.models import model_routes
@@ -44,13 +45,19 @@ from akashic.jsonish import as_list
 from akashic.search import keyword, transcripts
 from akashic.search.keyword import Filters
 from akashic.storage.crypto import CryptoError
-from akashic.storage.debuginfo import ProcessInfo
+from akashic.storage.debuginfo import (
+    SIDEBAR_CAPTURE_RUNS,
+    ProcessInfo,
+    processing_attention,
+    processing_status,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Generator
     from sqlite3 import Connection
 
     from akashic.api.debug import DebugSources
+    from akashic.api.export import Exports
     from akashic.api.models import Downloads
     from akashic.storage.audio import AudioStore
     from akashic.storage.frames import FrameStore
@@ -149,6 +156,7 @@ class Services:
         embedding_model: str = DEFAULT_EMBEDDING_MODEL,
         ask_blocker: Callable[[], str | None] = lambda: None,
         downloads: Downloads | None = None,
+        exports: Exports | None = None,
     ) -> None:
         self._conn = conn
         self.debug = debug
@@ -160,6 +168,7 @@ class Services:
         self.embedding_model = embedding_model
         self.ask_blocker = ask_blocker  # why a question cannot be answered yet, or None
         self.downloads = downloads  # Settings > Models
+        self.exports = exports  # Settings > Export
         self.token = token
         self.controls = controls
         self.presence = Presence(controls.set_ui_open)
@@ -279,8 +288,11 @@ def _control_routes(services: Services) -> APIRouter:
                 else None
             )
             problems = _capture_problems(conn) if states.get("capture") == "degraded" else []
+            processing = processing_status(conn, states.get("worker", "stopped"))
         return {
             "processes": states,
+            "processing": asdict(processing) if processing else None,
+            "attention": processing_attention(states, processing, SIDEBAR_CAPTURE_RUNS),
             "capture_problems": problems,
             "paused": states.get("capture") == "paused",
             "frames": frames,
@@ -410,6 +422,8 @@ def _api_routes(services: Services) -> list[APIRouter]:
         routers.append(settings_routes(services, services.config_file))
     if services.downloads is not None:
         routers.append(model_routes(services, services.downloads))
+    if services.exports is not None:
+        routers.append(export_routes(services.exports))
     return routers
 
 

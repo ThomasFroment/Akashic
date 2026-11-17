@@ -7,12 +7,14 @@ import threading
 import time
 from collections import Counter
 from dataclasses import replace
-from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from audio_fakes import (
+    DEVICES,
+    MIC,
     SETTINGS,
+    SYSTEM,
     T0,
     Clock,
     FakeDetector,
@@ -31,6 +33,7 @@ from akashic.capture.audio import (
     AudioCapture,
     AudioSettings,
     SegmentWriter,
+    SourceCheck,
     SourceSampler,
     StreamRecorder,
     Utterance,
@@ -38,6 +41,7 @@ from akashic.capture.audio import (
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.ports import AudioDevice, AudioError
 from akashic.config import Exclusions as UserExclusions
+from akashic.log import FaultLog
 from akashic.storage.audio import AudioStore
 
 if TYPE_CHECKING:
@@ -133,11 +137,14 @@ def test_the_sampler_does_not_poll_while_halted() -> None:
     polls: list[int] = []
 
     class Counting:
-        def active_processes(self) -> frozenset[str]:
+        def active_processes(self, *, refresh: bool = False) -> dict[str, frozenset[str]]:
+            del refresh
             polls.append(1)
-            return frozenset()
+            return {}
 
-    sampler = SourceSampler(cast("Any", Counting()), Clock(T0), interval_s=0.01)
+    sampler = SourceSampler(
+        cast("Any", Counting()), Clock(T0), Exclusions(UserExclusions()), interval_s=0.01
+    )
     stop, halt = threading.Event(), threading.Event()
     halt.set()
     thread = threading.Thread(target=sampler.run, args=(stop, halt), daemon=True)
@@ -153,7 +160,9 @@ def test_the_sampler_does_not_poll_while_halted() -> None:
 def test_sampler_unions_what_was_audible_during_the_span() -> None:
     clock = Clock(T0)
     sessions = FakeSessions(frozenset({"discord.exe"}))
-    sampler = SourceSampler(sessions, clock, interval_s=1.0, keep_ms=10_000)
+    sampler = SourceSampler(
+        sessions, clock, Exclusions(UserExclusions()), interval_s=1.0, keep_ms=10_000
+    )
     sampler.sample()
     clock.now += 1_000
     sessions.names = frozenset({"chrome.exe", "discord.exe"})
@@ -161,12 +170,13 @@ def test_sampler_unions_what_was_audible_during_the_span() -> None:
     clock.now += 5_000
     sessions.names = frozenset({"game.exe"})
     sampler.sample()
-    assert sampler.between(T0, T0 + 1_000) == ("chrome.exe", "discord.exe")
-    assert sampler.between(T0 + 6_000, T0 + 6_500) == ("game.exe",)
-    assert sampler.between(T0 + 3_000, T0 + 3_500) == ()
+    sid = SYSTEM.device_id
+    assert sampler.check(T0, T0 + 1_000, sid).recorded == ("chrome.exe", "discord.exe")
+    assert sampler.check(T0 + 6_000, T0 + 6_500, sid).recorded == ("game.exe",)
+    assert sampler.check(T0 + 3_000, T0 + 3_500, sid).recorded == ()
     clock.now += 20_000
     sampler.sample()  # old samples are forgotten
-    assert sampler.between(T0, T0 + 1_000) == ()
+    assert sampler.check(T0, T0 + 1_000, sid).recorded == ()
 
 
 def _utterance(start: int = T0, *, continues: bool = False) -> Utterance:
@@ -176,7 +186,7 @@ def _utterance(start: int = T0, *, continues: bool = False) -> Utterance:
 def make_writer(
     store: AudioStore, sessions: FakeSessions, clock: Clock
 ) -> tuple[SegmentWriter, Counter[str], SourceSampler]:
-    sampler = SourceSampler(sessions, clock)
+    sampler = SourceSampler(sessions, clock, Exclusions(UserExclusions()))
     stats: Counter[str] = Counter()
     writer = SegmentWriter(store, sampler, Exclusions(UserExclusions()), clock, stats)
     return writer, stats, sampler
@@ -188,7 +198,7 @@ def test_writer_stores_segment_with_sources_and_queues_a_job(
     clock = Clock(T0 + 3_000)
     writer, stats, sampler = make_writer(store, FakeSessions(frozenset({"discord.exe"})), clock)
     sampler.sample()
-    segment_id = writer.write("system", _utterance())
+    segment_id = writer.write("system", _utterance(), SYSTEM)
     assert segment_id is not None
     stored = store.get(segment_id)
     assert stored is not None
@@ -207,7 +217,7 @@ def test_audio_while_an_excluded_process_is_heard_is_dropped_before_writing(
         store, FakeSessions(frozenset({"keepassxc.exe", "discord.exe"})), clock
     )
     sampler.sample()
-    assert writer.write("system", _utterance()) is None
+    assert writer.write("system", _utterance(), SYSTEM) is None
     assert stats["dropped_excluded"] == 1
     assert conn.execute("SELECT count(*) FROM audio_segments").fetchone() == (0,)
     assert list(paths.media_dir.rglob("*")) == [] or not list(paths.media_dir.rglob("*.enc"))
@@ -234,7 +244,7 @@ def test_music_only_system_sound_is_dropped(
         for t in range(utterance.start_ms, utterance.end_ms + 1, 250):
             clock.now = t
             sampler.sample()
-    assert (writer.write(kind, utterance) is not None) is kept
+    assert (writer.write(kind, utterance, DEVICES[kind]) is not None) is kept
     assert stats["dropped_music"] == (0 if kept else 1)
 
 
@@ -242,14 +252,14 @@ def test_continuation_links_to_the_previous_segment_of_the_same_stream(store: Au
     clock = Clock(T0)
     writer, _, sampler = make_writer(store, FakeSessions(), clock)
     sampler.sample()
-    first = writer.write("mic", _utterance(T0))
-    other_stream = writer.write("system", _utterance(T0 + 1))
+    first = writer.write("mic", _utterance(T0), MIC)
+    other_stream = writer.write("system", _utterance(T0 + 1), SYSTEM)
     clock.now += 2_000
     sampler.sample()
-    second = writer.write("mic", _utterance(T0 + 1_500, continues=True))
+    second = writer.write("mic", _utterance(T0 + 1_500, continues=True), MIC)
     clock.now += 7_000
     sampler.sample()  # an utterance is only kept where the sources are known
-    third = writer.write("system", _utterance(T0 + 9_000, continues=True))
+    third = writer.write("system", _utterance(T0 + 9_000, continues=True), SYSTEM)
     assert None not in (first, second, other_stream, third)
     assert store.get(second).continues_id == first  # type: ignore[union-attr]
     assert store.get(third).continues_id == other_stream  # type: ignore[union-attr]
@@ -261,15 +271,15 @@ def test_a_dropped_segment_breaks_the_continuation_chain(store: AudioStore) -> N
     sessions = FakeSessions()
     writer, _, sampler = make_writer(store, sessions, clock)
     sampler.sample()
-    assert writer.write("mic", _utterance(T0)) is not None
+    assert writer.write("mic", _utterance(T0), MIC) is not None
     clock.now = T0 + 2_000
     sessions.names = frozenset({"keepass.exe"})
     sampler.sample()
-    assert writer.write("mic", _utterance(T0 + 1_500)) is None
+    assert writer.write("mic", _utterance(T0 + 1_500), MIC) is None
     sessions.names = frozenset()
     clock.now += 60_000
     sampler.sample()
-    later = writer.write("mic", _utterance(T0 + 61_000, continues=True))
+    later = writer.write("mic", _utterance(T0 + 61_000, continues=True), MIC)
     assert later is not None
     assert store.get(later).continues_id is None  # type: ignore[union-attr]
 
@@ -328,9 +338,10 @@ class _Audio:
     def writer(
         self, sessions: FakeSessions, clock: Clock, user: UserExclusions | None = None
     ) -> tuple[SegmentWriter, SourceSampler]:
-        sampler = SourceSampler(sessions, clock)
         exclusions = Exclusions(user or UserExclusions())
-        return SegmentWriter(self.store, sampler, exclusions, clock, self.stats), sampler
+        sampler = SourceSampler(sessions, clock, exclusions)
+        writer = SegmentWriter(self.store, sampler, exclusions, clock, self.stats)
+        return writer, sampler
 
     def segments(self) -> int:
         return self.conn.execute("SELECT count(*) FROM audio_segments").fetchone()[0]
@@ -348,19 +359,24 @@ def audio(
 def test_the_sampler_marks_a_failed_poll_and_an_empty_span_as_incomplete() -> None:
     clock = Clock(T0)
     sessions = FakeSessions(frozenset({"discord.exe"}))
-    sampler = SourceSampler(sessions, clock, interval_s=1.0)
-    assert sampler.check(T0, T0 + 500) == ((), False)  # nobody looked: unknown, not silence
+    sampler = SourceSampler(sessions, clock, Exclusions(UserExclusions()), interval_s=1.0)
+    sid = SYSTEM.device_id
+    assert sampler.check(T0, T0 + 500, sid) == SourceCheck((), (), complete=False)  # nobody looked
     sampler.sample()
-    assert sampler.check(T0, T0 + 500) == (("discord.exe",), True)
+    assert sampler.check(T0, T0 + 500, sid) == SourceCheck(
+        ("discord.exe",), ("discord.exe",), complete=True
+    )
     clock.now += 1_000
     sessions.names = None
     sampler.sample()
-    assert sampler.check(T0, T0 + 1_500)[1] is False  # one failed poll inside the span
-    assert sampler.check(T0 - 3_000, T0 - 2_500)[1] is False  # before the first poll
+    assert not sampler.check(T0, T0 + 1_500, sid).complete  # one failed poll inside the span
+    assert not sampler.check(T0 - 3_000, T0 - 2_500, sid).complete  # before the first poll
     sessions.names = frozenset()
     clock.now += 5_000
     sampler.sample()
-    assert sampler.check(T0 + 5_500, T0 + 6_000) == ((), True)  # silence that was observed
+    assert sampler.check(T0 + 5_500, T0 + 6_000, sid) == SourceCheck(
+        (), (), complete=True
+    )  # silence
 
 
 def test_unknown_sources_are_dropped_in_memory_not_stored_as_clean(audio: _Audio) -> None:
@@ -368,7 +384,7 @@ def test_unknown_sources_are_dropped_in_memory_not_stored_as_clean(audio: _Audio
     sessions = FakeSessions(error=OSError(f"audio session enumeration failed {SECRET}"))
     writer, sampler = audio.writer(sessions, clock)
     sampler.sample()  # raises inside; the sampler records "unknown"
-    assert writer.write("system", _utterance()) is None
+    assert writer.write("system", _utterance(), SYSTEM) is None
     assert audio.stats["dropped_unknown_sources"] == 1
     assert audio.spy.nothing_stored(audio.conn)
     assert audio.spy.leaks(audio.conn, SECRET) == []  # not even the error text reaches a log
@@ -413,7 +429,7 @@ def test_an_excluded_source_is_dropped_even_when_another_poll_failed(audio: _Aud
     sessions.names = None
     clock.now += 500
     sampler.sample()
-    assert writer.write("system", _utterance()) is None
+    assert writer.write("system", _utterance(), SYSTEM) is None
     assert audio.stats["dropped_excluded"] == 1  # the known reason wins; nothing is stored
     assert audio.spy.nothing_stored(audio.conn)
 
@@ -426,7 +442,7 @@ def test_user_excluded_process_names_are_dropped_before_any_write(audio: _Audio)
         UserExclusions(processes=(SECRET_PROCESS,)),
     )
     sampler.sample()
-    assert writer.write("system", _utterance()) is None
+    assert writer.write("system", _utterance(), SYSTEM) is None
     assert audio.spy.nothing_stored(audio.conn)
     assert audio.spy.leaks(audio.conn, SECRET) == []
 
@@ -440,7 +456,7 @@ def test_a_clean_observed_span_is_still_stored(audio: _Audio) -> None:
     clock.now = T0 + 1_000
     sessions.names = frozenset({"discord.exe"})
     sampler.sample()
-    assert writer.write("system", _utterance()) is not None
+    assert writer.write("system", _utterance(), SYSTEM) is not None
     assert audio.segments() == 1
 
 
@@ -448,16 +464,16 @@ def test_negative_control_ignoring_failed_polls_stores_the_segment(
     audio: _Audio, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def old_check(
-        sampler: SourceSampler, start_ms: int, end_ms: int
-    ) -> tuple[tuple[str, ...], bool]:
-        del sampler, start_ms, end_ms
-        return (), True  # a failed poll looked like silence
+        sampler: SourceSampler, start_ms: int, end_ms: int, endpoint_id: str | None
+    ) -> SourceCheck:
+        del sampler, start_ms, end_ms, endpoint_id
+        return SourceCheck((), (), complete=True)  # a failed poll looked like silence
 
     monkeypatch.setattr(SourceSampler, "check", old_check)
     clock = Clock(T0 + 1_000)
     writer, sampler = audio.writer(FakeSessions(None), clock)
     sampler.sample()
-    assert writer.write("system", _utterance()) is not None
+    assert writer.write("system", _utterance(), SYSTEM) is not None
     assert audio.segments() == 1
     assert not audio.spy.nothing_stored(audio.conn)
 
@@ -491,7 +507,7 @@ def test_audio_recorder_survives_a_detector_error(monkeypatch: pytest.MonkeyPatc
         devices=devices,
         detector=_FlakyDetector(),
         settings=SETTINGS,
-        sink=lambda kind, u: out.append((kind, u)),
+        sink=lambda kind, u, _d: out.append((kind, u)),
         clock_ms=wall_clock_ms,
         stats=Counter(),
     )
@@ -589,7 +605,7 @@ def _recorder(
         devices=devices,
         detector=detector or FakeDetector(),
         settings=SETTINGS,
-        sink=lambda kind, u: sink_to.append((kind, u)),
+        sink=lambda kind, u, _d: sink_to.append((kind, u)),
         clock_ms=wall_clock_ms,
         stats=stats if stats is not None else Counter(),
     )
@@ -702,21 +718,26 @@ def test_each_fault_type_has_its_own_log_budget(caplog: pytest.LogCaptureFixture
     assert sum("ValueError" in w for w in warnings) == 1
 
 
-def test_a_fault_type_is_logged_again_after_the_interval(
-    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
-) -> None:
+def test_a_fault_type_is_logged_again_after_the_interval(caplog: pytest.LogCaptureFixture) -> None:
     now = [0.0]
-    monkeypatch.setattr(audio_module, "time", SimpleNamespace(monotonic=lambda: now[0]))
     recorder = _recorder(_FaultyDevices(fail_find=1000))
+    recorder._faults = FaultLog(audio_module.log, clock=lambda: now[0])
 
     class Advancing(_CountingStop):
         def wait(self, timeout: float | None = None) -> bool:
-            now[0] += audio_module.FAULT_LOG_S / 2
+            now[0] += 150.0
             return super().wait(timeout)
 
     with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
         recorder.run(Advancing(6), threading.Event(), threading.Event())
     assert len(_fault_warnings(caplog)) == 3  # at 0, 300 and 600 s
+
+
+def test_the_snapshot_holds_the_fault_counts() -> None:
+    recorder = _recorder(_FaultyDevices(fail_find=1000))
+    recorder.run(_CountingStop(4), threading.Event(), threading.Event())
+    faults = recorder.snapshot()["faults"]
+    assert faults == {"mic audio loop iteration: OSError": 4}
 
 
 def test_a_close_that_raises_still_clears_the_device_state() -> None:
@@ -748,8 +769,8 @@ def test_a_fault_drops_the_open_utterance_and_leaves_no_device_open() -> None:
     out: list[tuple[AudioKind, Utterance]] = []
     recorder = _recorder(devices, out=out)
     assert recorder._acquire()
-    recorder._consume(speech(30), wall_clock_ms())
-    recorder._recover_from_fault("RuntimeError", _CountingStop(1))
+    recorder._consume(speech(30), wall_clock_ms(), MIC)
+    recorder._recover_from_fault(RuntimeError("x"), _CountingStop(1))
     assert out == []
     assert recorder._input is None
     assert devices.opened[0][1].closed
@@ -790,7 +811,7 @@ def test_stop_closes_the_open_utterance_at_once_and_hands_it_over_before_the_dev
     closed_when_handed_over: list[bool] = []
     handed_over = rig.out
 
-    def sink(kind: AudioKind, utterance: Utterance) -> None:
+    def sink(kind: AudioKind, utterance: Utterance, _device: AudioDevice) -> None:
         closed_when_handed_over.append(rig.devices.opened[0][1].closed)
         handed_over.append((kind, utterance))
 
@@ -920,7 +941,7 @@ def test_a_sink_that_raises_on_stop_still_closes_the_device() -> None:
     rig = _open_recorder()
     rig.deliver(speech(30))
 
-    def bad_sink(kind: AudioKind, utterance: Utterance) -> None:
+    def bad_sink(kind: AudioKind, utterance: Utterance, _device: AudioDevice) -> None:
         del kind, utterance
         raise RuntimeError(_PRIVATE)
 
@@ -931,7 +952,10 @@ def test_a_sink_that_raises_on_stop_still_closes_the_device() -> None:
 
 
 def _capture(
-    store: AudioStore, devices: FakeDevices, sessions: FakeSessions, user: UserExclusions
+    store: AudioStore,
+    devices: FakeDevices,
+    sessions: FakeSessions,
+    user: UserExclusions,
 ) -> AudioCapture:
     return AudioCapture(
         devices=devices,

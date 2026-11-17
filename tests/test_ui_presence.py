@@ -190,11 +190,18 @@ def test_only_sticky_problems_are_reported_while_halted() -> None:
     status = CaptureStatus(accept, lambda: 0, audio_failed=True)
     writer = cast("Any", SimpleNamespace(problems=writer_problems))
     audio = cast("Any", SimpleNamespace(problems=audio_problems))
-    halted = capture_main._active_problems(status, writer, audio, halted=True, since=0.0)
-    running = capture_main._active_problems(status, writer, audio, halted=False, since=0.0)
+
+    def shot_problems(now: float) -> list[str]:
+        del now
+        return ["window_events_down"]
+
+    shot = cast("Any", SimpleNamespace(problems=shot_problems))
+    halted = capture_main._active_problems(status, writer, audio, shot, halted=True, since=0.0)
+    running = capture_main._active_problems(status, writer, audio, shot, halted=False, since=0.0)
     assert halted == ["audio_unavailable"]
     assert "writer_problem" in running
     assert "mic_unavailable" in running
+    assert "window_events_down" in running
 
 
 class _Pipe:
@@ -616,6 +623,7 @@ def test_the_tray_toggle_offers_pause_while_the_ui_is_open() -> None:
     state = ["ui_open"]
     tray = Tray(
         state=lambda: state[0],
+        detail=lambda: "",
         open_ui=lambda: None,
         toggle_pause=lambda: None,
         quit_app=lambda: None,

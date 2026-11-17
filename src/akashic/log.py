@@ -10,11 +10,14 @@ from __future__ import annotations
 import faulthandler
 import logging
 import sys
+import threading
+import time
 import traceback
 from logging.handlers import RotatingFileHandler
 from typing import IO, TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
     from types import TracebackType
 
@@ -47,6 +50,43 @@ def setup_logging(logs_dir: Path, process_name: str, level: str) -> None:
         )
 
     sys.excepthook = log_uncaught
+
+
+class FaultLog:
+    """Counts recurring faults and logs each (what, label) pair once per ``every_s``.
+
+    The label is an exception's type name or a caller-supplied string; both must follow the
+    module's logging rule. The exception's message and traceback are never read."""
+
+    def __init__(
+        self,
+        logger: logging.Logger,
+        every_s: float = 300.0,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self._logger = logger
+        self._every_s = every_s
+        self._clock = clock
+        self._counts: dict[str, int] = {}
+        self._logged_at: dict[str, float] = {}
+        self._lock = threading.Lock()
+
+    def note(self, what: str, error: BaseException | str) -> int:
+        """Count one fault; return the running total for this (what, label)."""
+        label = error if isinstance(error, str) else type(error).__name__
+        key = f"{what}: {label}"
+        with self._lock:
+            count = self._counts.get(key, 0) + 1
+            self._counts[key] = count
+            now = self._clock()
+            if now - self._logged_at.get(key, float("-inf")) >= self._every_s:
+                self._logged_at[key] = now
+                self._logger.warning("%s failed: %s (%d so far)", what, label, count)
+            return count
+
+    def counts(self) -> dict[str, int]:
+        with self._lock:
+            return dict(self._counts)
 
 
 def enable_crash_log(logs_dir: Path, process_name: str) -> IO[str]:

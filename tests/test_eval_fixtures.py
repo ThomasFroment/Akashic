@@ -459,8 +459,23 @@ def test_the_cli_compares_two_stored_outputs(
     )
     assert ev.main(["--compare", str(base), "--against", str(new)]) == 0
     out = capsys.readouterr().out
-    assert "m: 0/1 -> 1/1 passed runs" in out
+    assert "m unknown: 0/1 -> 1/1 passed runs" in out
     assert "h1 0/1 -> 1/1  q" in out
+
+
+def test_the_report_has_no_pooled_total(capsys: pytest.CaptureFixture[str]) -> None:
+    results: list[Any] = []
+    for qid in ("1", "h1"):
+        _, q = by_id(qid)
+        verdict = scoring.judge(q, "No idea.", ())
+        results.append(ev.Result(qid, q, 0, "No idea.", 0.1, verdict, [], [], {}))
+    ev.report("gemma", results, show=False)
+    out = capsys.readouterr().out
+    assert "== gemma\n" in out
+    assert "correct including plan" not in out
+    assert "ok+plan" not in out
+    assert re.search(r"^\s+dev\s+all\s+ok ", out, re.MULTILINE)
+    assert re.search(r"^\s+heldout\s+all\s+ok ", out, re.MULTILINE)
 
 
 def test_the_cli_refuses_a_changed_held_out_set(monkeypatch: pytest.MonkeyPatch) -> None:

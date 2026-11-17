@@ -91,7 +91,6 @@ function debugOverview(root) {
       // While Akashic is open, capture is halted and has released its devices on purpose.
       if (!c.data.halted) for (const [kind, s] of Object.entries(a.streams)) if (!s.device) out.push(dbgNote("bad", `No ${kind} audio device is open.`));
     } else out.push(dbgNote("bad", "Audio recording is not running (disabled, or it failed to start): see the capture log."));
-    if (o.disk.free_gb !== null && o.disk.free_gb < 50) out.push(dbgNote("bad", `Only ${o.disk.free_gb} GB free on the data drive.`));
     return out;
   }
 
@@ -155,6 +154,7 @@ function debugOverview(root) {
       ["Latest frame", o.frames.latest_ts_ms ? fmtAge(o.now_ms - o.frames.latest_ts_ms) : "none"],
       ["Screen outcomes", c ? JSON.stringify(c.data.screen) : null],
       ["Media outcomes", c ? JSON.stringify(c.data.media) : null],
+      ["Screen writer outcomes", c ? JSON.stringify(c.data.writer) : null],
       ["Database", `${o.disk.db_mb ?? "?"} MB · schema v${o.schema}`], ["Free disk", `${o.disk.free_gb ?? "?"} GB`]]));
     parts.push(h("h2", {}, "Settings in effect"), dbgKv(Object.entries(o.settings)));
     body.replaceChildren(...parts);

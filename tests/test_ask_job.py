@@ -3,18 +3,24 @@
 from __future__ import annotations
 
 import json
+import logging
+import sqlite3
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-from ask_fakes import FakeChat, FakeEmbedder, ask, make
+import sqlcipher3
+from ask_fakes import PLAN_OK, FakeChat, FakeEmbedder, FlushClock, ask, make
 from defects import known_defect
 from memory_data import HOUR, MINUTE, NOW, add_episode, add_segment, add_speaker
 
-from akashic.pipeline.ask import ask_job, plan_json, stored_plan
+from akashic.pipeline.ask import AskHandler, ask_job, plan_json, stored_plan
 from akashic.pipeline.llm import LlamaError
 from akashic.search.planner import Plan
+from akashic.search.timeparse import TimeRange
 from akashic.storage import db, embeddings
+from akashic.storage.gaps import GapLog, GapSpan
 from akashic.storage.jobs import Job, JobQueue
 
 if TYPE_CHECKING:
@@ -332,3 +338,193 @@ def test_deletion_during_generation_cannot_restore_answer_or_sources(
     assert "transcripts changed" in str(stored["error"])
     handler.give_up(job)
     assert row(conn, job)["error"] == stored["error"]
+
+
+def at(hour: int, minute: int = 0) -> int:
+    return int(datetime(2026, 11, 17, hour, minute).astimezone().timestamp() * 1000)
+
+
+WINDOW = TimeRange(at(14), at(15), "14:00-15:00")
+LATER = at(16)
+TIMED_PLAN = json.dumps({**json.loads(PLAN_OK), "kinds": [], "time_text": "at 14:30"})
+
+
+def add_gap(conn: Connection, kind: str, reason: str, start: int, end: int | None) -> None:
+    conn.execute(
+        "INSERT INTO capture_gaps (kind, reason, start_ms, end_ms) VALUES (?, ?, ?, ?)",
+        (kind, reason, start, end),
+    )
+
+
+def not_recorded(conn: Connection, plan: Plan, now: int = LATER) -> list[GapSpan]:
+    return make(conn)[0]._not_recorded(plan, now)
+
+
+def pairs(spans: list[GapSpan]) -> list[tuple[str, str]]:
+    return [(s.kind, s.reason) for s in spans]
+
+
+@pytest.mark.parametrize(
+    ("kinds", "expected"),
+    [
+        (("conversation",), {"mic", "system"}),
+        (("video",), {"system"}),
+        (("music",), {"system"}),
+        (("browsing",), {"screen", "screen_text"}),
+        (("work",), {"screen", "screen_text"}),
+        (("game",), {"screen", "screen_text"}),
+        (("video", "game"), {"system", "screen", "screen_text"}),
+        ((), {"mic", "system", "screen", "screen_text"}),
+        (("nonsense",), set[str]()),
+    ],
+)
+def test_the_planned_kinds_choose_which_gap_kinds_are_read(
+    conn: Connection, kinds: tuple[str, ...], expected: set[str]
+) -> None:
+    for kind in ("all", "screen", "screen_text", "mic", "system"):
+        add_gap(conn, kind, "paused", at(14, 10), at(14, 20))
+    found = not_recorded(conn, Plan(time=WINDOW, kinds=kinds))
+    assert {s.kind for s in found} == expected | {"all"}
+
+
+def test_gaps_of_other_kinds_are_not_listed(conn: Connection) -> None:
+    add_gap(conn, "screen", "locked", at(14, 10), at(14, 20))
+    add_gap(conn, "mic", "device_missing", at(14, 10), at(14, 20))
+    assert not_recorded(conn, Plan(time=WINDOW, kinds=("conversation",))) == [
+        GapSpan("mic", "device_missing", at(14, 10), at(14, 20))
+    ]
+    assert not_recorded(conn, Plan(time=WINDOW, kinds=("video",))) == []
+
+
+def test_excluded_music_and_the_open_ui_are_left_out(conn: Connection) -> None:
+    add_gap(conn, "all", "excluded", at(14, 0), at(14, 10))
+    add_gap(conn, "system", "music", at(14, 0), at(14, 10))
+    add_gap(conn, "all", "ui_open", at(14, 20), at(14, 30))  # closed: stays
+    add_gap(conn, "mic", "ui_open", at(14, 40), None)  # open at now
+    for reason in ("backlog", "write_failed", "unknown_sources", "voice_elsewhere", "stopped"):
+        add_gap(conn, "system", reason, at(14, 50), at(14, 55))
+    found = not_recorded(conn, Plan(time=WINDOW, kinds=("conversation",)))
+    assert sorted(pairs(found)) == [
+        ("all", "ui_open"),
+        ("system", "backlog"),
+        ("system", "stopped"),
+        ("system", "unknown_sources"),
+        ("system", "voice_elsewhere"),
+        ("system", "write_failed"),
+    ]
+
+
+def test_spans_are_clipped_to_the_window_and_merged_per_kind_and_reason(conn: Connection) -> None:
+    add_gap(conn, "mic", "write_failed", at(13, 50), at(14, 10))
+    add_gap(conn, "mic", "write_failed", at(14, 10), at(14, 20))  # touches
+    add_gap(conn, "mic", "write_failed", at(14, 15), at(14, 25))  # overlaps
+    add_gap(conn, "mic", "write_failed", at(14, 40), at(14, 45))  # apart
+    add_gap(conn, "system", "write_failed", at(14, 30), at(15, 30))
+    found = not_recorded(conn, Plan(time=WINDOW, kinds=("conversation",)))
+    assert found == [
+        GapSpan("mic", "write_failed", at(14, 0), at(14, 25)),
+        GapSpan("system", "write_failed", at(14, 30), at(15, 0)),
+        GapSpan("mic", "write_failed", at(14, 40), at(14, 45)),
+    ]
+
+
+def test_without_a_time_window_gaps_are_not_read(
+    conn: Connection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def boom(*_: object) -> list[GapSpan]:
+        raise AssertionError("gaps read")
+
+    monkeypatch.setattr("akashic.pipeline.ask.gaps.overlapping", boom)
+    assert not_recorded(conn, Plan()) == []
+
+
+@pytest.mark.parametrize("error", [sqlite3.OperationalError, sqlcipher3.OperationalError])
+def test_a_failing_gap_read_is_an_empty_list_and_logs_only_the_type(
+    conn: Connection,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    error: type[Exception],
+) -> None:
+    def broken(*_: object) -> list[GapSpan]:
+        raise error("secret detail")
+
+    monkeypatch.setattr("akashic.pipeline.ask.gaps.overlapping", broken)
+    with caplog.at_level(logging.WARNING):
+        assert not_recorded(conn, Plan(time=WINDOW)) == []
+    assert "OperationalError" in caplog.text
+    assert "secret detail" not in caplog.text
+
+
+def run_at_four(conn: Connection, question: str, chat: FakeChat) -> tuple[str, str]:
+    """The (answer, prompt) of a question asked with the clock at 16:00."""
+    handler = AskHandler(
+        conn, chat, FakeEmbedder(), lambda: True, lambda: True, lambda: LATER, FlushClock()
+    )
+    job = ask(conn, question)
+    handler.run(job)
+    prompt = chat.prompts[0][1] if chat.prompts else ""
+    return str(row(conn, job)["answer"]), prompt
+
+
+def three_gaps(conn: Connection) -> None:
+    log = GapLog(conn)
+    log.add("all", "paused", at(14, 5), at(14, 15))
+    log.add("mic", "device_missing", at(14, 20), at(14, 40))
+    log.add("system", "voice_elsewhere", at(14, 30), at(14, 50))
+
+
+def test_a_timed_question_with_nothing_found_lists_every_gap_of_the_window(
+    conn: Connection,
+) -> None:
+    three_gaps(conn)
+    answer, prompt = run_at_four(conn, "what happened at 14:30", FakeChat(plan=TIMED_PLAN))
+    assert answer.startswith("I found nothing in your memory")
+    assert prompt == ""
+    assert "2026-11-17 14:05 - 14:15 (everything: recording paused)" in answer
+    assert "2026-11-17 14:20 - 14:40 (microphone: device missing)" in answer
+    assert "(system sound: speech lost, voice chat on another device)" in answer
+    assert answer.index("14:05") < answer.index("14:20") < answer.index("14:30")
+
+
+def test_a_timed_question_with_evidence_gets_the_line_after_searched(conn: Connection) -> None:
+    three_gaps(conn)
+    add_segment(conn, at(14, 10), text="there is a new game next month")
+    _, prompt = run_at_four(conn, "what happened at 14:30", FakeChat(plan=TIMED_PLAN))
+    lines = prompt.splitlines()
+    i = next(n for n, text in enumerate(lines) if text.startswith("Searched:"))
+    assert lines[i + 1].startswith("Not recorded (")
+    for words in ("everything: recording paused", "microphone: device missing", "voice chat"):
+        assert words in lines[i + 1]
+
+
+def test_the_same_database_without_a_time_window_has_no_line(conn: Connection) -> None:
+    three_gaps(conn)
+    answer, _ = run_at_four(conn, "what did Minlo say", FakeChat())
+    assert answer == "I found nothing in your memory that answers that question."
+    add_segment(conn, at(14, 10), text="there is a new game next month")
+    _, prompt = run_at_four(conn, "what did Minlo say", FakeChat())
+    assert prompt
+    assert "Not recorded" not in prompt
+
+
+def test_an_empty_model_answer_falls_back_to_the_reply_with_the_gaps(conn: Connection) -> None:
+    three_gaps(conn)
+    add_segment(conn, at(14, 10), text="there is a new game next month")
+    answer, prompt = run_at_four(conn, "what happened at 14:30", FakeChat(("",), plan=TIMED_PLAN))
+    assert prompt
+    assert answer.startswith("I found nothing")
+    assert "Not recorded: 2026-11-17 14:05" in answer
+
+
+@pytest.mark.parametrize("error", [sqlite3.OperationalError, sqlcipher3.OperationalError])
+def test_a_failing_gap_read_still_answers_without_a_line(
+    conn: Connection, monkeypatch: pytest.MonkeyPatch, error: type[Exception]
+) -> None:
+    three_gaps(conn)
+
+    def broken(*_: object) -> list[GapSpan]:
+        raise error
+
+    monkeypatch.setattr("akashic.pipeline.ask.gaps.overlapping", broken)
+    answer, _ = run_at_four(conn, "what happened at 14:30", FakeChat(plan=TIMED_PLAN))
+    assert answer == "I found nothing in your memory that answers that question."

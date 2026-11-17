@@ -12,6 +12,7 @@ from akashic.pipeline.transcribe import (
     PREVIOUS_MAX_CHARS,
     PROMPT_MAX_CHARS,
     TARGET_RMS,
+    LoadFailure,
     TranscribeHandler,
     Transcript,
     build_prompt,
@@ -22,7 +23,7 @@ from akashic.pipeline.transcribe import (
 )
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import DataKey
-from akashic.storage.jobs import Job, PermanentJobError
+from akashic.storage.jobs import DEFER_MS, DeferJob, Job, PermanentJobError
 from akashic.storage.media import MediaStore
 from akashic.storage.opus import encode_opus
 
@@ -112,8 +113,9 @@ def test_known_hallucinations_are_recognised_whole_only() -> None:
 
 
 class FakeTranscriber:
-    def __init__(self, *results: Transcript | None) -> None:
+    def __init__(self, *results: Transcript | Exception | None) -> None:
         self.results = list(results)
+        self.load_reason: str | None = None
         self.calls: list[tuple[int, str | None]] = []
         self.model_present = True
         self.unloads = 0
@@ -122,9 +124,15 @@ class FakeTranscriber:
     def available(self) -> bool:
         return self.model_present
 
+    def load_error(self) -> str | None:
+        return self.load_reason
+
     def transcribe(self, samples: NDArray[np.float32], prompt: str | None) -> Transcript | None:
         self.calls.append((len(samples), prompt))
-        return self.results.pop(0)
+        result = self.results.pop(0)
+        if isinstance(result, Exception):
+            raise result
+        return result
 
     def unload_if_idle(self, *, force: bool = False) -> None:
         self.unloads += 1
@@ -155,7 +163,9 @@ def job_for(segment_id: int) -> Job:
 def test_transcript_is_stored_with_its_language(audio: AudioStore) -> None:
     seg = add_segment(audio)
     fake = FakeTranscriber(Transcript("  Salut Minlo  ", "fr"))
-    TranscribeHandler(audio, fake, ("Minlo", "Elden Ring"), "test-model").run(job_for(seg))
+    TranscribeHandler(audio, fake, ("Minlo", "Elden Ring"), "test-model", lambda: True).run(
+        job_for(seg)
+    )
     stored = audio.get(seg)
     assert stored is not None
     assert (stored.status, stored.language, stored.transcript) == ("done", "fr", "Salut Minlo")
@@ -177,7 +187,7 @@ def test_the_previous_line_is_context_and_confidence_is_kept(
         Transcript("autre chose", "fr"),
         Transcript("heard", "en"),
     )
-    handler = TranscribeHandler(audio, fake, ("Minlo",), "test-model")
+    handler = TranscribeHandler(audio, fake, ("Minlo",), "test-model", lambda: True)
     for seg in (first, second, late, other):
         handler.run(job_for(seg))
     assert [p for _, p in fake.calls] == [
@@ -197,7 +207,11 @@ def test_the_previous_line_is_context_and_confidence_is_kept(
 def test_no_speech_and_hallucinations_become_empty(audio: AudioStore) -> None:
     a, b = add_segment(audio, 1_000_000), add_segment(audio, 2_000_000)
     handler = TranscribeHandler(
-        audio, FakeTranscriber(None, Transcript("Thanks for watching!", "en")), (), "test-model"
+        audio,
+        FakeTranscriber(None, Transcript("Thanks for watching!", "en")),
+        (),
+        "test-model",
+        lambda: True,
     )
     handler.run(job_for(a))
     handler.run(job_for(b))
@@ -218,6 +232,7 @@ def test_overlap_with_the_previous_segment_is_removed(audio: AudioStore) -> None
         ),
         (),
         "test-model",
+        lambda: True,
     )
     handler.run(job_for(first))
     handler.run(job_for(second))
@@ -234,6 +249,7 @@ def test_a_continuation_that_is_all_overlap_is_empty(audio: AudioStore) -> None:
         FakeTranscriber(Transcript("a b c d e", "en"), Transcript("d e", "en")),
         (),
         "test-model",
+        lambda: True,
     )
     handler.run(job_for(first))
     handler.run(job_for(second))
@@ -248,7 +264,11 @@ def test_a_continuation_is_kept_whole_when_the_previous_has_no_transcript(
     first = add_segment(audio, 1_000_000)
     second = add_segment(audio, 1_028_000, continues_id=first)
     handler = TranscribeHandler(
-        audio, FakeTranscriber(None, Transcript("bonjour tout le monde", "fr")), (), "test-model"
+        audio,
+        FakeTranscriber(None, Transcript("bonjour tout le monde", "fr")),
+        (),
+        "test-model",
+        lambda: True,
     )
     handler.run(job_for(first))
     handler.run(job_for(second))
@@ -260,14 +280,14 @@ def test_a_continuation_is_kept_whole_when_the_previous_has_no_transcript(
 def test_already_transcribed_segment_is_not_done_twice(audio: AudioStore) -> None:
     seg = add_segment(audio)
     fake = FakeTranscriber(Transcript("one", "en"))
-    handler = TranscribeHandler(audio, fake, (), "test-model")
+    handler = TranscribeHandler(audio, fake, (), "test-model", lambda: True)
     handler.run(job_for(seg))
     handler.run(job_for(seg))  # e.g. the worker died before completing the job
     assert len(fake.calls) == 1
 
 
 def test_bad_jobs_fail_for_good(audio: AudioStore) -> None:
-    handler = TranscribeHandler(audio, FakeTranscriber(), (), "test-model")
+    handler = TranscribeHandler(audio, FakeTranscriber(), (), "test-model", lambda: True)
     with pytest.raises(PermanentJobError):
         handler.run(Job(1, "transcribe", "k", {}, 0, 1))
     with pytest.raises(PermanentJobError):
@@ -279,7 +299,9 @@ def test_missing_audio_marks_the_segment_failed(audio: AudioStore, paths: Paths)
     for f in paths.media_dir.rglob("*.enc"):
         f.unlink()
     with pytest.raises(PermanentJobError):
-        TranscribeHandler(audio, FakeTranscriber(), (), "test-model").run(job_for(seg))
+        TranscribeHandler(audio, FakeTranscriber(), (), "test-model", lambda: True).run(
+            job_for(seg)
+        )
     stored = audio.get(seg)
     assert stored is not None
     assert stored.status == "failed"
@@ -288,7 +310,7 @@ def test_missing_audio_marks_the_segment_failed(audio: AudioStore, paths: Paths)
 def test_give_up_marks_failed_and_blocked_follows_the_model(audio: AudioStore) -> None:
     seg = add_segment(audio)
     fake = FakeTranscriber()
-    handler = TranscribeHandler(audio, fake, (), "test-model")
+    handler = TranscribeHandler(audio, fake, (), "test-model", lambda: True)
     handler.give_up(job_for(seg))
     handler.give_up(Job(2, "transcribe", "k", {}, 0, 1))  # nothing to mark: ignored
     stored = audio.get(seg)
@@ -299,3 +321,72 @@ def test_give_up_marks_failed_and_blocked_follows_the_model(audio: AudioStore) -
     assert handler.blocked() == "model missing"
     handler.idle()
     assert fake.unloads == 1
+
+
+def test_blocked_reports_a_missing_model_first_then_the_load_error(audio: AudioStore) -> None:
+    fake = FakeTranscriber()
+    handler = TranscribeHandler(audio, fake, (), "test-model", lambda: True)
+    fake.load_reason = "model failed to load (RuntimeError)"
+    assert handler.blocked() == "model failed to load (RuntimeError)"
+    fake.model_present = False
+    assert handler.blocked() == "model missing"
+
+
+def test_a_decode_failure_after_a_load_failure_defers_and_leaves_the_segment_pending(
+    audio: AudioStore,
+) -> None:
+    seg = add_segment(audio)
+    fake = FakeTranscriber(RuntimeError("CUDA driver version is insufficient"))
+    fake.load_reason = "model failed to load (RuntimeError)"
+    handler = TranscribeHandler(audio, fake, (), "test-model", lambda: True)
+    with pytest.raises(DeferJob, match=r"model failed to load \(RuntimeError\)"):
+        handler.run(job_for(seg))
+    stored = audio.get(seg)
+    assert stored is not None
+    assert stored.status == "pending"
+
+
+def test_any_other_decode_failure_is_still_a_counted_failure(audio: AudioStore) -> None:
+    seg = add_segment(audio)
+    fake = FakeTranscriber(ValueError("bad frame"))
+    handler = TranscribeHandler(audio, fake, (), "test-model", lambda: True)
+    with pytest.raises(ValueError, match="bad frame"):
+        handler.run(job_for(seg))
+
+
+@pytest.mark.parametrize(
+    ("stream", "ready", "queued"),
+    [("mic", False, 1), ("system", True, 1), ("system", False, 0)],
+)
+def test_speakers_jobs_follow_the_stream_and_the_voice_models(
+    audio: AudioStore, conn: Connection, stream: str, *, ready: bool, queued: int
+) -> None:
+    seg = add_segment(audio, stream=stream)
+    fake = FakeTranscriber(Transcript("bonjour", "fr"))
+    TranscribeHandler(audio, fake, (), "test-model", lambda: ready).run(job_for(seg))
+    assert conn.execute("SELECT count(*) FROM jobs WHERE kind = 'speakers'").fetchone()[0] == queued
+
+
+def test_watch_records_and_reraises_a_failure_and_clears_on_success() -> None:
+    failure = LoadFailure(lambda: 100.0)
+    with pytest.raises(ImportError), failure.watch():
+        raise ImportError("secret text")
+    assert failure.reason() == "model failed to load (ImportError)"
+    with failure.watch():
+        pass
+    assert failure.reason() is None
+
+
+def test_a_load_failure_is_reported_for_the_defer_window_then_forgotten() -> None:
+    now = [100.0]
+    failure = LoadFailure(lambda: now[0])
+    assert failure.reason() is None
+    failure.record(ImportError("secret text"))
+    assert failure.reason() == "model failed to load (ImportError)"
+    now[0] += DEFER_MS / 1000 - 1
+    assert failure.reason() == "model failed to load (ImportError)"
+    now[0] += 1
+    assert failure.reason() is None
+    failure.record(RuntimeError())
+    failure.clear()
+    assert failure.reason() is None

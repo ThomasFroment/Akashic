@@ -75,6 +75,9 @@ class Recognizer:
     def available(self) -> bool:
         return True
 
+    def load_error(self) -> str | None:
+        return None
+
     def transcribe(self, samples: NDArray[np.float32], prompt: str | None) -> Transcript:
         assert samples.size == 1600
         assert prompt == "mods"
@@ -235,7 +238,7 @@ def test_shared_current_production_boundary_uses_fixed_reference(
     current = add_segment(conn, 2000, text=None, status="pending")
     conn.execute("UPDATE audio_segments SET continues_id=? WHERE id=?", (prior, current))
     audio = SyntheticAudio(conn, MediaStore(paths.media_dir, bytes(32)))
-    TranscribeHandler(audio, model, ("Minlo",), "fixed-model-pin").run(
+    TranscribeHandler(audio, model, ("Minlo",), "fixed-model-pin", lambda: True).run(
         Job(1, "transcribe", "production", {"segment_id": current}, 0, 1)
     )
     production = audio.get(current)

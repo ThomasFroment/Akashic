@@ -13,7 +13,7 @@ import time
 from typing import TYPE_CHECKING, Any, Final
 
 from akashic.pipeline.models import CANARY_V2, QWEN3_ASR, SPEECH_CANDIDATES, is_complete
-from akashic.pipeline.transcribe import Transcriber, Transcript
+from akashic.pipeline.transcribe import LoadFailure, Transcriber, Transcript
 from akashic.pipeline.whisper import WhisperTranscriber
 
 if TYPE_CHECKING:
@@ -45,13 +45,21 @@ class TransformerTranscriber:
         self._torch: Any = None
         self._processor: Any = None
         self._model: Any = None
+        self._load_failure = LoadFailure(clock)
 
     def available(self) -> bool:
         return is_complete(self._folder.parent, SPEECH_CANDIDATES[self._folder.name])
 
+    def load_error(self) -> str | None:
+        return self._load_failure.reason()
+
     def _load(self) -> None:
         if self._model is not None:
             return
+        with self._load_failure.watch():
+            self._build()
+
+    def _build(self) -> None:
         if not self.available():
             msg = "speech model files are missing"
             raise RuntimeError(msg)

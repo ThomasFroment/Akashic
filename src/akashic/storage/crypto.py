@@ -256,17 +256,6 @@ def write_keyfile_atomic(path: Path, contents: bytes) -> None:
     tmp.replace(path)
 
 
-def change_passphrase(
-    path: Path, old: str, new: str, params: Argon2Params = DEFAULT_ARGON2
-) -> None:
-    """Re-wrap the data key under a new passphrase. No data is re-encrypted."""
-    key = unwrap_data_key(path.read_bytes(), old)
-    try:
-        write_keyfile_atomic(path, wrap_data_key(key, new, params))
-    finally:
-        key.wipe()
-
-
 def encrypt_blob(key: bytes, plaintext: bytes, context: bytes) -> bytes:
     """AES-256-GCM. ``context`` (e.g. the file's relative path) is bound as associated data,
     so a ciphertext moved to another file fails to decrypt."""

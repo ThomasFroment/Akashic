@@ -19,7 +19,7 @@ from akashic.pipeline.speakers import (
 )
 from akashic.storage.audio import AudioStore, NewSegment
 from akashic.storage.crypto import DataKey
-from akashic.storage.jobs import Job
+from akashic.storage.jobs import DeferJob, Job
 from akashic.storage.media import MediaStore
 from akashic.storage.opus import encode_opus
 from akashic.storage.speakers import NewTurn, SpeakerError, SpeakerStore, best_match
@@ -344,6 +344,34 @@ def test_handler_gives_the_microphone_to_the_user_without_the_models(
     assert voices.embedded == []
     (me,) = store.all_speakers()
     assert me.is_self
+
+
+def test_the_handler_is_never_blocked_and_a_mic_job_runs_without_the_models(
+    conn: Connection, audio: AudioStore, store: SpeakerStore
+) -> None:
+    seg = segment(audio, stream="mic")
+    voices = FakeVoices([])
+    voices.present = False
+    handler = SpeakersHandler(audio, store, voices, now_ms=lambda: 7)
+    assert handler.blocked() is None
+    handler.run(speakers_job(seg))
+    (me,) = store.all_speakers()
+    assert conn.execute("SELECT count(*) FROM speaker_turns").fetchone()[0] == 1
+    assert conn.execute(
+        "SELECT speaker_id FROM audio_segments WHERE id = ?", (seg,)
+    ).fetchone() == (me.id,)
+
+
+def test_a_system_job_without_the_models_is_deferred_and_changes_nothing(
+    conn: Connection, audio: AudioStore, store: SpeakerStore
+) -> None:
+    seg = segment(audio)
+    voices = FakeVoices([local(3)])
+    voices.present = False
+    with pytest.raises(DeferJob):
+        SpeakersHandler(audio, store, voices, now_ms=lambda: 7).run(speakers_job(seg))
+    assert voices.embedded == []
+    assert conn.execute("SELECT count(*) FROM speaker_turns").fetchone()[0] == 0
 
 
 # --- queueing and the real adapter -----------------------------------------------------------

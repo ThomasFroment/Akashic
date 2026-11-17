@@ -13,6 +13,7 @@ from akashic.storage.gaps import (
     HEARTBEAT_MS,
     HEARTBEAT_STALE_MS,
     GapKind,
+    GapLog,
     GapReason,
     GapSpan,
     overlapping,
@@ -46,6 +47,17 @@ def test_ui_open_is_a_valid_reason(conn: Connection) -> None:
     assert "ui_open" in get_args(GapReason.__value__)
     add(conn, "screen", "ui_open", 10, 20)
     assert overlapping(conn, 0, 100, NOW, ["screen"]) == [GapSpan("screen", "ui_open", 10, 20)]
+
+
+def test_voice_elsewhere_is_a_valid_reason(conn: Connection) -> None:
+    assert "voice_elsewhere" in get_args(GapReason.__value__)
+    log = GapLog(conn)
+    log.add("mic", "voice_elsewhere", 10, 20)
+    log.open("system", "voice_elsewhere", 30)
+    assert overlapping(conn, 0, 100, NOW, ["mic", "system"]) == [
+        GapSpan("mic", "voice_elsewhere", 10, 20),
+        GapSpan("system", "voice_elsewhere", 30, NOW),
+    ]
 
 
 def test_closed_rows_overlap_when_they_start_before_b_and_end_after_a(conn: Connection) -> None:

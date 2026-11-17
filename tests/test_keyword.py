@@ -233,9 +233,87 @@ def test_limit_and_offset_apply_after_collapsing(store: FrameStore, conn: Connec
     assert len(keyword.search(conn, "quux", limit=2, offset=2)) == 1
 
 
-def test_browse_does_not_collapse(store: FrameStore, conn: Connection) -> None:
+def test_browse_shows_a_run_as_its_first_row(store: FrameStore, conn: Connection) -> None:
     seq(store, ["quux same", "quux same", "quux same"])
-    assert len(keyword.browse(conn, Filters(start_ms=20_000))) == 3
+    assert times(keyword.browse(conn, Filters(start_ms=20_000))) == [20_000]
+
+
+def test_browse_keeps_identical_rows_of_two_hwnds_or_split_by_another_row(
+    store: FrameStore, conn: Connection
+) -> None:
+    add(store, 20_000, win(0, "chrome.exe", "same", hwnd=7))
+    add(store, 20_001, win(0, "chrome.exe", "same", hwnd=8))
+    add(store, 20_002, win(0, "chrome.exe", "other", hwnd=7))
+    add(store, 20_003, win(0, "chrome.exe", "same", hwnd=7))
+    got = keyword.browse(conn, Filters(start_ms=20_000))
+    assert [h.ts_ms for h in got] == [20_003, 20_002, 20_001, 20_000]
+
+
+def test_browse_collapses_newest_first_and_pages_after_collapsing(
+    store: FrameStore, conn: Connection
+) -> None:
+    seq(store, ["a", "a", "a", "b", "b", "c"])
+    flt = Filters(start_ms=20_000)
+    assert [h.ts_ms for h in keyword.browse(conn, flt)] == [20_005, 20_003, 20_000]
+    assert [h.ts_ms for h in keyword.browse(conn, flt, limit=2)] == [20_005, 20_003]
+    assert [h.ts_ms for h in keyword.browse(conn, flt, limit=2, offset=2)] == [20_000]
+
+
+def unbounded_browse(conn: Connection, flt: Filters, limit: int, offset: int) -> list[int]:
+    """Window ids of the collapse over every app row at once, the reference for ``browse``."""
+    inner = (
+        "SELECT f.id AS frame_id, w.id AS window_id, f.ts_ms, f.monitor_id, w.z, w.hwnd,"
+        " 0 AS has_image, substr(coalesce(w.text, ''), 1, 160) AS snippet"
+        " FROM frame_windows w JOIN frames f ON f.id = w.frame_id"
+        " WHERE w.role = 'app' AND f.ts_ms >= :start_ms AND f.ts_ms < :end_ms"
+        " AND (:process IS NULL OR lower(w.process) = lower(:process))"
+    )
+    sql = (
+        "SELECT m.frame_id, m.window_id, m.ts_ms, m.monitor_id, c.process, c.title, c.url,"  # noqa: S608
+        " m.has_image, m.snippet"
+        f" FROM (SELECT *, LAG(window_id) OVER run AS prev_id FROM ({inner})"
+        "  WINDOW run AS (PARTITION BY hwnd ORDER BY ts_ms, window_id))"
+        " AS m JOIN frame_windows c ON c.id = m.window_id"
+        " LEFT JOIN frame_windows p ON p.id = m.prev_id"
+        f" WHERE {keyword.STARTS_RUN_SQL}"
+        " ORDER BY m.ts_ms DESC, m.frame_id DESC, m.z LIMIT :limit OFFSET :offset"
+    )
+    params = {
+        "start_ms": flt.start_ms,
+        "end_ms": flt.end_ms,
+        "process": flt.process,
+        "limit": limit,
+        "offset": offset,
+    }
+    return [r[1] for r in conn.execute(sql, params)]
+
+
+def test_bounded_browse_equals_the_unbounded_collapse_across_widening_and_pages(
+    store: FrameStore, conn: Connection
+) -> None:
+    # Two hwnds, long runs, a text change every 15 frames: few run starts among many rows.
+    for n in range(60):
+        add(
+            store,
+            30_000 + n,
+            win(0, "chrome.exe", f"run {n // 15}", hwnd=7),
+            win(1, "code.exe", f"edit {n // 20}", hwnd=8),
+        )
+    for flt in (Filters(start_ms=30_000), Filters(start_ms=30_010, end_ms=30_050)):
+        for limit in (1, 2, 3, 5, 200):
+            for offset in (0, 1, 2, 3, 7):
+                got = [h.window_id for h in keyword.browse(conn, flt, limit=limit, offset=offset)]
+                assert got == unbounded_browse(conn, flt, limit, offset), (flt, limit, offset)
+    run_starts = [h.ts_ms for h in keyword.browse(conn, Filters(start_ms=30_000), limit=200)]
+    assert len(run_starts) == 4 + 3  # hwnd 7: runs 0-3; hwnd 8: runs 0-2
+
+
+def test_browse_collapse_respects_the_filters(store: FrameStore, conn: Connection) -> None:
+    seq(store, ["same", "same", "same"])
+    add(store, 20_010, win(1, "code.exe", "same", hwnd=9))
+    add(store, 20_011, win(1, "code.exe", "same", hwnd=9))
+    assert times(keyword.browse(conn, Filters(start_ms=20_001))) == [20_001, 20_010]
+    assert times(keyword.browse(conn, Filters(start_ms=20_000, process="code.exe"))) == [20_010]
 
 
 def test_only_a_painted_window_of_a_stored_picture_has_an_image(
@@ -248,3 +326,30 @@ def test_only_a_painted_window_of_a_stored_picture_has_an_image(
     assert found == {"lighthouse shown": True, "lighthouse pending": False}
     browsed = [h.has_image for h in keyword.browse(conn, Filters(start_ms=9_000, end_ms=9_001))]
     assert browsed == [True, False]  # ordered by z
+
+
+def test_processes_match_a_plain_distinct_select_and_use_the_index_only(
+    store: FrameStore, conn: Connection
+) -> None:
+    add(store, 10_000, win(0, "Chrome.exe", "x"), win(1, "zen.exe", "y"))
+    add(store, 10_001, app_window(process=None, text="z", z=0, hwnd=30))
+    plain_list = [
+        r[0]
+        for r in conn.execute(
+            "SELECT DISTINCT process FROM frame_windows WHERE process IS NOT NULL"
+            " ORDER BY lower(process)"
+        )
+    ]
+    got = keyword.processes(conn)
+    assert sorted(got) == sorted(plain_list)
+    assert [p.lower() for p in got] == [p.lower() for p in plain_list]
+    assert {"chrome.exe", "Chrome.exe"} <= set(got)
+    assert None not in got
+    sql: list[str] = []
+    conn.set_trace_callback(sql.append)
+    keyword.processes(conn)
+    conn.set_trace_callback(None)
+    plan = conn.execute("EXPLAIN QUERY PLAN " + sql[-1]).fetchall()
+    details = " | ".join(str(r[-1]) for r in plan)
+    assert "frame_windows_process" in details
+    assert "SCAN frame_windows" not in details

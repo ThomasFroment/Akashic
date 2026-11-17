@@ -12,15 +12,16 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from collections import deque
+from collections import Counter, deque
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from akashic.capture import imaging
+from akashic.capture.gaps import limit_wait_at_stop
 from akashic.capture.health import MonitorHealth
 from akashic.capture.text import MIN_UIA_CHARS
-from akashic.storage.db import is_disk_full
+from akashic.storage import db
 from akashic.storage.frames import NewFrame, NewWindow
 from akashic.storage.monitors import MonitorRow
 
@@ -101,18 +102,23 @@ class ScreenWriter:
         self._monitors = monitors
         self._gate = gate
         self._clock = clock
+        self.stats: Counter[str] = Counter()
         self._cond = threading.Condition()
         self._queue: deque[_Item] = deque()
         self._seq = 0
         self._lost: dict[str, int] = {}  # monitor key -> sequence at which it was lost
         self._health = MonitorHealth()
         self._labels: dict[str, str] = {}  # monitor key -> "Monitor 2", left to right
-        self._closed = False
         # Writer thread only: monitor ids, and the layout that is not in the database yet.
         self._ids: dict[str, int] = {}
         self._unwritten: tuple[list[MonitorRow], int] | None = None
+        self._stopping = False
+        self._busy_at_stop = False
 
     # --- loop side: never blocks on the store --------------------------------------------------
+
+    def stats_snapshot(self) -> dict[str, int]:
+        return dict(self.stats)
 
     def submit(self, picture: Picture) -> None:
         with self._cond:
@@ -148,12 +154,6 @@ class ScreenWriter:
         with self._cond:
             return self._health.problems(since, self._labels)
 
-    def close(self) -> None:
-        with self._cond:
-            self._closed = True
-            self._queue.clear()
-            self._cond.notify_all()
-
     def _enqueue(self, item: _Item) -> None:
         with self._cond:
             self._queue.append(item)
@@ -182,15 +182,36 @@ class ScreenWriter:
     # --- writer side ---------------------------------------------------------------------------
 
     def run(self, stop: threading.Event) -> None:
-        """Apply queued items until ``stop`` is set, write what is left, then return."""
+        """Apply queued items until ``stop`` is set, write what is left, then return. Once stopping,
+        the first write that meets a busy database drops what is still queued."""
         while (item := self._next(stop)) is not None:
+            if stop.is_set() and not self._stopping:
+                self._begin_stop()
             self._apply(item)
+            if self._busy_at_stop:
+                self._drop_queue()
+                return
 
     def _next(self, stop: threading.Event) -> _Item | None:
         with self._cond:
-            while not self._queue and not stop.is_set() and not self._closed:
+            while not self._queue and not stop.is_set():
                 self._cond.wait(POLL_S)
             return self._queue.popleft() if self._queue else None
+
+    def _begin_stop(self) -> None:
+        self._stopping = True
+        limit_wait_at_stop(self._store.conn)
+
+    def _flag_busy_at_stop(self, error: Exception) -> None:
+        if self._stopping and db.is_busy(error):
+            self._busy_at_stop = True
+
+    def _drop_queue(self) -> None:
+        with self._cond:
+            dropped = len(self._queue)
+            self._queue.clear()
+        self.stats["stop_dropped"] += dropped
+        log.warning("database busy at stop; dropped %d queued screen items", dropped)
 
     def _apply(self, item: _Item) -> None:
         match item:
@@ -218,6 +239,7 @@ class ScreenWriter:
         try:
             self._ensure_layout()
         except Exception as error:  # noqa: BLE001 - the writer outlives any one item
+            self._flag_busy_at_stop(error)
             log.warning("monitor layout not written: %s", type(error).__name__)
 
     def _ensure_layout(self) -> None:
@@ -242,6 +264,7 @@ class ScreenWriter:
         try:
             self._monitors.state(monitor_id, state, ts_ms)
         except Exception as error:  # noqa: BLE001 - the writer outlives any one item
+            self._flag_busy_at_stop(error)
             log.warning("monitor state not written: %s", type(error).__name__)
 
     def _monitor_id(self, key: str) -> int:
@@ -263,7 +286,8 @@ class ScreenWriter:
                 self._gate.commit(window_key, result)
             self._monitors.state(monitor_id, "shown", picture.ts_ms)
         except Exception as error:  # noqa: BLE001 - the writer outlives any one picture
-            kind: RunKind = "disk_full" if is_disk_full(error) else "failure"
+            self._flag_busy_at_stop(error)
+            kind: RunKind = "disk_full" if db.is_disk_full(error) else "failure"
             self._fail(picture, seq, type(error).__name__, kind)
             return
         with self._cond:

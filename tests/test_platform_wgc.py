@@ -12,6 +12,7 @@ import pytest
 from winrt.windows.graphics.directx import DirectXPixelFormat
 
 from akashic.capture.ports import CapturedFrame, WindowCaptures
+from akashic.log import FaultLog
 from akashic.platform.win import wgc
 from akashic.platform.win.wgc import WgcCaptures
 
@@ -629,11 +630,15 @@ def test_a_refused_window_is_logged_once_per_interval_but_always_counted(
     world: World, caps: WgcCaptures, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.WARNING, logger=wgc.log.name)
+    now = [0.0]
+    caps.faults = FaultLog(wgc.log, clock=lambda: now[0])
     world.start_error = hresult_error(REMOVED + 100)
     for _ in range(5):
         assert not caps.start(10, 0)
     assert caplog.text.count("capture start failed") == 1
-    assert sum(caps._failures.values()) == 5
-    caps._warned_at.clear()  # the interval has passed
+    assert sum(caps.faults.counts().values()) == 5
+    now[0] = 301.0
     caps.start(10, 0)
     assert caplog.text.count("capture start failed") == 2
+    assert "(1 so far)" in caplog.text
+    assert "(6 so far)" in caplog.text

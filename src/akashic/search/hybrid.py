@@ -23,6 +23,7 @@ from akashic.pipeline.transcribe import UNCLEAR_BELOW
 from akashic.search.keyword import HIGHLIGHT_END, HIGHLIGHT_START, STARTS_RUN_SQL, Hit, build_match
 from akashic.search.timeparse import normalize
 from akashic.storage import embeddings, passages
+from akashic.storage.monitors import SHOWN_SQL
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
@@ -550,7 +551,7 @@ def _ranked_frames(conn: Connection, scope: _Scope, limit: int) -> list[Hit]:
         "SELECT c.id, c.frame_id, c.ts_ms, c.monitor_id, c.process, c.title, c.url, c.has_image,"  # noqa: S608
         f" {STARTS_RUN_SQL}, c.text"
         " FROM (SELECT w.id, w.frame_id, f.ts_ms, f.monitor_id, w.process, w.title, w.url,"
-        "  w.text, w.hwnd, f.image_path IS NOT NULL AND w.painted = 1 AS has_image,"
+        f"  w.text, w.hwnd, {SHOWN_SQL} AS has_image,"
         "  LAG(w.id) OVER (PARTITION BY w.hwnd ORDER BY f.ts_ms, w.id) AS prev_id"
         "  FROM frame_windows w JOIN frames f ON f.id = w.frame_id"
         "  WHERE w.id IN (SELECT value FROM json_each(?))) AS c"

@@ -40,6 +40,7 @@ from akashic.capture.health import (
     AUDIO_UNAVAILABLE,
     DEVICE_DOWN_S,
     SCREEN_IMAGES_FAILING,
+    WINDOW_EVENTS_DOWN,
     CaptureStatus,
 )
 from akashic.capture.ports import AudioError, AudioPlatform, CapturePlatform
@@ -53,6 +54,7 @@ if TYPE_CHECKING:
     from collections.abc import Buffer, Iterator
     from sqlite3 import Connection
 
+    from akashic.capture.screen import ScreenCapture
     from akashic.capture.screen_writer import ScreenWriter
     from akashic.capture.vad import SpeechDetector
     from akashic.config import Paths
@@ -62,6 +64,10 @@ INF = float("inf")
 
 
 # --- the audio device clock ------------------------------------------------------------------
+
+
+def _no_drops(_since: float) -> frozenset[str]:
+    return frozenset()
 
 
 def _run(rig: RecorderRig) -> tuple[threading.Event, threading.Thread]:
@@ -161,6 +167,7 @@ def test_audio_capture_names_each_recorder_down_for_a_minute(since: float, down:
     capture = object.__new__(AudioCapture)
     rigs = [RecorderRig("mic"), RecorderRig("system")]
     capture._recorders = [r.recorder for r in rigs]  # pyright: ignore[reportPrivateUsage]
+    capture._writer = cast("Any", SimpleNamespace(dropped_since=_no_drops))  # pyright: ignore[reportPrivateUsage]
     assert list(capture.problems(1000.0, since)) == down
 
 
@@ -169,6 +176,7 @@ def test_audio_capture_reports_only_the_recorder_that_is_down() -> None:
     rigs = [RecorderRig("mic"), RecorderRig("system")]
     rigs[0].recorder._ok_at = 990.0  # pyright: ignore[reportPrivateUsage]
     capture._recorders = [r.recorder for r in rigs]  # pyright: ignore[reportPrivateUsage]
+    capture._writer = cast("Any", SimpleNamespace(dropped_since=_no_drops))  # pyright: ignore[reportPrivateUsage]
     assert capture.problems(1000.0, 0.0) == ("system_audio_unavailable",)
 
 
@@ -351,6 +359,14 @@ def _fake_audio(*codes: str) -> AudioCapture:
     return cast("AudioCapture", SimpleNamespace(problems=problems))
 
 
+def _fake_capture(*codes: str) -> ScreenCapture:
+    def problems(now: float) -> list[str]:
+        del now
+        return list(codes)
+
+    return cast("ScreenCapture", SimpleNamespace(problems=problems))
+
+
 def _status(*, audio_failed: bool) -> CaptureStatus:
     def set_active(state: ipc.State, *, epoch: int | None) -> bool:
         del state, epoch
@@ -364,6 +380,7 @@ def test_active_problems_while_running_are_all_the_detected_ones() -> None:
         _status(audio_failed=True),
         _fake_writer(failing=True),
         _fake_audio("mic_unavailable", "system_audio_unavailable"),
+        _fake_capture(WINDOW_EVENTS_DOWN),
         halted=False,
         since=0.0,
     )
@@ -372,19 +389,29 @@ def test_active_problems_while_running_are_all_the_detected_ones() -> None:
         "mic_unavailable",
         "system_audio_unavailable",
         SCREEN_IMAGES_FAILING,
+        WINDOW_EVENTS_DOWN,
     ]
 
 
 def test_active_problems_while_halted_are_only_the_sticky_one() -> None:
     active = capture_main._active_problems  # pyright: ignore[reportPrivateUsage]
-    args = (_fake_writer(failing=True), _fake_audio("mic_unavailable"))
+    args = (
+        _fake_writer(failing=True),
+        _fake_audio("mic_unavailable"),
+        _fake_capture(WINDOW_EVENTS_DOWN),
+    )
     assert active(_status(audio_failed=True), *args, halted=True, since=0.0) == [AUDIO_UNAVAILABLE]
     assert active(_status(audio_failed=False), *args, halted=True, since=0.0) == []
 
 
 def test_active_problems_with_no_audio_recorders() -> None:
     problems = capture_main._active_problems(  # pyright: ignore[reportPrivateUsage]
-        _status(audio_failed=False), _fake_writer(failing=False), None, halted=False, since=0.0
+        _status(audio_failed=False),
+        _fake_writer(failing=False),
+        None,
+        _fake_capture(),
+        halted=False,
+        since=0.0,
     )
     assert problems == []
 
@@ -503,12 +530,12 @@ class _Sup:
 
 
 def test_the_overall_state_of_a_missing_capture_is_stopped() -> None:
-    assert app._overall_state(cast("Any", _Sup())) == "stopped"  # pyright: ignore[reportPrivateUsage]
+    assert app._overall_state(cast("Any", _Sup()), None) == "stopped"  # pyright: ignore[reportPrivateUsage]
 
 
 @pytest.mark.parametrize("state", ["starting", "stopping", "stopped", "crashed", "degraded"])
 def test_worker_backlog_shows_only_for_ready_capture(state: str) -> None:
-    got = app._overall_state(cast("Any", _Sup(capture=state, worker="backlog")))  # pyright: ignore[reportPrivateUsage]
+    got = app._overall_state(cast("Any", _Sup(capture=state, worker="backlog")), None)  # pyright: ignore[reportPrivateUsage]
     assert got != "backlog"
 
 
@@ -534,7 +561,7 @@ def test_the_degraded_icon_is_full_colour_and_the_restarting_one_is_faded() -> N
 def test_the_sidebar_words_and_dot_colours() -> None:
     js = (UI_DIR / "app.js").read_text("utf-8")
     start = js.index("const STATUS_LABELS")
-    end = js.index("let signedIn")
+    end = js.index("const processingLineEl")
     script = (
         js[start:end]
         + "\nconsole.log(JSON.stringify({L: STATUS_LABELS, D: DOT_CLASSES, "

@@ -16,11 +16,13 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol
 
+from akashic.log import FaultLog
 from akashic.storage import db
 from akashic.storage.gaps import HEARTBEAT_MS
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from sqlite3 import Connection
 
     from akashic.storage.gaps import GapKind, GapLog, GapReason
 
@@ -32,7 +34,17 @@ MERGE_WITHIN_MS: Final = 30_000
 MAX_PENDING_DROPS: Final = 10_000
 TICK_FLUSH_S: Final = 0.5  # keeps the pause and lock watch timely after a long backlog
 STOP_FLUSH_S: Final = 1.0
-STOP_BUSY_WAIT_MS: Final = 250  # the supervisor kills a stop that takes more than 10 s
+STOP_RETRY_S: Final = 0.05  # between attempts to write the stop
+STOP_BUSY_TIMEOUT_MS: Final = 250  # capture's stop must end before the supervisor's 10 s kill
+
+
+def limit_wait_at_stop(conn: Connection) -> None:
+    """Shorten the busy wait of ``conn`` to ``STOP_BUSY_TIMEOUT_MS``. Call it from the thread that
+    uses ``conn``. A failure leaves the full busy timeout in place."""
+    try:
+        db.limit_wait(conn, STOP_BUSY_TIMEOUT_MS)
+    except Exception as exc:  # noqa: BLE001 - the stop then waits the full busy timeout
+        log.warning("shortening the busy wait at stop failed: %s", type(exc).__name__)
 
 
 class GapSink(Protocol):
@@ -101,6 +113,7 @@ class CaptureGaps:
         self._now_ms = now_ms
         self._start_ms = start_ms
         self.stats: Counter[str] = Counter()
+        self._faults = FaultLog(log)
         self._lock = threading.Lock()
         self._events: deque[_Event] = deque()
         self._wanted: dict[GapKind, GapReason] = {}
@@ -146,6 +159,10 @@ class CaptureGaps:
             self._pending_spans += 1
             self._events.append(_Span(kind, reason, start_ms, end_ms, merge, bounded=True))
 
+    def stats_snapshot(self) -> dict[str, int]:
+        """Gap and fault counters merged into a copy."""
+        return dict(self.stats) | self._faults.counts()
+
     def run(
         self,
         stop: threading.Event,
@@ -158,29 +175,53 @@ class CaptureGaps:
                 self._tick(paused, halted, locked)
             except Exception as exc:  # noqa: BLE001 - gap bookkeeping must never stop capture
                 self.stats["tick_failed"] += 1
-                log.warning("capture gap tick failed: %s", type(exc).__name__)
+                self._faults.note("capture gap tick", exc)
             stop.wait(TICK_S)
 
-    def finish(self, stop_ms: int) -> None:
-        """Write the clean stop. Call after ``run`` has returned. Without a settled previous run,
-        or with events still unwritten, nothing is stopped: the next start then reads the
-        heartbeat and records a crash instead."""
+    def finish(self, stop_ms: int, until: float) -> None:
+        """Write the clean stop. Call after ``run`` has returned. A busy database is retried until
+        ``until`` (a ``time.monotonic`` time); then the events still unwritten are dropped and no
+        stop is written, so the next start reads the heartbeat and records a crash instead."""
         with self._lock:
             self._stopping = True  # recorder threads still running can no longer open or close rows
-        self._log.limit_wait(STOP_BUSY_WAIT_MS)
-        if not self._settle() or not self._flush(STOP_FLUSH_S) or self._has_pending():
-            return
-        self._log.stop(stop_ms)
+        limit_wait_at_stop(self._log.conn)
+        while not self._try_stop(stop_ms, until):
+            if time.monotonic() >= until:
+                self._drop_pending()
+                return
+            time.sleep(STOP_RETRY_S)
+
+    def _try_stop(self, stop_ms: int, until: float) -> bool:
+        flush_s = min(STOP_FLUSH_S, max(0.0, until - time.monotonic()))
+        if not self._settle() or not self._flush(flush_s) or self._has_pending():
+            return False
+        try:
+            self._log.stop(stop_ms)
+        except Exception as exc:
+            if not db.is_busy(exc):
+                raise
+            self._faults.note("writing the capture stop (busy database)", exc)
+            return False
         with self._lock:
             self._stop_written = True
+        return True
 
-    def flush_late(self) -> None:
-        """After ``finish``, write the drops reported while the audio writer drained. Only drops
-        can be queued by then, because ``finish`` stopped accepting transitions."""
+    def _drop_pending(self) -> None:
+        with self._lock:
+            dropped = len(self._events)
+            self._events.clear()
+            self._pending_spans = 0
+        self.stats["stop_dropped"] += dropped
+        log.warning("capture stop not written; dropped %d pending gap events", dropped)
+
+    def flush_late(self, until: float) -> None:
+        """After ``finish``, write until ``until`` (a ``time.monotonic`` time) the drops reported
+        while the audio writer drained. Only drops can be queued by then, because ``finish``
+        stopped accepting transitions."""
         with self._lock:
             stop_written = self._stop_written
         if stop_written:
-            self._flush(STOP_FLUSH_S)
+            self._flush(min(STOP_FLUSH_S, max(0.0, until - time.monotonic())))
 
     def _tick(
         self, paused: threading.Event, halted: threading.Event, locked: Callable[[], bool]
@@ -219,7 +260,7 @@ class CaptureGaps:
         try:
             return locked()
         except Exception as exc:  # noqa: BLE001 - keep the last known state
-            log.warning("reading the lock state failed: %s", type(exc).__name__)
+            self._faults.note("reading the lock state", exc)
             with self._lock:
                 return self._wanted.get("screen") == "locked"
 
@@ -227,9 +268,11 @@ class CaptureGaps:
         if not self._recovered:
             try:
                 self._log.recover(self._start_ms)
-            except Exception as exc:  # noqa: BLE001 - retried on the next tick
+            except Exception as exc:  # retried next tick or by finish; at stop others raise
+                if self._stopping and not db.is_busy(exc):
+                    raise
                 self.stats["recovery_failed"] += 1
-                log.warning("settling the previous capture run failed: %s", type(exc).__name__)
+                self._faults.note("settling the previous capture run", exc)
                 return False
             self._recovered = True
         return True
@@ -241,7 +284,7 @@ class CaptureGaps:
             self._log.heartbeat(now)
         except Exception as exc:  # noqa: BLE001 - retried on the next tick
             self.stats["heartbeat_failed"] += 1
-            log.warning("writing the capture heartbeat failed: %s", type(exc).__name__)
+            self._faults.note("writing the capture heartbeat", exc)
             return
         self._last_beat_ms = now
 
@@ -264,10 +307,10 @@ class CaptureGaps:
             except Exception as exc:  # noqa: BLE001 - one bad event must not block the queue
                 if db.is_busy(exc):
                     self.stats["write_busy"] += 1
-                    log.warning("writing a capture gap hit a busy database: %s", type(exc).__name__)
+                    self._faults.note("writing a capture gap (busy database)", exc)
                     return False
                 self.stats["write_rejected"] += 1
-                log.warning("a capture gap was rejected: %s", type(exc).__name__)
+                self._faults.note("writing a capture gap", exc)
                 if isinstance(event, _Span):
                     self._last_span.pop((event.kind, event.reason), None)
             self._discard(event)

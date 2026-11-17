@@ -27,11 +27,13 @@ from akashic.capture.debounce import Debouncer
 from akashic.capture.desk import Desk, visible_monitors
 from akashic.capture.exclusions import normalize_url
 from akashic.capture.gaming import GameMode, GameSettings
+from akashic.capture.health import HOOK_DOWN_PROBLEM_S, WINDOW_EVENTS_DOWN
 from akashic.capture.ports import BROWSERS
 from akashic.capture.screen_writer import Picture
 from akashic.capture.text import assemble_text
 from akashic.capture.uia_budget import BudgetedUia
 from akashic.capture.verdicts import Verdicts
+from akashic.log import FaultLog
 
 if TYPE_CHECKING:
     import threading
@@ -65,6 +67,7 @@ log = logging.getLogger(__name__)
 
 STATS_LOG_INTERVAL_S: Final = 300.0
 MONITOR_REFRESH_S: Final = 5.0
+HOOK_DOWN_RECHECK_S: Final = 5.0  # while the hook is down, act on it no more often than this
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,11 +155,23 @@ class ScreenCapture:
         self._own_address = False  # the failsafe holds: a browser window showed Akashic
         self._watched_at = float("-inf")
         self._rects: dict[int, Rect] = {}  # window rects of the last enumeration
+        self._down_since: float | None = None  # first unhealthy drain of the current run
+        self._down_acted_at = float("-inf")
         self._stats: Counter[str] = Counter()
+        self._faults = FaultLog(log, clock=clock)
 
     def stats_snapshot(self) -> dict[str, int]:
-        """Loop and UI Automation counters, merged into a copy that is safe to read elsewhere."""
-        return dict(self._stats) | dict(self._uia.stats)
+        """Loop, UI Automation and fault counters, merged into a copy that is safe to read
+        elsewhere."""
+        return dict(self._stats) | dict(self._uia.stats) | self._faults.counts()
+
+    def problems(self, now: float) -> list[str]:
+        """``[WINDOW_EVENTS_DOWN]`` once drains have stayed unhealthy for ``HOOK_DOWN_PROBLEM_S``;
+        safe from the publisher thread."""
+        down_since = self._down_since
+        if down_since is not None and now - down_since >= HOOK_DOWN_PROBLEM_S:
+            return [WINDOW_EVENTS_DOWN]
+        return []
 
     # --- lifecycle ---------------------------------------------------------------------------
 
@@ -164,6 +179,7 @@ class ScreenCapture:
         """Forget everything seen and held (used while halted or locked)."""
         self._desk.drop_all()
         self._events.drain()
+        self._down_since = None
         self._debouncer.clear()
         self._event_hwnds.clear()
         self._states.clear()
@@ -182,10 +198,11 @@ class ScreenCapture:
     def _end_game(self, *, notify: bool = False) -> None:
         """End the current game session, if any (pause, lock or shutdown). ``notify`` reports the
         end through ``on_game`` even when writing the end row fails."""
-        if self._game_mode.stop() is None:
+        ended = self._game_mode.stop()
+        if ended.ended is None:
             return
         try:
-            self._end_game_row()
+            self._end_game_row(ended.ended_ms)
         except Exception as exc:  # noqa: BLE001 - e.g. a busy database
             self._note_game_log_fault(exc)
         finally:
@@ -199,7 +216,6 @@ class ScreenCapture:
         failsafe watch reads browser addresses. The user's ``paused`` ends that watch too."""
         self._events.start()
         last_stats = self._clock()
-        last_logged: dict[str, float] = {}
         while not stop.wait(self._settings.poll_s):
             try:
                 if paused.is_set():
@@ -220,16 +236,10 @@ class ScreenCapture:
                     log.info("capture stats: %s", dict(sorted(self.stats_snapshot().items())))
             except Exception as exc:  # noqa: BLE001 - the screen loop must outlive any one fault
                 self._stats["loop_error"] += 1
-                self._log_loop_fault(type(exc).__name__, last_logged)
+                self._faults.note("screen loop iteration", exc)
                 for key, state in self._states.items():
                     state.noted = "failed"  # the next check composes and submits again
                     self._writer.capture_failures(key, 1)
-
-    def _log_loop_fault(self, name: str, last_logged: dict[str, float]) -> None:
-        now = self._clock()
-        if now - last_logged.get(name, float("-inf")) >= STATS_LOG_INTERVAL_S:
-            last_logged[name] = now
-            log.warning("screen loop iteration failed: %s", name)
 
     def _trip_own_address(self) -> None:
         """A visible browser window shows Akashic's own address: keep nothing of this check,
@@ -268,7 +278,7 @@ class ScreenCapture:
             self.reset()
             return
         monitors = self._refresh_monitors(now)
-        changes = self._events.drain()
+        changes = self._bounded(self._events.drain(), now)
         self._verdicts.note_events(changes)
         if not monitors:
             self._debouncer.clear()
@@ -291,13 +301,29 @@ class ScreenCapture:
         if due:
             self._check(monitors, due, windows, tick)
 
+    def _bounded(self, changes: WindowChanges, now: float) -> WindowChanges:
+        """While the hook stays down, only a drain ``HOOK_DOWN_RECHECK_S`` after the last acting
+        one is reported unhealthy: it requests every monitor and restarts every hold."""
+        if changes.healthy:
+            self._down_since = None
+            return changes
+        if self._down_since is None:
+            self._down_since = now
+            self._down_acted_at = now
+            return changes
+        if now - self._down_acted_at < HOOK_DOWN_RECHECK_S:
+            return replace(changes, healthy=True)
+        self._down_acted_at = now
+        return changes
+
     # --- scheduling --------------------------------------------------------------------------
 
     def _begin(self, monitors: Sequence[MonitorInfo], now: float) -> _Tick:
         """Poll the foreground window and the game state, once for the whole tick."""
         focused = self._windows.focused_window()
+        ts_ms = self._now_ms()
         self._record_transition(
-            self._game_mode.observe(focused, [m.rect for m in monitors], now), now
+            self._game_mode.observe(focused, [m.rect for m in monitors], now, ts_ms), now, ts_ms
         )
         game = self._game_mode.current
         if game is not None:
@@ -305,7 +331,7 @@ class ScreenCapture:
         self._poll_focus_and_input(focused, now)
         return _Tick(
             now=now,
-            ts_ms=self._now_ms(),
+            ts_ms=ts_ms,
             focused=focused,
             focus_key=_monitor_key_at(monitors, focused.rect.center) if focused else None,
             game_focused=game is not None
@@ -533,13 +559,15 @@ class ScreenCapture:
 
     # --- gaming mode -------------------------------------------------------------------------
 
-    def _record_transition(self, transition: Transition, now: float) -> None:
+    def _record_transition(self, transition: Transition, now: float, ts_ms: int) -> None:
         """Write the game rows and report the flag; a failed write is counted, not a grab fault."""
         try:
             if transition.ended is not None:
-                self._end_game_row()
+                self._end_game_row(transition.ended_ms)
             if transition.started is not None:
-                self._start_game_row(transition.started.process, transition.started.title, now)
+                self._start_game_row(
+                    transition.started.process, transition.started.title, now, ts_ms
+                )
         except Exception as exc:  # noqa: BLE001 - e.g. a busy database
             self._note_game_log_fault(exc)
         finally:
@@ -550,22 +578,20 @@ class ScreenCapture:
                 self._on_game(self._game_mode.active)
 
     def _note_game_log_fault(self, exc: Exception) -> None:
-        log.warning("game log write failed: %s", type(exc).__name__)
+        self._faults.note("game log write", exc)
         self._stats["game_log_error"] += 1
 
-    def _start_game_row(self, process: str, title: str, now: float) -> None:
-        self._game_id = self._games.open(
-            process=process, window_title=title or None, ts_ms=self._now_ms()
-        )
+    def _start_game_row(self, process: str, title: str, now: float, ts_ms: int) -> None:
+        self._game_id = self._games.open(process=process, window_title=title or None, ts_ms=ts_ms)
         log.info("game mode started for %s (fullscreen detection)", process)
         self._game_heartbeat_at = now
         self._stats["game_started"] += 1
 
-    def _end_game_row(self) -> None:
+    def _end_game_row(self, ended_ms: int) -> None:
         # Cleared first: a failed close leaves the open row to close_stale, never to a later end.
         game_id, self._game_id = self._game_id, None
         if game_id is not None:
-            self._games.close(game_id, self._now_ms())
+            self._games.close(game_id, ended_ms)
             log.info("game mode ended")
             self._stats["game_ended"] += 1
 

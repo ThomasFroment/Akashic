@@ -14,6 +14,8 @@ from akashic.capture.ports import AudioDevice, AudioError
 from akashic.capture.vad import WINDOW
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from numpy.typing import NDArray
 
     from akashic.capture.ports import AudioInput, AudioKind
@@ -22,6 +24,9 @@ RATE = 16_000
 WINDOW_MS = WINDOW * 1000 // RATE
 SETTINGS = AudioSettings(preroll_ms=96, hangover_ms=320, min_speech_ms=128)
 T0 = 1_700_000_000_000
+MIC = AudioDevice("mic-1", "Fake Mic")
+SYSTEM = AudioDevice("spk-1", "Fake Speakers")
+DEVICES = {"mic": MIC, "system": SYSTEM}
 
 
 def speech(windows: int, amplitude: float = 0.3) -> NDArray[np.float32]:
@@ -76,8 +81,8 @@ class FakeInput:
 class FakeDevices:
     def __init__(self) -> None:
         self.devices: dict[str, AudioDevice | None] = {
-            "mic": AudioDevice("mic-1", "Fake Mic"),
-            "system": AudioDevice("spk-1", "Fake Speakers"),
+            "mic": MIC,
+            "system": SYSTEM,
         }
         self.scripts: dict[str, list[list[NDArray[np.float32] | AudioError | None]]] = {
             "mic": [],
@@ -108,18 +113,26 @@ class FakeDevices:
 
 
 class FakeSessions:
-    """``names`` None is a failed enumeration (unknown), not silence; ``error`` is raised."""
+    """``names`` None is a failed enumeration (unknown), not silence; ``error`` is raised.
+
+    A bare frozenset is what the fake system device ("spk-1") is playing."""
 
     def __init__(
-        self, names: frozenset[str] | None = frozenset(), error: Exception | None = None
+        self,
+        names: frozenset[str] | dict[str, frozenset[str]] | None = frozenset(),
+        error: Exception | None = None,
     ) -> None:
         self.names = names
         self.error = error
+        self.refreshes: list[bool] = []
 
-    def active_processes(self) -> frozenset[str] | None:
+    def active_processes(self, *, refresh: bool = False) -> dict[str, frozenset[str]] | None:
+        self.refreshes.append(refresh)
         if self.error is not None:
             raise self.error
-        return self.names
+        if self.names is None or isinstance(self.names, dict):
+            return self.names
+        return {SYSTEM.device_id: self.names}
 
 
 class Clock:
@@ -144,26 +157,33 @@ class RecorderRig:
         settings: AudioSettings = SETTINGS,
         *,
         realtime: bool = False,
+        on_device: Callable[[str | None], None] = lambda _id: None,
     ) -> None:
         self.devices = FakeDevices()
         self.devices.realtime = realtime
         self.detector = FakeDetector()
         self.clock = Clock(T0)
         self.out: list[tuple[str, Utterance]] = []
+        self.out_devices: list[AudioDevice] = []
         self.stats: Counter[str] = Counter()
         self.recorder = StreamRecorder(
             kind=kind,
             devices=self.devices,
             detector=self.detector,
             settings=settings,
-            sink=lambda k, u: self.out.append((k, u)),
+            sink=self._sink,
             clock_ms=wall_clock_ms if realtime else self.clock,
             stats=self.stats,
+            on_device=on_device,
         )
+
+    def _sink(self, kind: AudioKind, utterance: Utterance, device: AudioDevice) -> None:
+        self.out.append((kind, utterance))
+        self.out_devices.append(device)
 
     def deliver(self, samples: np.ndarray, block_windows: int = 4) -> None:
         step = block_windows * 512
         for i in range(0, len(samples), step):
             block = samples[i : i + step]
             self.clock.now += len(block) * 1000 // RATE
-            self.recorder._consume(block, self.clock.now)
+            self.recorder._consume(block, self.clock.now, DEVICES[self.recorder.kind])

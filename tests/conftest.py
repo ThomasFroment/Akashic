@@ -7,12 +7,13 @@ import sys
 from typing import TYPE_CHECKING, Any, Final
 
 import pytest
+from export_world import World, build_world
 from screen_rig import Rig, build_rig
 from sink_spy import close_rig, make_rig_factory
 
 from akashic.config import Paths
-from akashic.storage import db
-from akashic.storage.crypto import Argon2Params, DataKey
+from akashic.storage import db, export
+from akashic.storage.crypto import Argon2Params, DataKey, wrap_data_key
 from akashic.storage.media import MediaStore
 
 if TYPE_CHECKING:
@@ -98,3 +99,19 @@ def make_rig(paths: Paths, key: DataKey) -> Iterator[Callable[..., Rig]]:
 
     yield build
     conn.close()
+
+
+@pytest.fixture
+def fast_keywrap(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The export wraps its new key with cheap Argon2 parameters (the keyfile records them)."""
+
+    def cheap(data_key: DataKey, passphrase: str) -> bytes:
+        return wrap_data_key(data_key, passphrase, FAST_ARGON2)
+
+    monkeypatch.setattr(export, "wrap_data_key", cheap)
+
+
+@pytest.fixture
+def world(paths: Paths, key: DataKey, conn: Connection, media: MediaStore) -> World:
+    """A live store with rows before, across, inside and after a range (see export_world)."""
+    return build_world(paths.root, key, conn, media)

@@ -46,9 +46,9 @@ class Rig:
         self.focus[0] = win
         self.browsers.publish(win, reason)
 
-    def at(self, seconds: float) -> None:
+    def at(self, seconds: float, *, locked: bool = False) -> None:
         self.clock[0] = int(seconds * 1000)
-        self.tracker.poll()
+        self.tracker.poll(locked=locked)
 
     def rows(self) -> list[tuple[str, str, str | None, int, int, int, int]]:
         return self.conn.execute(
@@ -191,9 +191,232 @@ def test_stalled_polling_is_not_counted_as_playing_time(make_rig: Callable[..., 
     rig = make_rig()
     rig.source.states = [playing()]
     rig.at(0)
-    rig.at(3600)  # the PC slept
+    rig.at(3600)  # the PC slept: the gap closes the row and is not played
     rig.tracker.close_all()
-    assert rig.rows()[0][5] == 10_000
+    assert [r[3:] for r in rig.rows()] == [(0, 0, 0, 1), (3_600_000, 3_600_000, 0, 1)]
+
+
+def paused(title: str = "Video A", app_id: str = "Z1") -> MediaState:
+    return MediaState(app_id, title, "Chan", "paused")
+
+
+def test_end_ms_stays_at_the_pause_point_through_heartbeats(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.source.states = [playing()]
+    for second in range(0, 11, 2):
+        rig.at(second)
+    assert rig.rows()[0][4] == 10_000  # playing: the latest poll
+    rig.source.states = [paused()]
+    rig.at(12)
+    for second in range(14, 60, 2):  # several 10 s heartbeats
+        rig.at(second)
+    assert rig.rows()[0][4:] == (12_000, 12_000, 0)
+
+
+@pytest.mark.parametrize("how", ["gone", "title", "long_pause", "halt", "excluded"])
+def test_every_close_of_a_paused_row_ends_at_the_pause_point(
+    make_rig: Callable[..., Rig], how: str
+) -> None:
+    rig = make_rig()
+    rig.focus_browser(window(process="chrome.exe", title="Video A - YouTube - Google Chrome"))
+    rig.source.states = [playing(app_id="C1")]
+    rig.at(0)
+    rig.source.states = [paused(app_id="C1")]
+    rig.at(2)  # paused since 2 s, 2 s played
+    rig.at(4)
+    rig.at(6)
+    if how == "gone":
+        rig.source.states = []
+        rig.at(8)
+    elif how == "title":
+        rig.source.states = [paused("Video B", "C1")]
+        rig.at(8)
+    elif how == "long_pause":
+        rig.at(2 + PAUSE_CLOSE_MS / 1000)
+    elif how == "excluded":
+        rig.focus_browser(
+            window(process="chrome.exe", title="Video A - YouTube - Google Chrome"), "finance"
+        )
+        rig.at(8)
+    else:
+        rig.clock[0] = 8000
+        rig.tracker.close_all()
+    assert rig.rows()[0][4:] == (2000, 2000, 1)
+    assert rig.events()[-1] == (2000, "stopped")
+
+
+def test_a_playing_row_closes_at_now_on_title_change_and_halt_and_at_the_last_poll_when_gone(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.source.states = [playing("Video A", app_id="Z1"), playing("Video C", app_id="C1")]
+    rig.at(0)
+    rig.at(2)
+    rig.source.states = [playing("Video B", app_id="Z1")]  # Z1 retitled, C1 gone
+    rig.at(4)
+    rig.clock[0] = 7000
+    rig.tracker.close_all()
+    rows = {r[1]: r[3:] for r in rig.rows()}
+    assert rows["Video A"] == (0, 4000, 4000, 1)
+    assert rows["Video C"] == (0, 2000, 2000, 1)
+    assert rows["Video B"] == (4000, 7000, 3000, 1)
+
+
+def test_a_gap_while_playing_closes_at_the_last_poll_and_reopens_on_the_same_poll(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.source.states = [playing()]
+    rig.at(0)
+    rig.at(2)
+    rig.at(100)
+    assert [r[3:] for r in rig.rows()] == [(0, 2000, 2000, 1), (100_000, 100_000, 0, 0)]
+
+
+def test_a_halt_after_a_gap_closes_at_the_last_poll(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.source.states = [playing()]
+    rig.at(0)
+    rig.at(2)
+    rig.clock[0] = 9 * 3_600_000
+    rig.tracker.close_all()
+    assert rig.rows()[0][4:] == (2000, 2000, 1)
+
+
+def test_no_row_opens_while_locked_until_the_first_unlocked_poll(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.source.states = [playing()]
+    rig.at(0, locked=True)
+    rig.at(2, locked=True)
+    assert rig.rows() == []
+    rig.at(4)
+    assert [r[3:] for r in rig.rows()] == [(4000, 4000, 0, 0)]
+
+
+def test_the_lock_never_closes_a_row_and_updates_it_as_usual(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.source.states = [playing()]
+    rig.at(0)
+    rig.at(2, locked=True)
+    rig.source.states = [paused()]
+    rig.at(4, locked=True)
+    rig.source.states = [playing()]
+    rig.at(6, locked=True)
+    rig.at(8, locked=True)
+    rig.at(10)
+    assert rig.rows()[0][6] == 0
+    assert [s for _, s in rig.events()] == ["playing", "paused", "playing"]
+    rig.tracker.close_all()
+    assert [r[3:] for r in rig.rows()] == [(0, 10_000, 8000, 1)]
+
+
+def test_a_title_change_while_locked_closes_the_old_row_and_opens_none(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.source.states = [playing("Video A")]
+    rig.at(0)
+    rig.source.states = [playing("Video B")]
+    rig.at(2, locked=True)
+    assert [(r[1], r[4], r[6]) for r in rig.rows()] == [("Video A", 2000, 1)]
+    rig.at(4)
+    assert [(r[1], r[6]) for r in rig.rows()] == [("Video A", 1), ("Video B", 0)]
+
+
+def test_halt_closes_every_row_even_while_locked(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    rig.source.states = [playing("A", app_id="Z1"), playing("B", app_id="C1")]
+    rig.at(0)
+    rig.at(2, locked=True)
+    rig.tracker.close_all()
+    assert [r[6] for r in rig.rows()] == [1, 1]
+
+
+def test_a_sleep_onto_the_lock_screen_closes_at_the_last_poll_and_reopens_when_unlocked(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    rig.source.states = [playing()]
+    rig.at(0)
+    rig.at(2)
+    rig.at(30_000, locked=True)
+    assert [r[3:] for r in rig.rows()] == [(0, 2000, 2000, 1)]
+    rig.at(30_002)
+    assert [r[3:] for r in rig.rows()] == [(0, 2000, 2000, 1), (30_002_000, 30_002_000, 0, 0)]
+
+
+# --- url_unknown: the lock clears the browser verdicts, an open row rides it out ---
+
+
+def unknown_verdict(rig: Rig) -> None:
+    rig.focus[0] = window(process="chrome.exe", title="Another tab - Google Chrome")
+
+
+def open_chrome_row(rig: Rig) -> None:
+    rig.focus_browser(window(process="chrome.exe", title="Video A - YouTube - Google Chrome"))
+    rig.source.states = [playing(app_id="C1")]
+    rig.at(0)
+    rig.at(2)
+
+
+def test_url_unknown_keeps_an_open_row_while_locked_and_on_the_first_poll_after(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    open_chrome_row(rig)
+    unknown_verdict(rig)
+    rig.at(4, locked=True)
+    rig.at(6)  # first unlocked poll
+    assert rig.rows()[0][6] == 0
+    assert "excluded:url_unknown" not in rig.tracker.stats
+    rig.tracker.close_all()
+    assert [r[3:] for r in rig.rows()] == [(0, 6000, 6000, 1)]
+
+
+def test_url_unknown_rejects_from_the_second_unlocked_poll(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    open_chrome_row(rig)
+    unknown_verdict(rig)
+    rig.at(4, locked=True)
+    rig.at(6)
+    rig.at(8)
+    assert [r[3:] for r in rig.rows()] == [(0, 6000, 6000, 1)]
+    assert rig.tracker.stats["excluded:url_unknown"] == 1
+
+
+def test_url_unknown_never_opens_a_row(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig()
+    unknown_verdict(rig)
+    rig.source.states = [playing(app_id="C1")]
+    rig.at(0, locked=True)
+    rig.at(2)
+    rig.at(4)
+    assert rig.rows() == []
+
+
+def test_a_title_change_on_a_held_poll_closes_the_row_and_opens_none(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    open_chrome_row(rig)
+    unknown_verdict(rig)
+    rig.source.states = [playing("Video B", app_id="C1")]
+    rig.at(4, locked=True)
+    assert [(r[1], r[4], r[6]) for r in rig.rows()] == [("Video A", 4000, 1)]
+
+
+def test_another_reason_closes_the_row_at_once_even_while_locked(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig()
+    open_chrome_row(rig)
+    rig.focus_browser(
+        window(process="chrome.exe", title="Video A - YouTube - Google Chrome"), "finance"
+    )
+    rig.at(4, locked=True)
+    assert [r[3:] for r in rig.rows()] == [(0, 2000, 2000, 1)]
 
 
 def test_private_browsing_sources_are_never_logged(make_rig: Callable[..., Rig]) -> None:

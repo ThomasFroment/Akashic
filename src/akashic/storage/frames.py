@@ -127,6 +127,10 @@ class FrameStore:
         self._media = media
 
     @property
+    def conn(self) -> Connection:
+        return self._conn
+
+    @property
     def media(self) -> MediaStore:
         """Where the screenshots live (retention and Settings delete files through it)."""
         return self._media

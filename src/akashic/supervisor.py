@@ -124,7 +124,7 @@ class Supervisor:
         )
         proc = self._spawn(spec, self._data_dir)
         child.proc = proc
-        child.state = "starting"
+        child.state = "ui_paused" if spec.ui_open else "starting"
         child.started_at = self._clock()
         child.restart_at = None
         stdin, stdout = proc.stdin, proc.stdout

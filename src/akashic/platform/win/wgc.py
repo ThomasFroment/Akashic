@@ -17,7 +17,6 @@ import itertools
 import logging
 import threading
 import time
-from collections import Counter
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import wraps
@@ -34,6 +33,7 @@ from winrt.windows.graphics.directx.direct3d11.interop import create_direct3d11_
 from winrt.windows.graphics.imaging import SoftwareBitmap
 
 from akashic.capture.ports import CapturedFrame
+from akashic.log import FaultLog
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -45,7 +45,6 @@ log = logging.getLogger(__name__)
 _PIXEL_FORMAT: Final = DirectXPixelFormat.B8_G8_R8_A8_UINT_NORMALIZED
 _BYTES_PER_PIXEL: Final = 4
 _RELEASE_TIMEOUT_SECONDS: Final = 0.3
-_WARN_INTERVAL_SECONDS: Final = 300.0
 _DEVICE_LOST_HRESULTS: Final = frozenset({0x887A0005, 0x887A0006, 0x887A0007})  # REMOVED/HUNG/RESET
 
 type _Size = tuple[int, int]
@@ -75,7 +74,7 @@ def _never_raises[**P, R](default: object) -> Callable[[Callable[P, R]], Callabl
             try:
                 return method(*args, **kwargs)
             except Exception as error:  # noqa: BLE001
-                cast("WgcCaptures", args[0]).warn(method.__name__, error)
+                cast("WgcCaptures", args[0]).faults.note(method.__name__, _hresult_text(error))
                 return cast("R", default)
 
         return guarded
@@ -157,19 +156,9 @@ class WgcCaptures:
         self._counter = itertools.count(1)
         self._lost = False
         self._closed = False
-        # Failures per "what: HRESULT", and when each was last logged. A window WGC refuses (an
-        # elevated one) is retried at every check: a line per failure would be one a second.
-        self._failures: Counter[str] = Counter()
-        self._warned_at: dict[str, float] = {}
-
-    def warn(self, what: str, error: Exception) -> None:
-        """Count the failure; log it at most once per ``_WARN_INTERVAL_SECONDS`` for its HRESULT."""
-        key = f"{what}: {_hresult_text(error)}"
-        self._failures[key] += 1
-        now = time.monotonic()
-        if now - self._warned_at.get(key, float("-inf")) >= _WARN_INTERVAL_SECONDS:
-            self._warned_at[key] = now
-            log.warning("%s (%d so far)", key, self._failures[key])
+        # A window WGC refuses (an elevated one) is retried at every check: a line per failure
+        # would be one a second.
+        self.faults = FaultLog(log)
 
     @_never_raises(default=False)
     def start(self, hwnd: int, min_interval_ms: int) -> bool:
@@ -269,7 +258,7 @@ class WgcCaptures:
                 self._captures[hwnd] = cap
                 cap.session.start_capture()
         except Exception as error:  # noqa: BLE001
-            self.warn("capture start failed", error)
+            self.faults.note("capture start", _hresult_text(error))
             with self._lock:
                 if self._captures.get(hwnd) is cap:
                     del self._captures[hwnd]
@@ -322,7 +311,7 @@ class WgcCaptures:
         """Lock must be held. Device loss waits for the next public call; any other error fails."""
         if self._captures.get(cap.hwnd) is not cap:
             return
-        self.warn("frame failed", error)
+        self.faults.note("frame", _hresult_text(error))
         if _is_device_lost(error):
             self._lost = True
         else:

@@ -22,6 +22,10 @@ class MediaLog:
     def __init__(self, conn: Connection) -> None:
         self._conn = conn
 
+    @property
+    def conn(self) -> Connection:
+        return self._conn
+
     def open(  # noqa: PLR0913 - one row's columns plus its first state
         self, *, app_id: str, app: str, title: str, artist: str | None, ts_ms: int, state: str
     ) -> int:

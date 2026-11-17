@@ -13,7 +13,7 @@ const grab = (start, end) => {
   return source.slice(a, b);
 };
 const code = [
-  grab("function resultRow(", "function searchField("),
+  grab("function momentHref(", "function searchField("),
   grab("const TEXT_SOURCE_LABELS", "// ---- routing"),
 ].join("\n");
 
@@ -30,24 +30,32 @@ const find = (node, pred, out = []) => {
 
 let rendered = null;
 let frame = null;
+const active = [];
+const replaced = [];
+const fallbacks = [];
+const clicks = {};
 const view = { replaceChildren: (...items) => { rendered = items; }, focus() {} };
 const context = vm.createContext({
   h, view, fmtTime: (ms) => `at ${ms}`, appName: (p) => p, thumb: () => null,
   metaLine: (...parts) => h("div", {}, ...parts), highlighted: (s) => [s],
-  iconButton: (_i, label) => h("button", {}, label), backButton: () => h("button", {}, "Back"),
-  lazyImg: () => h("img"), setActive() {}, visited: [], location: { replace() {} },
+  iconButton: (_i, label, opts = {}) => { clicks[label] = opts.onclick; return h("button", {}, label); },
+  backButton: (fallback) => { fallbacks.push(fallback); return h("button", {}, "Back"); },
+  lazyImg: () => h("img"), setActive: (name) => active.push(name), visited: [1, 2],
+  location: { replace: (href) => replaced.push(href) },
   document: { addEventListener() {}, removeEventListener() {} },
   getJson: async () => { if (!frame) throw new Error("gone"); return frame; },
-  encodeURIComponent, cleanup: () => {},
+  encodeURIComponent, URLSearchParams, cleanup: () => {},
 });
 vm.runInContext(code, context);
 
 (async () => {
   // Search, timeline and memory rows show the window title, falling back to the address.
   const row = vm.runInContext("resultRow", context);
-  const hit = { id: 4, window_id: 9, ts_ms: 1, process: "code.exe", title: "main.py", url: null, snippet: "x" };
-  assert.ok(text(row(hit, "search")).includes("main.py"));
-  assert.ok(text(row({ ...hit, title: null, url: "https://a.test" }, "search")).includes("https://a.test"));
+  const hit = { id: 4, window_id: 9, ts_ms: 1, monitor_id: 2, process: "code.exe", title: "main.py", url: null, snippet: "x" };
+  assert.ok(text(row(hit)).includes("main.py"));
+  assert.ok(text(row({ ...hit, title: null, url: "https://a.test" })).includes("https://a.test"));
+  // A result row opens the moment on the timeline, never the frame page.
+  assert.equal(row(hit).attrs.href, "#/moment/1?monitor=2&window=9");
 
   frame = {
     id: 4, ts_ms: 1700000000000, monitor_id: 1, has_image: false, prev_id: null, next_id: 5,
@@ -64,7 +72,11 @@ vm.runInContext(code, context);
       { id: 6, role: "shell", z: 5, rect: [0, 0, 1, 1] },
     ],
   };
-  await vm.runInContext("frameView(4, 'search')", context);
+  await vm.runInContext("frameView(4)", context);
+  assert.deepEqual(active, ["timeline"]);
+  assert.deepEqual(fallbacks, [`#/moment/${frame.ts_ms}?monitor=1`], "direct opening goes back to the moment");
+  clicks["Later moment (→)"]();
+  assert.deepEqual(replaced, ["#/frame/5"], "Later steps with no from parameter");
   const page = text(h("div", {}, ...rendered));
   const sections = find(h("div", {}, ...rendered), (n) => n.attrs.class === "window");
   assert.equal(sections.length, 4, "one block per app window, no hidden or shell rows");

@@ -136,8 +136,9 @@ function timelineView(apps, ts, monitorParam, windowParam) {
   const status = h("div", { class: "muted small", role: "status" });
   const bigName = h("h2", { class: "big-name" });
   const bigTile = monitorTile(null);
+  const bigTexts = h("a", { class: "big-texts" }, "Window texts");
   const bigBox = h("section", { class: "big", hidden: true },
-    h("div", { class: "big-head" }, bigName, iconButton("x", "Show the whole desk (Esc)", { onclick: () => closeBig() })), bigTile.el);
+    h("div", { class: "big-head" }, bigName, bigTexts, iconButton("x", "Show the whole desk (Esc)", { onclick: () => closeBig() })), bigTile.el);
   const clockLabel = h("div", { class: "strip-clock" });
   const axisStart = h("span");
   const axisEnd = h("span");
@@ -191,6 +192,8 @@ function timelineView(apps, ts, monitorParam, windowParam) {
     bigTile.el.style.width = `${(big.rect[2] - big.rect[0]) * bigScale}px`;
     bigTile.el.style.height = `${(big.rect[3] - big.rect[1]) * bigScale}px`;
     bigName.textContent = labels.get(big.id);
+    bigTexts.hidden = big.frame_id === null;
+    if (big.frame_id !== null) bigTexts.href = `#/frame/${big.frame_id}`;
     bigTile.update(big, labels.get(big.id), stage.ts_ms, (big.rect[2] - big.rect[0]) * bigScale, windowId);
   }
 

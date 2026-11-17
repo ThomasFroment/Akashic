@@ -21,7 +21,15 @@ from akashic.pipeline.scheduler import Scheduler
 from akashic.storage import db
 from akashic.storage.crypto import DataKey
 from akashic.storage.frames import FrameStore
-from akashic.storage.jobs import Job, JobQueue, NewJob, PermanentJobError
+from akashic.storage.jobs import (
+    BACKOFF_BASE_MS,
+    DEFER_MS,
+    DeferJob,
+    Job,
+    JobQueue,
+    NewJob,
+    PermanentJobError,
+)
 from akashic.storage.sessions import GameLog
 
 if TYPE_CHECKING:
@@ -224,6 +232,54 @@ def test_failing_job_is_retried_then_given_up(conn: Connection) -> None:
     assert conn.execute("SELECT state, error FROM jobs").fetchone() == ("failed", "RuntimeError")
 
 
+def test_a_deferred_job_waits_without_counting_an_attempt_or_giving_up(
+    conn: Connection, caplog: pytest.LogCaptureFixture
+) -> None:
+    clock = [NOW]
+    handler = Handler()
+    handler.failures = [DeferJob("model failed to load (RuntimeError)")] * 5
+    runner, queue = make_runner(conn, FakeLoad(), handler, clock=clock)
+    queue.enqueue(NewJob("work", "k", 1), NOW)
+    with caplog.at_level("DEBUG"):
+        for _ in range(5):  # max_attempts is 2
+            assert runner.step() == "ran"
+            assert conn.execute("SELECT state, attempts, run_after_ms FROM jobs").fetchone() == (
+                "pending",
+                0,
+                clock[0] + DEFER_MS,
+            )
+            assert runner.step() == "idle"  # still waiting
+            clock[0] += DEFER_MS
+    assert handler.gave_up == []
+    assert conn.execute("SELECT error FROM jobs").fetchone() == (None,)
+    deferrals = [r for r in caplog.records if "deferred" in r.getMessage()]
+    assert len(deferrals) == 5
+    assert all(r.getMessage().endswith("model failed to load (RuntimeError)") for r in deferrals)
+
+
+def test_a_refused_deferral_is_written_at_the_next_step_before_claiming(
+    conn: Connection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clock = [NOW]
+    handler = Handler()
+    handler.failures = [DeferJob("speaker models missing")]
+    runner, queue = make_runner(conn, FakeLoad(), handler, clock=clock)
+    queue.enqueue(NewJob("work", "a", 1), NOW)
+    queue.enqueue(NewJob("work", "b", 2), NOW)
+    calls = _busy_once(queue, monkeypatch, "defer")
+    with pytest.raises(sqlite3.OperationalError):
+        runner.step()
+    assert conn.execute("SELECT state FROM jobs WHERE key = 'a'").fetchone() == ("running",)
+    assert runner.step() == "ran"  # settles the deferral of "a", then runs "b"
+    assert len(calls) == 2
+    assert conn.execute("SELECT key, state, attempts FROM jobs ORDER BY id").fetchall() == [
+        ("a", "pending", 0),
+        ("b", "done", 1),
+    ]
+    assert handler.ran == ["b"]
+    assert handler.gave_up == []
+
+
 def test_permanent_errors_give_up_immediately(conn: Connection) -> None:
     handler = Handler()
     handler.failures = [PermanentJobError("gone")]
@@ -283,7 +339,9 @@ def test_worker_loop_derives_sessions_runs_jobs_and_reports_backlog(
         for i in range(BACKLOG_ON):
             queue.enqueue(NewJob("work", f"k{i}", i), NOW)
         ctx = RecordingContext(paths, conn, key)
-        thread = threading.Thread(target=worker.run_worker, args=(ctx, runner, queue, lambda: 2000))
+        thread = threading.Thread(
+            target=worker.run_worker, args=(ctx, runner, queue, lambda: False, lambda: 2000)
+        )
         thread.start()
         try:
             # Drained, reported "ready" and back to idling: the loop has gone past the last job.
@@ -322,7 +380,9 @@ def test_worker_loop_frees_models_while_a_game_runs(
         handler = Handler()
         runner, queue = make_runner(conn, FakeLoad(), handler)
         ctx = RecordingContext(paths, conn, key)
-        thread = threading.Thread(target=worker.run_worker, args=(ctx, runner, queue, lambda: 2000))
+        thread = threading.Thread(
+            target=worker.run_worker, args=(ctx, runner, queue, lambda: False, lambda: 2000)
+        )
         thread.start()
         try:
             # Several idle passes: enough for a running game to have forced an unload on each.
@@ -366,7 +426,9 @@ def test_worker_loop_waits_while_paused_and_survives_errors(
         queue.enqueue(NewJob("work", "after-resume", 1), NOW)
         ctx = RecordingContext(paths, conn, key)
         ctx.paused.set()
-        thread = threading.Thread(target=worker.run_worker, args=(ctx, runner, queue))
+        thread = threading.Thread(
+            target=worker.run_worker, args=(ctx, runner, queue, lambda: False)
+        )
         thread.start()
         try:
             assert wait_for(lambda: len(loop_errors) >= 3, 15)  # paused passes, each failing
@@ -412,7 +474,9 @@ def test_paused_worker_answers_questions_without_running_background_jobs(
             pytest.fail("housekeeping must stay paused")
 
         monkeypatch.setattr(worker, "housekeeping", no_housekeeping)
-        thread = threading.Thread(target=worker.run_worker, args=(ctx, runner, queue))
+        thread = threading.Thread(
+            target=worker.run_worker, args=(ctx, runner, queue, lambda: False)
+        )
         thread.start()
         try:
             # Both questions answered, then several idle passes in which background jobs stay put.
@@ -430,10 +494,173 @@ def test_paused_worker_answers_questions_without_running_background_jobs(
 
 def test_released_jobs_after_a_crash_run_again(conn: Connection) -> None:
     handler = Handler()
-    runner, queue = make_runner(conn, FakeLoad(), handler)
+    clock = [NOW]
+    runner, queue = make_runner(conn, FakeLoad(), handler, clock=clock)
     queue.enqueue(NewJob("work", "k", 1), NOW)
     assert queue.claim(["work"], NOW) is not None  # the previous worker died holding it
     assert runner.step() == "idle"
-    queue.release_running()
+    assert queue.release_running(NOW) == []
+    assert conn.execute("SELECT state FROM jobs").fetchall() == [("pending",)]
+    assert runner.step() == "idle"  # still backing off
+    clock[0] = NOW + BACKOFF_BASE_MS
     assert runner.step() == "ran"
     assert handler.ran == ["k"]
+
+
+# --- interrupted and unsettled jobs --------------------------------------------------------
+
+
+class GiveUpFails(Handler):
+    def give_up(self, job: Job) -> None:
+        super().give_up(job)
+        msg = "give_up broke"
+        raise RuntimeError(msg)
+
+
+def _busy_once(
+    queue: JobQueue, monkeypatch: pytest.MonkeyPatch, name: str, times: int = 1
+) -> list[tuple[tuple[object, ...], dict[str, object]]]:
+    """Make queue.<name> raise 'locked' ``times`` times; returns the calls seen."""
+    original = getattr(queue, name)
+    calls: list[tuple[tuple[object, ...], dict[str, object]]] = []
+
+    def flaky(*args: object, **kwargs: object) -> object:
+        calls.append((args, kwargs))
+        if len(calls) <= times:
+            msg = "database is locked"
+            raise sqlite3.OperationalError(msg)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(queue, name, flaky)
+    return calls
+
+
+def test_release_interrupted_gives_up_each_returned_job_once(conn: Connection) -> None:
+    handler = Handler()
+    runner, queue = make_runner(conn, FakeLoad(), handler)
+    queue.enqueue(NewJob("work", "spent", 1), NOW)
+    queue.enqueue(NewJob("work", "fresh", 2), NOW)
+    conn.execute("UPDATE jobs SET state = 'running', attempts = 2 WHERE key = 'spent'")
+    conn.execute("UPDATE jobs SET state = 'running', attempts = 1 WHERE key = 'fresh'")
+    runner.release_interrupted()
+    assert handler.gave_up == ["spent"]
+    assert conn.execute("SELECT key, state FROM jobs ORDER BY id").fetchall() == [
+        ("spent", "failed"),
+        ("fresh", "pending"),
+    ]
+
+
+def test_release_interrupted_skips_an_unknown_kind_and_logs_no_payload(
+    conn: Connection, caplog: pytest.LogCaptureFixture
+) -> None:
+    handler = Handler()
+    runner, queue = make_runner(conn, FakeLoad(), handler)
+    queue.enqueue(NewJob("ghost", "ghost:1", 1, {"secret": "hunter2"}), NOW)
+    queue.enqueue(NewJob("work", "work:1", 2), NOW)
+    conn.execute("UPDATE jobs SET state = 'running', attempts = 2")
+    with caplog.at_level("DEBUG"):
+        runner.release_interrupted()
+    assert handler.gave_up == ["work:1"]
+    (ghost_id,) = conn.execute("SELECT id FROM jobs WHERE kind = 'ghost'").fetchone()
+    assert "ghost" in caplog.text
+    assert str(ghost_id) in caplog.text
+    assert "hunter2" not in caplog.text
+
+
+def test_an_unsettled_complete_is_settled_before_the_paused_filter(
+    conn: Connection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    speech, ask = TranscriptionHandler(), AskHandler()
+    runner, queue = make_runner(conn, FakeLoad(), speech, ask)
+    queue.enqueue(NewJob("transcribe", "t:1", 1), NOW)
+    calls = _busy_once(queue, monkeypatch, "complete")
+    with pytest.raises(sqlite3.OperationalError):
+        runner.step()
+    assert conn.execute("SELECT state FROM jobs").fetchone() == ("running",)
+    assert runner.step(only=("ask", "embed_query", "stt_compare")) == "idle"
+    assert conn.execute("SELECT state FROM jobs").fetchone() == ("done",)
+    assert len(calls) == 2
+    assert speech.ran == ["t:1"]
+
+
+def test_an_unsettled_complete_is_written_before_the_next_job_is_claimed(
+    conn: Connection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    handler = Handler()
+    runner, queue = make_runner(conn, FakeLoad(), handler)
+    queue.enqueue(NewJob("work", "a", 1), NOW)
+    queue.enqueue(NewJob("work", "b", 2), NOW)
+    _busy_once(queue, monkeypatch, "complete", times=2)
+    for _ in range(2):  # still busy: nothing new is claimed
+        with pytest.raises(sqlite3.OperationalError):
+            runner.step()
+    assert handler.ran == ["a"]
+    assert conn.execute("SELECT key, state FROM jobs ORDER BY id").fetchall() == [
+        ("a", "running"),
+        ("b", "pending"),
+    ]
+    assert runner.step() == "ran"  # settles "a", then runs "b" in the same step
+    assert handler.ran == ["a", "b"]
+
+
+@pytest.mark.parametrize("permanent", [False, True])
+def test_an_unsettled_fail_is_retried_with_the_same_arguments(
+    conn: Connection, monkeypatch: pytest.MonkeyPatch, *, permanent: bool
+) -> None:
+    handler = Handler()
+    handler.failures = [PermanentJobError("gone") if permanent else RuntimeError("boom")]
+    runner, queue = make_runner(conn, FakeLoad(), handler)
+    queue.enqueue(NewJob("work", "k", 1), NOW)
+    calls = _busy_once(queue, monkeypatch, "fail")
+    with pytest.raises(sqlite3.OperationalError):
+        runner.step()
+    assert handler.gave_up == []
+    runner.step()
+    assert len(calls) == 2
+    (first, second) = calls
+    assert (
+        first[0][1:2] == second[0][1:2] == ("PermanentJobError" if permanent else "RuntimeError",)
+    )
+    assert first[1].get("permanent", False) == second[1].get("permanent", False) == permanent
+    state = conn.execute("SELECT state FROM jobs").fetchone()
+    assert state == (("failed",) if permanent else ("pending",))
+    assert handler.gave_up == (["k"] if permanent else [])
+    runner.step()
+    assert handler.gave_up == (["k"] if permanent else [])
+
+
+def test_an_unsettled_last_attempt_gives_up_exactly_once_after_fail_succeeds(
+    conn: Connection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    handler = Handler()
+    handler.failures = [RuntimeError("boom"), RuntimeError("boom")]
+    clock = [NOW]
+    runner, queue = make_runner(conn, FakeLoad(), handler, clock=clock)
+    queue.enqueue(NewJob("work", "k", 1), NOW)
+    assert runner.step() == "ran"  # attempt 1 fails, retry scheduled
+    clock[0] += 10**9
+    _busy_once(queue, monkeypatch, "fail", times=2)
+    for _ in range(2):
+        with pytest.raises(sqlite3.OperationalError):
+            runner.step()
+        assert handler.gave_up == []
+    runner.step()
+    assert handler.gave_up == ["k"]
+    runner.step()
+    assert handler.gave_up == ["k"]
+    assert conn.execute("SELECT state FROM jobs").fetchone() == ("failed",)
+
+
+def test_a_failing_give_up_does_not_leave_the_job_unsettled(
+    conn: Connection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    handler = GiveUpFails()
+    handler.failures = [PermanentJobError("gone")]
+    runner, queue = make_runner(conn, FakeLoad(), handler)
+    queue.enqueue(NewJob("work", "k", 1), NOW)
+    calls = _busy_once(queue, monkeypatch, "fail", times=0)
+    with pytest.raises(RuntimeError, match="give_up broke"):
+        runner.step()
+    assert runner.step() == "idle"
+    assert len(calls) == 1
+    assert handler.gave_up == ["k"]

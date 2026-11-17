@@ -6,12 +6,23 @@ from __future__ import annotations
 import io
 import sqlite3
 import threading
+import time
 from collections import Counter
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 import sqlcipher3
-from audio_fakes import SETTINGS, T0, Clock, FakeDetector, FakeDevices, FakeSessions, speech
+from audio_fakes import (
+    DEVICES,
+    MIC,
+    SETTINGS,
+    T0,
+    Clock,
+    FakeDetector,
+    FakeDevices,
+    FakeSessions,
+    speech,
+)
 from capture_fakes import (
     LONG_TEXT,
     FakeOcr,
@@ -26,6 +37,7 @@ from akashic.capture.audio import SegmentWriter, SourceSampler, StreamRecorder, 
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.gaps import (
     MAX_PENDING_DROPS,
+    STOP_BUSY_TIMEOUT_MS,
     CaptureGaps,
 )
 from akashic.capture.ocr_gate import OcrGate
@@ -280,6 +292,10 @@ def busy() -> Exception:
     return sqlcipher3.OperationalError("database is locked")
 
 
+def until(seconds: float = 5.0) -> float:
+    return time.monotonic() + seconds
+
+
 class Rig:
     def __init__(self, conn: Connection, start_ms: int = 10_000) -> None:
         self.conn = conn
@@ -494,6 +510,8 @@ def test_a_busy_write_stays_queued_and_ends_the_flush(rig: Rig, error: type[Exce
     rig.tick()
     assert rows(rig.conn) == []
     assert rig.gaps.stats["write_busy"] == 1  # one failure ended that tick
+    key = "writing a capture gap (busy database): " + error.__name__
+    assert rig.gaps.stats_snapshot() == {"write_busy": 1, key: 1}
     rig.tick()
     assert rows(rig.conn) == [("mic", "music", 1, 2), ("system", "music", 3, 4)]
 
@@ -556,6 +574,7 @@ def test_a_tick_that_raises_is_counted_and_the_loop_goes_on(
     monkeypatch.setattr(rig.gaps, "_tick", tick)
     rig.gaps.run(stop, rig.paused, rig.halted, lambda: False)
     assert rig.gaps.stats["tick_failed"] == 3
+    assert rig.gaps.stats_snapshot() == {"tick_failed": 3, "capture gap tick: RuntimeError": 3}
 
 
 def test_a_clock_jump_backwards_cannot_make_an_event_fail_forever(rig: Rig) -> None:
@@ -685,7 +704,7 @@ def test_a_clean_stop_closes_everything_and_opens_stopped(rig: Rig) -> None:
     rig.tick()
     rig.gaps.open("mic", "device_failed", 20_000)
     rig.tick()
-    rig.gaps.finish(50_000)
+    rig.gaps.finish(50_000, until())
     assert rows(rig.conn) == [
         ("all", "paused", 11_000, 50_000),
         ("screen", "locked", 11_000, 50_000),
@@ -697,17 +716,17 @@ def test_a_clean_stop_closes_everything_and_opens_stopped(rig: Rig) -> None:
 def test_stop_never_closes_a_row_before_its_own_start(rig: Rig) -> None:
     rig.gaps.open("mic", "device_failed", 90_000)
     rig.tick()
-    rig.gaps.finish(50_000)
+    rig.gaps.finish(50_000, until())
     assert ("mic", "device_failed", 90_000, 90_000) in rows(rig.conn)
 
 
 def test_transitions_after_the_stop_began_are_ignored(rig: Rig) -> None:
     rig.tick()
     rig.gaps.open("mic", "device_failed", 20_000)
-    rig.gaps.finish(50_000)
+    rig.gaps.finish(50_000, until())
     rig.gaps.open("system", "device_missing", 51_000)
     rig.gaps.close("mic", 52_000)
-    rig.gaps.flush_late()
+    rig.gaps.flush_late(until())
     assert rows(rig.conn) == [
         ("mic", "device_failed", 20_000, 50_000),
         ("all", "stopped", 50_000, None),
@@ -716,9 +735,9 @@ def test_transitions_after_the_stop_began_are_ignored(rig: Rig) -> None:
 
 def test_drops_reported_after_the_stop_are_written_late_as_closed_rows(rig: Rig) -> None:
     rig.tick()
-    rig.gaps.finish(50_000)
+    rig.gaps.finish(50_000, until())
     rig.gaps.drop("system", "backlog", 48_000, 49_000)
-    rig.gaps.flush_late()
+    rig.gaps.flush_late(until())
     assert rows(rig.conn) == [
         ("all", "stopped", 50_000, None),
         ("system", "backlog", 48_000, 49_000),
@@ -727,7 +746,7 @@ def test_drops_reported_after_the_stop_are_written_late_as_closed_rows(rig: Rig)
 
 def test_the_next_start_closes_the_stopped_row(conn: Connection, rig: Rig) -> None:
     rig.tick()
-    rig.gaps.finish(50_000)
+    rig.gaps.finish(50_000, until())
     again = Rig(conn, start_ms=60_000)
     again.tick()
     assert rows(conn) == [("all", "stopped", 50_000, 60_000)]  # and no crashed row
@@ -737,44 +756,88 @@ def test_the_next_start_closes_the_stopped_row(conn: Connection, rig: Rig) -> No
 def test_finish_retries_recovery_and_writes_the_stop_when_it_succeeds(rig: Rig) -> None:
     rig.log.fail["recover"] = [busy()]
     rig.tick()  # recovery fails
-    rig.gaps.finish(50_000)  # tries again, succeeds
+    rig.gaps.finish(50_000, until())  # tries again, succeeds
     assert rows(rig.conn) == [("all", "stopped", 50_000, None)]
 
 
-def test_if_recovery_still_fails_at_stop_nothing_is_flushed_and_no_stop_is_written(
-    rig: Rig,
-) -> None:
-    rig.log.fail["recover"] = [busy()] * 5
+def test_if_recovery_stays_busy_until_the_deadline_nothing_is_written(rig: Rig) -> None:
+    rig.log.fail["recover"] = [busy()] * 10_000
     rig.paused.set()
     rig.tick()
     rig.gaps.drop("mic", "music", 1, 2)
-    rig.gaps.finish(50_000)
-    rig.gaps.flush_late()
+    rig.gaps.finish(50_000, until(0.2))
+    rig.gaps.flush_late(until())
     assert rows(rig.conn) == []
+    assert rig.gaps.stats["stop_dropped"] == 2  # the paused row and the drop
 
 
-def test_events_still_pending_at_stop_mean_no_stopped_row(rig: Rig) -> None:
+def test_a_busy_write_at_stop_is_retried_and_the_stop_still_written(rig: Rig) -> None:
     rig.tick()
     rig.gaps.drop("mic", "music", 1, 2)
-    rig.log.fail["add"] = [busy()]
-    rig.gaps.finish(50_000)
+    rig.log.fail["add"] = [busy(), busy()]
+    rig.log.fail["stop"] = [busy()]
+    rig.gaps.finish(50_000, until())
+    assert [r[:2] for r in rows(rig.conn)] == [("mic", "music"), ("all", "stopped")]
+    assert rig.gaps.stats["stop_dropped"] == 0
+
+
+def test_events_still_pending_at_the_deadline_are_dropped_and_no_stopped_row_is_written(
+    rig: Rig,
+) -> None:
+    rig.tick()
+    rig.gaps.drop("mic", "music", 1, 2)
+    rig.log.fail["add"] = [busy()] * 10_000
+    rig.gaps.finish(50_000, until(0.2))
     assert [r for r in rows(rig.conn) if r[1] == "stopped"] == []
+    assert rig.gaps.stats["stop_dropped"] == 1
+    assert not rig.gaps._has_pending()
 
 
-def test_a_stop_that_was_not_written_is_recorded_as_a_crash_next_time(
+def test_a_stop_that_stays_busy_to_the_deadline_is_recorded_as_a_crash_next_time(
     conn: Connection, rig: Rig
 ) -> None:
     rig.tick()
     rig.paused.set()
     rig.tick()
-    rig.log.fail["stop"] = [busy()]
-    with pytest.raises(sqlcipher3.OperationalError):
-        rig.gaps.finish(50_000)
+    rig.log.fail["stop"] = [busy()] * 10_000
+    rig.gaps.finish(50_000, until(0.2))
     again = Rig(conn, start_ms=60_000)
     again.tick()
     found = rows(conn)
     assert ("all", "crashed", 11_000, 60_000) in found  # the first heartbeat
     assert ("all", "paused", 12_000, 60_000) in found  # nothing is left open
+
+
+def test_a_non_busy_error_writing_the_stop_gives_up_at_once(rig: Rig) -> None:
+    rig.tick()
+    rig.log.fail["stop"] = [sqlcipher3.IntegrityError("x")]
+    started = time.monotonic()
+    with pytest.raises(sqlcipher3.IntegrityError):
+        rig.gaps.finish(50_000, until(30.0))
+    assert time.monotonic() - started < 5.0
+    assert rig.log.calls.count("stop") == 1
+
+
+def test_a_non_busy_recovery_error_at_stop_gives_up_at_once(rig: Rig) -> None:
+    rig.log.fail["recover"] = [sqlcipher3.IntegrityError("x")]
+    started = time.monotonic()
+    with pytest.raises(sqlcipher3.IntegrityError):
+        rig.gaps.finish(50_000, until(30.0))
+    assert time.monotonic() - started < 5.0
+    assert rig.gaps.stats["stop_dropped"] == 0
+
+
+def test_finish_limits_the_busy_wait_on_the_gap_connection(rig: Rig) -> None:
+    rig.gaps.finish(50_000, until())
+    assert rig.conn.execute("PRAGMA busy_timeout").fetchone()[0] == STOP_BUSY_TIMEOUT_MS
+
+
+def test_flush_late_writes_only_until_the_time_it_is_given(rig: Rig) -> None:
+    rig.tick()
+    rig.gaps.finish(50_000, until())
+    rig.gaps.drop("system", "backlog", 48_000, 49_000)
+    rig.gaps.flush_late(time.monotonic())
+    assert [r[:2] for r in rows(rig.conn)] == [("all", "stopped")]  # no time left to write
 
 
 # --- the stream recorder's reports ------------------------------------------------------------
@@ -865,7 +928,7 @@ def test_a_read_error_opens_device_failed_and_releases_the_device() -> None:
 def test_a_loop_fault_opens_device_failed() -> None:
     r = Recorder()
     r.stop.set()
-    r.recorder._recover_from_fault("RuntimeError", r.stop)
+    r.recorder._recover_from_fault(RuntimeError("x"), r.stop)
     assert r.sink.events == [("open", "mic", "device_failed", T0)]
 
 
@@ -983,7 +1046,7 @@ class WriterRig:
     def __init__(self, store: AudioStore, sink: Any) -> None:  # noqa: ANN401
         self.clock = Clock(T0)
         self.sessions = FakeSessions(frozenset())
-        self.sampler = SourceSampler(self.sessions, self.clock)
+        self.sampler = SourceSampler(self.sessions, self.clock, Exclusions(UserExclusions()))
         self.sink = sink
         self.writer = SegmentWriter(
             store,
@@ -1005,7 +1068,7 @@ class WriterRig:
         self.clock.now = start + 500
         self.sampler.sample()
         utterance = Utterance(start, start + length, speech(60), 1_500, False)  # noqa: FBT003
-        return self.writer.write(kind, utterance)
+        return self.writer.write(kind, utterance, DEVICES[kind])
 
 
 MUSIC = frozenset({"spotify.exe"})
@@ -1042,7 +1105,7 @@ def test_a_full_writer_queue_reports_a_backlog_drop_that_never_merges(store: Aud
     w = WriterRig(store, spy)
     utterance = Utterance(T0, T0 + 1_000, speech(10), 800, False)  # noqa: FBT003
     for _ in range(WRITER_QUEUE + 2):
-        w.writer.submit("mic", utterance)
+        w.writer.submit("mic", utterance, MIC)
     drops = [e for e in spy.events if e[0] == "drop"]
     assert len(drops) == 2
     assert all(d[2] == "backlog" and d[5] is False for d in drops)
@@ -1064,7 +1127,7 @@ def test_a_write_that_fails_reports_write_failed(
     w.sampler.sample()
     stop = threading.Event()
     stop.set()
-    w.writer.submit("mic", Utterance(T0, T0 + 2_000, speech(60), 1_500, False))  # noqa: FBT003
+    w.writer.submit("mic", Utterance(T0, T0 + 2_000, speech(60), 1_500, False), MIC)  # noqa: FBT003
     w.writer.run(stop)
     assert spy.events == [("drop", "mic", "write_failed", T0, T0 + 2_000, False)]
 

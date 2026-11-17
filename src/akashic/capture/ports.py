@@ -29,6 +29,14 @@ BROWSERS: Final[dict[str, BrowserFamily]] = {
     "zen.exe": "firefox",
 }
 FRAME_HOST: Final = "applicationframehost.exe"  # hosts every UWP window; the app behind is unknown
+# Lower-case executable names whose sound means people are talking to each other.
+VOICE_APPS: Final = frozenset(
+    {
+        "discord.exe", "discordptb.exe", "discordcanary.exe", "teams.exe", "ms-teams.exe",
+        "zoom.exe", "skype.exe", "telegram.exe", "whatsapp.exe", "teamspeak.exe",
+        "ts3client_win64.exe", "mumble.exe", "guilded.exe", "slack.exe", "signal.exe",
+    }
+)  # fmt: skip
 
 
 @dataclass(frozen=True, slots=True)
@@ -329,10 +337,11 @@ class AudioDevices(Protocol):
 
 
 class AudioSessions(Protocol):
-    def active_processes(self) -> frozenset[str] | None:
-        """Lower-case executable names of processes making sound right now (any playback
-        device). Empty when nothing is audible; None when the OS could not be asked, which is
-        not the same thing: nobody knows what was playing."""
+    def active_processes(self, *, refresh: bool = False) -> dict[str, frozenset[str]] | None:
+        """Lower-case executable names of processes making sound right now, per playback
+        endpoint, keyed by ``AudioDevice.device_id``. An endpoint without a session manager is
+        left out; an empty set is silence; None means the OS could not be asked, which is not
+        the same thing: nobody knows what was playing. ``refresh`` re-reads the endpoints now."""
         ...
 
 

@@ -12,6 +12,10 @@ module has no model in it: it builds the sources and the prompt, and checks what
   did he say after that?" can be understood; only the new sources may be cited.
 - ``clean_answer`` drops citations the model invented (numbers with no source) and reports
   which sources the answer really used.
+- Spans of the asked time window that were not recorded (``GapSpan``; this module picks the gap
+  kinds for a plan and keeps only the lost spans, clipped and merged) go
+  into the prompt as a ``Not recorded:`` line and into the no-evidence reply, so silence is not
+  read as "nothing happened".
 - With no evidence at all there is no model call: ``no_evidence`` is the whole answer.
 """
 
@@ -30,7 +34,9 @@ if TYPE_CHECKING:
 
     from akashic.search.hybrid import LineHit, Results
     from akashic.search.planner import Plan
+    from akashic.storage.gaps import GapKind, GapSpan
 
+MAX_GAPS: Final = 10  # spans listed in a prompt or reply; the rest is counted
 MAX_EPISODES: Final = 5
 MAX_OVERVIEW_EPISODES: Final = 10
 MAX_LINES: Final = 6
@@ -49,6 +55,53 @@ _FRENCH_TEXT: Final = """
     aujourd'hui qu'est
 """
 _FRENCH: Final = frozenset(_FRENCH_TEXT.split())
+# (English, French) words for what was not recorded and why
+_GAP_KIND_WORDS: Final = {
+    "all": ("everything", "tout"),
+    "screen": ("screen", "écran"),
+    "screen_text": ("screen text", "texte de l'écran"),
+    "mic": ("microphone", "microphone"),
+    "system": ("system sound", "son du système"),
+}
+_GAP_REASON_WORDS: Final = {
+    "paused": ("recording paused", "enregistrement en pause"),
+    "stopped": ("app not running", "application arrêtée"),
+    "crashed": ("app crashed", "application plantée"),
+    "stalled": ("capture stalled", "capture bloquée"),
+    "locked": ("screen locked", "écran verrouillé"),
+    "ocr_unavailable": ("text reading unavailable", "lecture du texte indisponible"),
+    "audio_unavailable": ("audio unavailable", "audio indisponible"),
+    "disabled": ("turned off", "désactivé"),
+    "device_missing": ("device missing", "périphérique absent"),
+    "device_failed": ("device failed", "périphérique en panne"),
+    "unknown_sources": (
+        "speech or sound lost, source unknown",
+        "paroles ou sons perdus, source inconnue",
+    ),
+    "backlog": (
+        "speech lost, audio writer fell behind",
+        "paroles perdues, écriture audio en retard",
+    ),
+    "write_failed": (
+        "speech or sound lost, write failed",
+        "paroles ou sons perdus, écriture échouée",
+    ),
+    "ui_open": ("app window open", "fenêtre de l'application ouverte"),
+    "voice_elsewhere": (
+        "speech lost, voice chat on another device",
+        "paroles perdues, voix sur un autre périphérique",
+    ),
+}
+# Which capture gaps hide evidence of a planned kind (``all`` is always read too).
+_GAP_KINDS_OF_PLAN: Final[dict[str, tuple[GapKind, ...]]] = {
+    "conversation": ("mic", "system"),
+    "video": ("system",),
+    "music": ("system",),
+    "browsing": ("screen", "screen_text"),
+    "work": ("screen", "screen_text"),
+    "game": ("screen", "screen_text"),
+}
+_NOT_LOST: Final = frozenset({"excluded", "music"})  # gaps by choice, not lost evidence
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,14 +212,65 @@ def is_french(question: str) -> bool:
     return bool(words & _FRENCH)
 
 
-def no_evidence(question: str) -> str:
-    if is_french(question):
-        return "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
-    return "I found nothing in your memory that answers that question."
+def gap_kinds(plan: Plan) -> set[GapKind]:
+    """The gap kinds that can hide evidence for what the plan looks for."""
+    kinds: set[GapKind] = {"all"}
+    for planned in plan.kinds or _GAP_KINDS_OF_PLAN:
+        kinds.update(_GAP_KINDS_OF_PLAN.get(planned, ()))
+    return kinds
+
+
+def lost_spans(found: Sequence[GapSpan], a: int, b: int, now: int) -> list[GapSpan]:
+    """The spans that are lost evidence, clipped to [a, b] and merged by kind and reason.
+
+    Left out: excluded, music, and the UI still open now."""
+    merged: dict[tuple[str, str], list[GapSpan]] = {}
+    for span in found:
+        if span.reason in _NOT_LOST or (span.reason == "ui_open" and span.end_ms >= now):
+            continue
+        start, end = max(span.start_ms, a), min(span.end_ms, b)
+        if end <= start:
+            continue
+        same = merged.setdefault((span.kind, span.reason), [])
+        if same and start <= same[-1].end_ms:
+            same[-1] = replace(same[-1], end_ms=max(same[-1].end_ms, end))
+        else:
+            same.append(replace(span, start_ms=start, end_ms=end))
+    return sorted((s for spans in merged.values() for s in spans), key=lambda s: s.start_ms)
+
+
+def no_evidence(question: str, gaps: Sequence[GapSpan] = ()) -> str:
+    french = is_french(question)
+    refusal = (
+        "Je n'ai rien trouvé dans ta mémoire qui réponde à cette question."
+        if french
+        else "I found nothing in your memory that answers that question."
+    )
+    if not gaps:
+        return refusal
+    label = "Non enregistré :" if french else "Not recorded:"
+    return f"{refusal} {label} {_gap_list(gaps, french=french)}"
 
 
 def _clock(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000).astimezone().strftime("%Y-%m-%d %H:%M")
+
+
+def _gap_list(gaps: Sequence[GapSpan], *, french: bool) -> str:
+    """The longest ``MAX_GAPS`` spans in start order, each with what and why."""
+    lang = int(french)
+    longest = sorted(gaps, key=lambda g: g.end_ms - g.start_ms, reverse=True)[:MAX_GAPS]
+    items: list[str] = []
+    for gap in sorted(longest, key=lambda g: g.start_ms):
+        start, end = _clock(gap.start_ms), _clock(gap.end_ms)
+        until = end[11:] if end[:10] == start[:10] else end
+        items.append(
+            f"{start} - {until} ({_GAP_KIND_WORDS[gap.kind][lang]}: "
+            f"{_GAP_REASON_WORDS[gap.reason][lang]})"
+        )
+    more = len(gaps) - len(longest)
+    extra = f" (+{more} {'autres' if french else 'more'})" if more else ""
+    return "; ".join(items) + extra
 
 
 def _weekday(ms: int) -> str:
@@ -235,9 +339,10 @@ def answer_prompt(  # noqa: PLR0913 - question, evidence, conversation and cover
     history: Sequence[Turn] = (),
     *,
     overview_total: int | None = None,
+    gaps: Sequence[GapSpan] = (),
 ) -> tuple[str, str]:
-    """(system, user) messages: the question, what was searched, the sources as data, and the
-    earlier turns of the conversation when it is a follow-up."""
+    """(system, user) messages: the question, what was searched, the spans not recorded, the
+    sources as data, and the earlier turns of the conversation when it is a follow-up."""
     blocks = [
         f'<source n="{s.n}" kind="{s.kind}" time="{_clock(s.start_ms)}"'
         f' label="{_neutralise(s.label)}"{UNCLEAR_ATTR if s.unclear else ""}>'
@@ -246,6 +351,16 @@ def answer_prompt(  # noqa: PLR0913 - question, evidence, conversation and cover
     ]
     searched = (
         f"{_clock(plan.time.start_ms)} to {_clock(plan.time.end_ms)}" if plan.time else "any time"
+    )
+    not_recorded = (
+        _neutralise(
+            "Not recorded (nothing is known about these spans; when they matter to the "
+            "question, say they were not recorded and never say nothing happened then): "
+            f"{_gap_list(gaps, french=False)}"
+        )
+        + "\n"
+        if gaps
+        else ""
     )
     coverage = ""
     if plan.overview:
@@ -267,7 +382,7 @@ def answer_prompt(  # noqa: PLR0913 - question, evidence, conversation and cover
                 )
     user = (
         f"Now: {_weekday(now_ms)} {_clock(now_ms)} (local time)\n"
-        f"Searched: {searched}\n{coverage}\n<sources>\n"
+        f"Searched: {searched}\n{not_recorded}{coverage}\n<sources>\n"
         + "\n".join(blocks)
         + "\n</sources>\n\n"
         + _conversation(history)

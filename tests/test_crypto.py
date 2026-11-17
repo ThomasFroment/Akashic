@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 import pytest
 from conftest import FAST_ARGON2
@@ -13,16 +13,11 @@ from akashic.storage.crypto import (
     DecryptionError,
     KeyfileError,
     WrongPassphraseError,
-    change_passphrase,
     decrypt_blob,
     encrypt_blob,
     unwrap_data_key,
     wrap_data_key,
-    write_keyfile_atomic,
 )
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def _doc(contents: bytes) -> dict[str, object]:
@@ -157,27 +152,6 @@ def test_missing_wrap_section() -> None:
         unwrap_data_key(json.dumps(doc).encode(), "pass phrase")
 
 
-# Pins change_passphrase: delete or rewrite with M14.4.
-def test_change_passphrase_keeps_data_key(tmp_path: Path) -> None:
-    path = tmp_path / "db" / "keyfile"
-    key = DataKey.generate()
-    write_keyfile_atomic(path, wrap_data_key(key, "old passphrase", FAST_ARGON2))
-    change_passphrase(path, "old passphrase", "new passphrase", FAST_ARGON2)
-    assert unwrap_data_key(path.read_bytes(), "new passphrase").raw() == key.raw()
-    with pytest.raises(WrongPassphraseError):
-        unwrap_data_key(path.read_bytes(), "old passphrase")
-    assert not path.with_name("keyfile.tmp").exists()
-
-
-def test_change_passphrase_with_wrong_old_leaves_file(tmp_path: Path) -> None:
-    path = tmp_path / "keyfile"
-    write_keyfile_atomic(path, wrap_data_key(DataKey.generate(), "old passphrase", FAST_ARGON2))
-    before = path.read_bytes()
-    with pytest.raises(WrongPassphraseError):
-        change_passphrase(path, "nope nope", "new passphrase", FAST_ARGON2)
-    assert path.read_bytes() == before
-
-
 def test_data_key_wipe_and_repr() -> None:
     key = DataKey.generate()
     assert "redacted" in repr(key)
@@ -293,3 +267,9 @@ def test_in_range_tampered_parameters_fail_authentication_not_validation() -> No
     for field, value in (("memory_kib", 16 * 1024), ("parallelism", 2)):
         with pytest.raises(WrongPassphraseError):
             unwrap_data_key(_tamper(contents, "kdf", field, value), "pass phrase")
+
+
+def test_change_passphrase_is_gone_and_the_rest_of_the_keyfile_api_stays() -> None:
+    assert not hasattr(crypto, "change_passphrase")
+    for name in ("wrap_data_key", "unwrap_data_key", "write_keyfile_atomic", "DataKey"):
+        assert hasattr(crypto, name)

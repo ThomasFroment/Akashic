@@ -179,8 +179,8 @@ function momentHref(ts, monitor = null, windowId = null) {
   return `#/moment/${ts}` + (query ? "?" + query : "");
 }
 
-function resultRow(hit, back) {
-  return h("a", { class: "row", href: `#/frame/${hit.id}?from=${encodeURIComponent(back)}` },
+function resultRow(hit) {
+  return h("a", { class: "row", href: momentHref(hit.ts_ms, hit.monitor_id, hit.window_id) },
     thumb(hit),
     h("div", { class: "row-body" },
       metaLine(fmtTime(hit.ts_ms), hit.process ? appName(hit.process) : ""),
@@ -246,7 +246,7 @@ function screenSearch(root, apps, saved) {
     if (!hits.length && !append) {
       results.append(h("div", { class: "empty" }, input.value ? "Nothing matches." : "Nothing captured yet."));
     }
-    for (const hit of hits) results.append(resultRow(hit, "search"));
+    for (const hit of hits) results.append(resultRow(hit));
     offset += hits.length;
     more.hidden = hits.length < PAGE;
     lastSearch = { q: input.value, process: appSel.value, from: from.value, to: to.value };
@@ -320,8 +320,8 @@ const TEXT_SOURCE_LABELS = {
   ocr_deferred: "screen reading after the game (OCR)",
 };
 
-async function frameView(id, from) {
-  setActive(from === "memory" ? null : "search");
+async function frameView(id) {
+  setActive("timeline");
   let f;
   try { f = await getJson(`/api/frames/${id}`); } catch {
     view.replaceChildren(h("div", { class: "column empty" }, "That moment no longer exists."));
@@ -331,9 +331,9 @@ async function frameView(id, from) {
   const go = (target) => {
     if (!target) return;
     visited.pop();
-    location.replace(`#/frame/${target}?from=${encodeURIComponent(from)}`);
+    location.replace(`#/frame/${target}`);
   };
-  const fallback = from === "memory" ? "#/" : "#/search";
+  const fallback = momentHref(f.ts_ms, f.monitor_id);
   const shot = f.has_image
     ? lazyImg("shot", `/api/frames/${f.id}/image`, "Screenshot")
     : h("div", { class: "noshot" }, "No screenshot was kept for this moment.");
@@ -375,7 +375,7 @@ async function route() {
   const hash = location.hash.replace(/^#/, "") || "/";
   const [path, query = ""] = hash.split("?");
   const params = new URLSearchParams(query);
-  const from = params.get("from") || "search";
+  const mine = ++routeSeq;
   const frame = /^\/frame\/(\d+)$/.exec(path);
   const episode = /^\/episode\/(\d+)$/.exec(path);
   const chat = /^\/ask\/(\d+)$/.exec(path);
@@ -385,20 +385,31 @@ async function route() {
     view.replaceChildren(h("div", { class: "column empty" }, REOPEN));
     return;
   }
-  if (frame) await frameView(Number(frame[1]), from);
-  else if (moment) timelineView(await appList(), Number(moment[1]), params.get("monitor"), params.get("window"));
+  if (frame) await frameView(Number(frame[1]));
+  else if (moment) {
+    const apps = await appList();
+    if (mine !== routeSeq) return;
+    timelineView(apps, Number(moment[1]), params.get("monitor"), params.get("window"));
+  }
   else if (path === "/timeline") {
     // Recording is paused while this page shows, so "now" is never recorded: open on the latest moment.
     const [apps, latest] = await Promise.all([appList(), getJson(`/api/stage?ts=${Date.now()}`).catch(() => ({}))]);
+    if (mine !== routeSeq) return;
     timelineView(apps, latest.prev_ms ?? Date.now(), null, null);
   }
-  else if (path === "/search") searchView(await appList(), params.get("tab"));
+  else if (path === "/search") {
+    const apps = await appList();
+    if (mine !== routeSeq) return;
+    searchView(apps, params.get("tab"));
+  }
   else if (path === "/speakers") speakersView();
   else if (episode) await episodeView(Number(episode[1]));
   else if (chat) await chatView(Number(chat[1]));
   else if (path === "/settings") settingsView(params.get("tab"));
   else memoryView();
 }
+
+let routeSeq = 0;
 
 // ---- mobile menu ----------------------------------------------------------------------------
 const menuBtn = document.getElementById("menu-btn");
@@ -424,9 +435,12 @@ const PROBLEM_WORDS = {
   audio_unavailable: "audio recording could not start",
   mic_unavailable: "the microphone could not be read for a minute",
   system_audio_unavailable: "system audio could not be read for a minute",
+  mic_segments_dropped: "some microphone speech could not be saved in the last minute",
+  system_segments_dropped: "some system audio could not be saved in the last minute",
   screen_images_failing: (where) => `screenshots are failing${where}`,
   screen_frames_dropped: (where) => `screenshots${where} are being dropped because saving cannot keep up`,
   screen_disk_full: (where) => `screenshots${where} can't be saved because the disk is full`,
+  window_events_down: "window changes are not being detected, so screenshots may come late and some browser windows may stay blank",
 };
 // A screen problem arrives as "<code>@<monitor label>".
 function problemWords(problem) {
@@ -438,6 +452,35 @@ function problemSentence(codes) {
   const words = (codes || []).map(problemWords).filter(Boolean);
   const what = words.length ? words.join("; ") : "part of the recording is not working";
   return `Recording has problems: ${what}. The Debug page has details.`;
+}
+
+const processingLineEl = document.getElementById("processing-line");
+const processingText = document.getElementById("processing-text");
+const KIND_WORDS = {
+  transcribe: "transcription", speakers: "speaker recognition", embed: "search indexing",
+  embed_query: "search", ask: "answering questions", ocr_window: "text recognition",
+  stt_compare: "speech comparison", retention: "cleanup",
+};
+const recordings = (n) => `${n} recording${n === 1 ? "" : "s"}`;
+
+// The processing problem to show under the capture status, as {text, detail}, or null.
+function processingLine(s) {
+  const p = s.processing;
+  const failed = p?.failed.transcribe ?? 0;
+  const failedSentence = failed ? ` ${recordings(failed)} could not be transcribed.` : "";
+  const more = " The Debug page has details.";
+  if (s.attention === "processing_stopped") {
+    return { text: "Processing stopped", detail: `The processing worker is not running.${failedSentence}${more}` };
+  }
+  if (s.attention === "needs_attention") {
+    if (p.blocked.length) {
+      const what = p.blocked.map((k) => KIND_WORDS[k] ?? k).join(", ");
+      return { text: "Needs attention", detail: `${what[0].toUpperCase()}${what.slice(1)} can't run: something needed is missing. See Settings › Models.${failedSentence}${more}` };
+    }
+    return { text: "Needs attention", detail: `Transcription made no progress for over an hour.${failedSentence}${more}` };
+  }
+  if (failed) return { text: `${recordings(failed)} could not be transcribed`, detail: `${failedSentence.trim()}${more}` };
+  return null;
 }
 
 let signedIn = true;  // until the server says otherwise (401)
@@ -456,12 +499,20 @@ async function refreshStatus() {
     const detail = capture === "gaming" ? gameReason : capture === "degraded" ? problemSentence(s.capture_problems) : "";
     statusText.title = detail;
     statusText.setAttribute("aria-label", detail || statusText.textContent);
+    const line = processingLine(s);
+    processingLineEl.hidden = !line;
+    if (line) {
+      processingText.textContent = line.text;
+      processingText.title = line.detail;
+      processingText.setAttribute("aria-label", `${line.text}. ${line.detail}`);
+    }
     statusCount.textContent = `${s.frames.toLocaleString()} moments` + (s.processes.capture === "gaming" ? ` · ${s.game_process ? appName(s.game_process) : "fullscreen app"} detected` : "");
     pauseBtn.hidden = false;
     pauseBtn.textContent = paused ? "Resume" : "Pause";
     if (wasSignedOut) { loadRecents(); route(); }
   } catch (e) {
     dot.className = "dot";
+    processingLineEl.hidden = true;
     if (e.status === 401) signedIn = false;
     statusText.textContent = e.status === 401 ? "Reopen from the tray" : "Not reachable";
     pauseBtn.hidden = true;

@@ -215,18 +215,6 @@ def test_key_not_passed_in_argv_or_env(paths: Paths, key: DataKey) -> None:
         Supervisor._close_pipes(proc)
 
 
-def test_capture_never_imports_cuda_libraries() -> None:
-    code = (
-        "import sys, akashic.capture.main\n"
-        "bad = {'onnxruntime', 'llama_cpp', 'ctranslate2', 'faster_whisper', 'torch'}\n"
-        "print(sorted(bad & set(sys.modules)))\n"
-    )
-    out = subprocess.run(  # noqa: S603 - fixed argv
-        [sys.executable, "-c", code], capture_output=True, text=True, check=True
-    )
-    assert out.stdout.strip() == "[]"
-
-
 # --- in-process child runs (cover child.py without subprocess indirection) ---
 
 

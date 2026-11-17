@@ -23,6 +23,7 @@ from akashic.pipeline.embed import (
     query_job,
 )
 from akashic.pipeline.main import housekeeping, model_folder_has_gguf
+from akashic.pipeline.speakers import OnnxVoiceModels, model_paths
 from akashic.search.semantic import query_vector, semantic_ready
 from akashic.storage import embeddings
 from akashic.storage.jobs import Job, JobQueue, PermanentJobError
@@ -36,6 +37,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from akashic.child import ChildContext
+    from akashic.config import Paths
 
     type Vector = NDArray[np.float32]
 
@@ -292,17 +294,19 @@ def test_when_the_worker_does_not_answer_the_api_gives_up(conn: Connection) -> N
 # --- housekeeping --------------------------------------------------------------------------
 
 
-def test_housekeeping_builds_episodes_and_queues_their_embedding(conn: Connection) -> None:
+def test_housekeeping_builds_episodes_and_queues_their_embedding(
+    conn: Connection, paths: Paths
+) -> None:
     add_media(conn, "A video", LONG_AGO, LONG_AGO + 10 * MINUTE)
     queue = JobQueue(conn)
-    ctx = cast("ChildContext", SimpleNamespace(conn=conn, config=Config()))
-    housekeeping(ctx, queue, NOW)
+    ctx = cast("ChildContext", SimpleNamespace(conn=conn, config=Config(), paths=paths))
+    housekeeping(ctx, queue, NOW, lambda: False)
     assert conn.execute("SELECT count(*) FROM episodes").fetchone()[0] == 1
     assert claimed(queue, EMBED).payload["kind"] == "episode"
 
 
 def test_housekeeping_does_not_queue_embeddings_older_than_their_retention(
-    conn: Connection,
+    conn: Connection, paths: Paths
 ) -> None:
     add_media(conn, "Old video", LONG_AGO, LONG_AGO + 10 * MINUTE)
     config = Config(
@@ -310,9 +314,48 @@ def test_housekeeping_does_not_queue_embeddings_older_than_their_retention(
         search=SearchSettings("m"),
     )
     queue = JobQueue(conn)
-    ctx = cast("ChildContext", SimpleNamespace(conn=conn, config=config))
-    housekeeping(ctx, queue, NOW + 3 * 86_400_000)
+    ctx = cast("ChildContext", SimpleNamespace(conn=conn, config=config, paths=paths))
+    housekeeping(ctx, queue, NOW + 3 * 86_400_000, lambda: False)
     assert queue.pending_count([EMBED]) == 0
+
+
+def _speakers_keys(conn: Connection) -> list[str]:
+    return [r[0] for r in conn.execute("SELECT key FROM jobs WHERE kind = 'speakers'")]
+
+
+def test_housekeeping_queues_missing_speakers_only_when_both_voice_models_exist(
+    conn: Connection, paths: Paths
+) -> None:
+    segment = add_segment(conn, LONG_AGO)
+    conn.execute("UPDATE audio_segments SET audio_path = 'a/b.enc' WHERE id = ?", (segment,))
+    ctx = cast("ChildContext", SimpleNamespace(conn=conn, config=Config(), paths=paths))
+    queue = JobQueue(conn)
+    files = model_paths(paths.models_dir)
+    voices = OnnxVoiceModels(*files, idle_unload_s=1.0)
+    housekeeping(ctx, queue, NOW, voices.available)
+    assert _speakers_keys(conn) == []
+    files[0].parent.mkdir(parents=True)
+    files[0].write_bytes(b"x")
+    housekeeping(ctx, queue, NOW, voices.available)
+    assert _speakers_keys(conn) == []  # one of the two is still missing
+    files[1].parent.mkdir(parents=True)
+    files[1].write_bytes(b"x")
+    housekeeping(ctx, queue, NOW, voices.available)
+    assert _speakers_keys(conn) == [f"speakers:{segment}"]
+    conn.execute("DELETE FROM jobs WHERE kind = 'speakers'")
+    housekeeping(ctx, queue, NOW, voices.available)
+    assert _speakers_keys(conn) == []  # once: the watermark is set
+
+
+def test_housekeeping_asks_the_voice_models_not_the_folder(conn: Connection, paths: Paths) -> None:
+    segment = add_segment(conn, LONG_AGO)
+    conn.execute("UPDATE audio_segments SET audio_path = 'a/b.enc' WHERE id = ?", (segment,))
+    ctx = cast("ChildContext", SimpleNamespace(conn=conn, config=Config(), paths=paths))
+    queue = JobQueue(conn)
+    housekeeping(ctx, queue, NOW, lambda: False)
+    assert _speakers_keys(conn) == []
+    housekeeping(ctx, queue, NOW, lambda: True)  # no model file exists under paths
+    assert _speakers_keys(conn) == [f"speakers:{segment}"]
 
 
 def test_the_model_folder_check(tmp_path: Path) -> None:

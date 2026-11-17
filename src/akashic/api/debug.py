@@ -15,6 +15,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from akashic.api import logview
 from akashic.storage import db
+from akashic.storage.audio import retry_failed_transcriptions
 from akashic.storage.debuginfo import ProcessInfo
 
 if TYPE_CHECKING:
@@ -160,12 +161,20 @@ def _action_routes(services: Services) -> APIRouter:
 
     @router.post("/jobs/retry")
     def retry_jobs() -> Json:  # pyright: ignore[reportUnusedFunction]
-        """Make every waiting or failed job runnable now (skips retry delays, resets attempts)."""
-        with services.db() as conn, db.transaction(conn) as tx:
-            changed = tx.execute(
-                "UPDATE jobs SET state = 'pending', run_after_ms = 0, attempts = 0, error = NULL"
-                " WHERE state IN ('pending', 'failed')"
-            ).rowcount
+        """Make every waiting or failed job runnable now (skips retry delays, resets attempts),
+        and queue failed transcriptions that still have audio again."""
+        try:
+            with services.db() as conn:
+                with db.transaction(conn) as tx:
+                    changed = tx.execute(
+                        "UPDATE jobs SET state = 'pending', run_after_ms = 0, attempts = 0,"
+                        " error = NULL WHERE state IN ('pending', 'failed')"
+                    ).rowcount
+                retry_failed_transcriptions(conn, time.time_ns() // 1_000_000)
+        except db.DB_ERRORS as exc:
+            if not db.is_busy(exc):
+                raise
+            raise HTTPException(503, "database busy, try again") from exc
         return {"retried": changed}
 
     @router.post("/segments/{segment_id}/retranscribe")

@@ -29,12 +29,18 @@ LABELS: Final = {
     "gaming": "Recording (game mode)",
     "degraded": "Recording (with problems)",
     "backlog": "Recording (catching up on transcripts)",
+    "processing_stopped": "Recording, but processing stopped",
+    "needs_attention": "Recording, but processing needs attention",
     "paused": "Paused",
     "ui_open": "Not recording while Akashic is open",
     "starting": "Starting…",
     "restarting": "Restarting…",
     "stopped": "Stopped",
 }
+
+
+def _title(state: str, detail: str) -> str:
+    return f"Akashic: {LABELS.get(state, state)}" + (f" · {detail}" if detail else "")
 
 
 @cache
@@ -50,7 +56,7 @@ def make_icon(state: str) -> Image.Image:
     while starting or stopped."""
     alpha = _logo_alpha()
     colour = ACCENT if state != "paused" else GREY
-    if state not in {"recording", "gaming", "degraded", "backlog", "paused"}:
+    if state in {"ui_open", "starting", "restarting", "stopped"}:
         alpha = alpha.point([v * 60 // 100 for v in range(256)])
     img = Image.new("RGBA", (SIZE, SIZE), colour)
     img.putalpha(alpha)
@@ -62,19 +68,21 @@ def make_icon(state: str) -> Image.Image:
 
 
 class Tray:
-    def __init__(
+    def __init__(  # noqa: PLR0913 - one callback per tray feature, all keyword-only
         self,
         *,
         state: Callable[[], str],
+        detail: Callable[[], str],
         open_ui: Callable[[], None],
         toggle_pause: Callable[[], None],
         quit_app: Callable[[], None],
         lock_app: Callable[[], None] = lambda: None,
     ) -> None:
         self._state = state
+        self._detail = detail
         self._quit_app = quit_app
         self._lock_app = lock_app
-        self._shown = state()
+        self._shown = (state(), detail())
 
         def toggle_label(_item: pystray.MenuItem) -> str:
             return "Resume" if self._state() == "paused" else "Pause"
@@ -90,7 +98,7 @@ class Tray:
             pystray.MenuItem("Lock", self.lock),
             pystray.MenuItem("Quit", self.quit),
         )
-        self._icon = pystray.Icon("akashic", make_icon(self._shown), "Akashic", menu)
+        self._icon = pystray.Icon("akashic", make_icon(self._shown[0]), _title(*self._shown), menu)
 
     def quit(self) -> None:
         self._quit_app()
@@ -102,13 +110,15 @@ class Tray:
         self._icon.stop()
 
     def refresh(self) -> None:
-        """Redraw the icon if the state changed. Safe to call from any thread."""
-        state = self._state()
-        if state != self._shown:
-            self._shown = state
+        """Redraw the icon and tooltip if the state or detail changed. Safe from any thread."""
+        state, detail = self._state(), self._detail()
+        if (state, detail) == self._shown:
+            return
+        if state != self._shown[0]:
             self._icon.icon = make_icon(state)
-            self._icon.title = f"Akashic: {LABELS.get(state, state)}"
-            self._icon.update_menu()
+        self._shown = (state, detail)
+        self._icon.title = _title(state, detail)
+        self._icon.update_menu()
 
     def run(self) -> None:
         self._icon.run()

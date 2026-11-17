@@ -26,6 +26,30 @@ Three parts:
 - **Part C, needs the real dataset:** transcription, speaker identity and episode rules whose right
   behaviour depends on the user's own audio, screens and habits. Starts on the A8 export.
 
+## Epic: Recording readiness
+
+Untouchable: none
+Tracks A3, A5, A6, A7, A8, A9 (OPEN), B1, B3, B6, B9, B10 items; their lines are ticked in F16.
+
+- [x] F0 Shared groundwork
+- [x] F1 Shared fault log
+- [x] F2 Media and game session ends (after F1)
+- [x] F3 Bounded capture stop (after F0, F2)
+- [x] F4 Drops as capture problems (after F3)
+- [x] F5 Hook-down bound (after F4)
+- [x] F6 Seeded continuation (after F4)
+- [x] F7 Endpoint attribution (after F0, F6)
+- [x] F8 Ask gap coverage (after F0)
+- [x] F9 Queue exits
+- [x] F10 Missing models block nothing (after F0, F9)
+- [x] F11 Encrypted export
+- [x] F12 Processing status (after F5, F10, F11)
+- [x] F13 UI leftovers and moment links (after F0, F12)
+- [x] F14 Pending decisions (after F5, F11)
+- [x] F15 Scorers and held-out
+- [x] F16 Guides and ticks (after F0–F15)
+- [x] Integration + full tests
+
 ## Epic: Monitor capture and timeline
 
 Untouchable: none
@@ -112,11 +136,11 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
   - [x] Guard `capture.close()` in `run_capture`'s finally so a DB error can't skip the joins
   - [x] Clear `_game_id` when the game end-row write raises; leave the row to `close_stale`
   - [x] Per-HWND UIA backoff after a timeout; time-box the readers without a `UiaBudget`
-  - [ ] Shorter `busy_timeout` once stop is set, so a busy database at stop fits the 10 s kill
-  - [ ] One rate-limited, type-only fault log shared by the screen, audio, media and gap loops
+  - [x] Shorter `busy_timeout` once stop is set, so a busy database at stop fits the 10 s kill
+  - [x] One rate-limited, type-only fault log shared by the screen, audio, media and gap loops
     (replaces `_log_fault` in capture/audio.py, `_log_loop_fault` in capture/screen.py and
     `warn` in platform/win/wgc.py)
-  - [ ] Report dropped audio segments and failed frame writes as capture problems (with #143)
+  - [x] Report dropped audio segments and failed frame writes as capture problems (with #143)
   - [ ] Keep UIA text on very large pages (filtered `read_text` on the 30k-element page: worst 1.9 s Edge, 1.8 s Chrome, against the 2 s timeout; target <= 666 ms)
 
 ### A4. Screen coverage
@@ -132,8 +156,10 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
 
 ### A5. Audio recording
 
-- [ ] #131 Keep a seeded continuation's short fresh speech after a 30 s cut; keep the quiet check
-- [ ] #151 Attribute only the recorded endpoint's processes; log a gap when voice plays elsewhere
+- [x] #131 Keep a seeded continuation's short fresh speech after a 30 s cut; keep the quiet check
+- [x] #151 Attribute only the recorded endpoint's processes; log a gap when voice plays elsewhere
+- [ ] Record a second loopback on the device voice chat plays on when it is not the recorded one
+  (today only a `voice_elsewhere` gap; check the Wave Link routing first, CHECKLIST audio 7)
 - [ ] #152 Music-app audio: drop songs, keep segments with evidence of real speech (D7)
 - [ ] #110 Spike per-process loopback for the Discord process tree before building it
 - [ ] Explore per-app audio streams (process loopback, include and exclude modes) (after #110)
@@ -144,9 +170,9 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
 
 ### A6. Media sessions
 
-- [ ] #167 Freeze `end_ms` while paused and close at `paused_since` (tracker side)
-- [ ] #142 After a poll gap (suspend), close at `last_poll_ms`; close games when last seen
-- [ ] #146 Close media rows only on Akashic pause, not on lock or UAC prompts
+- [x] #167 Freeze `end_ms` while paused and close at `paused_since` (tracker side)
+- [x] #142 After a poll gap (suspend), close at `last_poll_ms`; close games when last seen
+- [x] #146 Close media rows only on Akashic pause, not on lock or UAC prompts
 - [x] #145 `find_url`: same process, title prefix, skip search engines, no lock-in within 120 s
 - [ ] Lead: spike several media sessions per browser (§9)
 
@@ -156,7 +182,7 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
   - [x] Pause, lock, missing or failed audio device, gated drops (screen drops: A9 states)
   - [x] OCR unavailable, capture process down
   - [x] Covered by retention and "Delete all" (after B4 #10)
-- [ ] Shared overlapping-gaps reader (open rows end at heartbeat or now), with its first consumer
+- [x] Shared overlapping-gaps reader (open rows end at heartbeat or now), with its first consumer
 - [ ] Own retention key for gaps if "longest limit, only when every type has one" proves wrong
 
 ### A9. Monitor capture and timeline (before A8)
@@ -256,6 +282,8 @@ captured pixels and titles in memory; reports hold numbers only.
     (`Verdicts` and the focused-window text read share the one capture thread today)
     - [x] Spike first: comtypes UIA calls from several MTA threads (`WindowsUia` is one-thread today)
   - [ ] A slow or hung window on one monitor never delays another
+  - [ ] Re-check a monitor sooner (`min_gap_s`) while its frame shows a held or pending window,
+    so a held browser is not blank until the side rate (also while the event hook is down)
   - [x] Black monitor stores no image, only its window list and any focused-window UIA text
   - [x] Encoding off the loop, bounded queue; full: drop the oldest side-monitor frame
   - [x] Health per monitor: failure and drop runs; full disk reported as a problem
@@ -303,10 +331,10 @@ captured pixels and titles in memory; reports hold numbers only.
 
 ### A8. Dataset export (gate to Part C)
 
-- [ ] Encrypted export for agent testing (DECISIONS, 2026-11-12)
-  - [ ] An explicit user action copies the database and media, optionally by date range or category
-  - [ ] Re-encrypted under a new passphrase; opens with `AKASHIC_DATA_DIR`; no plaintext temp files
-  - [ ] Live store unchanged; writers stopped or a consistent snapshot; no partial export left
+- [x] Encrypted export for agent testing (DECISIONS, 2026-11-12)
+  - [x] An explicit user action copies the database and media, optionally by date range or category
+  - [x] Re-encrypted under a new passphrase; opens with `AKASHIC_DATA_DIR`; no plaintext temp files
+  - [x] Live store unchanged; writers stopped or a consistent snapshot; no partial export left
 
 Then the user records daily use with Part A in place and exports it; Part C works on that export.
 
@@ -319,15 +347,17 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] #113 Cases: both target questions in one thread, runs at 00:40 and 09:00, ≥ 8 videos
   - [ ] #113 `eval_hard_memory` embeds `semantic_query`, not the whole question
   - [ ] #124 One test from capture rows through `build_episodes` to the video answer
-- [ ] Scorers accept only right answers
-  - [ ] #114 Facts on word boundaries after removing `[n]`; reject alternatives seen in distractors
-  - [ ] #115 Abstention: no cited in-window episode, anchored refusal, `forbid` on every question
-  - [ ] #116 Score cited-episode precision; forbid other-day and other-kind titles
-- [ ] Honest reporting
-  - [ ] #118 Freeze a held-out set; report development and held-out apart; say so in README.md
+- [x] Scorers accept only right answers
+  - [x] #114 Facts on word boundaries after removing `[n]`; reject alternatives seen in distractors
+  - [x] #115 Abstention: no cited in-window episode, anchored refusal, `forbid` on every question
+  - [x] #116 Score cited-episode precision; forbid other-day and other-kind titles
+- [x] Honest reporting
+  - [x] #118 Freeze a held-out set; report development and held-out apart; say so in README.md
   - [x] #126 `--repeats N` and `--output` JSON; compare per question with one stored baseline
-  - [ ] #127 `lang` per question, per-language results, mixed-language lines and questions
+  - [x] #127 `lang` per question, per-language results, mixed-language lines and questions
 - [ ] Fixtures cover real failure shapes
+  - [ ] Question shapes beyond the AGENTS.md examples, FR and EN: game kind ("what solo game"),
+    names read off the screen ("the Minecraft Rust project"), counts, places, people
   - [ ] #125 Noisy and low-confidence anchor lines, with questions that require a hedge
   - [ ] #123 Mixed, unattributed and mis-attributed speaker decoys in the Ask fixtures
   - [ ] #124 Content-free Debug counter: unbuilt sessions, oldest age, horizon age
@@ -359,14 +389,14 @@ Then the user records daily use with Part A in place and exports it; Part C work
 
 ### B3. Processing never stops silently
 
-- [ ] Missing models block nothing
-  - [ ] #30 Run mic speaker jobs without models; queue none while the speaker models are absent
-  - [ ] #31 Transcript horizon gates only media and conversations; games and app runs use the gap
-  - [ ] #41 Remember model load failures and report them from `blocked()`; jobs stay pending
+- [x] Missing models block nothing
+  - [x] #30 Run mic speaker jobs without models; queue none while the speaker models are absent
+  - [x] #31 Transcript horizon gates only media and conversations; games and app runs use the gap
+  - [x] #41 Remember model load failures and report them from `blocked()`; jobs stay pending
 - [ ] Every queue state has an exit
-  - [ ] #154 `release_running` fails jobs at `max_attempts` (`give_up`) and backs off the rest
-  - [ ] #155 "Run waiting jobs now" also resets failed segments, so transcription reruns
-  - [ ] #156 Retry `complete()`/`fail()` on `OperationalError`; release orphaned `running` jobs
+  - [x] #154 `release_running` fails jobs at `max_attempts` (`give_up`) and backs off the rest
+  - [x] #155 "Run waiting jobs now" also resets failed segments, so transcription reruns
+  - [x] #156 Retry `complete()`/`fail()` on `OperationalError`; release orphaned `running` jobs
   - [ ] #33 Embed give-up marks ids skipped (or retries one by one); purge old failed jobs
   - [ ] #40 Ask jobs get 1–2 attempts; no server restart within a run after a failed start
   - [ ] #42 STT comparison re-checks game and heavy gates between clips and requeues the rest
@@ -416,11 +446,13 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] RAM-only list of captured media titles vetoes time words inside titles (`PRAGMA data_version`)
   - [ ] Time C5 retrieval: keep lines by overlap; extend to a voice call crossing the window
   - [ ] #45 Read "il y a 2h" and "2h ago" as durations, never as a clock time
+  - [ ] Explicit ranges ("between 14:00 and 15:00", "entre 14h et 15h") give that window
+    (today the first clock time becomes a one-hour window, 13:30-14:30)
 - [ ] Lists and evidence
   - [ ] #177 Topic-free questions: chronological order, "N of M", up to `MAX_OVERVIEW_EPISODES`
   - [ ] #176 With people, time or kinds set, append the remaining eligible lines, newest first
   - [ ] Flagged or unclear text never alone supports a factual answer (D9)
-  - [ ] #143 List overlapping capture gaps in Ask's coverage line (after A7)
+  - [x] #143 List overlapping capture gaps in Ask's coverage line (after A7)
 - [ ] Planner rules
   - [ ] #182 Topic keywords in French and English; prefix terms for words of 4+ characters
   - [ ] #183 Extend the stopwords; filter model keywords for cues, names and time words
@@ -428,7 +460,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] #50 Strip the quoted name key once and use it for both the test and the lookup
 - [ ] Answers and citations
   - [ ] #185 Sources give start and end; links open at the excerpt's segment and time
-  - [ ] Search hits and Ask "Related moments" open the timeline moment
+  - [x] Search hits and Ask "Related moments" open the timeline moment
     (`#/moment/<ts>?monitor=&window=`) instead of `#/frame/<id>` (found in A9)
   - [ ] #186 Raise `max_tokens` and mark truncation; flag uncited answers as unsupported
   - [ ] #53 `episode_lines` drops empty and expired lines before applying the limit
@@ -459,8 +491,8 @@ Then the user records daily use with Part A in place and exports it; Part C work
 
 ### B9. App shell and health
 
-- [ ] #157 `/api/status`: worker state, blocked kinds, failed count, oldest pending, horizon age
-- [ ] #157 Tray and sidebar show "needs attention" and "processing stopped"
+- [x] #157 `/api/status`: worker state, blocked kinds, failed count, oldest pending, horizon age
+- [x] #157 Tray and sidebar show "needs attention" and "processing stopped"
 - [ ] Debug page: screen writer counters (stored, dropped, failed, OCR ran or reused,
   deferred, encode time) (found in A9)
 - [ ] #67 Type-only `threading.excepthook`; guard the monitor loop body
@@ -472,8 +504,8 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] #72 `Services.close()` under `_lock`
 - [ ] #73 Category deletion maps `OSError`/`CryptoError` like "Delete all"
 - [ ] #74 `python -I` for autostart, `Akashic.cmd` and child spawns
-- [ ] Remove the low-disk warning `disk_warning_free_gb` (2026-11-12); old configs still load
-  - [ ] Also drop the "Verify the disk-space warning" line of tests/manual/CHECKLIST.md
+- [x] Remove the low-disk warning `disk_warning_free_gb` (2026-11-12); old configs still load
+  - [x] Also drop the "Verify the disk-space warning" line of tests/manual/CHECKLIST.md
     (Settings, retention and diagnostics, item 3)
 - [ ] Lead: isolated Edge `--app` window for the UI (§9) (after A9: any visible UI page
   halts recording)
@@ -483,7 +515,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] Single sources of truth
   - [x] #1 Move `pipeline/jobs.py` to `storage/jobs.py` (2026-11-10); layout test checks direction
   - [ ] #2 `query_vector` to `pipeline/query.py` or `api/`; `UNCLEAR_BELOW` to a neutral module
-  - [ ] #4 `JobQueue` gains `retry_failed`, `replace`, `has_pending`, `oldest_pending`, `key_for`
+  - [ ] #4 `JobQueue` gains `retry_failed`, `replace`, `has_pending`, `key_for`
   - [ ] #5 Handlers declare the resources they use; the runner idles conflicting ones
   - [ ] #6 Define job kinds once, next to the queue
   - [ ] #7 Add `storage/questions.py` and `storage/stt_samples.py`; HTTP handlers hold no SQL
@@ -497,12 +529,12 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] #12 Use `models.is_ready`/`is_complete` instead of `glob("*.gguf")`
   - [x] #14 Regenerate the ARCHITECTURE.md layout from the tree; state the real dependency rules
 - [ ] Dead code and stale docs
-  - [ ] #91 Delete `change_passphrase` and its tests; reword SECURITY.md and STORAGE.md (2026-11-10)
+  - [x] #91 Delete `change_passphrase` and its tests; reword SECURITY.md and STORAGE.md (2026-11-10)
   - [ ] #90 Drop `media_sessions_fts` and its triggers if still unread; keep `media_events` (user)
   - [ ] #93 Delete `_WORD_TOKEN`, `WHISPER_MODELS` and dead CSS; rewrite that test on `REGISTRY`
   - [ ] #94 Build `REGISTRY` from `SPEECH_CANDIDATES`; keep the GPT-OSS 20B and Qwen3 14B choices
-  - [ ] #95 Debug uses settings, the storage report and `Paths.db_file`; no 50 GB warning
-  - [ ] Drop the capture CPU-only rule from code (DECISIONS row removed 2026-11-15): the
+  - [ ] #95 Debug uses settings, the storage report and `Paths.db_file` (50 GB note gone, Recording readiness F14)
+  - [x] Drop the capture CPU-only rule from code (DECISIONS row removed 2026-11-15): the
     `capture/main.py` and `capture/vad.py` docstrings and the two no-CUDA capture tests
     (`test_processes.py`, `test_audio_wiring.py`); the voice detector may stay on CPU
   - [ ] #96 Fix citations to absent docs and deleted manual tests; correct the CUDA/cuDNN claim

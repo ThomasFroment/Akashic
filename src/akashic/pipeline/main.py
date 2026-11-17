@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Final
 from akashic.child import ChildContext, run_child
 from akashic.pipeline.ask import ASK, AskHandler
 from akashic.pipeline.embed import EMBED_QUERY, EmbedHandler, QueryEmbedHandler, enqueue_missing
-from akashic.pipeline.episodes import build_episodes
+from akashic.pipeline.episodes import build_episodes, horizon_ms
 from akashic.pipeline.llm import (
     CHAT_FLAGS,
     EMBEDDING_FLAGS,
@@ -30,7 +30,7 @@ from akashic.pipeline.speech import make_transcriber
 from akashic.pipeline.stt_compare import STT_COMPARE, STTCompareHandler
 from akashic.pipeline.transcribe import TranscribeHandler
 from akashic.storage import embeddings
-from akashic.storage.audio import AudioStore
+from akashic.storage.audio import AudioStore, enqueue_missing_speakers
 from akashic.storage.debuginfo import ProcessInfo
 from akashic.storage.frames import FrameStore
 from akashic.storage.jobs import JobQueue
@@ -85,9 +85,15 @@ def model_folder_has_gguf(folder: Path) -> bool:
     return folder.is_dir() and any(folder.glob("*.gguf"))
 
 
-def housekeeping(ctx: ChildContext, queue: JobQueue, now_ms: int) -> None:
+def housekeeping(
+    ctx: ChildContext, queue: JobQueue, now_ms: int, voices_available: Callable[[], bool]
+) -> None:
     """Cheap periodic derivations and cleanup."""
     derive_app_sessions(ctx.conn, now_ms)
+    if voices_available():
+        queued = enqueue_missing_speakers(ctx.conn, now_ms)
+        if queued:
+            log.info("speakers jobs queued for %d earlier segments", queued)
     built = build_episodes(ctx.conn, now_ms)
     if any(built.values()):
         log.info("episodes built: %s", ", ".join(f"{k}={n}" for k, n in built.items()))
@@ -110,6 +116,7 @@ class _Heartbeat:
     """Tells the log (once per change) and the Debug page (every few seconds) why jobs wait."""
 
     def __init__(self, ctx: ChildContext, runner: JobRunner, queue: JobQueue) -> None:
+        self._conn = ctx.conn
         self._info = ProcessInfo(ctx.conn)
         self._runner = runner
         self._queue = queue
@@ -128,6 +135,7 @@ class _Heartbeat:
             return
         self._last_published = clock_s
         try:
+            health = self._queue.health(now_ms)
             self._info.publish(
                 "worker",
                 {
@@ -135,6 +143,9 @@ class _Heartbeat:
                     "last_outcome": outcome,
                     "pending_jobs": self._queue.pending_count(),
                     **self._runner.status(),
+                    "horizon_ms": horizon_ms(self._conn, now_ms),
+                    "failed": health.failed,
+                    "oldest_pending_ms": health.oldest_pending_ms,
                 },
                 now_ms,
             )
@@ -142,10 +153,11 @@ class _Heartbeat:
             log.warning("publishing debug info failed: %s", type(exc).__name__)
 
 
-def run_worker(
+def run_worker(  # noqa: PLR0913, PLR0917 - the loop's collaborators and its two clocks
     ctx: ChildContext,
     runner: JobRunner,
     queue: JobQueue,
+    voices_available: Callable[[], bool],
     now_ms: Callable[[], int] = lambda: time.time_ns() // 1_000_000,
     clock: Callable[[], float] = time.monotonic,
 ) -> None:
@@ -159,7 +171,7 @@ def run_worker(
         if not paused and clock() - last_housekeeping >= HOUSEKEEPING_INTERVAL_S:
             last_housekeeping = clock()
             try:
-                housekeeping(ctx, queue, now_ms())
+                housekeeping(ctx, queue, now_ms(), voices_available)
             except Exception as exc:  # noqa: BLE001 - a bad pass must not kill the worker
                 log.warning("housekeeping failed: %s", type(exc).__name__)
         try:
@@ -183,7 +195,10 @@ def run_worker(
 
 
 def build_runner(
-    ctx: ChildContext, load: LoadSource, handlers: list[Handler] | None = None
+    ctx: ChildContext,
+    load: LoadSource,
+    voices: OnnxVoiceModels,
+    handlers: list[Handler] | None = None,
 ) -> tuple[JobRunner, JobQueue]:
     queue = JobQueue(ctx.conn)
     if handlers is None:
@@ -193,10 +208,6 @@ def build_runner(
             ctx.config.model_idle_unload_minutes * 60.0,
         )
         media = MediaStore(ctx.paths.media_dir, ctx.key.subkey("media"))
-        segmentation, embedding = model_paths(ctx.paths.models_dir)
-        voices = OnnxVoiceModels(
-            segmentation, embedding, idle_unload_s=ctx.config.model_idle_unload_minutes * 60.0
-        )
         speakers = SpeakerStore(ctx.conn, ctx.config.speakers.match_threshold)
         embedding_dir = ctx.paths.models_dir / ctx.config.search.embedding_model
         chat_model = ctx.config.search.chat_model
@@ -223,7 +234,11 @@ def build_runner(
 
         handlers = [
             TranscribeHandler(
-                audio, whisper, ctx.config.audio.vocabulary, ctx.config.audio.whisper_model
+                audio,
+                whisper,
+                ctx.config.audio.vocabulary,
+                ctx.config.audio.whisper_model,
+                voices.available,
             ),
             STTCompareHandler(ctx.conn, audio, ctx.paths.models_dir),
             SpeakersHandler(audio, speakers, voices),
@@ -249,11 +264,13 @@ def _body(ctx: ChildContext) -> None:
     except Exception as exc:  # noqa: BLE001 - the scheduler still watches for games
         log.warning("load measurement unavailable: %s", type(exc).__name__)
         load = _NoLoad()
-    runner, queue = build_runner(ctx, load)
-    released = queue.release_running()
-    if released:
-        log.info("%d interrupted job(s) put back in the queue", released)
-    run_worker(ctx, runner, queue)
+    segmentation, embedding = model_paths(ctx.paths.models_dir)
+    voices = OnnxVoiceModels(
+        segmentation, embedding, idle_unload_s=ctx.config.model_idle_unload_minutes * 60.0
+    )
+    runner, queue = build_runner(ctx, load, voices)
+    runner.release_interrupted()
+    run_worker(ctx, runner, queue, voices.available)
 
 
 def main(argv: list[str] | None = None) -> int:

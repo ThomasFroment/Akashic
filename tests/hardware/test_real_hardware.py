@@ -100,7 +100,22 @@ def test_default_devices_open_and_deliver_16khz_float_audio() -> None:
                 assert 0.8 * 16_000 <= total <= 1.3 * 16_000
         finally:
             stream.close()
-    assert isinstance(platform.sessions.active_processes(), frozenset)
+    assert isinstance(platform.sessions.active_processes(), dict)
+
+
+def test_audible_processes_are_keyed_by_playback_device_id() -> None:
+    """Read-only: no window, no sound, no focus. Run with -s to see what is audible where."""
+    platform = build_audio_platform()
+    audible = platform.sessions.active_processes()
+    assert audible is not None
+    resolved = {
+        found.device_id: found.name
+        for name in platform.devices.names("system")
+        if (found := platform.devices.find("system", name)) is not None
+    }
+    assert set(audible) <= set(resolved)
+    for device_id, names in audible.items():
+        print(f"{resolved[device_id]}: {sorted(names)}")  # noqa: T201 - read by the person running it
 
 
 def test_load_source_reports_sane_numbers() -> None:
@@ -327,7 +342,7 @@ def test_spoken_sentence_is_recorded_from_loopback_and_transcribed_by_whisper(
     transcriber = WhisperTranscriber(
         whisper_dir.models_dir / DEFAULT_WHISPER_MODEL, idle_unload_s=60.0
     )
-    handler = TranscribeHandler(store, transcriber, ("Minlo",), "test-model")
+    handler = TranscribeHandler(store, transcriber, ("Minlo",), "test-model", lambda: True)
     started = time.monotonic()
     queue = JobQueue(conn)
     while job := queue.claim([handler.kind], 2**62):

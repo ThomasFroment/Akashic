@@ -20,6 +20,7 @@ from capture_fakes import (
 from PIL import Image
 
 from akashic.capture.ports import (
+    VOICE_APPS,
     CapturedFrame,
     Displays,
     MonitorInfo,
@@ -31,6 +32,7 @@ from akashic.capture.ports import (
     WindowEvents,
     WindowFacts,
 )
+from akashic.pipeline import episodes
 
 # Static check: strict pyright fails if a fake does not satisfy its Protocol.
 _displays: Displays = FakeDisplays()
@@ -218,3 +220,9 @@ def test_fake_captures_close_stops_everything() -> None:
     assert fake.latest_seq(1) is None
     assert fake.grab(2) is None
     assert fake.failed() == frozenset()
+
+
+def test_voice_apps_live_in_capture_ports_and_episodes_reuses_them() -> None:
+    assert len(VOICE_APPS) == 15
+    assert all(name == name.lower() and name.endswith(".exe") for name in VOICE_APPS)
+    assert episodes.VOICE_APPS is VOICE_APPS

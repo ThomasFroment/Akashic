@@ -48,6 +48,35 @@ def test_horizon_stops_at_the_oldest_unfinished_transcription_or_speaker_job(
     assert horizon_ms(conn, NOW) == NOW - 5 * HOUR
 
 
+def test_games_and_app_runs_wait_only_for_the_close_gap_not_for_speech_jobs(
+    conn: Connection,
+) -> None:
+    add_job(conn, "transcribe", "t:1", NOW - 9 * HOUR)
+    game = add_game(conn, NOW - 3 * HOUR, NOW - 2 * HOUR)
+    add_game(conn, NOW - 40 * MINUTE, NOW - CLOSE_GAP_MS + MINUTE)  # ended inside the gap
+    add_visit(conn, "code.exe", "main.py - Akashic", NOW - 8 * HOUR, NOW - 7 * HOUR)
+    assert horizon_ms(conn, NOW) == NOW - 9 * HOUR
+    assert build_episodes(conn, NOW)["games"] == 1
+    assert [row[:2] for row in episodes(conn) if row[0] == "game"] == [("game", f"game:{game}")]
+    assert sum(1 for row in episodes(conn) if row[0] == "work") == 1
+    assert build_episodes(conn, NOW + 2 * MINUTE)["games"] == 1  # the gap has passed
+
+
+def test_an_app_run_still_inside_its_own_close_gap_waits_for_it(conn: Connection) -> None:
+    add_visit(conn, "code.exe", "late.py", NOW - 40 * MINUTE, NOW - 2 * CLOSE_GAP_MS + MINUTE)
+    assert build_episodes(conn, NOW)["app_runs"] == 0
+    assert build_episodes(conn, NOW + 2 * MINUTE)["app_runs"] == 1
+
+
+def test_media_and_conversations_still_wait_for_the_oldest_speech_job(conn: Connection) -> None:
+    add_job(conn, "speakers", "s:1", NOW - 3 * HOUR)
+    add_media(conn, "A video", NOW - 2 * HOUR, NOW - HOUR + 10 * MINUTE, url="https://y.example/v")
+    add_segment(conn, NOW - 2 * HOUR, text="salut", sources=("discord.exe",))
+    add_segment(conn, NOW - 2 * HOUR + MINUTE, text="ça va", sources=("discord.exe",))
+    built = build_episodes(conn, NOW)
+    assert (built["media"], built["conversations"]) == (0, 0)
+
+
 # --- videos and music ----------------------------------------------------------------------
 
 

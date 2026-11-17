@@ -1,8 +1,5 @@
 """Capture process entry point.
 
-CPU only: this process must never import CUDA-backed libraries (onnxruntime-gpu, llama_cpp,
-ctranslate2). A test enforces it.
-
 ``AKASHIC_CAPTURE=0`` starts the process but captures nothing (used by the test suite so it never
 records the real screen, and handy when debugging the supervisor).
 """
@@ -14,13 +11,14 @@ import os
 import sys
 import threading
 import time
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from akashic.capture.audio import VAD_CONTINUE_RATIO, AudioCapture, AudioSettings
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.gaming import GameSettings
-from akashic.capture.gaps import CaptureGaps
+from akashic.capture.gaps import CaptureGaps, limit_wait_at_stop
 from akashic.capture.health import CaptureStatus
 from akashic.capture.media import MediaTracker
 from akashic.capture.ocr_gate import OcrGate
@@ -94,21 +92,40 @@ def _start_audio(
         conn.close()
         log.error("audio recording unavailable: %s", type(exc).__name__)  # noqa: TRY400
         return None
-    thread = threading.Thread(target=audio.run, args=(ctx.stop, ctx.halt, ctx.paused), name="audio")
+    thread = threading.Thread(
+        target=audio.run, args=(ctx.stop, ctx.halt, ctx.paused), name="audio", daemon=True
+    )
     thread.start()
     log.info("audio recording running")
     return audio, thread, conn
 
 
-GAP_THREAD_JOIN_S: Final = 2.0  # a tick still running means the database is busy anyway
-WRITER_JOIN_S: Final = 10.0  # time to store the few pictures still queued at stop
 PUBLISH_INTERVAL_S: Final = 5.0
+STOP_BUDGET_S: Final = 8.0  # the supervisor kills a stop that takes more than STOP_TIMEOUT_S = 10
 
 
-def _active_problems(
+@dataclass(frozen=True, slots=True)
+class StopDeadline:
+    at: float  # a time.monotonic() value
+
+    def remaining(self) -> float:
+        return max(0.0, self.at - time.monotonic())
+
+
+def _join(thread: threading.Thread, deadline: StopDeadline) -> bool:
+    """Wait for the thread until the deadline. False (logged by name) when it is still running."""
+    thread.join(timeout=deadline.remaining())
+    if thread.is_alive():
+        log.warning("%s still running at the stop deadline; abandoned", thread.name)
+        return False
+    return True
+
+
+def _active_problems(  # noqa: PLR0913 - each argument is a distinct source of problems
     status: CaptureStatus,
     writer: ScreenWriter,
     audio: AudioCapture | None,
+    capture: ScreenCapture,
     *,
     halted: bool,
     since: float,
@@ -117,9 +134,11 @@ def _active_problems(
     problems = list(status.sticky)
     if halted:
         return problems
+    now = time.monotonic()
     if audio is not None:
-        problems.extend(audio.problems(time.monotonic(), since))
+        problems.extend(audio.problems(now, since))
     problems.extend(writer.problems(since))
+    problems.extend(capture.problems(now))
     return problems
 
 
@@ -142,14 +161,15 @@ def _collect(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct co
     """``(pause epoch, problems, debug data)``, or None (logged) when reading health failed."""
     try:
         epoch, halted, since = ctx.health_snapshot()  # before reading any health
-        problems = _active_problems(status, writer, audio, halted=halted, since=since)
+        problems = _active_problems(status, writer, audio, capture, halted=halted, since=since)
         data: dict[str, object] = {
             "halted": halted,
             "problems": problems,
             "screen": dict(sorted(capture.stats_snapshot().items())),
-            "media": dict(sorted(tracker.stats.items())),
+            "media": dict(sorted(tracker.stats_snapshot().items())),
+            "writer": dict(sorted(writer.stats_snapshot().items())),
             "audio": audio.snapshot() if audio is not None else None,
-            "gaps": dict(sorted(gaps.stats.items())),
+            "gaps": dict(sorted(gaps.stats_snapshot().items())),
         }
     except Exception as exc:  # noqa: BLE001 - health reporting must never disturb capture
         log.warning("collecting capture health failed: %s", type(exc).__name__)
@@ -211,51 +231,62 @@ def _open_unrecorded_streams(
     gaps.open("system", reason, start_ms)
 
 
-def _finish_gaps(gaps: CaptureGaps, thread: threading.Thread, stop_ms: int) -> bool:
+def _finish_gaps(
+    gaps: CaptureGaps, thread: threading.Thread, stop_ms: int, deadline: StopDeadline
+) -> bool:
     """Write the clean stop once the gap thread is done. False when the thread would not end:
     the next start then records a crash from the heartbeat."""
-    thread.join(timeout=GAP_THREAD_JOIN_S)
-    if thread.is_alive():
-        log.warning("capture gap thread did not stop; the stop is not recorded")
+    if not _join(thread, deadline):
         return False
     try:
-        gaps.finish(stop_ms)
+        gaps.finish(stop_ms, deadline.at)
     except Exception as exc:  # noqa: BLE001 - the next start settles open rows
         log.warning("recording the capture stop failed: %s", type(exc).__name__)
     return True
 
 
 def _stop_writer(
-    writer: ScreenWriter, stop: threading.Event, thread: threading.Thread, conn: Connection
+    writer: ScreenWriter,
+    stop: threading.Event,
+    thread: threading.Thread,
+    conn: Connection,
+    deadline: StopDeadline,
 ) -> None:
-    """Let the writer store what is queued; give up (and drop the rest) after a bounded wait.
-    Called once the screen loop has returned, so nothing more is submitted."""
+    """Let the writer store what is queued; it drops the rest at its first busy write, and is
+    abandoned (connection left open) at the deadline. Called once the screen loop has returned,
+    so nothing more is submitted."""
     stop.set()
-    thread.join(timeout=WRITER_JOIN_S)
-    if thread.is_alive():
-        log.warning("screen writer did not stop; queued pictures are dropped")
-        writer.close()
-    else:
+    if _join(thread, deadline):
         conn.close()
+    log.info("screen writer stats: %s", dict(sorted(writer.stats.items())))
 
 
-def _close_capture(
+def _close_capture(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct collaborator
     capture: ScreenCapture,
     writer: ScreenWriter,
     writer_stop: threading.Event,
     thread: threading.Thread,
     conn: Connection,
+    deadline: StopDeadline,
 ) -> None:
     try:
         capture.close()
     except Exception as exc:  # noqa: BLE001 - the rest of the stop must still run
         log.warning("closing screen capture failed: %s", type(exc).__name__)
-    _stop_writer(writer, writer_stop, thread, conn)
+    _stop_writer(writer, writer_stop, thread, conn, deadline)
 
 
-def _flush_late_gaps(gaps: CaptureGaps) -> None:
+def _stop_audio(
+    audio: AudioCapture, thread: threading.Thread, conn: Connection, deadline: StopDeadline
+) -> None:
+    if _join(thread, deadline):
+        conn.close()
+    log.info("audio stats: %s", dict(sorted(audio.stats.items())))
+
+
+def _flush_late_gaps(gaps: CaptureGaps, deadline: StopDeadline) -> None:
     try:
-        gaps.flush_late()
+        gaps.flush_late(deadline.at)
     except Exception as exc:  # noqa: BLE001 - only late drops are lost
         log.warning("writing late capture gaps failed: %s", type(exc).__name__)
 
@@ -361,20 +392,20 @@ def run_capture(
         capture.run(ctx.stop, ctx.halt, ctx.paused)
     finally:
         ctx.stop.set()
+        deadline = StopDeadline(time.monotonic() + STOP_BUDGET_S)
         stop_ms = _now_ms()
-        _close_capture(capture, writer, writer_stop, writer_thread, writer_conn)
-        gaps_done = _finish_gaps(gaps, gap_thread, stop_ms)
-        media_thread.join(timeout=10)
-        media_conn.close()
+        limit_wait_at_stop(ctx.conn)
+        _close_capture(capture, writer, writer_stop, writer_thread, writer_conn, deadline)
+        gaps_done = _finish_gaps(gaps, gap_thread, stop_ms, deadline)
+        if _join(media_thread, deadline):
+            media_conn.close()
         if audio is not None:
-            audio[1].join(timeout=60)
-            audio[2].close()
-            log.info("audio stats: %s", dict(sorted(audio[0].stats.items())))
+            _stop_audio(*audio, deadline)
         if gaps_done:
-            _flush_late_gaps(gaps)
+            _flush_late_gaps(gaps, deadline)
             gap_conn.close()
         log.info("capture stats: %s", dict(sorted(capture.stats_snapshot().items())))
-        log.info("media stats: %s", dict(sorted(tracker.stats.items())))
+        log.info("media stats: %s", dict(sorted(tracker.stats_snapshot().items())))
 
 
 def _body(ctx: ChildContext) -> None:

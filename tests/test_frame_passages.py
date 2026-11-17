@@ -18,7 +18,7 @@ from akashic.search.planner import Plan
 from akashic.search.semantic import semantic_ready
 from akashic.search.timeparse import TimeRange
 from akashic.storage import embeddings, passages
-from akashic.storage.jobs import JobQueue
+from akashic.storage.jobs import BACKOFF_BASE_MS, JobQueue
 from akashic.storage.media import MediaStore
 from akashic.storage.retention import (
     delete_all_recorded_data,
@@ -239,8 +239,8 @@ def test_interrupted_frame_publication_rolls_back_and_worker_can_retry(conn: Con
         handler.run(job)
     assert conn.execute("SELECT count(*) FROM window_passages").fetchone()[0] == 0
     conn.execute("DROP TRIGGER break_frame_publish")
-    assert queue.release_running() == 1
-    retry = queue.claim([EMBED], 2)
+    assert queue.release_running(1) == []
+    retry = queue.claim([EMBED], 1 + BACKOFF_BASE_MS)
     assert retry is not None
     handler.run(retry)
     handler.run(retry)

@@ -1,10 +1,8 @@
 """Silero voice-activity detection on CPU, fed one 32 ms window at a time.
 
 The model file ships inside the faster-whisper package (``silero_vad_v6.onnx``, MIT), so there is
-nothing to download. It runs on onnxruntime's CPU provider only, which loads no CUDA library
-(native check retained in docs/CAPTURE.md): the capture process stays CPU-only. One window costs
-about 0.1 ms. The capture process must never import ``faster_whisper`` itself (that pulls in
-CTranslate2), so the file is located without importing the package.
+nothing to download. One window costs about 0.1 ms. The file is located without importing
+``faster_whisper``, which would pull in CTranslate2.
 """
 
 from __future__ import annotations
@@ -69,7 +67,7 @@ class SileroVad:
             "_Session",
             ort.InferenceSession(
                 str(model_path or silero_model_path()),
-                providers=["CPUExecutionProvider"],  # never CUDA: this runs in the capture process
+                providers=["CPUExecutionProvider"],
                 sess_options=options,
             ),
         )

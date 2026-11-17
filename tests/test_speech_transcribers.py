@@ -18,6 +18,7 @@ from akashic.pipeline import speech
 from akashic.pipeline.models import CANARY_V2, QWEN3_ASR, SPEECH_CANDIDATES, ModelFile
 from akashic.pipeline.speech import GPU_FRACTION, MAX_TOKENS, TransformerTranscriber
 from akashic.pipeline.whisper import WhisperTranscriber
+from akashic.storage.jobs import DEFER_MS
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterator
@@ -410,6 +411,28 @@ def test_library_logs_are_silenced_even_when_loading_fails(libs: Libs, tmp_path:
     with pytest.raises(RuntimeError):
         transcriber.transcribe(AUDIO, None)
     assert all(logging.getLogger(n).propagate is False for n in HF_LOGGERS)
+
+
+def test_a_load_failure_is_reported_for_the_defer_window_and_cleared_by_a_good_load(
+    libs: Libs, tmp_path: Path
+) -> None:
+    clock = Clock()
+    transcriber = TransformerTranscriber(model_folder(tmp_path, QWEN3_ASR.key), 60.0, clock)
+    assert transcriber.load_error() is None
+    libs.torch.cuda.available = False
+    with pytest.raises(RuntimeError):
+        transcriber.transcribe(AUDIO, None)
+    assert transcriber.load_error() == "model failed to load (RuntimeError)"
+    clock.now = DEFER_MS / 1000 - 1
+    assert transcriber.load_error() == "model failed to load (RuntimeError)"
+    clock.now = DEFER_MS / 1000
+    assert transcriber.load_error() is None
+    clock.now = 1.0
+    with pytest.raises(RuntimeError):
+        transcriber.transcribe(AUDIO, None)
+    libs.torch.cuda.available = True
+    transcriber.transcribe(AUDIO, None)
+    assert transcriber.load_error() is None
 
 
 # --- Qwen3-ASR -----------------------------------------------------------------------------

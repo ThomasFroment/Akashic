@@ -4,7 +4,7 @@
 
 const SETTINGS_TABS = [
   ["general", "General"], ["capture", "Capture"], ["audio", "Audio"],
-  ["retention", "Retention"], ["models", "Models"], ["debug", "Debug"],
+  ["retention", "Retention"], ["models", "Models"], ["export", "Export"], ["debug", "Debug"],
 ];
 const settingsDraft = new Map();
 
@@ -19,6 +19,7 @@ function settingsTabs(current) {
 function settingsView(tab = "general") {
   setActive("settings");
   if (tab === "debug" || tab === "overview" || tab === "logs") { debugView(tab === "debug" ? "overview" : tab); return; }
+  if (tab === "export") { exportView(); return; }
   if (!SETTINGS_TABS.some(([key]) => key === tab)) tab = "general";
   const root = h("div", { class: "column settings wide" }, h("div", { class: "muted" }, "Loading…"));
   view.replaceChildren(root);
@@ -210,6 +211,96 @@ function dataDeletionPanel() {
     }); return b; })(), status);
 }
 
+const formatBytes = (b) => b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.max(0, Math.round(b / 1e3)) + " KB";
+
+// An encrypted copy of the recordings in a new folder, under its own passphrase. One export runs
+// at a time on the server; this page polls it while it runs.
+function exportView() {
+  const field = (id, label, input, help) => h("div", { class: "setting" },
+    h("label", { class: "name", for: id }, label), input, help ? h("div", { class: "help" }, help) : null);
+  const folder = h("input", { id: "export-folder", type: "text", autocomplete: "off", spellcheck: "false", placeholder: "D:\\Backups\\akashic-export" });
+  const pass = h("input", { id: "export-pass", type: "password", autocomplete: "off" });
+  const again = h("input", { id: "export-again", type: "password", autocomplete: "off" });
+  const from = h("input", { id: "export-from", type: "datetime-local" });
+  const to = h("input", { id: "export-to", type: "datetime-local" });
+  const boxes = Object.entries(STORAGE_KIND_LABELS).map(([kind, label]) => {
+    const box = h("input", { type: "checkbox", checked: true });
+    return { kind, box, el: h("label", { class: "autostart-row" }, box, " " + label) };
+  });
+  const exportBtn = h("button", { type: "button", class: "primary", disabled: true }, "Export");
+  const cancelBtn = h("button", { type: "button", hidden: true }, "Cancel");
+  const bar = h("progress", { max: 1, value: 0, hidden: true });
+  const outcome = h("div", { class: "msg muted small", "aria-live": "polite" });
+  const instant = (input) => (input.value ? new Date(input.value).getTime() : null);
+  let timer = 0;
+  let running = false;
+
+  function refresh() {
+    exportBtn.disabled = running || !pass.value || pass.value !== again.value
+      || !folder.value.trim() || !boxes.some((b) => b.box.checked);
+  }
+  function show(s) {
+    running = s.state === "running";
+    bar.hidden = cancelBtn.hidden = !running;
+    bar.max = s.total || 1;
+    bar.value = s.done;
+    outcome.className = "msg small " + (s.state === "failed" ? "bad" : "muted");
+    if (running) outcome.textContent = "Exporting…";
+    else if (s.state === "done") outcome.textContent = `Export finished: ${s.result.files} files, ${formatBytes(s.result.bytes)}, ${s.result.missing_files} files missing.`;
+    else if (s.state === "failed") outcome.textContent = "The export failed. Nothing was kept. Check the folder and the free space, then try again.";
+    else if (s.state === "cancelled") outcome.textContent = "The export was cancelled. Nothing was kept.";
+    else outcome.textContent = "";
+    refresh();
+  }
+  async function poll() {
+    clearTimeout(timer);
+    try { show(await getJson("/api/export")); } catch { outcome.textContent = "Cannot read the export state."; return; }
+    if (!outcome.isConnected) return;
+    if (running) timer = setTimeout(poll, 1000);
+  }
+  exportBtn.addEventListener("click", async () => {
+    exportBtn.disabled = true;
+    const body = {
+      target: folder.value.trim(), passphrase: pass.value, start_ms: instant(from), end_ms: instant(to),
+      categories: boxes.filter((b) => b.box.checked).map((b) => b.kind),
+    };
+    let res;
+    try {
+      res = await fetch("/api/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    } catch { outcome.textContent = "Cannot reach the app."; outcome.className = "msg bad small"; refresh(); return; }
+    if (!res.ok) {
+      const detail = await res.json().catch(() => ({}));
+      outcome.textContent = res.status === 409 ? "An export is already running." : typeof detail.detail === "string" ? detail.detail : "Could not start the export (" + res.status + ").";
+      outcome.className = "msg bad small";
+      refresh();
+      return;
+    }
+    pass.value = again.value = "";
+    poll();
+  });
+  cancelBtn.addEventListener("click", async () => {
+    cancelBtn.disabled = true;
+    try { await api("/api/export", { method: "DELETE" }); } catch { /* the next poll says what happened */ }
+    cancelBtn.disabled = false;
+    poll();
+  });
+  for (const el of [folder, pass, again, ...boxes.map((b) => b.box)]) { el.addEventListener("input", refresh); el.addEventListener("change", refresh); }
+  view.replaceChildren(h("div", { class: "column settings wide" },
+    pageHead("Settings"), settingsTabs("export"),
+    h("section", { class: "settings-section" }, h("h2", {}, "Export"),
+      h("p", { class: "muted" }, "Writes an encrypted copy of your recordings into a new folder. It has its own passphrase and keys: the copy opens as a data folder, and the live data is not changed."),
+      field("export-folder", "Folder", folder, "A new or empty folder on another drive or disk."),
+      field("export-pass", "Passphrase", pass, "It cannot be recovered."),
+      field("export-again", "Repeat passphrase", again),
+      field("export-from", "From", from, "Optional. Leave empty for no start."),
+      field("export-to", "To", to, "Optional. Leave empty for no end."),
+      h("div", { class: "setting" }, h("span", { class: "name" }, "Include"), h("div", { class: "stack" }, boxes.map((b) => b.el))),
+      h("div", { class: "button-row" }, exportBtn, cancelBtn, bar), outcome)));
+  cleanup = () => clearTimeout(timer);
+  refresh();
+  poll();
+}
+
 // Start with Windows: applied at once (the user's Run registry value), not part of config.toml.
 function autostartBlock() {
   const box = h("input", { type: "checkbox", id: "set-autostart" });
@@ -280,15 +371,13 @@ function modelsPanel() {
 // What the recordings take on disk, per kind, and how fast it grows: the numbers to choose limits by.
 function storagePanel() {
   const el = h("div", { class: "meter-box" }, h("div", { class: "muted small" }, "Measuring…"));
-  const size = (b) => b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.max(0, Math.round(b / 1e3)) + " KB";
   getJson("/api/settings/storage").then((s) => {
-    const rows = s.types.map((t) => h("tr", {}, h("td", {}, STORAGE_KIND_LABELS[t.kind] || t.kind), h("td", { class: "num" }, size(t.bytes)),
-      h("td", { class: "num muted" }, "+" + size(t.bytes_7d) + " this week"), h("td", { class: "muted" }, t.days === null ? "kept forever" : "kept " + t.days + " days")));
-    const free = s.free_bytes === null ? "unknown" : size(s.free_bytes);
-    el.replaceChildren(...[
+    const rows = s.types.map((t) => h("tr", {}, h("td", {}, STORAGE_KIND_LABELS[t.kind] || t.kind), h("td", { class: "num" }, formatBytes(t.bytes)),
+      h("td", { class: "num muted" }, "+" + formatBytes(t.bytes_7d) + " this week"), h("td", { class: "muted" }, t.days === null ? "kept forever" : "kept " + t.days + " days")));
+    const free = s.free_bytes === null ? "unknown" : formatBytes(s.free_bytes);
+    el.replaceChildren(
       h("table", { class: "storage" }, rows),
-      h("div", { class: "muted small" }, `Total on disk ${size(s.total_bytes)} (database ${size(s.database_bytes)}, which holds the texts). Free on the data drive: ${free}.`),
-      s.low_space ? h("div", { class: "msg bad small" }, `Less than ${s.warn_below_gb} GB free. Nothing is deleted automatically: shorten a limit below, or pause screenshots.`) : null].filter(Boolean));
+      h("div", { class: "muted small" }, `Total on disk ${formatBytes(s.total_bytes)} (database ${formatBytes(s.database_bytes)}, which holds the texts). Free on the data drive: ${free}.`));
   }).catch(() => el.replaceChildren(h("div", { class: "muted small" }, "Cannot measure the disk use.")));
   return { el };
 }

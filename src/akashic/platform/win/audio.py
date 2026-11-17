@@ -503,36 +503,40 @@ class _WasapiInput:
 
 
 class WindowsAudioSessions:
-    """Which processes are audible right now, across every active playback device."""
+    """Which processes are audible right now, per active playback device."""
 
     def __init__(self) -> None:
-        self._managers: list = []
+        self._managers: list[tuple[str, Any]] = []
         self._refreshed = float("-inf")
         self._names: dict[int, str] = {}
 
-    def active_processes(self) -> frozenset[str] | None:
-        """None (unknown) when the OS could not be asked, as opposed to nothing being audible."""
+    def active_processes(self, *, refresh: bool = False) -> dict[str, frozenset[str]] | None:
+        """Audible process names per playback device id. None (unknown) when the OS could not
+        be asked, as opposed to nothing being audible."""
+        if refresh:
+            self._refreshed = float("-inf")
         try:
             self._refresh_managers()
-            names: set[str] = set()
-            for manager in self._managers:
-                names.update(self._audible(manager))
+            return {
+                device_id: frozenset(self._audible(manager))
+                for device_id, manager in self._managers
+            }
         except comtypes.COMError, OSError:
             self._refreshed = float("-inf")  # devices changed under us: look them up again
             return None
-        return frozenset(names)
 
     def _refresh_managers(self) -> None:
         if time.monotonic() - self._refreshed < _SESSION_REFRESH_S:
             return
         self._refreshed = time.monotonic()
         self._names.clear()
-        managers = []
+        managers: list[tuple[str, Any]] = []
         devices = _enumerator().EnumAudioEndpoints(_E_RENDER, _STATE_ACTIVE)
         for i in range(devices.GetCount()):
             try:
-                interface = devices.Item(i).Activate(IAudioSessionManager2._iid_, _CLSCTX_ALL, None)
-                managers.append(interface.QueryInterface(IAudioSessionManager2))
+                item = devices.Item(i)
+                interface = item.Activate(IAudioSessionManager2._iid_, _CLSCTX_ALL, None)
+                managers.append((_device_id(item), interface.QueryInterface(IAudioSessionManager2)))
             except comtypes.COMError, OSError:
                 log.debug("playback device has no session manager")
         self._managers = managers

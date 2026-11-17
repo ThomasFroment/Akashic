@@ -36,13 +36,11 @@ def test_load_writes_default(tmp_path: Path) -> None:
     assert load_config(paths).log_level == "DEBUG"
 
 
-# Pins disk_warning_free_gb: delete or rewrite with M21.2 (also the invalid-value row below).
 def test_full_config() -> None:
     cfg = parse_config(
         """
         log_level = "WARNING"
         ocr_language = "en"
-        disk_warning_free_gb = 20
         model_idle_unload_minutes = 3
         [retention]
         screenshots = 30
@@ -54,7 +52,6 @@ def test_full_config() -> None:
     )
     assert cfg.log_level == "WARNING"
     assert cfg.ocr_language == "en"
-    assert cfg.disk_warning_free_gb == 20
     assert cfg.model_idle_unload_minutes == 3
     assert cfg.retention_days["screenshots"] == 30
     assert cfg.retention_days["raw_audio"] is None
@@ -76,12 +73,25 @@ def test_an_old_window_titles_key_is_accepted_and_ignored(value: str) -> None:
     assert cfg.exclusions == parse_config(head).exclusions
 
 
+def test_the_disk_warning_setting_is_gone_from_the_config_and_the_default_file() -> None:
+    assert "disk_warning_free_gb" not in DEFAULT_CONFIG_TOML
+    assert not hasattr(Config(), "disk_warning_free_gb")
+    assert parse_config(DEFAULT_CONFIG_TOML) == Config()
+
+
+@pytest.mark.parametrize("value", ["20", "0", '"x"', "true"])
+def test_an_old_disk_warning_key_is_accepted_and_ignored(value: str) -> None:
+    line = f"disk_warning_free_gb = {value}"
+    assert parse_config(line) == Config()
+    head = 'log_level = "WARNING"'
+    assert parse_config(f"{head}\n{line}") == parse_config(head)
+
+
 @pytest.mark.parametrize(
     ("text", "match"),
     [
         ("log_levl = 'INFO'", "unknown key"),
         ("log_level = 'LOUD'", "log_level"),
-        ("disk_warning_free_gb = 0", "disk_warning_free_gb"),
         ("retention = 5", r"\[retention\]"),
         ("[retention]\nscreenshots = 'never'", "retention.screenshots"),
         ("[exclusions]\nprocesses = 'x'", "exclusions.processes"),

@@ -229,6 +229,25 @@ test("#/timeline and #/moment/<ts> route to the timeline", async () => {
   assert.equal(JSON.stringify(await routeTo("#/moment/123")), "[[[],123,null,null]]");
 });
 
+test("a route whose app list arrives after the user moved on draws nothing", async () => {
+  const calls = [];
+  const pending = [];
+  const ctx = vm.createContext({
+    location: { hash: "#/search" }, shell: new El("div"), view: new El("div"), cleanup() {}, trackHistory() {},
+    signedIn: true, URLSearchParams, timelineView: (...a) => calls.push(["timeline", ...a]),
+    frameView() {}, searchView: (...a) => calls.push(["search", ...a]), speakersView() {}, episodeView() {},
+    chatView() {}, settingsView() {}, memoryView() {}, REOPEN: "",
+    getJson: (p) => new Promise((resolve) => pending.push({ p, resolve })),
+  });
+  vm.runInContext(grab(app, "async function route()", "// ---- mobile menu"), ctx);
+  const first = vm.runInContext("route()", ctx);
+  ctx.location.hash = "#/moment/5";
+  const second = vm.runInContext("route()", ctx);
+  for (const req of pending) req.resolve([]);
+  await Promise.all([first, second]);
+  assert.deepEqual(calls.map((c) => c[0]), ["timeline"]);
+});
+
 function linkContext() {
   const view = new El("div");
   const ctx = vm.createContext({
@@ -248,7 +267,7 @@ function linkContext() {
   return { ctx, view };
 }
 
-const source = (extra) => ({ n: 1, kind: "frame", id: 4, label: "L", start_ms: 1, window_id: 9, frame_ms: 1000, monitor_id: 2, ...extra });
+const source = (extra) => ({ n: 1, kind: "frame", id: 4, label: "L", start_ms: 1, window_id: 9, has_image: true, frame_ms: 1000, monitor_id: 2, ...extra });
 
 test("frame citation chips and source images open the moment, omitting null params", async () => {
   const { ctx } = linkContext();
@@ -266,6 +285,11 @@ test("frame citation chips and source images open the moment, omitting null para
   assert.equal(link.children[0].attrs.src, "/api/frames/12/image?window=7&w=320");
   ctx.s = source();
   assert.equal(vm.runInContext("sourceImage(s)", ctx).attrs.href, "#/moment/1000?monitor=2&window=9");
+  // A frame source whose stored picture does not show its window has no image and no box.
+  ctx.s = source({ has_image: false });
+  assert.equal(vm.runInContext("sourceImage(s)", ctx), null);
+  ctx.s = { n: 2, kind: "episode", id: 3, label: "E", start_ms: 1, frame_id: null, window_id: null };
+  assert.equal(vm.runInContext("sourceImage(s)", ctx), null);
 });
 
 test("the episode image links to its moment", async () => {
@@ -360,6 +384,38 @@ test("a listed window on a stage tile is a button that opens the moment with it 
   const bigItems = find(big, (n) => n.tag === "li");
   assert.equal(bigItems.length, 2);
   assert.ok(bigItems.every((li) => li.attrs.tabindex === "0" && !li.children.some((c) => c.tag === "button")));
+});
+
+test("the enlarged monitor links to the frame page of its frame, hidden without one", async () => {
+  const t = boot();
+  t.start({ width: 1000, monitor: "1" });
+  await t.answer("/api/stage", stage(NOON, { frame: 11 }));
+  const link = () => find(find(t.view, (n) => hasClass(n, "big"))[0], (n) => hasClass(n, "big-texts"))[0];
+  assert.equal(link().hidden, false);
+  assert.equal(link().href, "#/frame/11");
+  // It follows the frame when the moment changes.
+  await t.scrubTo(NOON + 5 * 60000);
+  await t.answer("/api/stage", stage(t.stageTs(t.stageCalls()[0]), { frame: 12 }));
+  assert.equal(link().href, "#/frame/12");
+  // A monitor with no frame hides it.
+  await t.scrubTo(NOON + 10 * 60000);
+  await t.answer("/api/stage", stage(t.stageTs(t.stageCalls()[0]), { leftState: "hidden" }));
+  assert.equal(link().hidden, true);
+});
+
+test("the link is that of the enlarged monitor, not another one", async () => {
+  const t = boot();
+  t.start({ width: 1000, monitor: "1" });
+  const two = stage(NOON);
+  two.monitors[1] = { ...two.monitors[1], state: "shown", frame_id: 21 };
+  await t.answer("/api/stage", two);
+  const link = () => find(find(t.view, (n) => hasClass(n, "big"))[0], (n) => hasClass(n, "big-texts"))[0];
+  assert.equal(link().href, "#/frame/11");
+  const t2 = boot();
+  t2.start({ width: 1000, monitor: "2" });
+  await t2.answer("/api/stage", two);
+  const other = find(find(t2.view, (n) => hasClass(n, "big"))[0], (n) => hasClass(n, "big-texts"))[0];
+  assert.equal(other.href, "#/frame/21");
 });
 
 // ---- the strip and the moment ---------------------------------------------------------------

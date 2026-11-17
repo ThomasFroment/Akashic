@@ -3,11 +3,16 @@
 The OS is polled every couple of seconds rather than subscribed to: one code path covers new
 sessions, title changes (YouTube autoplay), play/pause and sessions that vanish, and a missed
 event can't leave a row open forever. A media session becomes a row when it first plays; the
-row stays open across pauses (``played_ms`` counts only the time spent playing) and closes when
-the title changes, the source disappears or a pause lasts too long. A close that fails on a busy
+row stays open across pauses (``played_ms`` counts only the time spent playing; ``end_ms`` stays
+at the pause point while paused) and closes when the title changes, the source disappears, a pause
+lasts too long (at the pause point), a poll gap passes (at the last poll; a still-playing session
+gets a new row) or capture halts. The lock does not close rows and none is opened while locked.
+Locking clears the browser verdicts, so an open row whose verdict is ``url_unknown`` is kept
+while locked and for one poll after. A close that fails on a busy
 database stays pending and is retried at every poll; the session gets nothing else until it
 closes. Rows still open at the next start are closed at their last heartbeat. On stop, ``run``
-returns within one interval plus one busy timeout per attempt still in flight.
+returns within one interval, the poll in flight and one short busy timeout
+(``gaps.STOP_BUSY_TIMEOUT_MS``) per open session.
 
 Exclusions apply before anything is written. A media title is matched by no rule. For a browser
 the screen loop's verdict on the browser's windows decides (private window, password manager,
@@ -28,7 +33,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlsplit
 
+from akashic.capture.gaps import limit_wait_at_stop
 from akashic.capture.ports import BROWSERS
+from akashic.log import FaultLog
 
 if TYPE_CHECKING:
     import threading
@@ -42,7 +49,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 POLL_INTERVAL_S: Final = 2.0
-MAX_POLL_GAP_MS: Final = 10_000  # a longer gap (suspend, stall) is not counted as playing time
+MAX_POLL_GAP_MS: Final = 10_000  # a longer gap (suspend, stall) closes the row at the last poll
 PAUSE_CLOSE_MS: Final = 10 * 60_000  # a session paused this long is over
 WRITE_INTERVAL_MS: Final = 10_000  # heartbeat for end_ms / played_ms
 URL_SEARCH_WINDOW_MS: Final = 120_000  # keep looking for the page address this long
@@ -131,6 +138,11 @@ class _Open:
     url_tried_ms: int = -URL_SEARCH_EVERY_MS
     close_at: tuple[int, int] | None = None  # (end_ms, played_ms) once a close was attempted
 
+    @property
+    def end_ms(self) -> int:
+        """Where the row ends now: at the pause point while paused, else at the latest poll."""
+        return self.last_poll_ms if self.paused_since_ms is None else self.paused_since_ms
+
 
 class MediaTracker:
     def __init__(  # noqa: PLR0913 - the ports are the dependencies; keyword-only
@@ -152,40 +164,48 @@ class MediaTracker:
         self._interval_s = interval_s
         self._browsers = browsers
         self._open: dict[str, _Open] = {}
+        self._locked_last_poll = False
         self._names: dict[str, str] = {}  # resolved display names only
         self._name_retry: dict[str, tuple[int, int]] = {}  # app id -> (retry at ms, misses)
         self.stats: dict[str, int] = {}
+        self._faults = FaultLog(log)
+
+    def stats_snapshot(self) -> dict[str, int]:
+        """Session and fault counters merged into a copy."""
+        return self.stats | self._faults.counts()
 
     def run(self, stop: threading.Event, halt: threading.Event, locked: Callable[[], bool]) -> None:
-        """Poll until ``stop``. While halted or locked nothing is read and open rows are closed."""
+        """Poll until ``stop``. While halted nothing is read and open rows are closed; while
+        locked open rows go on and none is opened."""
         stale_closed = False
         while not stop.is_set():
             stale_closed = stale_closed or self._close_stale()
             if stale_closed:
                 self._tick(halt, locked)
             stop.wait(self._interval_s)
+        limit_wait_at_stop(self._store.conn)
         try:
             self.close_all()
         except Exception as exc:  # noqa: BLE001 - open rows are closed by close_stale at next start
-            log.warning("closing media sessions at stop failed: %s", type(exc).__name__)
+            self._faults.note("closing media sessions at stop", exc)
 
     def _close_stale(self) -> bool:
         try:
             self._store.close_stale()
         except Exception as exc:  # noqa: BLE001 - retried on the next iteration
             self.stats["close_stale_failed"] = self.stats.get("close_stale_failed", 0) + 1
-            log.warning("closing stale media rows failed: %s", type(exc).__name__)
+            self._faults.note("closing stale media rows", exc)
             return False
         return True
 
     def _tick(self, halt: threading.Event, locked: Callable[[], bool]) -> None:
         try:
-            if halt.is_set() or locked():
+            if halt.is_set():
                 self.close_all()
             else:
-                self.poll()
+                self.poll(locked=locked())
         except Exception as exc:  # noqa: BLE001 - one bad poll must never stop the thread
-            log.warning("media poll failed: %s", type(exc).__name__)
+            self._faults.note("media poll", exc)
 
     def close_all(self) -> None:
         """One close attempt per session, pending ones included; a failure leaves the others be."""
@@ -193,18 +213,25 @@ class MediaTracker:
         for app_id in list(self._open):
             self._try_close(app_id, now)
 
-    def poll(self) -> None:
+    def poll(self, *, locked: bool = False) -> None:
+        # Locking clears the browser verdicts; an open row keeps going through that and one poll
+        # after it. No row is opened while locked.
+        hold = locked or self._locked_last_poll
+        self._locked_last_poll = locked
         self._retry_pending()
         now = self._now_ms()
         seen: set[str] = set()
         for state in self._source.sessions():
-            if state.app_id in seen:  # two sessions from one app: the first (current) wins
-                continue
+            if state.app_id in seen or not state.title.strip():
+                continue  # untitled, or a second session from one app: the first (current) wins
             app, known = self._app_name(state.app_id, now)
-            if not self._allowed(state, app, known=known):
+            reason = self._reason(state, app, known=known)
+            held = reason == "url_unknown" and hold and self._has_live_row(state.app_id)
+            if reason is not None and not held:
+                self.stats[f"excluded:{reason}"] = self.stats.get(f"excluded:{reason}", 0) + 1
                 continue
             seen.add(state.app_id)
-            self._update(state, app, now)
+            self._update(state, app, now, may_open=not locked and not held)
         for app_id, current in list(self._open.items()):
             if app_id not in seen and current.close_at is None:  # gone: it ended when last seen
                 self._try_close(app_id, current.last_poll_ms)
@@ -229,20 +256,16 @@ class MediaTracker:
             self._name_retry[app_id] = (now + delay, misses)
         return app_id, False
 
-    def _allowed(self, state: MediaState, app: str, *, known: bool) -> bool:
-        if not state.title.strip():
-            return False
+    def _reason(self, state: MediaState, app: str, *, known: bool) -> str | None:
+        """Why this session must not be logged, or None."""
         process = process_for_app(app)
         known = known or process in BROWSERS  # "Chrome" names its browser even unresolved
         reason = self._exclusions.check_process(process if known else "")
         if "private" in state.app_id.casefold():
             reason = "private_window"
         if reason is None and (not known or process in BROWSERS):
-            reason = self._browser_reason(process if known else None)
-        if reason is not None:
-            self.stats[f"excluded:{reason}"] = self.stats.get(f"excluded:{reason}", 0) + 1
-            return False
-        return True
+            return self._browser_reason(process if known else None)
+        return reason
 
     def _browser_reason(self, process: str | None) -> str | None:
         """Why this browser's (or, with None, any browser's) media must not be logged."""
@@ -256,22 +279,27 @@ class MediaTracker:
             return "private_window"
         return self._browsers.media_reason(process, focus)
 
-    def _update(self, state: MediaState, app: str, now: int) -> None:
+    def _has_live_row(self, app_id: str) -> bool:
+        current = self._open.get(app_id)
+        return current is not None and current.close_at is None
+
+    def _update(self, state: MediaState, app: str, now: int, *, may_open: bool) -> None:
         current = self._open.get(state.app_id)
         if current is not None and current.close_at is not None:
             return  # a pending close gets nothing but close attempts
-        if current is not None and (current.title, current.artist) != (state.title, state.artist):
+        if current is not None and (
+            now - current.last_poll_ms > MAX_POLL_GAP_MS
+            or (current.title, current.artist) != (state.title, state.artist)
+        ):
             if not self._try_close(state.app_id, now):
                 return
             current = None
         if current is None:
-            if state.state != "playing":
-                return  # a paused leftover we never saw play is not something that was watched
-            self._open_session(state, app, now)
+            if may_open and state.state == "playing":  # a paused leftover was not watched
+                self._open_session(state, app, now)
             return
-        elapsed = min(now - current.last_poll_ms, MAX_POLL_GAP_MS)
         if current.state == "playing":
-            current.played_ms += elapsed
+            current.played_ms += now - current.last_poll_ms
         current.last_poll_ms = now
         changed = state.state != current.state
         if changed:
@@ -284,7 +312,9 @@ class MediaTracker:
         self._find_url(current, now)
         if changed or now - current.last_write_ms >= WRITE_INTERVAL_MS:
             current.last_write_ms = now
-            self._store.touch(current.session_id, end_ms=now, played_ms=current.played_ms)
+            self._store.touch(
+                current.session_id, end_ms=current.end_ms, played_ms=current.played_ms
+            )
 
     def _open_session(self, state: MediaState, app: str, now: int) -> None:
         session_id = self._store.open(
@@ -334,7 +364,7 @@ class MediaTracker:
             self._close(app_id, end_ms)
         except Exception as exc:  # noqa: BLE001 - the session is kept and retried
             self.stats["close_failed"] = self.stats.get("close_failed", 0) + 1
-            log.warning("closing a media session failed: %s", type(exc).__name__)
+            self._faults.note("closing a media session", exc)
             return False
         return True
 
@@ -346,9 +376,12 @@ class MediaTracker:
     def _close(self, app_id: str, end_ms: int) -> None:
         current = self._open[app_id]
         if current.close_at is None:  # fixed on the first attempt so a retry keeps the same row
-            elapsed = min(max(end_ms - current.last_poll_ms, 0), MAX_POLL_GAP_MS)
-            played = current.played_ms + (elapsed if current.state == "playing" else 0)
-            current.close_at = (max(end_ms, current.last_poll_ms), played)
+            elapsed = end_ms - current.last_poll_ms
+            if current.paused_since_ms is None and 0 <= elapsed <= MAX_POLL_GAP_MS:
+                current.close_at = (end_ms, current.played_ms + elapsed)
+            else:
+                # Paused, or a gap (suspend, stall): it ends at the last poll, gap not played.
+                current.close_at = (current.end_ms, current.played_ms)
         end, played = current.close_at
         self._store.close(current.session_id, end_ms=end, played_ms=played)
         del self._open[app_id]

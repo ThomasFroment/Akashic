@@ -90,6 +90,13 @@ def seams(monkeypatch: pytest.MonkeyPatch) -> Seams:
 
 
 @pytest.fixture
+def clock(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    now = [1000.0]
+    monkeypatch.setattr(ev, "time", SimpleNamespace(monotonic=lambda: now[0]))
+    return now
+
+
+@pytest.fixture
 def events(seams: Seams) -> Iterator[ev.Win32WindowEvents]:
     w = ev.Win32WindowEvents()
     yield w
@@ -241,20 +248,76 @@ def test_failed_install_removes_hooks_and_records_nothing(
     assert events.drain() == WindowChanges((), healthy=False)
 
 
-def test_failed_install_stays_unhealthy_and_retries_each_drain(
-    events: ev.Win32WindowEvents, seams: Seams
+def test_failed_install_retries_with_a_doubling_delay_capped_at_a_minute(
+    events: ev.Win32WindowEvents, seams: Seams, clock: list[float]
 ) -> None:
     seams.fail_at = 2
     events.start()
     settle(events)
-    for expected_attempts in (2, 3, 4):
+    assert seams.attempts == 1
+    delay = 1.0
+    for expected_attempts in range(2, 10):
+        clock[0] += delay - 0.01
+        assert events.drain().healthy is False
+        assert seams.attempts == expected_attempts - 1  # too early: no thread
+        clock[0] += 0.01
         assert events.drain().healthy is False
         settle(events)
         assert seams.attempts == expected_attempts
+        delay = min(delay * 2, 60.0)
+    assert delay == 60.0
+
+
+def test_a_hook_that_installs_and_dies_still_counts_as_an_attempt(
+    events: ev.Win32WindowEvents, seams: Seams, clock: list[float]
+) -> None:
+    events.start()
+    seams.pump_stop.set()
+    settle(events)
+    for delay in (1.0, 2.0, 4.0):
+        assert events.drain().healthy is False  # too early, or the reinstall that follows
+        clock[0] += delay
+        assert events.drain().healthy is False
+        seams.pump_stop.set()
+        settle(events)
+    assert seams.attempts == 4
+    clock[0] += 7.9
+    attempts = seams.attempts
+    events.drain()
+    assert seams.attempts == attempts  # the next delay is 8 s
+
+
+def test_a_healthy_drain_resets_the_backoff(
+    events: ev.Win32WindowEvents, seams: Seams, clock: list[float]
+) -> None:
+    seams.fail_at = 1
+    events.start()
+    settle(events)
+    for _ in range(3):
+        clock[0] += 100
+        events.drain()
+        settle(events)
+    seams.fail_at = None
+    clock[0] += 100
+    events.drain()
+    settle(events)
+    assert events.drain().healthy is False  # first drain after the install
+    assert events.drain().healthy is True
+    seams.pump_stop.set()
+    settle(events)
+    attempts = seams.attempts
+    assert events.drain().healthy is False
+    assert seams.attempts == attempts + 1  # a working hook that dies reinstalls at once
+    settle(events)
+    seams.pump_stop.set()
+    settle(events)
+    clock[0] += 1.0  # the delay is back to 1 s
+    events.drain()
+    assert seams.attempts == attempts + 2
 
 
 def test_reinstall_success_needs_two_drains_to_be_healthy(
-    events: ev.Win32WindowEvents, seams: Seams
+    events: ev.Win32WindowEvents, seams: Seams, clock: list[float]
 ) -> None:
     seams.fail_at = 1
     events.start()
@@ -262,6 +325,7 @@ def test_reinstall_success_needs_two_drains_to_be_healthy(
     assert events.drain().healthy is False
     settle(events)
     seams.fail_at = None
+    clock[0] += 1.0
     assert events.drain().healthy is False  # triggers the working reinstall
     assert events.drain().healthy is False
     assert events.drain().healthy is True
@@ -366,7 +430,7 @@ def test_thread_start_failure_does_not_raise(
 
 
 def test_failed_install_warns_once_with_error_code(
-    events: ev.Win32WindowEvents, seams: Seams, caplog: pytest.LogCaptureFixture
+    events: ev.Win32WindowEvents, seams: Seams, caplog: pytest.LogCaptureFixture, clock: list[float]
 ) -> None:
     seams.fail_at = 0
     seams.fail_error = 1407
@@ -374,6 +438,7 @@ def test_failed_install_warns_once_with_error_code(
         events.start()
         settle(events)
         for _ in range(3):
+            clock[0] += 100
             events.drain()
             settle(events)
     warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
@@ -383,7 +448,7 @@ def test_failed_install_warns_once_with_error_code(
 
 
 def test_warns_again_on_change_from_working_to_failed(
-    events: ev.Win32WindowEvents, seams: Seams, caplog: pytest.LogCaptureFixture
+    events: ev.Win32WindowEvents, seams: Seams, caplog: pytest.LogCaptureFixture, clock: list[float]
 ) -> None:
     with caplog.at_level(logging.DEBUG):
         events.start()
@@ -392,6 +457,7 @@ def test_warns_again_on_change_from_working_to_failed(
         seams.fail_at = 0
         events.drain()
         settle(events)
+        clock[0] += 100
         events.drain()
         settle(events)
     assert [r.levelno for r in caplog.records].count(logging.WARNING) == 1

@@ -102,6 +102,12 @@ def has_colour(image: Image.Image, wanted: Colour, tolerance: int = 45) -> bool:
     return bool((np.abs(pixels - np.array(wanted)) <= tolerance).all(axis=2).any())
 
 
+def walk_to(rig: PrivacyRig, until_s: float) -> None:
+    """Poll media every 2 s up to ``until_s``: a longer gap would close the row as a suspend."""
+    while rig.clock[0] < until_s:
+        rig.poll(min(2.0, until_s - rig.clock[0]))
+
+
 def chrome(title: str = "Video - YouTube - Google Chrome", hwnd: int = 1) -> WindowInfo:
     return window(hwnd=hwnd, process="chrome.exe", title=title, rect=Rect(0, 0, 800, 600))
 
@@ -235,14 +241,14 @@ def test_zen_private_and_chrome_incognito_on_side_monitors_are_blank_unlisted_an
     rig.rig.hide(5)  # the Zen window closes
     rig.tick(15.0)  # the side monitors are checked again: only Chrome's verdict is renewed
     chrome_seen = rig.clock[0]
-    rig.poll(advance_s=zen_seen + 55 - rig.clock[0])
+    walk_to(rig, zen_seen + 55)
     assert rig.sessions() == 0
-    rig.poll(advance_s=zen_seen + 62 - rig.clock[0])
+    walk_to(rig, zen_seen + 62)
     apps = rig.media_conn.execute("SELECT app FROM media_sessions").fetchall()
     assert apps == [("Zen",)]  # Zen's cut lapsed, Chrome's has not
-    rig.poll(advance_s=chrome_seen + 55 - rig.clock[0])
+    walk_to(rig, chrome_seen + 55)
     assert rig.sessions() == 1
-    rig.poll(advance_s=chrome_seen + 62 - rig.clock[0])
+    walk_to(rig, chrome_seen + 62)
     apps = rig.media_conn.execute("SELECT app FROM media_sessions ORDER BY id").fetchall()
     assert apps == [("Zen",), ("Google Chrome",)]
     assert rig.leaks(*NEEDLES) == []

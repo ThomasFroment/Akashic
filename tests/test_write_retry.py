@@ -15,12 +15,12 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 import sqlcipher3
-from audio_fakes import Clock, FakeSessions, speech
+from audio_fakes import SYSTEM, Clock, FakeSessions, speech
 from capture_fakes import FakeMedia
 from waits import wait_for
 
 from akashic.capture import audio as audio_module
-from akashic.capture.audio import SegmentWriter, SourceSampler, Utterance
+from akashic.capture.audio import SegmentWriter, SourceCheck, SourceSampler, Utterance
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.media import PAUSE_CLOSE_MS, MediaTracker
@@ -116,7 +116,9 @@ def utt(start: int = T0, *, continues: bool = False) -> Utterance:
 class WriterRig:
     def __init__(self, store: AudioStore) -> None:
         self.clock = Clock(T0)
-        self.sampler = SourceSampler(FakeSessions(frozenset({"discord.exe"})), self.clock)
+        self.sampler = SourceSampler(
+            FakeSessions(frozenset({"discord.exe"})), self.clock, Exclusions(UserExclusions())
+        )
         for offset in range(0, 6_000, 500):  # audible all along
             self.clock.now = T0 + offset
             self.sampler.sample()
@@ -159,7 +161,7 @@ def test_busy_audio_write_is_retried_and_stored_once(
 ) -> None:
     store = ScriptedStore(conn, media, [op_error(cls, code), op_error(cls, code)])
     rig = WriterRig(store)
-    rig.writer.submit("system", utt())
+    rig.writer.submit("system", utt(), SYSTEM)
     rig.thread.start()
     assert wait_for(lambda: counts(conn) == (1, 1), 5)
     rig.finish()
@@ -191,7 +193,7 @@ def test_other_audio_errors_fail_at_once(
     store = ScriptedStore(conn, media, [exc])
     rig = WriterRig(store)
     rig.writer._last_id["system"] = 7
-    rig.writer.submit("system", utt())
+    rig.writer.submit("system", utt(), SYSTEM)
     rig.thread.start()
     assert wait_for(lambda: rig.stats["write_failed"] == 1, 5)
     rig.finish()
@@ -205,12 +207,12 @@ def test_other_audio_errors_fail_at_once(
 def test_a_retried_write_keeps_the_continuation_chain(conn: Connection, media: MediaStore) -> None:
     store = ScriptedStore(conn, media, [])
     rig = WriterRig(store)
-    first = rig.writer.write("system", utt(T0))
+    first = rig.writer.write("system", utt(T0), SYSTEM)
     store.errors.append(op_error(sqlite3.OperationalError, 5))
-    second = rig.writer.write("system", utt(T0 + 1_300, continues=True))
+    second = rig.writer.write("system", utt(T0 + 1_300, continues=True), SYSTEM)
     assert rig.stats["write_retried"] == 1
     assert rig.last_id("system") == second
-    third = rig.writer.write("system", utt(T0 + 2_600, continues=True))
+    third = rig.writer.write("system", utt(T0 + 2_600, continues=True), SYSTEM)
     rows = dict(conn.execute("SELECT id, continues_id FROM audio_segments").fetchall())
     assert rows == {first: None, second: first, third: second}
     assert rig.stats["write_failed"] == 0
@@ -222,12 +224,12 @@ def test_a_continuation_after_a_dropped_segment_has_no_parent(
 ) -> None:
     store = ScriptedStore(conn, media, [])
     rig = WriterRig(store)
-    rig.writer.write("system", utt(T0))
+    rig.writer.write("system", utt(T0), SYSTEM)
     store.errors.extend(op_error(sqlite3.OperationalError, 5) for _ in range(6))
-    rig.writer.submit("system", utt(T0 + 1_300, continues=True))
+    rig.writer.submit("system", utt(T0 + 1_300, continues=True), SYSTEM)
     rig.thread.start()
     assert wait_for(lambda: rig.stats["write_failed"] == 1, 5)
-    rig.writer.submit("system", utt(T0 + 2_600, continues=True))
+    rig.writer.submit("system", utt(T0 + 2_600, continues=True), SYSTEM)
     assert wait_for(lambda: counts(conn)[0] == 2, 5)
     rig.finish()
     assert conn.execute(
@@ -244,7 +246,7 @@ def test_every_attempt_failing_drops_the_segment_and_logs_the_type_only(
     rig = WriterRig(store)
     rig.writer._last_id["system"] = 3
     caplog.set_level(logging.DEBUG)
-    rig.writer.submit("system", utt())
+    rig.writer.submit("system", utt(), SYSTEM)
     rig.thread.start()
     assert wait_for(lambda: rig.stats["write_failed"] == 1, 5)
     rig.finish()
@@ -271,7 +273,7 @@ def test_a_database_that_stays_busy_leaves_no_orphan_file(
 
     monkeypatch.setattr("akashic.storage.audio.db.transaction", fail)
     rig = WriterRig(store)
-    rig.writer.submit("system", utt())
+    rig.writer.submit("system", utt(), SYSTEM)
     rig.thread.start()
     assert wait_for(lambda: rig.stats["write_failed"] == 1, 5)
     rig.finish()
@@ -282,7 +284,7 @@ def test_the_first_retry_comes_within_one_second(conn: Connection, media: MediaS
     assert audio_module.WRITE_RETRY_S[0] <= 1.0
     store = ScriptedStore(conn, media, [op_error(sqlite3.OperationalError, 5)])
     rig = WriterRig(store)
-    rig.writer.submit("system", utt())
+    rig.writer.submit("system", utt(), SYSTEM)
     started = time.monotonic()
     rig.thread.start()
     assert wait_for(lambda: counts(conn) == (1, 1), 5)
@@ -291,14 +293,14 @@ def test_the_first_retry_comes_within_one_second(conn: Connection, media: MediaS
     assert elapsed < 1.5
 
 
-def test_once_stopping_a_busy_segment_gets_no_retry_and_the_next_is_written(
+def test_once_stopping_a_busy_segment_gets_no_retry_and_the_queue_is_dropped(
     conn: Connection, media: MediaStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(audio_module, "WRITE_RETRY_S", (30.0, 30.0))  # would hang if waited
     store = ScriptedStore(conn, media, [op_error(sqlite3.OperationalError, 5)])
     rig = WriterRig(store)
-    rig.writer.submit("system", utt(T0))
-    rig.writer.submit("system", utt(T0 + 1_300))
+    rig.writer.submit("system", utt(T0), SYSTEM)
+    rig.writer.submit("system", utt(T0 + 1_300), SYSTEM)
     rig.stop.set()
     started = time.monotonic()
     rig.thread.start()
@@ -307,8 +309,9 @@ def test_once_stopping_a_busy_segment_gets_no_retry_and_the_next_is_written(
     assert time.monotonic() - started < 3
     assert rig.stats["write_failed"] == 1
     assert rig.stats["write_retried"] == 0
-    assert store.calls == 2
-    assert counts(conn) == (1, 1)
+    assert store.calls == 1
+    assert rig.stats["stop_dropped"] == 1
+    assert counts(conn) == (0, 0)
 
 
 def test_stop_during_a_retry_wait_ends_the_wait(
@@ -317,7 +320,7 @@ def test_stop_during_a_retry_wait_ends_the_wait(
     monkeypatch.setattr(audio_module, "WRITE_RETRY_S", (30.0, 30.0))
     store = ScriptedStore(conn, media, [op_error(sqlite3.OperationalError, 5)] * 3)
     rig = WriterRig(store)
-    rig.writer.submit("system", utt())
+    rig.writer.submit("system", utt(), SYSTEM)
     rig.thread.start()
     assert wait_for(lambda: store.calls >= 1, 5)
     time.sleep(0.1)
@@ -341,9 +344,9 @@ def test_checks_and_encoding_run_once_per_segment(
     real_check = rig.sampler.check
     real_encode = audio_module.encode_opus
 
-    def check(start: int, end: int) -> tuple[tuple[str, ...], bool]:
+    def check(start: int, end: int, endpoint_id: str | None) -> SourceCheck:
         checks.append(start)
-        return real_check(start, end)
+        return real_check(start, end, endpoint_id)
 
     def encode(samples: np.ndarray) -> bytes:
         encodes.append(1)
@@ -351,7 +354,7 @@ def test_checks_and_encoding_run_once_per_segment(
 
     monkeypatch.setattr(rig.sampler, "check", check)
     monkeypatch.setattr(audio_module, "encode_opus", encode)
-    rig.writer.write("system", utt())
+    rig.writer.write("system", utt(), SYSTEM)
     assert (len(checks), len(encodes), store.calls) == (1, 1, 4)
     assert counts(conn) == (1, 1)
 
@@ -472,6 +475,12 @@ def test_a_failed_close_is_retried_with_the_first_attempts_times(mrig: MediaRig)
     assert mrig.rows()[0][5] == 0
     assert mrig.tracker.stats["close_failed"] == 1
     mrig.at(20)  # the retry fails again, long after
+    assert mrig.tracker.stats["close_failed"] == 2
+    assert sum(mrig.tracker._faults.counts().values()) == 2  # pyright: ignore[reportPrivateUsage]
+    snapshot = mrig.tracker.stats_snapshot()
+    assert snapshot["close_failed"] == 2
+    assert sum(v for k, v in snapshot.items() if k.startswith("closing a media session")) == 2
+    snapshot["close_failed"] = 99  # a copy
     assert mrig.tracker.stats["close_failed"] == 2
     mrig.at(40)
     assert mrig.rows() == [(1, "Video A", 1000, 3000, 2000, 1)]

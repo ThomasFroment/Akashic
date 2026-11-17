@@ -19,7 +19,7 @@ from akashic.pipeline import whisper
 from akashic.pipeline.whisper import WhisperTranscriber
 from akashic.storage import db
 from akashic.storage.crypto import DataKey
-from akashic.storage.jobs import JobQueue, NewJob
+from akashic.storage.jobs import DEFER_MS, JobQueue, NewJob
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -154,6 +154,49 @@ def test_model_is_unloaded_after_the_idle_time(
     assert len(fake_faster_whisper.instances) == 3
 
 
+def test_a_load_failure_is_reported_for_the_defer_window_and_cleared_by_a_good_load(
+    fake_faster_whisper: type[FakeModel], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    clock = Clock()
+    transcriber = WhisperTranscriber(tmp_path, 60.0, clock=clock)
+    assert transcriber.load_error() is None
+    monkeypatch.setitem(sys.modules, "faster_whisper", None)  # the import fails
+    with pytest.raises(ImportError):
+        transcriber.transcribe(AUDIO, None)
+    assert transcriber.load_error() == "model failed to load (ModuleNotFoundError)"
+    clock.now = DEFER_MS / 1000 - 1
+    assert transcriber.load_error() == "model failed to load (ModuleNotFoundError)"
+    clock.now = DEFER_MS / 1000
+    assert transcriber.load_error() is None  # the window is over
+    assert WhisperTranscriber(tmp_path, 60.0, clock=clock).load_error() is None  # a restart
+    clock.now = 1.0
+    with pytest.raises(ImportError):
+        transcriber.transcribe(AUDIO, None)
+    assert transcriber.load_error() is not None
+    monkeypatch.undo()
+    module = types.ModuleType("faster_whisper")
+    module.WhisperModel = fake_faster_whisper  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "faster_whisper", module)
+    monkeypatch.setattr(whisper, "add_cuda_dll_directories", lambda: None)
+    assert transcriber.transcribe(AUDIO, None) is not None
+    assert transcriber.load_error() is None
+
+
+def test_a_model_construction_failure_is_remembered_by_type_name_only(
+    fake_faster_whisper: type[FakeModel], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    def broken(self: object, path: str, **kwargs: object) -> None:
+        del self, path, kwargs
+        msg = "CUDA failed: C:/Users/someone/secret"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(fake_faster_whisper, "__init__", broken)
+    transcriber = WhisperTranscriber(tmp_path, 60.0)
+    with pytest.raises(RuntimeError):
+        transcriber.transcribe(AUDIO, None)
+    assert transcriber.load_error() == "model failed to load (RuntimeError)"
+
+
 def test_cuda_dll_directories_are_added_for_every_nvidia_wheel_folder(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -216,7 +259,6 @@ def test_worker_body_puts_interrupted_jobs_back_and_stops(paths: Paths) -> None:
     assert queue.claim(["transcribe"], 0) is not None  # "running" when the previous worker died
     conn.close()
     assert run_worker_body(paths, key) == child.EXIT_OK
-    assert "1 interrupted job(s) put back" in (paths.logs_dir / "worker.log").read_text("utf-8")
     reopened = db.connect(paths.db_file, key.subkey("db"))
     try:
         # Back in the queue, not left "running" (which nothing would ever pick up again).

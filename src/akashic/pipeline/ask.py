@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
 from akashic.pipeline.llm import LlamaError, strip_thinking
 from akashic.search import answer, hybrid, planner, semantic
 from akashic.search.timeparse import TimeRange
-from akashic.storage import db
+from akashic.storage import db, gaps
 from akashic.storage.jobs import NewJob, PermanentJobError
 
 if TYPE_CHECKING:
@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from akashic.search.planner import Plan
+    from akashic.storage.gaps import GapSpan
     from akashic.storage.jobs import Job
 
     type Vector = NDArray[np.float32]
@@ -302,9 +303,10 @@ class AskHandler:
         *,
         history: list[answer.Turn],
         overview_total: int | None,
+        not_recorded: list[GapSpan],
     ) -> str:
         system, user = answer.answer_prompt(
-            question, plan, sources, now, history, overview_total=overview_total
+            question, plan, sources, now, history, overview_total=overview_total, gaps=not_recorded
         )
         text, last_flush = "", self._monotonic()
         for piece in self._chat.stream(system, user):
@@ -314,6 +316,20 @@ class AskHandler:
                 if not self._set(question_id, answer=strip_thinking(text)):
                     return ""
         return strip_thinking(text)
+
+    def _not_recorded(self, plan: Plan, now: int) -> list[GapSpan]:
+        """Spans of the asked window worth telling the model about.
+
+        Without a time window nothing is read; a failed read leaves the line out."""
+        if plan.time is None:
+            return []
+        a, b = plan.time.start_ms, plan.time.end_ms
+        try:
+            found = gaps.overlapping(self._conn, a, b, now, answer.gap_kinds(plan))
+        except db.DB_ERRORS as e:
+            log.warning("could not read capture gaps: %s", type(e).__name__)
+            return []
+        return answer.lost_spans(found, a, b, now)
 
     # --- the job -----------------------------------------------------------------------------
 
@@ -347,12 +363,13 @@ class AskHandler:
         found = hybrid.search_memory(self._conn, plan, qvec, self._embedder.model, limit=LIMIT)
         sources = answer.build_sources(found, overview=plan.overview)
         log.info("retrieved %d source(s) for question", len(sources))
+        not_recorded = self._not_recorded(plan, now)
         if not sources:
             self._set(
                 question_id,
                 state="done",
                 step="",
-                answer=answer.no_evidence(question),
+                answer=answer.no_evidence(question, not_recorded),
                 sources="[]",
                 model=None,
                 finished_ms=self._clock_ms(),
@@ -368,13 +385,14 @@ class AskHandler:
             now,
             history=[e.turn for e in earlier],
             overview_total=found.overview_total,
+            not_recorded=not_recorded,
         )
         cleaned, _ = answer.clean_answer(text, sources)
         self._set(
             question_id,
             state="done",
             step="",
-            answer=cleaned or answer.no_evidence(question),
+            answer=cleaned or answer.no_evidence(question, not_recorded),
             model=self._chat.model,
             finished_ms=self._clock_ms(),
         )

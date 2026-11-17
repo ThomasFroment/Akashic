@@ -69,6 +69,13 @@ Frames are monitor composites; evidence images are the cited window's visible pa
    from 6–12 real clips, mark meaning-changing terms and compare the same models locally. Inspect
    FR/EN/mixed outputs, omissions and hallucinations alongside word errors. Verify original
    transcripts remain unchanged and removing a sample/transcript removes comparison copies.
+7. With Discord's output on the headset and `[audio] system_device` another endpoint, hold a call
+   while a video plays on the recorded device. System lines name only the recorded device's
+   processes, and Ask "what did I hear at <hh:mm>?" (a time during the call) says voice was not
+   recorded. With sound playing through Wave Link, run
+   `uv run pytest -m hardware -s tests/hardware/test_real_hardware.py -k audible_processes_are_keyed`
+   and confirm the mixer's process name matches `MIXER_PROCESSES` (`elgato.wavelink.exe`,
+   unconfirmed).
 
 ## Media, sessions and gaming
 
@@ -84,6 +91,10 @@ Frames are monitor composites; evidence images are the cited window's visible pa
 4. On three monitors, open the timeline: every monitor at its real position; states with the age
    of the check; "Monitor N" labels matching the problem messages; hover lists a frame's
    windows; an Ask video link opens its moment, and Back returns to it.
+5. Play a browser video, pause 5 min, resume, then lock for 2 min and accept a UAC prompt. One row
+   runs through the lock and the prompt, and its end does not advance while paused. A video
+   started while locked gets no row until unlock. After sleep onto the lock screen, the row ends
+   at the last poll before sleep and a new one opens after unlock.
 
 ## Speakers
 
@@ -122,7 +133,12 @@ Frames are monitor composites; evidence images are the cited window's visible pa
    without restarting after the chat model finishes.
 3. Shorten screenshot and audio retention against disposable old data. Confirm the warning, cancel
    once, then apply it: only the selected media disappears while searchable text remains. Restore
-   `forever`; deleted media must not return. Verify the disk-space warning and one retention pass
-   per day.
+   `forever`; deleted media must not return. Verify one retention pass per day.
 4. Debug > Overview and Logs must explain stalled jobs and capture outcomes without exposing
    captured content. Settings must report disk use by type.
+5. While recording, Settings > Export one day (From/To) with screenshots and transcripts into an
+   empty folder on another drive. Cancel a second export into another empty folder and confirm no
+   `.partial` is left and that folder is still there, empty. Open the first with
+   `AKASHIC_DATA_DIR=<folder>` and `AKASHIC_CAPTURE=0`: the live passphrase fails and the new one
+   unlocks. There is no `crashed` gap and no Ask history. Search and Ask find only that day. The
+   live store is unchanged.

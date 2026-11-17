@@ -225,6 +225,7 @@ def build_rig(  # noqa: PLR0913 - one switch per scenario input
     on_game: Callable[[bool], None] | None = None,
     shown: bool = True,
     ts_start: int = 1_000_000,
+    now_ms: Callable[[], int] | None = None,
     uia: FakeUia | None = None,
     windows: FakeWindows | None = None,
 ) -> Rig:
@@ -260,7 +261,7 @@ def build_rig(  # noqa: PLR0913 - one switch per scenario input
         on_game=on_game or flags.append,
         on_own_address=own_flags.append,
         clock=clock or (lambda: clock_cell[0]),
-        now_ms=lambda: next(counter),
+        now_ms=now_ms or (lambda: next(counter)),
     )
     rig = Rig(
         capture, displays, windows, facts, events, captures, uia, ocr, writer, store, conn,

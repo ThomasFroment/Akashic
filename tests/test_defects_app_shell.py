@@ -97,6 +97,7 @@ class FakeTray:
         shell: Shell,
         *,
         state: Callable[[], str],
+        detail: Callable[[], str],
         open_ui: Callable[[], None],
         toggle_pause: Callable[[], None],
         quit_app: Callable[[], None],
@@ -104,6 +105,7 @@ class FakeTray:
     ) -> None:
         self.shell = shell
         self.state = state
+        self.detail = detail
         self.open_ui = open_ui
         self.toggle_pause = toggle_pause
         self.quit_app = quit_app
@@ -343,11 +345,10 @@ class States:
         return self.values
 
 
-@known_defect(157, "the tray says 'recording' while nothing is being processed")
 @pytest.mark.parametrize("worker", ["crashed", "stopped"])
 def test_tray_does_not_say_recording_when_the_worker_is_down(worker: str) -> None:
     sup = cast("supervisor.Supervisor", States({"capture": "ready", "worker": worker}))
-    assert app._overall_state(sup) != "recording"
+    assert app._overall_state(sup, None) != "recording"
 
 
 # --- #74: interpreters must start isolated --------------------------------------------------

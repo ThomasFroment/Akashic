@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import http.client
 import json
+import sqlite3
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import sqlcipher3
 from memory_data import add_monitor, new_frame
 
+from akashic.api import debug as debug_api
 from akashic.api.debug import DebugSources
 from akashic.api.server import ApiServer, Controls, Services, new_token
 from akashic.storage import db
@@ -152,6 +155,35 @@ def test_retry_makes_waiting_jobs_runnable(client: Client, conn: Connection) -> 
     assert client.call("/api/debug/jobs/retry", "POST") == (200, {"retried": 1})
     row = conn.execute("SELECT state, attempts, run_after_ms, error FROM jobs").fetchone()
     assert tuple(row) == ("pending", 0, 0, None)
+
+
+def test_retry_queues_failed_segments_that_still_have_audio_again(
+    client: Client, conn: Connection
+) -> None:
+    conn.execute("UPDATE audio_segments SET status = 'failed', transcript = 'old'")
+    conn.execute("UPDATE jobs SET state = 'failed', attempts = 5")
+    assert client.call("/api/debug/jobs/retry", "POST")[0] == 200
+    assert conn.execute("SELECT status, transcript FROM audio_segments").fetchone() == (
+        "pending",
+        None,
+    )
+    assert conn.execute("SELECT state, attempts FROM jobs").fetchone() == ("pending", 0)
+
+
+@pytest.mark.parametrize("error", [sqlite3.OperationalError, sqlcipher3.OperationalError])
+def test_retry_answers_503_when_the_database_is_busy(
+    client: Client, monkeypatch: pytest.MonkeyPatch, error: type[Exception]
+) -> None:
+    def busy(conn: object, now_ms: int) -> int:
+        del conn, now_ms
+        msg = "database is locked"
+        raise error(msg)
+
+    monkeypatch.setattr(debug_api, "retry_failed_transcriptions", busy)
+    assert client.call("/api/debug/jobs/retry", "POST") == (
+        503,
+        {"detail": "database busy, try again"},
+    )
 
 
 def test_retranscribe_forgets_the_text_and_queues_the_segment_again(

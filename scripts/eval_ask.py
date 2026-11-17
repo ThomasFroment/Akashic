@@ -1054,7 +1054,6 @@ def summary_lines(results: Sequence[Result]) -> list[str]:
             v = [r.verdict for r in rows]
             lines.append(
                 f"   {split:<7} {name:<5} ok {_rate(rows, lambda r: r.ok)}"
-                f"  ok+plan {_rate(rows, lambda r: r.verdict.ok_with_plan)}"
                 f"  facts {_rate(rows, lambda r: r.verdict.facts)}"
                 f"  cites {_rate(rows, lambda r: r.verdict.citations.ok)}"
                 f"  grounded {_rate(rows, lambda r: r.verdict.grounded)}"
@@ -1070,7 +1069,7 @@ def summary_lines(results: Sequence[Result]) -> list[str]:
 
 def report(model: str, results: Sequence[Result], *, show: bool) -> None:
     n = len(results)
-    print(f"\n== {model}: {sum(r.ok for r in results)}/{n} correct including plan")
+    print(f"\n== {model}")
     for line in summary_lines(results):
         print(line)
     times = sorted(r.seconds for r in results)
@@ -1188,7 +1187,7 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901, PLR0912, PLR0
         "models": {},
     }
     rows = cast("dict[str, object]", output["models"])
-    summary: dict[str, tuple[int, int]] = {}
+    summary: dict[tuple[str, str], tuple[int, int]] = {}
     with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
         work = Path(tmp)
         warmup, embedder = stack.enter_context(embedding_server(paths, work))
@@ -1208,10 +1207,12 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901, PLR0912, PLR0
                                 models_max=args.models_max, repeats=args.repeats)  # fmt: skip
             report(model, results, show=args.show)
             rows[model] = [result_json(r) for r in results]
-            summary[model] = (sum(r.ok for r in results), len(results))
+            for split in sorted({r.q.split for r in results}):
+                part = [r for r in results if r.q.split == split]
+                summary[model, split] = (sum(r.ok for r in part), len(part))
     print("\nSummary")
-    for model, (ok, n) in summary.items():
-        print(f"  {model}: {ok}/{n}")
+    for (model, split), (ok, n) in summary.items():
+        print(f"  {model} {split}: {ok}/{n}")
     if args.output is not None:
         args.output.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
     if args.compare is not None:

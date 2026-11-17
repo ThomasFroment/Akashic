@@ -12,11 +12,10 @@ import sys
 import threading
 import webbrowser
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-import sqlcipher3
+from typing import TYPE_CHECKING, Final
 
 from akashic.api.debug import DebugSources
+from akashic.api.export import Exports
 from akashic.api.models import Downloads
 from akashic.api.server import ApiServer, Controls, Services, new_token
 from akashic.config import (
@@ -35,6 +34,12 @@ from akashic.platform.win import autostart
 from akashic.storage import db, state
 from akashic.storage.audio import AudioStore
 from akashic.storage.crypto import KeyfileError
+from akashic.storage.debuginfo import (
+    TRAY_CAPTURE_RUNS,
+    Processing,
+    processing_attention,
+    processing_status,
+)
 from akashic.storage.frames import FrameStore
 from akashic.storage.media import MediaStore
 from akashic.storage.speakers import SpeakerStore
@@ -51,11 +56,16 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("app")
 
+EXPORT_STOP_S: Final = 10.0
 
-def _overall_state(supervisor: Supervisor) -> str:
-    """One word for the tray: what the capture process is doing."""
+
+def _overall_state(supervisor: Supervisor, processing: Processing | None) -> str:
+    """One word for the tray: what capture is doing, unless processing has a problem."""
     states = supervisor.states()
     state = states.get("capture", "stopped")
+    attention = processing_attention(states, processing, TRAY_CAPTURE_RUNS)
+    if attention is not None:
+        return attention
     if state == "ready" and states.get("worker") == "backlog":
         return "backlog"
     return {
@@ -67,6 +77,21 @@ def _overall_state(supervisor: Supervisor) -> str:
         "crashed": "restarting",
         "starting": "starting",
     }.get(state, "stopped")
+
+
+def _tray_detail(processing: Processing | None) -> str:
+    failed = processing.failed.get("transcribe", 0) if processing is not None else 0
+    if failed <= 0:
+        return ""
+    return f"{failed} recording{'s' if failed > 1 else ''} could not be transcribed"
+
+
+def _read_processing(conn: sqlite3.Connection, worker: str) -> Processing | None:
+    """The worker's published queue health; None while the database is busy."""
+    try:
+        return processing_status(conn, worker)
+    except db.DB_ERRORS:
+        return None
 
 
 def _debug_settings(paths: Paths) -> dict[str, object]:
@@ -140,16 +165,30 @@ def _required(paths: Paths) -> list[models.Needed]:
     return models.required(config)
 
 
-def _tear_down(api: ApiServer | None, supervisor: Supervisor, conn: sqlite3.Connection) -> None:
-    """Stop the API first so no request can restart children, then the children, then the db."""
+def _tear_down(
+    exports: Exports | None,
+    api: ApiServer | None,
+    supervisor: Supervisor,
+    conn: sqlite3.Connection,
+    monitor_conn: sqlite3.Connection,
+) -> None:
+    """Stop an export first (it uses the key), then the API so no request can restart children,
+    then the children, then the databases."""
     try:
-        if api is not None:
-            api.stop()
+        if exports is not None:
+            exports.cancel_and_wait(EXPORT_STOP_S)
     finally:
         try:
-            supervisor.shutdown()
+            if api is not None:
+                api.stop()
         finally:
-            conn.close()
+            try:
+                supervisor.shutdown()
+            finally:
+                try:
+                    monitor_conn.close()
+                finally:
+                    conn.close()
 
 
 def _remember_paused(services: Services | None, paused: bool) -> None:  # noqa: FBT001 - a setter
@@ -159,11 +198,11 @@ def _remember_paused(services: Services | None, paused: bool) -> None:  # noqa: 
     try:
         with services.db() as conn:
             state.set_int(conn, state.CAPTURE_PAUSED, int(paused))
-    except sqlcipher3.Error as exc:
+    except db.DB_ERRORS as exc:
         log.warning("could not remember pause: %s", type(exc).__name__)
 
 
-def _run(paths: Paths, key: DataKey, *, open_ui_at_start: bool) -> Outcome:
+def _run(paths: Paths, key: DataKey, *, open_ui_at_start: bool) -> Outcome:  # noqa: PLR0915 - wiring
     """Everything that runs while the app is unlocked. Returns when the user quits or locks."""
     # No pause can arrive before `services` is assigned: nothing sends one before start().
     services: Services | None = None
@@ -178,10 +217,11 @@ def _run(paths: Paths, key: DataKey, *, open_ui_at_start: bool) -> Outcome:
         quitting.set()
 
     conn = db.connect(paths.db_file, key.subkey("db"))
+    monitor_conn = db.connect(paths.db_file, key.subkey("db"))  # the tray never waits on the API
     api: ApiServer | None = None
+    exports: Exports | None = None
     try:
         log.info("schema v%d", db.migrate(conn))
-        start_paused = state.get_int(conn, state.CAPTURE_PAUSED, 0) == 1
         frames = FrameStore(conn, MediaStore(paths.media_dir, key.subkey("media")))
         audio = AudioStore(conn, MediaStore(paths.media_dir, key.subkey("media")))
 
@@ -203,6 +243,11 @@ def _run(paths: Paths, key: DataKey, *, open_ui_at_start: bool) -> Outcome:
             logs_dir=paths.logs_dir,
             settings=lambda: _debug_settings(paths),
         )
+        exports = Exports(
+            open_db=lambda: db.connect(paths.db_file, key.subkey("db")),
+            media=frames.media,
+            data_dir=paths.root,
+        )
         services = Services(
             conn,
             frames,
@@ -215,24 +260,27 @@ def _run(paths: Paths, key: DataKey, *, open_ui_at_start: bool) -> Outcome:
             _embedding_model(paths),
             _ask_blocker(paths),
             Downloads(paths.models_dir, paths.runtime_dir, lambda: _required(paths)),
+            exports,
         )
         presence = services.presence
         server = api = ApiServer(services)
         supervisor.set_api_port(server.port)
-        supervisor.start(paused=start_paused)
+        supervisor.start(paused=state.get_int(conn, state.CAPTURE_PAUSED, 0) == 1)
         server.start()
 
         def open_ui() -> None:
             webbrowser.open(server.open_url())
 
         def toggle_pause() -> None:
-            if _overall_state(supervisor) == "paused":
+            if supervisor.states().get("capture") == "paused":
                 controls.resume()
             else:
                 controls.pause()
 
+        processing: Processing | None = None
         tray = Tray(
-            state=lambda: _overall_state(supervisor),
+            state=lambda: _overall_state(supervisor, processing),
+            detail=lambda: _tray_detail(processing),
             open_ui=open_ui,
             toggle_pause=toggle_pause,
             quit_app=quitting.set,
@@ -240,9 +288,13 @@ def _run(paths: Paths, key: DataKey, *, open_ui_at_start: bool) -> Outcome:
         )
 
         def monitor() -> None:
+            nonlocal processing
             while not quitting.wait(1.0):
                 supervisor.poll()
                 presence.expire()
+                processing = _read_processing(
+                    monitor_conn, supervisor.states().get("worker", "stopped")
+                )
                 tray.refresh()
             tray.stop()
 
@@ -254,7 +306,7 @@ def _run(paths: Paths, key: DataKey, *, open_ui_at_start: bool) -> Outcome:
         log.info("interrupted")
     finally:
         quitting.set()
-        _tear_down(api, supervisor, conn)
+        _tear_down(exports, api, supervisor, conn, monitor_conn)
     return "lock" if locking.is_set() else "quit"
 
 

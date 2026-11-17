@@ -104,6 +104,7 @@ def is_game_window(window: WindowInfo, monitors: list[Rect], settings: GameSetti
 @dataclass(frozen=True, slots=True)
 class Transition:
     ended: Game | None = None
+    ended_ms: int = 0  # wall clock of the last tick that saw the ended game in front
     started: Game | None = None
 
 
@@ -114,32 +115,37 @@ class GameMode:
         self._settings = settings
         self.current: Game | None = None
         self._last_seen = 0.0
+        self._last_seen_ms = 0  # wall clock of the same tick
 
     @property
     def active(self) -> bool:
         return self.current is not None
 
-    def observe(self, window: WindowInfo | None, monitors: list[Rect], now: float) -> Transition:
+    def observe(
+        self, window: WindowInfo | None, monitors: list[Rect], now: float, ts_ms: int
+    ) -> Transition:
         game = (
             Game(window.process, window.title)
             if window is not None and is_game_window(window, monitors, self._settings)
             else None
         )
         if game is not None:
-            self._last_seen = now
+            ended_ms = self._last_seen_ms
+            self._last_seen, self._last_seen_ms = now, ts_ms
             if self.current is None:
                 self.current = game
                 return Transition(started=game)
             if self.current.process != game.process:  # straight from one game to another
                 ended, self.current = self.current, game
-                return Transition(ended=ended, started=game)
+                return Transition(ended=ended, ended_ms=ended_ms, started=game)
             return Transition()
         if self.current is not None and now - self._last_seen >= self._settings.end_grace_s:
             ended, self.current = self.current, None
-            return Transition(ended=ended)
+            return Transition(ended=ended, ended_ms=self._last_seen_ms)
         return Transition()
 
-    def stop(self) -> Game | None:
-        """Forget the current game (pause, shutdown). Returns it so the caller can close its row."""
+    def stop(self) -> Transition:
+        """Forget the current game (pause, shutdown). Returns its end so the caller can close its
+        row."""
         ended, self.current = self.current, None
-        return ended
+        return Transition(ended=ended, ended_ms=self._last_seen_ms)

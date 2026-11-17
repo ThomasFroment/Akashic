@@ -136,7 +136,7 @@ progress { accent-color: var(--accent); vertical-align: middle; }
 .recents-empty { padding: 4px 10px; font-size: 13px; color: var(--muted); }
 .sidebar-foot { margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
 .status-line { display: flex; align-items: center; gap: 8px; padding: 4px 10px 6px; font-size: 13px; color: var(--text-2); min-width: 0; }
-.status-line #status-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-line .status-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .status-line button { min-height: 26px; padding: 2px 10px; font-size: 12.5px; }
 .status-count { padding: 0 10px 6px 26px; font-size: 12px; color: var(--muted); margin-top: -6px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }

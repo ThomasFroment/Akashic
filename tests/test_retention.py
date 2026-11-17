@@ -570,14 +570,14 @@ def test_usage_of_an_empty_data_directory_is_zero(conn: Connection, paths: Paths
 
 
 def test_worker_housekeeping_queues_one_pass_per_day_and_none_when_all_forever(
-    conn: Connection,
+    conn: Connection, paths: Paths
 ) -> None:
     queue = JobQueue(conn)
 
     def tick(**limits: int | None) -> None:
         retention = {**dict.fromkeys(RETENTION_TYPES), **limits}
-        ctx = SimpleNamespace(conn=conn, config=Config(retention_days=retention))
-        housekeeping(ctx, queue, NOW)  # type: ignore[arg-type]  # only conn and config are used
+        ctx = SimpleNamespace(conn=conn, config=Config(retention_days=retention), paths=paths)
+        housekeeping(ctx, queue, NOW, lambda: False)  # type: ignore[arg-type]  # only conn, config and paths are used
 
     tick()
     assert queue.pending_count(["retention"]) == 0

@@ -71,26 +71,32 @@ def test_user_lists_override_the_heuristic() -> None:
 
 def test_game_mode_start_grace_end_and_switch() -> None:
     mode = GameMode(GameSettings(end_grace_s=5))
-    assert mode.observe(window(), [SCREEN], 0).started is None
-    started = mode.observe(game(), [SCREEN], 1)
+    assert mode.observe(window(), [SCREEN], 0, 0 * 1000).started is None
+    started = mode.observe(game(), [SCREEN], 1, 1 * 1000)
     assert started.started is not None
     assert started.started.process == "game.exe"
     assert mode.active
-    assert mode.observe(game(), [SCREEN], 2) == type(started)()  # no change
-    assert mode.observe(None, [SCREEN], 4).ended is None  # alt-tab flicker
-    assert mode.observe(game(), [SCREEN], 5).ended is None  # back: grace restarts
-    assert mode.observe(window(), [SCREEN], 9).ended is None
-    ended = mode.observe(window(), [SCREEN], 10.5)
+    assert mode.observe(game(), [SCREEN], 2, 2 * 1000) == type(started)()  # no change
+    assert mode.observe(None, [SCREEN], 4, 4 * 1000).ended is None  # alt-tab flicker
+    assert mode.observe(game(), [SCREEN], 5, 5 * 1000).ended is None  # back: grace restarts
+    assert mode.observe(window(), [SCREEN], 9, 9 * 1000).ended is None
+    ended = mode.observe(window(), [SCREEN], 10.5, int(10.5 * 1000))
     assert ended.ended is not None
+    assert ended.ended_ms == 5_000  # grace ends the row at the last tick it was in front
     assert not mode.active
-    mode.observe(game(process="a.exe"), [SCREEN], 20)
-    switched = mode.observe(game(process="b.exe"), [SCREEN], 21)
+    mode.observe(game(process="a.exe"), [SCREEN], 20, 20 * 1000)
+    switched = mode.observe(game(process="b.exe"), [SCREEN], 21, 21 * 1000)
     assert switched.ended is not None
     assert switched.ended.process == "a.exe"
     assert switched.started is not None
     assert switched.started.process == "b.exe"
-    assert mode.stop() is not None
-    assert mode.stop() is None
+    assert switched.ended_ms == 20_000  # the last tick game A was in front
+    mode.observe(game(process="b.exe"), [SCREEN], 22, 22_000)
+    mode.observe(window(), [SCREEN], 23, 23_000)
+    stopped = mode.stop()
+    assert stopped.ended is not None
+    assert stopped.ended_ms == 22_000
+    assert mode.stop().ended is None
 
 
 # --- the loop in gaming mode -------------------------------------------------------------
@@ -230,6 +236,76 @@ def test_reset_and_close_end_the_game_row(make_game: Callable[..., Rig]) -> None
     rig.capture.close()
     assert [g[4] for g in games(rig)] == [1, 1]
     rig.capture.close()  # idempotent
+
+
+# A game row ends at the wall-clock time of the last tick that saw the game in front.
+
+
+def timed_game(make_game: Callable[..., Rig]) -> tuple[Rig, list[int]]:
+    ms = [0]
+    return make_game(now_ms=lambda: ms[0]), ms
+
+
+def tick_at(rig: Rig, ms: list[int], seconds: float) -> None:
+    ms[0] = int(seconds * 1000)
+    rig.tick(seconds)
+
+
+def test_a_game_row_ends_at_the_last_tick_it_was_in_front_not_at_grace_expiry(
+    make_game: Callable[..., Rig],
+) -> None:
+    rig, ms = timed_game(make_game)
+    rig.show(7, "game.exe", "The Game", has_frame=False)
+    tick_at(rig, ms, 0.0)
+    tick_at(rig, ms, 1.0)
+    rig.show(1, "notepad.exe", "Notes")
+    tick_at(rig, ms, 3.0)
+    tick_at(rig, ms, 6.0)
+    assert [g[2:] for g in games(rig)] == [(0, 1000, 1)]
+
+
+def test_switching_from_game_a_to_game_b_ends_a_at_its_last_tick(
+    make_game: Callable[..., Rig],
+) -> None:
+    rig, ms = timed_game(make_game)
+    rig.show(7, "a.exe", "Game A", has_frame=False)
+    tick_at(rig, ms, 0.0)
+    tick_at(rig, ms, 2.0)
+    rig.hide(7)
+    rig.show(8, "b.exe", "Game B", has_frame=False)
+    tick_at(rig, ms, 4.0)
+    assert [(g[0], g[2], g[3], g[4]) for g in games(rig)] == [
+        ("a.exe", 0, 2000, 1),
+        ("b.exe", 4000, 4000, 0),
+    ]
+
+
+def test_locking_ends_the_game_row_at_the_last_tick_it_was_in_front(
+    make_game: Callable[..., Rig],
+) -> None:
+    rig, ms = timed_game(make_game)
+    rig.show(7, "game.exe", "The Game", has_frame=False)
+    tick_at(rig, ms, 0.0)
+    tick_at(rig, ms, 2.0)
+    rig.windows.locked = True
+    tick_at(rig, ms, 30.0)  # waking from sleep onto the lock screen
+    assert [g[2:] for g in games(rig)] == [(0, 2000, 1)]
+
+
+def test_reset_and_close_end_the_game_row_at_the_last_tick_it_was_in_front(
+    make_game: Callable[..., Rig],
+) -> None:
+    rig, ms = timed_game(make_game)
+    rig.show(7, "game.exe", "The Game", has_frame=False)
+    tick_at(rig, ms, 0.0)
+    tick_at(rig, ms, 2.0)
+    ms[0] = 9_000
+    rig.capture.reset()
+    tick_at(rig, ms, 10.0)  # resumed: a new row
+    tick_at(rig, ms, 12.0)
+    ms[0] = 20_000
+    rig.capture.close()
+    assert [g[2:] for g in games(rig)] == [(0, 2000, 1), (10_000, 12_000, 1)]
 
 
 def test_an_excluded_game_gets_no_frame_but_is_still_logged(make_game: Callable[..., Rig]) -> None:
@@ -757,13 +833,16 @@ def test_d3d_evidence_on_a_window_covering_no_monitor_is_not_a_game(process: str
 
 def test_a_windowed_d3d_flag_neither_ends_nor_switches_the_session() -> None:
     mode = GameMode(GameSettings(end_grace_s=5))
-    mode.observe(game(process="a.exe"), [SCREEN, SECOND], 0)
+    mode.observe(game(process="a.exe"), [SCREEN, SECOND], 0, 0 * 1000)
     for t in (1, 2, 3):
-        change = mode.observe(d3d("b.exe", WINDOWED), [SCREEN, SECOND], t)
+        change = mode.observe(d3d("b.exe", WINDOWED), [SCREEN, SECOND], t, int(t * 1000))
         assert change.started is None
         assert change.ended is None
     assert mode.active
-    assert mode.observe(d3d("b.exe", WINDOWED), [SCREEN, SECOND], 6.5).ended is not None
+    assert (
+        mode.observe(d3d("b.exe", WINDOWED), [SCREEN, SECOND], 6.5, int(6.5 * 1000)).ended
+        is not None
+    )
 
 
 def test_precedence_empty_process_and_coverage_come_first() -> None:

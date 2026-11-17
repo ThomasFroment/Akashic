@@ -7,6 +7,7 @@ import http.client
 import json
 import tomllib
 from dataclasses import replace
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -17,7 +18,7 @@ from store_reads import latest_frames
 from waits import wait_for
 
 from akashic.api.server import ApiServer, Controls, Services, new_token
-from akashic.api.settings import BY_KEY, SETTINGS, current_value
+from akashic.api.settings import BY_KEY, OTHER, SETTINGS, current_value
 from akashic.capture.audio import AudioSettings
 from akashic.capture.main import audio_settings
 from akashic.config import (
@@ -39,7 +40,6 @@ from akashic.supervisor import CHILDREN, Supervisor, spawn_module
 if TYPE_CHECKING:
     import subprocess
     from collections.abc import Iterator
-    from pathlib import Path
     from sqlite3 import Connection
 
     from akashic.config import Paths
@@ -211,6 +211,21 @@ def test_window_titles_are_not_a_setting(client: Client, paths: Paths) -> None:
     assert 'window_titles = ["*Mon compte*"]' in paths.config_file.read_text("utf-8")
 
 
+def test_the_disk_warning_is_not_a_setting_and_an_old_key_is_left_alone(
+    client: Client, paths: Paths
+) -> None:
+    _, out = client.call("/api/settings")
+    assert "disk_warning_free_gb" not in {f["key"] for f in out["fields"]}
+    assert "disk_warning_free_gb" not in BY_KEY
+    assert next(f for f in out["fields"] if f["key"] == "log_level")["group"] == OTHER
+    old = "disk_warning_free_gb = 20\n" + DEFAULT_CONFIG_TOML
+    paths.config_file.write_text(old, encoding="utf-8")
+    assert client.save({"theme": "dark"})[0] == 200
+    text = paths.config_file.read_text("utf-8")
+    assert "disk_warning_free_gb = 20\n" in text
+    assert parse_config(text).theme == "dark"
+
+
 def test_model_choices_can_be_saved_and_are_described(client: Client, paths: Paths) -> None:
     from akashic.pipeline.models import CHAT_CANDIDATES, QWEN35_4B  # noqa: PLC0415
 
@@ -296,6 +311,7 @@ def test_bad_values_are_refused_and_the_file_is_untouched(client: Client, paths:
         ({"ocr_language": 5}, "must be text"),
         ({"nope.key": 1}, "unknown setting"),
         ({"exclusions.window_titles": ["*x*"]}, "unknown setting"),
+        ({"disk_warning_free_gb": 20}, "unknown setting"),
     ]
     for values, why in bad:
         status, out = client.save(values)
@@ -446,7 +462,6 @@ def test_a_retention_limit_must_be_a_whole_number_of_days(client: Client, bad: o
     assert "Keep screenshots" in out["detail"]
 
 
-# Pins disk_warning_free_gb and low_space: delete or rewrite with M21.2.
 def test_the_storage_report_lists_sizes_growth_and_free_space(client: Client, paths: Paths) -> None:
     (paths.media_dir / "2026" / "11" / "08").mkdir(parents=True)
     (paths.media_dir / "2026" / "11" / "08" / "a.webp.enc").write_bytes(b"x" * 1500)
@@ -469,9 +484,8 @@ def test_the_storage_report_lists_sizes_growth_and_free_space(client: Client, pa
     assert out["database_bytes"] > 0
     assert out["total_bytes"] == 1500 + 700 + out["database_bytes"]
     assert out["free_bytes"] > 0
-    assert out["low_space"] is False
-    client.save({"disk_warning_free_gb": 100000})
-    assert client.call("/api/settings/storage")[1]["low_space"] is True
+    assert "warn_below_gb" not in out
+    assert "low_space" not in out
 
 
 def test_one_kind_of_data_can_be_deleted_with_its_files(client: Client, paths: Paths) -> None:
@@ -524,3 +538,15 @@ def test_media_only_deletion_keeps_searchable_text(client: Client, paths: Paths)
     ).fetchone() == ("retained speech", None)
     assert client.call("/api/settings/storage/transcripts", "DELETE")[0] == 200
     assert audio.get(segment) is None
+
+
+def test_the_pages_show_no_low_disk_space_warning() -> None:
+    ui = Path(__file__).resolve().parents[1] / "src" / "akashic" / "ui"
+    settings_js = (ui / "settings.js").read_text("utf-8")
+    debug_js = (ui / "debug.js").read_text("utf-8")
+    assert "low_space" not in settings_js
+    assert "Less than" not in settings_js
+    assert "warn_below_gb" not in settings_js
+    assert "Warn when free disk space" not in settings_js
+    assert "GB free" not in debug_js
+    assert "Free on the data drive" in settings_js

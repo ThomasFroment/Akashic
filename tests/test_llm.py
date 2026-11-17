@@ -553,6 +553,8 @@ def test_thinking_blocks_are_removed_even_when_unfinished() -> None:
 
 class _Sse(http.server.BaseHTTPRequestHandler):
     def do_POST(self) -> None:
+        # Unread request bytes at close make Windows reset the connection and drop the reply.
+        self.rfile.read(int(self.headers.get("Content-Length", 0)))
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.end_headers()

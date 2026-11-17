@@ -15,8 +15,10 @@ import pytest
 import sqlcipher3
 from capture_fakes import blank, monitor, with_text_block
 from PIL import Image
+from waits import wait_for
 
 from akashic.capture import imaging, ports, screen_writer
+from akashic.capture.gaps import STOP_BUSY_TIMEOUT_MS
 from akashic.capture.health import (
     SCREEN_DISK_FULL,
     SCREEN_FRAMES_DROPPED,
@@ -26,6 +28,7 @@ from akashic.capture.ocr_gate import OcrGate
 from akashic.capture.ports import Entry, Rect
 from akashic.capture.screen_writer import Picture, ScreenWriter
 from akashic.capture.text import MIN_UIA_CHARS
+from akashic.storage import db
 from akashic.storage.frames import FrameStore, NewFrame, NewWindow
 from akashic.storage.monitors import MonitorLog
 
@@ -63,6 +66,7 @@ class SpyStore(FrameStore):
         self.added: list[NewFrame] = []
         self.threads: set[int] = set()
         self.fail_ts: set[int] = set()
+        self.busy_ts: set[int] = set()
         self.entered = threading.Event()
         self.gate: threading.Event | None = None  # while set up and unset, add blocks
 
@@ -74,6 +78,8 @@ class SpyStore(FrameStore):
         if frame.ts_ms in self.fail_ts:
             msg = "secret title"
             raise RuntimeError(msg)
+        if frame.ts_ms in self.busy_ts:
+            raise sqlcipher3.OperationalError("database is locked")
         row = super().add(frame)
         self.added.append(frame)
         return row
@@ -85,6 +91,7 @@ class SpyMonitors(MonitorLog):
         self.threads: set[int] = set()
         self.fail_state_ts: set[int] = set()
         self.fail_present = False
+        self.busy_present = False
         self.on_state: Callable[[MonitorState, int], None] | None = None
         self.writes: list[tuple[MonitorState, int]] = []
 
@@ -93,6 +100,8 @@ class SpyMonitors(MonitorLog):
         if self.fail_present:
             msg = "secret layout"
             raise RuntimeError(msg)
+        if self.busy_present:
+            raise sqlcipher3.OperationalError("database is locked")
         return super().present(rows, ts_ms)
 
     def state(self, monitor_id: int, state: MonitorState, ts_ms: int) -> None:
@@ -377,7 +386,6 @@ def test_the_pixel_byte_bound_counts_the_composite_and_every_entry_image(rig: Ri
     rig.writer.submit(picture("m2", 3, entries=[entry(image=huge())]))
     assert rig.writer.lost("m1")
     assert not rig.writer.lost("m2")
-    rig.writer.close()
 
 
 def test_the_byte_bound_prefers_a_side_picture(rig: Rig) -> None:
@@ -386,7 +394,6 @@ def test_the_byte_bound_prefers_a_side_picture(rig: Rig) -> None:
     rig.writer.submit(picture("m2", 2, image=huge(), side=True))
     assert rig.writer.lost("m2")
     assert not rig.writer.lost("m1")
-    rig.writer.close()
 
 
 def test_drop_runs_grow_in_health_and_a_stored_picture_resets_them(rig: Rig) -> None:
@@ -706,23 +713,19 @@ def test_a_monitor_log_failure_on_a_note_or_layout_is_logged_and_skipped(
     assert "secret" not in caplog.text
 
 
-def test_failing_pictures_become_a_health_problem_after_three_in_a_row(rig: Rig) -> None:
+def test_one_failing_picture_is_a_health_problem(rig: Rig) -> None:
     rig.layout("m1")
-    rig.store.fail_ts = {1, 2, 3}
-    for ts in (1, 2):
-        rig.writer.submit(picture(ts=ts))
-    rig.drain()
-    assert rig.writer.problems(0) == []
+    rig.store.fail_ts = {3}
     rig.writer.submit(picture(ts=3))
     rig.drain()
     assert rig.writer.problems(0) == [f"{SCREEN_IMAGES_FAILING}@Monitor 1"]
     assert rig.writer.problems(4.5) == []  # runs older than `since` do not count
 
 
-def test_a_stored_picture_resets_the_failure_run(rig: Rig) -> None:
+def test_a_stored_picture_clears_the_failure(rig: Rig) -> None:
     rig.layout("m1")
-    rig.store.fail_ts = {1, 2, 4}
-    for ts in (1, 2, 3, 4):
+    rig.store.fail_ts = {1, 2}
+    for ts in (1, 2, 3):
         rig.writer.submit(picture(ts=ts))
     rig.drain()
     assert rig.writer.problems(0) == []
@@ -772,12 +775,15 @@ def test_only_the_failing_monitor_is_named_while_the_other_stores(rig: Rig) -> N
     assert rig.writer.problems(0) == [f"{SCREEN_IMAGES_FAILING}@Monitor 1"]
 
 
+def _disk_full_error() -> Exception:
+    error = sqlcipher3.OperationalError("database or disk is full")
+    error.sqlite_errorcode = db.SQLITE_FULL  # without a code it would read as a busy database
+    return error
+
+
 @pytest.mark.parametrize(
     "error",
-    [
-        OSError(errno.ENOSPC, "No space left on device"),
-        sqlcipher3.OperationalError("database or disk is full"),
-    ],
+    [OSError(errno.ENOSPC, "No space left on device"), _disk_full_error()],
 )
 def test_a_full_disk_is_its_own_problem_and_marks_the_monitor_lost(
     rig: Rig, monkeypatch: pytest.MonkeyPatch, error: Exception
@@ -927,11 +933,81 @@ def test_run_writes_what_is_queued_when_stopped_and_returns(rig: Rig) -> None:
     assert rig.states("m1") == [("shown", 1, 2), ("hidden", 3, 3)]
 
 
-def test_close_discards_whatever_is_still_queued(rig: Rig) -> None:
+def test_stopping_stores_everything_queued_when_the_database_is_free(rig: Rig) -> None:
     rig.layout("m1")
     rig.writer.submit(picture(ts=1))
     rig.writer.note("m1", "hidden", 2)
-    rig.writer.close()
     rig.drain()
+    assert rig.stored_ts() == [1]
+    assert rig.states("m1") == [("shown", 1, 1), ("hidden", 2, 2)]
+    assert rig.writer.stats["stop_dropped"] == 0
+
+
+def test_stopping_limits_the_busy_wait_on_the_writer_connection(rig: Rig) -> None:
+    rig.layout("m1")
+    rig.writer.submit(picture(ts=1))
+    rig.drain()
+    assert rig.conn.execute("PRAGMA busy_timeout").fetchone()[0] == STOP_BUSY_TIMEOUT_MS
+
+
+def test_a_busy_picture_write_at_stop_drops_the_rest_of_the_queue(
+    rig: Rig, caplog: pytest.LogCaptureFixture
+) -> None:
+    rig.layout("m1")
+    rig.store.busy_ts = {1}
+    for ts in (1, 2, 3):
+        rig.writer.submit(picture(ts=ts))
+    rig.writer.note("m1", "hidden", 4)
+    with caplog.at_level(logging.WARNING):
+        rig.drain()
     assert rig.stored_ts() == []
-    assert rig.states("m1") == []
+    assert rig.writer.stats["stop_dropped"] == 3  # the failed picture is counted elsewhere
+    assert "dropped 3 queued" in caplog.text
+    assert "locked" not in caplog.text
+
+
+def test_a_busy_layout_write_at_stop_drops_the_rest_of_the_queue(rig: Rig) -> None:
+    rig.monitors.busy_present = True
+    rig.layout("m1")
+    rig.writer.submit(picture(ts=1))
+    rig.writer.note("m1", "hidden", 2)
+    rig.drain()
+    assert rig.writer.stats["stop_dropped"] == 2
+
+
+def test_a_busy_state_write_at_stop_drops_the_rest_of_the_queue(rig: Rig) -> None:
+    rig.layout("m1")
+    rig.monitors.on_state = _busy_state
+    rig.writer.note("m1", "hidden", 1)
+    rig.writer.note("m1", "shown", 2)
+    rig.writer.note("m1", "hidden", 3)
+    rig.drain()
+    assert rig.writer.stats["stop_dropped"] == 2
+
+
+def test_a_write_failing_for_another_reason_at_stop_does_not_drop_the_queue(rig: Rig) -> None:
+    rig.layout("m1")
+    rig.store.fail_ts = {1}
+    for ts in (1, 2):
+        rig.writer.submit(picture(ts=ts))
+    rig.drain()
+    assert rig.stored_ts() == [2]
+    assert rig.writer.stats["stop_dropped"] == 0
+
+
+def test_a_busy_write_before_the_stop_is_not_a_drop(rig: Rig) -> None:
+    rig.layout("m1")
+    rig.store.busy_ts = {1}
+    rig.writer.submit(picture(ts=1))
+    rig.writer.submit(picture(ts=2))
+    thread, stop = rig.start()
+    assert wait_for(lambda: rig.stored_ts() == [2], 5)
+    stop.set()
+    thread.join(timeout=5)
+    assert rig.writer.stats["stop_dropped"] == 0
+
+
+def _busy_state(state: MonitorState, ts_ms: int) -> None:
+    del ts_ms
+    if state == "hidden":
+        raise sqlcipher3.OperationalError("database is locked")

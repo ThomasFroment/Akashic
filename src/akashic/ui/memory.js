@@ -90,7 +90,7 @@ function answerBody(text, sources) {
 }
 
 function sourceImage(s) {
-  if (!s.window_id) return null;
+  if (s.kind === "frame" ? !s.has_image : !s.window_id) return null;
   const frameId = s.kind === "frame" ? s.id : s.frame_id;
   const img = lazyImg("thumb", `/api/frames/${frameId}/image?window=${s.window_id}&w=320`);
   const href = sourceMoment(s);
@@ -113,7 +113,7 @@ async function relatedMoments(text) {
   const parts = [
     section("Episodes", found.episodes.map(episodeRow)),
     section("What was said", found.lines.map(lineRow)),
-    section("On screen", found.frames.map((f) => resultRow(f, "memory"))),
+    section("On screen", found.frames.map(resultRow)),
   ].filter(Boolean);
   return parts.length ? parts : [h("div", { class: "muted small" }, "Nothing matches that.")];
 }
