@@ -15,10 +15,16 @@ questions about it with a local LLM.
 - "What video did I watch yesterday afternoon?"
 - "What did Minlo say during our conversation this morning, something about a game?"
 - "Give me a list of all the series I watched."
+- "What solo game did I play?"
+- "What was the name of the Minecraft Rust project?"
+
+These are examples, not the full list: real questions are far more varied (games and apps,
+projects, files and names seen on screen, people, places, counts), in French and English.
 
 Every design choice should make questions of these shapes work better: a time window and/or a
-structured anchor (a video, a series, a person), often with a fuzzy topic; or a complete list of
-one kind of thing. When in doubt, test against them.
+structured anchor (a video, a series, a game, a project, a person), often with a fuzzy topic; or a
+complete list of one kind of thing. When in doubt, test against a wide range of such questions, not
+only the examples above.
 
 - Single user, single machine. No accounts, no multi-tenancy, no sync, no plugins, no "teams".
 - Fully local. Nothing ever leaves the machine. Privacy is the product.
