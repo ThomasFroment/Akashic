@@ -2,9 +2,10 @@
 
 ## Threat model
 
-Encryption protects recorded files and backups while the app is locked or stopped. It does not
-protect against malware acting as the user while unlocked, a keylogger, or physical access to
-an unlocked session. Python key wiping is best effort, not a guarantee of removing all copies.
+Encryption protects recorded files, backups and exports while the app is locked or stopped. It
+does not protect against malware acting as the user while unlocked, a keylogger, or physical
+access to an unlocked session. Python key wiping is best effort, not a guarantee of removing all
+copies.
 
 The hard privacy rules are in [AGENTS.md](../AGENTS.md). A mechanism described here is not proof
 that every implementation path satisfies them; [TODO.md](../TODO.md) (planned work) and
@@ -26,7 +27,8 @@ Do not duplicate those definitions here or change them as an incidental refactor
 
 Back up the keyfile with the encrypted database and media. A missing keyfile must not cause an
 existing store to receive a fresh, incompatible key. A lost passphrase has no implemented
-recovery path.
+recovery path. The passphrase cannot be changed; an export is the only copy under another
+passphrase.
 
 ## Local execution and sessions
 
@@ -43,6 +45,13 @@ server), and the pages show nothing recorded until the halt is confirmed. The UI
 the tray or on the first run, never at autostart. As a failsafe, a visible browser window whose
 readable address is Akashic's own port halts capture too, for a page opened some other way, such
 as a bookmark.
+
+The export passphrase reaches the loopback API only in the body of an authenticated
+`POST /api/export`. The body is read by hand and never logged. Errors are fixed sentences that
+never echo it, nor the path or dates. Status shows type names only. The new key is wiped after use
+(best effort). Lock and Quit cancel a running export first
+([ARCHITECTURE.md](ARCHITECTURE.md#lifecycle-guarantees)). Anyone with an export's passphrase
+reads everything it holds, so its scope is the user's choice.
 
 Only explicit public-file downloads may use external connections. They carry no captured or
 identifying data, use pinned artifacts and verify integrity before publication. Libraries must

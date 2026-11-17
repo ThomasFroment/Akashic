@@ -10,6 +10,9 @@ Vocabulary hints can help recurring names and game terms but can also produce pr
 Do not silently rewrite transcripts with an LLM or fuzzy name replacement. Retain the source
 recording, distinguish uncertain recognition and measure hallucinations as well as omissions.
 
+A long utterance is cut and continued. The continuation keeps any fresh speech, however short,
+and still goes through the quiet check.
+
 The microphone represents the user. System audio may mix friends, videos, music and game sound;
 process participation does not identify the author of every word.
 
@@ -19,6 +22,12 @@ Finding a person's participation in a recording does not establish which sentenc
 Keep mixed or uncertain authorship explicit, and do not present a whole mixed transcript as a
 quotation from one participant. Speaker corrections and merges must update derived associations
 without silently changing unrelated identities.
+
+A system segment names only the processes audible where it was recorded, so voice chat routed
+elsewhere is missing from it ([CAPTURE.md](CAPTURE.md#which-windows-are-captured)). The
+microphone's speaker is the user without any voice model. System segments wait for the voice
+models, and after they are downloaded every transcribed system segment that still has its audio
+gets one speaker job.
 
 Word alignment and diarization are separate sources of uncertainty, especially on short replies,
 continuations and overlapping voices. Public read speech or synthetic voices cannot calibrate

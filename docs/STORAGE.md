@@ -11,9 +11,10 @@ Preserve original evidence and provenance through derived episodes and indexes. 
 result must not resurrect a source changed or deleted while processing was in progress. The
 schema lives in `storage/migrations/0001_schema.sql`. Until real data exists, schema
 changes are edited into it in place; afterwards they become new numbered migrations. A store
-made before the monitor-capture schema is refused at start, unchanged (`db.StaleSchemaError`):
-move its folder aside or use another `AKASHIC_DATA_DIR`. That file
-and its tests define the actual format; do not maintain a second schema in docs.
+whose layout predates the current schema (its `frames` table lacks `monitor_id`, or
+`frame_windows` lacks `frame_windows_process` or `frame_windows_hwnd`) is refused at start,
+unchanged (`db.StaleSchemaError`): move its folder aside or use another `AKASHIC_DATA_DIR`. That
+file and its tests define the actual format; do not maintain a second schema in docs.
 
 ## Screen store
 
@@ -22,8 +23,9 @@ when the monitor was black (protected video). Its `frame_windows` rows list the 
 back. An app row carries the window's process, title, address, text and focus; hidden (excluded,
 unreadable) and shell (desktop, taskbar) rows keep a rectangle only, so an excluded window leaves
 no title, address or text. Each app window has one full-text entry, so a phrase never matches
-across windows. A whole-window capture taken for deferred OCR (game mode) stays encrypted on its
-row until the worker's `ocr_window` job reads it.
+across windows. The `frame_windows_hwnd` index lets Search's default view list the newest windows
+and collapse runs without scanning the history. A whole-window capture taken for deferred OCR
+(game mode) stays encrypted on its row until the worker's `ocr_window` job reads it.
 
 The monitors, their layouts over time and their state runs (shown, hidden, dropped, failed) are
 the tables `monitors`, `monitor_layouts`, `layout_monitors` and `monitor_states`. "Not recording"
@@ -35,7 +37,8 @@ writes, which capture reports as `screen_disk_full`; nothing is deleted to make 
 ## Retention choices
 
 The user chose indefinite retention by default; never delete recorded history automatically
-just to free space ([DECISIONS.md](DECISIONS.md)).
+just to free space and never warn about free space; Settings only reports it
+([DECISIONS.md](DECISIONS.md)).
 Retention uses capture time rather than processing time and is independently configurable by
 evidence category.
 
@@ -60,14 +63,39 @@ waiting for, and keeps the window rows and their text. `frame_text` clears each 
 A frame and its window rows go once its image, its text and its captures are all gone. Monitor
 history (layout and state runs) follows the frame rows; the rules are in `storage/retention.py`.
 
+## Export
+
+Settings › Export writes a copy of the store as a data folder (`db/keyfile`, `db/akashic.db`,
+`media/`; no `config.toml`, models, runtime or logs). The copy is under a new random data key
+wrapped by its own passphrase, so the live passphrase does not open it. It opens with
+`AKASHIC_DATA_DIR`, has the same schema version and needs no migration. Recording keeps running.
+The copy is one consistent snapshot read on its own connection. Its open gaps end at the snapshot
+and an open `stopped` gap is added, so opening it records no crash. The live store is never
+written. It is built in `<target>.partial` and renamed when whole. Failure, cancel, Lock and Quit
+leave no partial folder and keep an empty target folder. The target must not be inside the data
+folder.
+
+An export never contains questions and saved answers, speech-comparison data, process info, query
+vectors, finished, failed or Ask jobs, or state other than the heartbeat. Scope: a range keeps
+point rows by time and span rows that overlap it; gaps and monitor states are clipped; monitors
+and layouts are kept whole. An unchecked category has its retention effect on every row with no
+guard. Derived data follows: out-of-range episodes go; evidence-built bodies are rebuilt from the
+kept evidence; browsing, work and game episodes that cross an edge are cleared or dropped; changed
+episodes lose their vectors; speakers are kept only if referenced, with profiles recomputed;
+orphan embeddings are removed. Media is re-encrypted under the new key. A file gone since the
+snapshot loses its reference and counts as missing. Every full-text index is rebuilt, then VACUUM
+runs, so nothing out of scope survives in a page or an index. Temporary data stays in memory. The
+category map is checked against `retention.PURGERS` at import, and a test classifies every table of
+the copy, so a new table needs a scope rule, as for Delete all.
+
 ## Full-data deletion
 
 Stop and join writers before clearing recorded data, including queued/open records, derived
 indexes, saved answers, orphaned media and caches. The screen store goes too: frames, windows,
 monitors, layouts, states and stored window captures. A new table or cache must not silently
-survive this boundary. Keep setup, keys, models/runtime, content-free logs and the stored paused choice (the
-`capture_paused` state row); restore the prior
-recording/paused choice only after the deletion attempt ends.
+survive this boundary. Keep setup, keys, models/runtime, content-free logs and the stored paused
+choice (the `capture_paused` state row); restore the prior recording/paused choice only after the
+deletion attempt ends.
 
 Report file or database failures rather than false success. Retry must remain possible, but
 already removed files cannot be restored by database rollback. Do not follow directory links

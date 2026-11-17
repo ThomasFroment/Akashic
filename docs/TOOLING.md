@@ -31,9 +31,13 @@ concern ([ARCHITECTURE.md](ARCHITECTURE.md)).
 
 Never open the live data folder (`%LOCALAPPDATA%\Akashic`). Real-data testing uses an export the
 app writes, re-encrypted with a separate passphrase that the user gives the agent
-([DECISIONS.md](DECISIONS.md); the export feature is not built yet). Results and any copies stay
-local and encrypted. Until then, and always for deletion, upgrade and failure tests, use
-disposable encrypted stores.
+([DECISIONS.md](DECISIONS.md)). The user makes it in Settings › Export (range and categories as
+needed) into a folder outside the data folder, and gives the agent the folder and its passphrase.
+Keep it as received and work on a copy. Open it in scripts with `Paths(<folder>)`,
+`unwrap_data_key` and `db.connect`, as `tests/test_export.py` does, or in the app with
+`AKASHIC_DATA_DIR` and `AKASHIC_CAPTURE=0`. Never write the passphrase into files, logs or
+commits. Results and copies stay local and encrypted. Use disposable encrypted stores for
+deletion, upgrade and failure tests.
 
 ## Known defects and measurement
 

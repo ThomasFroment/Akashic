@@ -16,7 +16,7 @@ and its tests to establish current behaviour before changing an area.
 | Screen, media, audio and exclusions | [CAPTURE.md](CAPTURE.md) |
 | Transcription and speaker identity | [SPEECH.md](SPEECH.md) |
 | Finding evidence and answering questions | [RETRIEVAL.md](RETRIEVAL.md) |
-| Persistence, retention and deletion | [STORAGE.md](STORAGE.md) |
+| Persistence, retention, export and deletion | [STORAGE.md](STORAGE.md) |
 | Threat model and security boundaries | [SECURITY.md](SECURITY.md) |
 | Distribution | [PACKAGING.md](PACKAGING.md) |
 | Product interaction, timeline and visual direction | [UI.md](UI.md) |

@@ -29,7 +29,10 @@ Each monitor is its own schedule:
   actually stored: a dropped or failed write retakes the picture at the next check.
 - The monitor holding the focused window is checked on focus, title and input and every few
   seconds. Input also checks the monitor under the cursor (scrolling a side window). Window
-  events (show, hide, move, reorder, title) check the monitors they touch.
+  events (show, hide, move, reorder, title) check the monitors they touch. If the window event
+  hook is down, every monitor is checked and every hold restarts at once, then at most every 5 s
+  (`HOOK_DOWN_RECHECK_S`); reinstall attempts wait 1 s, doubling to 60 s. Held browser windows off
+  the busy monitor can stay blank meanwhile.
 - Side monitors are checked at least every 30 s, because a media verdict lapses after 60 s and
   every check renews it, even when the picture is unchanged, dropped or failed. The rates are in
   `capture/screen.py` `Settings`.
@@ -111,10 +114,11 @@ title or caption, address) is read, and none of it is kept or logged.
 **Title-change hold.** A kept browser main window that changes title is held (pending, blank)
 until its address and private state are read again, because a page excluded by its address can
 paint right after its title changes. The hold starts at the title event, or for every kept main
-window when events were lost. It ends when a read that started after the event returns an address
-different from the last judged one, or after 500 ms and 3 reads that started after the event
-(`HOLD_MIN_S`, `HOLD_MIN_READS`); an unreadable address is then kept. Measurements and the open
-cases: [title-change hold](baselines/2026-11-16-title-change-hold.md).
+window when events were lost (at most every 5 s while the hook stays down). It ends when a read
+that started after the event returns an address different from the last judged one, or after
+500 ms and 3 reads that started after the event (`HOLD_MIN_S`, `HOLD_MIN_READS`); an unreadable
+address is then kept. Measurements and the open cases:
+[title-change hold](baselines/2026-11-16-title-change-hold.md).
 
 **Grab before judge.** Each check grabs the newest frame of every started window before the
 verdicts run, so a frame painted under a verdict was grabbed before the read that verdict rests
@@ -138,9 +142,14 @@ resumes. Pause drops the utterance being recorded. Stop, a device change and a d
 keep it; an unexpected fault drops it. A locked Windows screen and an Akashic pause are
 different states: headset conversations can continue while Windows is locked.
 
-Media-session metadata and audible-process lists are correlations, not proof of which window
-or process produced a particular word. Endpoint loopback mixes sound and may miss audio routed
-elsewhere. Preserve that uncertainty in episode associations and answers.
+Audible processes are read per playback endpoint. Exclusions check every endpoint: an excluded
+app audible anywhere drops the segment. A system segment stores the processes audible on the
+endpoint it recorded. When that endpoint carries a virtual mixer (`MIXER_PROCESSES`, Elgato Wave
+Link), it stores what is audible on every endpoint instead, without the mixer. A poll that lacks
+the recorded endpoint makes the sources unknown (`unknown_sources`), and the endpoints are
+re-read. Voice chat (`VOICE_APPS`) audible only on another endpoint, and not of an excluded app,
+is not recorded. It is written as a `voice_elsewhere` gap. These lists are correlations, not
+proof of who produced a word. Preserve that uncertainty in episode associations and answers.
 
 Music-app audio: drop songs, but keep segments with evidence of real speech, such as a podcast
 ([DECISIONS.md](DECISIONS.md), D7). Today the code still drops all system sound whose only
@@ -183,11 +192,30 @@ in [ARCHITECTURE.md](ARCHITECTURE.md).
 Why not UIA for every window: it is slow on large pages, it adds work in the apps being read (the
 reason UIA reads are rationed per app) and it returns text hidden behind other windows.
 
+## Media and game sessions
+
+A media row opens when a session first plays, never while Windows is locked. It stays open across
+pauses, lock and UAC prompts. While paused, its end stays at the pause point. It closes on a title
+change, the source going away, an excluding verdict, a pause over 10 min (at the pause point), a
+poll gap over 10 s such as sleep (at the last poll; a session still playing gets a new row at the
+first unlocked poll), and Akashic's halt or stop. Locking clears the browser verdicts, so a row
+whose verdict becomes `url_unknown` is kept while locked and for one poll after. Any excluding
+verdict still closes it at once. A game row ends at the last screen tick that saw the game in
+front.
+
 ## Writes
 
 A failed frame write marks its monitor failed and the next check stores the picture again.
 Audio segment writes and media-session closes retry when the database is busy; game rows do not.
 A full disk fails writes and is reported as a problem; nothing is deleted to make room.
+
+Stop has a deadline (`STOP_BUDGET_S`, 8 s after the screen loop returns; the supervisor kills at
+10 s). Once stop is set every capture connection waits at most 250 ms on a busy database
+(`capture/gaps.py`). The screen and audio writers drop what is still queued at their first busy
+write after stop (`stop_dropped`; audio drops are `write_failed` gaps). The gap thread retries the
+stop record until the deadline. Every capture thread is a daemon and every join uses the
+deadline (`StopDeadline`); a thread still running at the deadline is logged by name and
+abandoned, and the process exits.
 
 ## Health
 
@@ -200,10 +228,14 @@ process_info row and returned as `capture_problems` by `GET /api/status`.
 - `mic_unavailable`, `system_audio_unavailable`: that recorder had no successful device read for
   60 s, counted from the later of its last read and the last resume. A read that times out with
   no data counts as a success.
-- `screen_images_failing`: a run of 3 failed stores, or of checks with failed window captures, on
-  one monitor.
-- `screen_disk_full`: a run of failed stores on a full disk.
+- `screen_images_failing`: one failed store on a monitor, or a run of 3 checks with failed window
+  captures; it lasts until that monitor's next stored picture.
+- `screen_disk_full`: one failed store on a full disk.
 - `screen_frames_dropped`: a run of 3 drops on one monitor.
+- `mic_segments_dropped`, `system_segments_dropped`: a segment of that stream was lost to a full
+  writer queue or a failed write in the last 60 s (`DROP_PROBLEM_S`) and after the last resume;
+  excluded, music and unknown-source drops are intended and never problems.
+- `window_events_down`: the window event hook has been down for 30 s (`HOOK_DOWN_PROBLEM_S`).
 
 Screen problems are reported per monitor as `<code>@Monitor N`, numbered left to right, the same
 numbering the timeline shows. Runs count only events after the last resume, and a success or a
@@ -211,7 +243,8 @@ pause clears them. Priority is `paused` > `degraded` > `gaming` > `ready`. A pau
 every non-sticky problem; a resume reports `degraded` only for `audio_unavailable`, and the next
 publish catches up with the real state. Problem changes are logged once, codes only: warning level
 when problems are active, info level when the set becomes empty.
-The thresholds (`GRAB_FAILURE_RUN`, `DEVICE_DOWN_S` in `capture/health.py`) are not measured.
+Down codes come before dropped codes. The thresholds (`GRAB_FAILURE_RUN`, `DEVICE_DOWN_S`,
+`DROP_PROBLEM_S`, `HOOK_DOWN_PROBLEM_S` in `capture/health.py`) are not measured.
 
 ## Capture gaps
 
@@ -236,6 +269,7 @@ are monitor states (`storage/monitors.py`), not gaps; "not recording" reads the 
 | `all` | `stalled` | a gap-thread tick more than 30 s after the previous one | (written closed) |
 | `mic`, `system` | `excluded`, `unknown_sources`, `music`, `write_failed` | a dropped segment | (written closed) |
 | `mic`, `system` | `backlog` | a segment dropped because the writer queue was full | (written closed) |
+| `system` | `voice_elsewhere` | voice chat audible on a playback device that is not recorded | (written closed; consecutive polls extend one row) |
 
 Device rows start at the first failure and keep one row while the reason stays the same; a
 changed reason closes the old row and opens a new one. A successful open alone does not close
@@ -250,8 +284,11 @@ Capture writes `capture_alive_ms` to `state` every 5 s. On the next start withou
 row, open rows are closed at the later of the start and that heartbeat, and the time from the
 heartbeat to the start is recorded as `crashed`. The stop is written when it begins, before
 the audio drain: every open row is closed and `stopped` opened; drops the audio writer reports
-while draining are still written afterwards as closed rows. Gaps queue at most 10,000 pending
-drops; transitions are always queued. Counters are under `gaps` in the capture Debug data.
+while draining are still written afterwards as closed rows. If the database stays busy, the stop
+is retried until the stop deadline. Then the pending gap events are dropped (`stop_dropped`) and
+no `stopped` is written, so the next start records `crashed` from the last heartbeat. Gaps queue
+at most 10,000 pending drops; transitions are always queued. Counters are under `gaps` in the
+capture Debug data, and `stop_dropped` under `writer` (screen), `audio.stats` (audio) and `gaps`.
 
 ## UI Automation timeouts
 

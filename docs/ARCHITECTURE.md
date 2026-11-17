@@ -16,6 +16,15 @@ The persistent queue separates recording from processing so work survives interr
 wait while the user plays a game. Recovery must avoid both lost evidence and jobs that starve
 all later work. A refactor must preserve evidence links and make stalled processing observable.
 
+Every queue state has an exit. At worker start an interrupted job goes back to pending with
+backoff, or fails (`give_up`) at its last attempt. A refused `complete`/`fail` is retried at the
+next step before anything new is claimed. A job whose resource is missing is deferred without
+counting an attempt (`DeferJob`). The worker publishes queue health in its `process_info` row
+(failed per kind, oldest pending age, episode horizon, transcription stall), which `/api/status`
+returns as `processing` and, as the one verdict `storage.debuginfo.processing_attention`, as
+`attention`: the tray and the sidebar read that verdict with their own capture-running sets. The
+transcript horizon holds back only media and conversation episodes.
+
 ## Source map
 
 All code is under `src/akashic/`. Packages only; read the modules for the rest.
@@ -29,7 +38,10 @@ All code is under `src/akashic/`. Packages only; read the modules for the rest.
 Shared by all: `storage/` (encrypted database, media files, migrations, retention, job
 queue), `search/` (time parsing, planner, keyword/semantic/hybrid ranking, answer building),
 `platform/win/` (Windows API adapters), and the top-level `config.py`, `ipc.py`, `log.py`,
-`offline.py`.
+`offline.py`. `log.FaultLog` is the capture loops' one rate-limited, type-only fault log: counts
+per what and exception type, one line per 5 min, never the message; the counts reach the Debug
+data. `db.DB_ERRORS` (the sqlite3 and sqlcipher3 errors) is what the app shell, the API and Ask
+catch for a database failure.
 
 Screen capture modules, by role:
 
@@ -40,6 +52,9 @@ Screen capture modules, by role:
   (the writer thread and per-monitor health), `uia_budget` (rationing and backoff).
 - `storage/`: `monitors` (layouts, states and the evidence readers `monitor_rect`,
   `latest_valid_frame`, `episode_evidence`, `frame_moment`), `frames`, `gaps`, `jobs`.
+- Export: `storage/export` (snapshot, scope, re-encryption) run by `api/export.Exports` on its own
+  thread and connection, never the API's shared lock. See [STORAGE.md](STORAGE.md).
+- `storage/debuginfo`: `Processing` and `processing_status`, the worker's published queue health.
 - `pipeline/ocr_windows`: the worker's `ocr_window` job.
 - `api/`: `frames` (frame routes and masked window crops), `timeline`; `ui/timeline.js`. The API
   server serves `/api/status` without the app list and `/api/apps` on its own; memory and Ask
@@ -64,7 +79,11 @@ Checked mechanically by `tests/test_layout.py` (local UI assets: `tests/test_net
 Other boundaries: only `capture/desk.py` starts and stops window captures; only
 `capture/verdicts.py` decides keep, hold or exclude and publishes to `BrowserState`; in the
 capture process only the screen-writer thread writes frames, `frame_windows` and the monitor
-tables. Excluded and held windows reach the writer as content-free rectangles.
+tables. Excluded and held windows reach the writer as content-free rectangles. Each capture
+owner reads its connection from its own store and shortens its busy wait at stop
+(`capture/gaps.py`: `STOP_BUSY_TIMEOUT_MS`, `limit_wait_at_stop`; storage keeps only
+`db.limit_wait`). The rule for which gaps Ask reports (kinds, not-lost filter, clip, merge) lives
+in `search/answer.py` (`gap_kinds`, `lost_spans`) and reads `storage.gaps.overlapping`.
 
 ## Capture threads and data flow
 
@@ -73,6 +92,10 @@ recorders and the gap thread. A screen tick runs `Desk.check` (`Verdicts.judge`,
 composition), compares the result with the last stored picture and hands a changed one to the
 `ScreenWriter`, which writes through `FrameStore` and `MonitorLog`. The worker's `ocr_window` job
 reads stored window captures and finishes them (`finish_capture`).
+
+The audio sources thread polls audible processes per playback endpoint. The system recorder tells
+it which endpoint it records, and the audio writer stores that endpoint's processes and reports
+voice chat heard elsewhere as a gap (`voice_elsewhere`).
 
 ## Messages between processes
 
@@ -96,9 +119,21 @@ immediate unload or preemption without evidence from the actual implementation.
 
 Capture starts only after unlock. Lock and quit must stop all writers and prevent a concurrent
 restart from reviving them. Pausing, restarting and deleting data must preserve the user's
-recording choice, including while children are starting.
+recording choice, including while children are starting. Lock and Quit cancel a running export
+first (`Exports.cancel_and_wait`), before the API, the children and the key go.
+
+Capture stop is bounded: it ends before the supervisor's 10 s kill and gives up what a busy
+database still holds. Rules: [CAPTURE.md](CAPTURE.md#writes).
 
 Full-data deletion requires an exclusive boundary with recording, processing and API writers;
 it is not ordinary age-based retention. See [STORAGE.md](STORAGE.md) for the contract.
 Planned structural changes are in [TODO.md](../TODO.md); leftovers of finished work are in
 [OPEN.md](../OPEN.md).
+
+## Extending
+
+- A gap reason: the `0001` CHECK, `GapReason`, and its words in `search/answer.py`.
+- A retention category: `PURGERS` plus its export scope handling.
+- A capture problem: its code in `capture/health.py`, the owner's `problems()`, its words in
+  `ui/app.js` `PROBLEM_WORDS`.
+- A Settings tab: `SETTINGS_TABS` in `ui/settings.js`.

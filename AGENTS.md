@@ -101,12 +101,12 @@ Read the one that matches your task before changing that area.
 - @docs/DECISIONS.md: the user's decisions, with date and whether the code follows them yet.
 - @docs/TOOLING.md: checks, quality bar, testing on real data, approved dependencies.
 - @docs/ARCHITECTURE.md: processes, source map, job queue, resource ownership, lifecycle.
-- @docs/CAPTURE.md: screen, browser URLs, media sessions, gaming mode, audio, exclusions.
+- @docs/CAPTURE.md: screen, browser URLs, media and game sessions, gaming mode, audio, exclusions, stop, health, gaps.
 - @docs/SPEECH.md: transcription, vocabulary, speaker identity, model comparisons.
-- @docs/STORAGE.md: encryption at rest, retention, derived copies, full deletion.
+- @docs/STORAGE.md: encryption at rest, retention, derived copies, export, full deletion.
 - @docs/RETRIEVAL.md: evidence rules for search and answers, evaluation.
 - @docs/PACKAGING.md: self-contained bundle, models outside the bundle.
-- @docs/UI.md: look and feel, interaction principles.
+- @docs/UI.md: look and feel, interaction principles, status, timeline, export.
 - @docs/SECURITY.md: threat model, keys, local sessions, accepted exclusion exceptions.
 - `docs/audits/`: dated project audits (skill `frogg:audit`).
 - `docs/solutions/`: invented methods with measured candidates (skill `frogg:invent`). Read the matching report before implementing or replacing its method.

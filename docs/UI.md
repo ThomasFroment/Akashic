@@ -21,6 +21,16 @@ Recording and processing are different states. Show blocked, degraded or stopped
 honestly, and keep pause, lock and quit available. Model comparisons must not silently replace
 memories or choose a winner from an incomplete score.
 
+## Status
+
+The sidebar shows capture's line and, only when something is wrong, a processing line:
+"Processing stopped" (the worker is not running while capture records), "Needs attention" (a kind
+of work is blocked with jobs waiting, usually a missing model, see Settings › Models; or
+transcription made no progress for over an hour while it could run), or "n recording(s) could not
+be transcribed". Its hover text explains and points to Debug. The tray says "Recording, but
+processing stopped" or "… needs attention", and its tooltip adds the failed-transcription count.
+A game or a Pause never brings needs attention. Capture problems read as plain sentences.
+
 ## While Akashic is open
 
 The UI opens only from the tray or on the first run, never at autostart. Recording halts while a
@@ -38,10 +48,19 @@ the microphone meter says levels are unavailable. Rules: [CAPTURE.md](CAPTURE.md
 - **Strip:** app bands, zoomable from a day down to 60 s; scroll, drag, keys and day navigation.
   The app filter highlights bands, it never hides monitors.
 - **Moments:** each has its own address, so Back returns to it. A cited moment enlarges its
-  monitor and outlines its window.
+  monitor and outlines its window. Search hits and Ask's Related moments open their moment the
+  same way. The enlarged monitor links to its frame's window texts, a link hidden when it has no
+  frame. The frame page's Back returns to where the user came from, or to that frame's moment.
 - Problems name their monitor, with the same "Monitor N".
 
 Evidence images are cut from frames as described in [RETRIEVAL.md](RETRIEVAL.md).
+
+## Export
+
+Settings › Export takes a new or empty folder, the passphrase twice (password fields, never
+stored), an optional From/To and the categories (all checked). It shows progress with Cancel, and
+the outcome: done with files, size and missing files, failed or cancelled, with nothing kept.
+Contract: [STORAGE.md](STORAGE.md).
 
 ## Deletion
 

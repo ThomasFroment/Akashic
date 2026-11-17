@@ -108,6 +108,14 @@ Format, lint, type-check and tests. `scripts\selftest.ps1` is a separate hardwar
 (real audio devices, OCR, GPU). Set `AKASHIC_CAPTURE=0` to start with capture idle. Manual checks:
 [tests/manual/CHECKLIST.md](tests/manual/CHECKLIST.md). Agents: start with [AGENTS.md](AGENTS.md).
 
+Ask is evaluated with `scripts\eval_ask.py` on two question sets, scored and reported apart. The
+development set (its 29 questions, plus the 20 of `scripts\eval_hard_memory.py`) is what the
+planner, ranking and scorer were tuned against, so its scores are development scores, not
+validation. The held-out set was written before any run, is frozen by a SHA-256 the script checks,
+and is never tuned against. Neither set establishes daily-use accuracy. No run with split
+reporting exists yet; the last scores (2026-11-11, older scorers) are in
+[docs/baselines/](docs/baselines/).
+
 ## Troubleshooting
 
 - *`'uv' is not recognized`:* open a new terminal, use `.\akashic.ps1`, or run

@@ -21,6 +21,12 @@ a larger model or larger context is not evidence that any of them is solved.
   construction. A digest is navigation, not a replacement for the underlying evidence.
 - Distinguish the latest correction from repeated older claims. Disclose conflicts and limits
   in list or summary coverage; stored evidence does not establish that capture was complete.
+- With a time window, the answer prompt carries a `Not recorded:` line: the spans in the window
+  where the planned kinds were not recorded (pause, lock for screen kinds, missing or failed
+  device, crash, lost or unattributed audio, voice chat on an unrecorded device). The answer then
+  says they were not recorded and never that nothing happened. The no-evidence reply lists them in
+  the question's language. Excluded and music spans and the current UI-open pause are left out. A
+  question without a time window gets no line, and a failed gap read drops only the line.
 - Support claims with cited evidence and hedge unclear speech or uncertain authorship. A valid
   citation number proves neither entailment nor the identity of the person who spoke.
 
@@ -38,9 +44,9 @@ produce an honest limitation rather than a fabricated answer.
 The window, not the frame, is the unit of screen text. Keyword hits, the app filter (on the
 window's process) and `window_passages` work on each window's text, so a match in one window is
 never returned under another window's app and a phrase never matches across windows. Repeated
-identical rows of one window collapse. An Ask source carries its window's app, title and address,
-and "on screen in <app>" names the cited window's app. App sessions and the timeline's bands still
-follow the focused window.
+identical rows of one window collapse, with or without a query. An Ask source carries its
+window's app, title and address, and "on screen in <app>" names the cited window's app. App
+sessions and the timeline's bands still follow the focused window.
 
 An evidence image shows only what the user saw of the cited app: the cited window intersected with
 its monitor, with everything in front of it masked (not blurred). It is computed when displayed;
