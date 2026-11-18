@@ -151,9 +151,7 @@ stay in `eval\quality\local\` (gitignored).
 
 - Phase 2 (`/frogg:audit`), with the smoke findings as leads.
 - Overnight: `run.py standard` twice (same seed, 5 % check) and `run.py day`; add them to the baseline.
-
-- Run smoke, then standard, with the user away; confirm the untested paths (exclusive game, Outer
-  Wilds launch, hung window, real-app launches, wt.exe feed) and fix what a real drive shows.
-- Day run overnight (monitors dimmed, shutdown after, by the user); attended run with the user
-  present (lock, sleep, default-output change, UAC).
-- Then write `docs\baselines\<date>-quality.md` and start Phase 2.
+- Untested until standard: exclusive-fullscreen re-entry, the Outer Wilds launch (confirm the Steam
+  launch arguments once by hand), real-app launches beyond smoke's.
+- Attended run with the user present (lock, sleep, default-output change, UAC).
+- Add `docs/baselines/2026-11-18-quality.md` to "Report paths" once standard and day are in.
