@@ -94,3 +94,12 @@ Each study's README gives the full commands. In short:
 - The study code was moved from its original local folder one directory level up; the expressions
   that locate `src/` were adjusted accordingly and the absolute paths stored in results were
   replaced with `eval\`. No other change was made to the code or the results.
+
+## Quality harness (`eval/quality/`)
+
+Not a method study: the harness of the 2026-11-18 data-quality audit. It drives the real desktop
+from a seeded scenario, records an independent OS log, runs Akashic unmodified in a disposable
+encrypted store and scores what it recorded. Its own README has the commands, the one-time steps
+per PC, the results layout and its limits. Runs need the user away from the PC; the committed
+assets, truth logs and number-only scores are the only data kept.
+

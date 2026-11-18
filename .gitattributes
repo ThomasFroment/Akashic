@@ -5,3 +5,7 @@ eval/conversational-time-windows/R2rules/captured_titles.py -text
 eval/conversational-time-windows/R2rules/verify_variants.py -text
 eval/conversational-time-windows/R2slots/model_cache_heldout2.jsonl -text
 eval/conversational-time-windows/R2slots/model_cache_phrases.jsonl -text
+
+# eval/quality hashes its assets, profile, coverage and scenario as committed. With core.autocrlf=true a
+# fresh checkout would change the bytes and break the recorded sha256.
+eval/quality/** -text

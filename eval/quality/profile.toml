@@ -1,0 +1,102 @@
+# Usage profile of the quality harness. Every leaf is { value, source }.
+# source = "measured 2026-11-18 (1 h)" for the gaming-block values measured that day, "assumed" otherwise.
+# The scenario generator refuses to run when a leaf has no source or a share group does not sum to 1.
+# Share groups: gaming.focus, desk.focus, gaming.monitor, desk.monitor, shared.language.
+# Focus is by category. Gaming: game, voice_chat, browser, other; Outer Wilds counts as game.
+# Desk: browser, editor, terminal, assistant, video, voice_chat, other.
+
+[seed]
+smoke = { value = 11, source = "assumed" }
+standard = { value = 21, source = "assumed" }
+day = { value = 31, source = "assumed" }
+attended = { value = 41, source = "assumed" }
+
+[blocks]
+gaming_share = { value = 0.35, source = "assumed" }
+gaming_block_min = { value = 45, source = "assumed" }
+desk_block_min = { value = 85, source = "assumed" }
+
+[gaming.focus]
+game = { value = 0.875, source = "measured 2026-11-18 (1 h)" }
+voice_chat = { value = 0.085, source = "measured 2026-11-18 (1 h)" }
+browser = { value = 0.02, source = "measured 2026-11-18 (1 h)" }
+other = { value = 0.02, source = "measured 2026-11-18 (1 h)" }
+
+[gaming.game]
+outer_wilds_share = { value = 0.25, source = "assumed" }
+
+[gaming.monitor]
+primary = { value = 0.89, source = "measured 2026-11-18 (1 h)" }
+left = { value = 0.09, source = "measured 2026-11-18 (1 h)" }
+right = { value = 0.02, source = "measured 2026-11-18 (1 h)" }
+
+[gaming.run]
+switches_per_hour = { value = 54, source = "measured 2026-11-18 (1 h)" }
+median_s = { value = 6, source = "measured 2026-11-18 (1 h)" }
+p90_s = { value = 160, source = "measured 2026-11-18 (1 h)" }
+title_changes_per_hour = { value = 24, source = "measured 2026-11-18 (1 h)" }
+
+[gaming.layout]
+visible_windows_per_monitor = { value = 2, source = "measured 2026-11-18 (1 h)" }
+title_change_s = { value = 2, source = "measured 2026-11-18 (1 h)" }
+
+[gaming.background]
+call_audible = { value = 0.87, source = "measured 2026-11-18 (1 h)" }
+game_sound = { value = 0.93, source = "measured 2026-11-18 (1 h)" }
+both = { value = 0.87, source = "measured 2026-11-18 (1 h)" }
+
+[desk.focus]
+browser = { value = 0.40, source = "assumed" }
+editor = { value = 0.20, source = "assumed" }
+terminal = { value = 0.10, source = "assumed" }
+assistant = { value = 0.10, source = "assumed" }
+video = { value = 0.10, source = "assumed" }
+voice_chat = { value = 0.05, source = "assumed" }
+other = { value = 0.05, source = "assumed" }
+
+[desk.monitor]
+primary = { value = 0.5, source = "assumed" }
+right = { value = 0.3, source = "assumed" }
+left = { value = 0.2, source = "assumed" }
+
+[desk.run]
+switches_per_hour = { value = 40, source = "assumed" }
+median_s = { value = 30, source = "assumed" }
+p90_s = { value = 600, source = "assumed" }
+title_changes_per_hour = { value = 40, source = "assumed" }
+
+[desk.layout]
+visible_windows_per_monitor = { value = 2, source = "assumed" }
+title_change_s = { value = 2, source = "assumed" }
+
+[desk.background]
+call_audible = { value = 0.15, source = "assumed" }
+game_sound = { value = 0.0, source = "assumed" }
+both = { value = 0.0, source = "assumed" }
+
+[shared.language]
+fr = { value = 0.5, source = "assumed" }
+en = { value = 0.4, source = "assumed" }
+mixed = { value = 0.1, source = "assumed" }
+
+[shared.call]
+speakers_min = { value = 2, source = "assumed" }
+speakers_max = { value = 4, source = "assumed" }
+
+[shared.audio]
+music_share_desk = { value = 0.25, source = "assumed" }
+voice_elsewhere_s = { value = 45, source = "assumed" }
+
+[shared.videos]
+per_day_min = { value = 2, source = "assumed" }
+per_day_max = { value = 3, source = "assumed" }
+day_hours = { value = 7, source = "assumed" }
+
+[events.per_day]
+pause = { value = 1, source = "assumed" }
+excluded_pages = { value = 3, source = "assumed" }
+canary = { value = 1, source = "assumed" }
+busy_disk = { value = 1, source = "assumed" }
+lock = { value = 2, source = "assumed" }
+sleep = { value = 1, source = "assumed" }
+device_change = { value = 1, source = "assumed" }

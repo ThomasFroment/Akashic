@@ -1,0 +1,246 @@
+# Coverage matrix: 13 dimensions x 41 cases. A cell (d, c) is filled when at least one truth item
+# of dimension d overlaps a step tagged c. `core` cases are the ones the 5 min smoke run covers.
+# Impossible cells name a reason. "dims" and "cases" take ids, "all", or "@group" for a case group.
+
+[dimensions]
+1 = "When the screen is captured"
+2 = "App tagging per window and frame"
+3 = "Text: UIA vs OCR, accuracy, de-duplication"
+4 = "Browser and media identity"
+5 = "Timeline continuity and durations"
+6 = "Media and game session boundaries"
+7 = "Sound separated per application"
+8 = "Voice detection, segmentation, speakers"
+9 = "Transcription"
+10 = "Privacy"
+11 = "Episodes"
+12 = "Index coverage and delay"
+13 = "Life-event loss"
+
+# 13 app cases
+[[case]]
+id = "discord"
+group = "apps"
+core = true
+[[case]]
+id = "zen"
+group = "apps"
+[[case]]
+id = "chrome"
+group = "apps"
+core = true
+[[case]]
+id = "edge"
+group = "apps"
+[[case]]
+id = "uwp"
+group = "apps"
+[[case]]
+id = "pwa"
+group = "apps"
+[[case]]
+id = "launcher"
+group = "apps"
+[[case]]
+id = "elevated"
+group = "apps"
+[[case]]
+id = "hung_ghost"
+group = "apps"
+[[case]]
+id = "game_borderless"
+group = "apps"
+core = true
+[[case]]
+id = "game_exclusive"
+group = "apps"
+[[case]]
+id = "pip"
+group = "apps"
+[[case]]
+id = "popups"
+group = "apps"
+
+# 13 content cases
+[[case]]
+id = "text_fr"
+group = "content"
+[[case]]
+id = "text_en"
+group = "content"
+core = true
+[[case]]
+id = "text_mixed"
+group = "content"
+[[case]]
+id = "small_fonts"
+group = "content"
+[[case]]
+id = "theme_dark"
+group = "content"
+[[case]]
+id = "theme_light"
+group = "content"
+[[case]]
+id = "res_1440p"
+group = "content"
+[[case]]
+id = "res_4k"
+group = "content"
+core = true
+[[case]]
+id = "scrolling"
+group = "content"
+[[case]]
+id = "chat_growing"
+group = "content"
+[[case]]
+id = "code_project"
+group = "content"
+core = true
+[[case]]
+id = "side_monitor_change"
+group = "content"
+[[case]]
+id = "title_churn"
+group = "content"
+
+# 8 audio cases
+[[case]]
+id = "call_across_gaming"
+group = "audio"
+core = true
+[[case]]
+id = "tts_voices"
+group = "audio"
+core = true
+[[case]]
+id = "overlap_speakers"
+group = "audio"
+[[case]]
+id = "returning_speaker"
+group = "audio"
+[[case]]
+id = "video_during_call"
+group = "audio"
+[[case]]
+id = "music"
+group = "audio"
+core = true
+[[case]]
+id = "silence"
+group = "audio"
+[[case]]
+id = "mic_and_system"
+group = "audio"
+core = true
+
+# 7 life-event cases ("lock" is one case, however many locks a day holds)
+[[case]]
+id = "lock"
+group = "life"
+[[case]]
+id = "sleep"
+group = "life"
+[[case]]
+id = "pause"
+group = "life"
+core = true
+[[case]]
+id = "device_change"
+group = "life"
+[[case]]
+id = "excluded_pages"
+group = "life"
+core = true
+[[case]]
+id = "canary"
+group = "life"
+core = true
+[[case]]
+id = "busy_disk"
+group = "life"
+
+[[impossible]]
+dims = "all"
+cases = ["lock", "sleep", "device_change", "elevated"]
+lengths = ["smoke", "standard", "day"]
+reason = "attended only (user answer 2026-11-18)"
+
+[[impossible]]
+dims = [1, 2, 3, 4, 6, 10]
+cases = ["lock"]
+lengths = ["attended"]
+reason = "nothing is shown while the PC is locked; M5.4 and M13.1 score it"
+
+[[impossible]]
+dims = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12]
+cases = ["sleep"]
+lengths = ["attended"]
+reason = "nothing plays or records while the PC is asleep; M5.4 and M13.1 score it"
+
+[[impossible]]
+dims = [3, 4, 6, 10, 13]
+cases = ["elevated"]
+lengths = ["attended"]
+reason = "the elevated window is only focused: it shows no harness text, identity, sound or canary, and no life event ends inside it"
+
+[[impossible]]
+dims = [3]
+cases = ["uwp", "launcher", "elevated", "hung_ghost", "game_borderless", "game_exclusive"]
+reason = "the harness draws no text in this window (game HUD and video frames carry change tags only, real apps nothing)"
+
+[[impossible]]
+dims = [4]
+cases = ["uwp", "launcher", "elevated", "hung_ghost", "code_project"]
+reason = "no URL, video, series or game identity exists in this window"
+
+[[impossible]]
+dims = [6]
+cases = ["zen", "uwp", "pwa", "launcher", "elevated", "hung_ghost", "popups"]
+reason = "media and game sessions exist only under video, PiP, game and Outer Wilds steps"
+
+[[impossible]]
+dims = [6]
+cases = ["text_fr", "text_mixed", "small_fonts", "theme_light", "scrolling", "chat_growing", "code_project"]
+reason = "video pages all look the same (English, dark, 16 px, no scrolling) and games draw no page text"
+
+[[impossible]]
+dims = [6]
+cases = ["lock", "sleep", "excluded_pages"]
+reason = "no media or game session is planted under this life event or private page"
+
+[[impossible]]
+dims = [10]
+cases = ["discord", "uwp", "pwa", "launcher", "elevated", "hung_ghost", "game_borderless", "game_exclusive", "pip", "popups"]
+reason = "a canary is planted only under the excluded-page and canary cases; the pages sit in Chrome, Edge or Zen"
+
+[[impossible]]
+dims = [10]
+cases = "@content"
+reason = "a canary is planted only under the excluded-page and canary cases"
+
+[[impossible]]
+dims = [10]
+cases = "@audio"
+reason = "the only planted audio canary is the canary case"
+
+[[impossible]]
+dims = [10]
+cases = ["pause", "busy_disk", "lock", "sleep", "device_change"]
+reason = "no canary is planted under this life event"
+
+[[impossible]]
+dims = [13]
+cases = ["discord", "zen", "chrome", "edge", "uwp", "pwa", "launcher", "elevated", "hung_ghost", "game_borderless", "game_exclusive", "pip", "popups", "text_fr", "text_en", "text_mixed", "small_fonts", "theme_dark", "theme_light", "res_1440p", "res_4k", "scrolling", "chat_growing", "code_project", "side_monitor_change", "title_churn", "call_across_gaming", "tts_voices", "overlap_speakers", "returning_speaker", "video_during_call", "music", "silence", "mic_and_system"]
+reason = "life-event loss is attributed to the event itself, not to what else was on screen or audible"
+
+[[impossible]]
+dims = [13]
+cases = ["canary", "excluded_pages"]
+reason = "M13.1 scores lock, sleep, Pause, device change and busy disk; canaries and private pages lose nothing"
+
+[[deferred_location]]
+metric = "M10.1"
+location = "export"
+reason = "app shell, export included, is a non-goal of this harness"
