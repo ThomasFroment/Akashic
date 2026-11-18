@@ -9,8 +9,9 @@ its assets, truth logs, scorer output and baselines at the end of each session.
 - Phase 0, scope: done 2026-11-18 (`scope.md`)
 - Phase 1, harness `eval/quality/`: built 2026-11-18; smoke run twice on `target` (baseline
   `docs/baselines/2026-11-18-quality.md`); standard and day pending (overnight)
-- Phase 2, audit: in progress (started 2026-11-18 after the smoke baseline)
-- Phase 3, research: not started
+- Phase 2, audit: done 2026-11-18 (`audit.md`: 9 MUST, 24 SHOULD, #187-#219, 0 refuted, all
+  queued in TODO.md `## Audit 2026-11-18`, which is not committed: the user's commit rule)
+- Phase 3, research: next
 - Phase 4, invent: not started
 - Phase 5, synthesis and refuters: not started
 - Phase 6, `quality.md`: not started
@@ -138,6 +139,8 @@ stay in `eval\quality\local\` (gitignored).
 ## Report paths
 
 - `scope.md`: Phase 0 scope and metric definitions.
+- `audit.md`: Phase 2 findings #187-#219.
+- `docs/baselines/2026-11-18-quality.md`: smoke baseline (standard and day pending).
 - `docs/research/conversational-speech-datasets-fr-en.md`: written by an agent during the Phase 1
   planning; public conversational corpora (SUMM-RE FR, AMI EN) as a later replacement for the
   read-speech bank. Input for Phase 3.
@@ -149,7 +152,8 @@ stay in `eval\quality\local\` (gitignored).
 
 ## Next
 
-- Phase 2 (`/frogg:audit`), with the smoke findings as leads.
+- Phase 3 (`/frogg:research`, batch): one item per open question blocking a Phase 4 run or a
+  recommendation.
 - Overnight: `run.py standard` twice (same seed, 5 % check) and `run.py day`; add them to the baseline.
 - Untested until standard: exclusive-fullscreen re-entry, the Outer Wilds launch (confirm the Steam
   launch arguments once by hand), real-app launches beyond smoke's.
