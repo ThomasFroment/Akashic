@@ -27,7 +27,7 @@ transcript horizon holds back only media and conversation episodes.
 
 ## Source map
 
-All code is under `src/akashic/`. Packages only; read the modules for the rest.
+All code is under `src/akashic/`.
 
 | Process | Entry point | Packages it uses |
 | --- | --- | --- |
@@ -39,8 +39,8 @@ Shared by all: `storage/` (encrypted database, media files, migrations, retentio
 queue), `search/` (time parsing, planner, keyword/semantic/hybrid ranking, answer building),
 `platform/win/` (Windows API adapters), and the top-level `config.py`, `ipc.py`, `log.py`,
 `offline.py`. `log.FaultLog` is the capture loops' one rate-limited, type-only fault log: counts
-per what and exception type, one line per 5 min, never the message; the counts reach the Debug
-data. `db.DB_ERRORS` (the sqlite3 and sqlcipher3 errors) is what the app shell, the API and Ask
+per what and exception type, one line per 5 min, never the message; its counts reach the Debug
+data. `storage.db.DB_ERRORS` (the sqlite3 and sqlcipher3 errors) is what the app shell, the API and Ask
 catch for a database failure.
 
 Screen capture modules, by role:
@@ -49,7 +49,8 @@ Screen capture modules, by role:
   `windows` (window list and facts), `uia` (UI Automation).
 - `capture/`: `verdicts` (keep, hold or exclude), `desk` (captures and per-monitor snapshots),
   `compose` (painting), `occlusion` (what lies in front), `screen` (the loop), `screen_writer`
-  (the writer thread and per-monitor health), `uia_budget` (rationing and backoff).
+  (the writer thread and per-monitor health), `uia_budget` (rationing and backoff), `uia_threads`
+  (per-process UIA workers).
 - `storage/`: `monitors` (layouts, states and the evidence readers `monitor_rect`,
   `latest_valid_frame`, `episode_evidence`, `frame_moment`), `frames`, `gaps`, `jobs`.
 - Export: `storage/export` (snapshot, scope, re-encryption) run by `api/export.Exports` on its own
@@ -59,6 +60,17 @@ Screen capture modules, by role:
 - `api/`: `frames` (frame routes and masked window crops), `timeline`; `ui/timeline.js`. The API
   server serves `/api/status` without the app list and `/api/apps` on its own; memory and Ask
   read evidence through `storage/monitors`.
+
+Other modules worth knowing:
+
+- Child startup: `child.py` `ChildContext` holds the stop event and when the stop was requested
+  (`stop_requested_at`), which the bounded stop measures from.
+- Capture ports: `capture/ports.py` also holds `slept()`, the rule that tells a sleep from awake
+  time for the media, gaming and gap clocks.
+- Browser state: `capture/browser_state.py` bumps a clear generation, which the media tracker reads
+  to tell that the verdicts were cleared.
+- Derived rows: `pipeline/episodes.py` depends on `storage.sessions` for game sessions.
+- Platform: `platform/win/windows.py` provides window facts and awake time (`awake_ms`).
 
 `capture/health.py` holds the problem codes and the per-monitor runs (`<code>@Monitor N`); the
 screen writer owns them and the monitor labels.
@@ -84,6 +96,11 @@ owner reads its connection from its own store and shortens its busy wait at stop
 (`capture/gaps.py`: `STOP_BUSY_TIMEOUT_MS`, `limit_wait_at_stop`; storage keeps only
 `db.limit_wait`). The rule for which gaps Ask reports (kinds, not-lost filter, clip, merge) lives
 in `search/answer.py` (`gap_kinds`, `lost_spans`) and reads `storage.gaps.overlapping`.
+All UIA calls run on per-process worker threads (`capture/uia_threads.py`, each with its own
+`WindowsUia`), reached via `BudgetedUia`, and only the screen-loop thread requests reads; waits,
+backoff and fail-closed rules: [CAPTURE.md](CAPTURE.md#ui-automation-timeouts). The rule for what a
+speech segment was heard as (`heard_tag`/`speech_tag`) lives in `search/transcripts.py`, and
+`pipeline/episodes.py` uses `heard_tag` for calls.
 
 ## Capture threads and data flow
 
@@ -94,8 +111,9 @@ composition), compares the result with the last stored picture and hands a chang
 reads stored window captures and finishes them (`finish_capture`).
 
 The audio sources thread polls audible processes per playback endpoint. The system recorder tells
-it which endpoint it records, and the audio writer stores that endpoint's processes and reports
-voice chat heard elsewhere as a gap (`voice_elsewhere`).
+it which endpoint it records, and the audio writer stores that endpoint's processes. The audio
+sources thread reports voice chat heard elsewhere: it writes the gap (`SourceSampler`) and
+`AudioCapture.problems` reads it as the capture problem (`voice_elsewhere`).
 
 ## Messages between processes
 
@@ -134,6 +152,8 @@ Planned structural changes are in [TODO.md](../TODO.md); leftovers of finished w
 
 - A gap reason: the `0001` CHECK, `GapReason`, and its words in `search/answer.py`.
 - A retention category: `PURGERS` plus its export scope handling.
-- A capture problem: its code in `capture/health.py`, the owner's `problems()`, its words in
+- A capture problem: its code in `capture/health.py`, the owner's `problems()`, and its words in
   `ui/app.js` `PROBLEM_WORDS`.
+- A Debug counter: the owner's `stats_snapshot()` or `FaultLog`, collected in `capture/main.py`
+  `_collect` and shown in `ui/debug.js`.
 - A Settings tab: `SETTINGS_TABS` in `ui/settings.js`.

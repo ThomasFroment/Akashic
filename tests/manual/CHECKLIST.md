@@ -18,6 +18,8 @@ Frames are monitor composites; evidence images are the cited window's visible pa
 4. Pause and resume from both the tray and sidebar. Lock must stop both child processes, forget the
    key and show the unlock dialog again; unlocking starts fresh processes and a new session.
 5. Toggle Settings > Startup and verify the `Akashic` HKCU Run value and a real sign-in start.
+6. Cover the Akashic page fully with another window: recording stays halted (a known limit).
+   Minimize it or switch tab: recording resumes, with no screen text that only the page showed.
 
 ## Screen capture and Windows adapters
 
@@ -50,6 +52,9 @@ Frames are monitor composites; evidence images are the cited window's visible pa
    - Chrome picture-in-picture is blank; Edge and Zen picture-in-picture follows its window.
    Inspect multi-column text, repeated chat messages and navigation controls for useful reading
    order.
+8. Suspend a side-monitor browser in Resource Monitor: the other monitors keep their rate, the
+   browser is blank or hidden, and it shows again within about 30 s of resuming. Navigating pages
+   in a side browser leaves it blank for a few seconds at most.
 
 ## Audio and transcription
 
@@ -57,7 +62,8 @@ Frames are monitor composites; evidence images are the cited window's visible pa
    reads "Levels are not available while Akashic is open"). Speak
    quiet French and normal English; Search > Speech should show both, with uncertain lines dimmed.
 2. Play a video and hold a Discord call. Microphone lines must be You, system lines must name the
-   audible processes, and music-player-only sound must not be stored.
+   audible processes, and music-player-only sound must not be stored. Lines show their tag
+   (`voice chat`, `game` or `media` on system lines, in Search > Speech, Memory and Ask).
 3. Play every line and confirm it matches the right recording. A long monologue must not duplicate
    overlap words. Measure whether vocabulary hints improve names; do not assume exact spelling.
 4. Pause and speak: no audio is stored and the microphone-in-use indicator turns off. Unplug or
@@ -72,7 +78,8 @@ Frames are monitor composites; evidence images are the cited window's visible pa
 7. With Discord's output on the headset and `[audio] system_device` another endpoint, hold a call
    while a video plays on the recorded device. System lines name only the recorded device's
    processes, and Ask "what did I hear at <hh:mm>?" (a time during the call) says voice was not
-   recorded. With sound playing through Wave Link, run
+   recorded, and the sidebar names voice chat on an unrecorded device. With sound playing
+   through Wave Link, run
    `uv run pytest -m hardware -s tests/hardware/test_real_hardware.py -k audible_processes_are_keyed`
    and confirm the mixer's process name matches `MIXER_PROCESSES` (`elgato.wavelink.exe`,
    unconfirmed).
@@ -95,6 +102,9 @@ Frames are monitor composites; evidence images are the cited window's visible pa
    runs through the lock and the prompt, and its end does not advance while paused. A video
    started while locked gets no row until unlock. After sleep onto the lock screen, the row ends
    at the last poll before sleep and a new one opens after unlock.
+6. With a video playing and a game in front, sleep, then hibernate. The rows end at the last poll
+   or tick before sleep, a game still in front gets a new row, and no played time counts the
+   sleep.
 
 ## Speakers
 
@@ -108,7 +118,7 @@ Frames are monitor composites; evidence images are the cited window's visible pa
 
 1. After a representative day, verify video, call, game, browsing and work episodes appear with
    evidence links. Cross-language meaning search should find French from English and vice versa.
-2. Ask the three product questions in `AGENTS.md`, in French and English. Answers must use the
+2. Ask the example questions in `AGENTS.md` and other shapes, in French and English. Answers must use the
    right time/person/kind filters, cite playable or viewable moments and never invent an answer
    when nothing matches. Flagged or unclear speech alone never supports a factual answer, even
    hedged: it is shown as a possible match linking the recording, with a note that it is too
@@ -135,7 +145,8 @@ Frames are monitor composites; evidence images are the cited window's visible pa
    once, then apply it: only the selected media disappears while searchable text remains. Restore
    `forever`; deleted media must not return. Verify one retention pass per day.
 4. Debug > Overview and Logs must explain stalled jobs and capture outcomes without exposing
-   captured content. Settings must report disk use by type.
+   captured content. Debug shows window-capture faults, audio faults and capture gaps as counts.
+   Settings must report disk use by type.
 5. While recording, Settings > Export one day (From/To) with screenshots and transcripts into an
    empty folder on another drive. Cancel a second export into another empty folder and confirm no
    `.partial` is left and that folder is still there, empty. Open the first with

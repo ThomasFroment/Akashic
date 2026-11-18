@@ -7,19 +7,11 @@ and its tests to establish current behaviour before changing an area.
 
 1. [AGENTS.md](../AGENTS.md): product scope and working agreement.
 2. [DECISIONS.md](DECISIONS.md): the user's decisions and which ones the code does not follow yet.
-3. The relevant guide below and [TOOLING.md](TOOLING.md).
+3. The relevant guide in the map and [TOOLING.md](TOOLING.md).
 4. The matching audit or method report, then the code and tests.
 
-| Area | Guide |
-| --- | --- |
-| Process boundaries, source map and resource ownership | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Screen, media, audio and exclusions | [CAPTURE.md](CAPTURE.md) |
-| Transcription and speaker identity | [SPEECH.md](SPEECH.md) |
-| Finding evidence and answering questions | [RETRIEVAL.md](RETRIEVAL.md) |
-| Persistence, retention, export and deletion | [STORAGE.md](STORAGE.md) |
-| Threat model and security boundaries | [SECURITY.md](SECURITY.md) |
-| Distribution | [PACKAGING.md](PACKAGING.md) |
-| Product interaction, timeline and visual direction | [UI.md](UI.md) |
+The map of guides, evidence and records is the "Detailed guides" list in
+[AGENTS.md](../AGENTS.md#detailed-guides).
 
 ## Evidence and maintenance
 

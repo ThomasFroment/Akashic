@@ -86,7 +86,9 @@ orphan embeddings are removed. Media is re-encrypted under the new key. A file g
 snapshot loses its reference and counts as missing. Every full-text index is rebuilt, then VACUUM
 runs, so nothing out of scope survives in a page or an index. Temporary data stays in memory. The
 category map is checked against `retention.PURGERS` at import, and a test classifies every table of
-the copy, so a new table needs a scope rule, as for Delete all.
+the copy, so a new table needs a scope rule, as for Delete all. An export opened as a data folder
+is an ordinary store: its worker rebuilds the derived categories the export excluded (such as
+episodes and vectors) from the sources it keeps.
 
 ## Full-data deletion
 

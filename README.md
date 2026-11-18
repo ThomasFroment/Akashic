@@ -31,11 +31,10 @@ uv sync --no-cache
 Installing and downloading models fetch only public files. The running app talks only to
 `127.0.0.1`.
 
-**Optional: French OCR.** UI Automation reads the focused window; Windows OCR reads every other
-kept window (the whole window), and the focused window keeps the longer text. French is the
-default recognizer (it reads English well too). Without the French pack the app falls back to
-English and logs a warning. To add it, run once in an elevated PowerShell (or
-add French under Settings › Time & language):
+**Optional: French OCR.** Windows OCR reads screen text next to UI Automation (rules:
+[docs/CAPTURE.md](docs/CAPTURE.md#screen-text)). French is the default recognizer (it reads
+English well too). Without the French pack the app falls back to English and logs a warning. To
+add it, run once in an elevated PowerShell (or add French under Settings › Time & language):
 
 ```powershell
 Add-WindowsCapability -Online -Name "Language.OCR~~~fr-FR~0.0.1.0"
@@ -112,9 +111,8 @@ Ask is evaluated with `scripts\eval_ask.py` on two question sets, scored and rep
 development set (its 29 questions, plus the 20 of `scripts\eval_hard_memory.py`) is what the
 planner, ranking and scorer were tuned against, so its scores are development scores, not
 validation. The held-out set was written before any run, is frozen by a SHA-256 the script checks,
-and is never tuned against. Neither set establishes daily-use accuracy. No run with split
-reporting exists yet; the last scores (2026-11-11, older scorers) are in
-[docs/baselines/](docs/baselines/).
+and is never tuned against. Neither set establishes daily-use accuracy. The last scores
+are in [docs/baselines/](docs/baselines/); what is still open is in [OPEN.md](OPEN.md).
 
 ## Troubleshooting
 

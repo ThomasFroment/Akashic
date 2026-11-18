@@ -27,6 +27,8 @@ a larger model or larger context is not evidence that any of them is solved.
   says they were not recorded and never that nothing happened. The no-evidence reply lists them in
   the question's language. Excluded and music spans and the current UI-open pause are left out. A
   question without a time window gets no line, and a failed gap read drops only the line.
+- A speech source label carries its tag: "(voice chat)", "(game)" or "(media)", none for the mic.
+  A tag says what was audible, not who spoke ([SPEECH.md](SPEECH.md#identity-and-attribution)).
 - Support claims with cited evidence and hedge unclear speech or uncertain authorship. A valid
   citation number proves neither entailment nor the identity of the person who spoke.
 

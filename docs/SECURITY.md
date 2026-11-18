@@ -66,8 +66,8 @@ exception messages or third-party logging that quote inputs must not reach them.
 
 Exclusion decisions fail closed, instead of storing content as "unclear", for: an unknown process
 or UWP host; an unreadable private marker; unreadable child windows; an unresolved ghost window;
-a browser window with no known main window; a Chrome or Brave window whose address was never
-read and whose caption is unreadable; and an unreadable audio source. Writer-spy tests watch
+a browser window with no known main window; a Chrome or Brave window whose caption is
+unreadable; and an unreadable audio source. Writer-spy tests watch
 every SQL write, encrypted file and log record for forbidden content. [CAPTURE.md](CAPTURE.md)
 has the rules.
 

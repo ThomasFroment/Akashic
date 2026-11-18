@@ -11,7 +11,8 @@ Do not silently rewrite transcripts with an LLM or fuzzy name replacement. Retai
 recording, distinguish uncertain recognition and measure hallucinations as well as omissions.
 
 A long utterance is cut and continued. The continuation keeps any fresh speech, however short,
-and still goes through the quiet check.
+and still goes through the quiet check, which judges the whole voiced level, the 2 s overlap
+included ([continuation on read speech](baselines/2026-11-17-continuation-speech.md)).
 
 The microphone represents the user. System audio may mix friends, videos, music and game sound;
 process participation does not identify the author of every word.
@@ -24,10 +25,18 @@ quotation from one participant. Speaker corrections and merges must update deriv
 without silently changing unrelated identities.
 
 A system segment names only the processes audible where it was recorded, so voice chat routed
-elsewhere is missing from it ([CAPTURE.md](CAPTURE.md#which-windows-are-captured)). The
+elsewhere is missing from it ([CAPTURE.md](CAPTURE.md#audio)). The
 microphone's speaker is the user without any voice model. System segments wait for the voice
 models, and after they are downloaded every transcribed system segment that still has its audio
 gets one speaker job.
+
+Every segment shown to the user carries a speech tag, derived at read time and never stored. The
+first rule that fits wins: the microphone stream is `you`; a source that is a voice app
+(`VOICE_APPS`) is `voice chat`; a source process with an overlapping game session is `game`; any
+other source is `media`; no source gives no tag. It is shown in Search > Speech, the Memory lines
+and Ask ("Minlo said (voice chat)"); mic lines get no suffix. The tag says what was audible, not
+who spoke. Conversation building applies the same rule to the sources alone, whatever the stream,
+so mic speech with a voice app audible still joins a call.
 
 Word alignment and diarization are separate sources of uncertainty, especially on short replies,
 continuations and overlapping voices. Public read speech or synthetic voices cannot calibrate

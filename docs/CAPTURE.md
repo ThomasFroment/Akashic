@@ -15,7 +15,10 @@ covered parts of the windows beneath them do not show either. Minimized, cloaked
 desktop, a suspended app), alpha-0 overlays (WGC returns them as solid black) and fully covered
 windows are not captured; a covered window is pending until part of it shows. A pending window is
 waited for `PENDING_WAIT_S` (`capture/desk.py`) before the monitor is composed without it, unless
-a capture failed on it.
+a capture failed on it. A monitor whose picture shows a held window, or a started one still
+awaiting a frame (for at most `PENDING_RECHECK_S`, 5 s), is checked again `min_gap_s`
+later, also while the hook is down; a window whose capture fails or will not start does not
+count; game mode keeps its rates.
 
 What the composite does not show, accepted: the blurred backdrop behind translucent shell
 surfaces, drop shadows and the cursor. While a window is dragged or resized the composite is off
@@ -31,8 +34,8 @@ Each monitor is its own schedule:
   seconds. Input also checks the monitor under the cursor (scrolling a side window). Window
   events (show, hide, move, reorder, title) check the monitors they touch. If the window event
   hook is down, every monitor is checked and every hold restarts at once, then at most every 5 s
-  (`HOOK_DOWN_RECHECK_S`); reinstall attempts wait 1 s, doubling to 60 s. Held browser windows off
-  the busy monitor can stay blank meanwhile.
+  (`HOOK_DOWN_RECHECK_S`); reinstall attempts wait 1 s, doubling to 60 s. Held browser windows
+  are blank for a few seconds after each restart.
 - Side monitors are checked at least every 30 s, because a media verdict lapses after 60 s and
   every check renews it, even when the picture is unchanged, dropped or failed. The rates are in
   `capture/screen.py` `Settings`.
@@ -103,7 +106,9 @@ A window is judged by, in this order:
 7. **Other browser windows** (picture-in-picture, DevTools, bar-less windows) take the strictest
    verdict of their browser's main windows; in Chrome and Brave they also need a caption that
    reads without a private marker. With no main window known they are excluded. Every browser
-   popup is excluded for now (a temporary default until the popups spike).
+   popup, owned or not, is excluded for good: the save-password bubble and autofill dropdown show
+   the username and share class and owner with harmless popups such as select dropdowns
+   ([focus-surfaces](baselines/2026-11-18-focus-surfaces.md)). WebView2 popups follow their owner.
 8. **Owned windows of other apps** (menus, dropdowns, tooltips) take the strictest of their own
    verdict and their owner's. An ownerless popup is excluded when any window of its app, minimized
    or on another desktop included, is excluded.
@@ -117,8 +122,10 @@ paint right after its title changes. The hold starts at the title event, or for 
 window when events were lost (at most every 5 s while the hook stays down). It ends when a read
 that started after the event returns an address different from the last judged one, or after
 500 ms and 3 reads that started after the event (`HOLD_MIN_S`, `HOLD_MIN_READS`); an unreadable
-address is then kept. Measurements and the open cases:
-[title-change hold](baselines/2026-11-16-title-change-hold.md).
+address is then kept. Only the window object's name change is a title event; Chrome's
+`OBJID_CLIENT` NAMECHANGE (sent on every navigation) is not delivered. Measurements and the
+open cases: [title-change hold](baselines/2026-11-16-title-change-hold.md),
+[leaking pages](baselines/2026-11-17-title-hold-pages.md).
 
 **Grab before judge.** Each check grabs the newest frame of every started window before the
 verdicts run, so a frame painted under a verdict was grabbed before the read that verdict rests
@@ -137,6 +144,11 @@ unknown verdict, or when its verdict is missing or stale. So a private or bank w
 monitor also cuts that browser's media. A media title is not a window title. Nothing about an
 excluded window is logged.
 
+Mechanics live with the code (`capture/verdicts.py`, `capture/exclusions.py`,
+`capture/browser_state.py`, `platform/win/uia.py`) and their tests.
+
+## Audio
+
 Pause stops all new capture. The pause is kept across Lock, Quit and restart until the user
 resumes. Pause drops the utterance being recorded. Stop, a device change and a device failure
 keep it; an unexpected fault drops it. A locked Windows screen and an Akashic pause are
@@ -148,15 +160,12 @@ endpoint it recorded. When that endpoint carries a virtual mixer (`MIXER_PROCESS
 Link), it stores what is audible on every endpoint instead, without the mixer. A poll that lacks
 the recorded endpoint makes the sources unknown (`unknown_sources`), and the endpoints are
 re-read. Voice chat (`VOICE_APPS`) audible only on another endpoint, and not of an excluded app,
-is not recorded. It is written as a `voice_elsewhere` gap. These lists are correlations, not
-proof of who produced a word. Preserve that uncertainty in episode associations and answers.
+is not recorded. It is written as a `voice_elsewhere` gap and reported as a capture problem.
+These lists are correlations, not proof of who produced a word. Preserve that uncertainty in
+episode associations and answers.
 
-Music-app audio: drop songs, but keep segments with evidence of real speech, such as a podcast
-([DECISIONS.md](DECISIONS.md), D7). Today the code still drops all system sound whose only
-sources are music apps.
-
-Mechanics live with the code (`capture/verdicts.py`, `capture/exclusions.py`,
-`capture/browser_state.py`, `platform/win/uia.py`) and their tests.
+Music-app audio: songs are dropped (a `music` gap). Keeping music-app speech, such as a podcast,
+is revisited on real data ([DECISIONS.md](DECISIONS.md), D7).
 
 ## While Akashic is open
 
@@ -169,15 +178,21 @@ A UI page reports itself to the local server while it is visible (in any browser
 address shows) and shows no recorded content until the server confirms the halt. As a failsafe, a
 visible main browser window whose readable address is Akashic's loopback port halts capture, and
 while that holds only the addresses of visible browser windows are re-read, about once a second,
-until none shows it. Akashic's own pages therefore never show recorded content while recording
-runs, and no copy of a transcript, excerpt or answer reaches the screen text. The message path is
-in [ARCHITECTURE.md](ARCHITECTURE.md).
+until none shows it. Akashic's own pages therefore show no recorded content while recording
+runs, with two limits measured on Chrome 157 and Zen 1.24.1b
+([presence timing](baselines/2026-11-17-presence-timing.md)). A page fully covered by another
+window still reports itself visible, so screen, audio and media stay halted until it is
+minimized, closed or switched away from. And in 2 of 92 hides the page reported hidden, and
+recording resumed, before the window left the screen, so one frame of Akashic's own UI was
+grabbed (the real capture's resume latency was not measured). The message path is in
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Screen text
 
 - The focused window is read through UIA once per tick, with the per-app budget
-  (`capture/uia_budget.py`). The text is dropped when the window, its title or its address changed
-  during the read.
+  (`capture/uia_budget.py`), on the window's UIA worker. The text is dropped when the window, its
+  title or its address changed during the read, or when a read did not finish in time or started
+  before the check asked for it.
 - Every other kept app window is read with OCR on its whole capture, covered parts included
   ([DECISIONS.md](DECISIONS.md)): reading window by window keeps each window's lines in order,
   attributes every line to its window, and lets an unchanged window reuse its previous text
@@ -197,25 +212,32 @@ reason UIA reads are rationed per app) and it returns text hidden behind other w
 A media row opens when a session first plays, never while Windows is locked. It stays open across
 pauses, lock and UAC prompts. While paused, its end stays at the pause point. It closes on a title
 change, the source going away, an excluding verdict, a pause over 10 min (at the pause point), a
-poll gap over 10 s such as sleep (at the last poll; a session still playing gets a new row at the
-first unlocked poll), and Akashic's halt or stop. Locking clears the browser verdicts, so a row
-whose verdict becomes `url_unknown` is kept while locked and for one poll after. Any excluding
-verdict still closes it at once. A game row ends at the last screen tick that saw the game in
-front.
+sleep (at the last poll; a session still playing gets a new row at the first unlocked poll), and
+Akashic's halt or stop. A sleep is a gap where the monotonic clock advanced at least 5 s more than
+the awake clock (`QueryUnbiasedInterruptTime`); a stall of the media thread while awake, or a
+wall-clock step, splits nothing, and `played_ms` grows by the awake time. Locking and a UAC prompt
+clear the browser verdicts, so a row whose verdict becomes `url_unknown` is kept while locked, when
+the verdicts were cleared since the previous poll (`BrowserState.generation`), and for one poll
+after. Any excluding verdict still closes it at once. A game row ends at the last screen tick that
+saw the game in front. The first tick after a sleep ends it at the last tick before the sleep, with
+no grace; a game still in front opens a new row at that first tick.
 
 ## Writes
 
 A failed frame write marks its monitor failed and the next check stores the picture again.
 Audio segment writes and media-session closes retry when the database is busy; game rows do not.
+A play/pause event that fails is kept on its session and written at the next poll with its own
+time, before the close.
 A full disk fails writes and is reported as a problem; nothing is deleted to make room.
 
-Stop has a deadline (`STOP_BUDGET_S`, 8 s after the screen loop returns; the supervisor kills at
-10 s). Once stop is set every capture connection waits at most 250 ms on a busy database
-(`capture/gaps.py`). The screen and audio writers drop what is still queued at their first busy
-write after stop (`stop_dropped`; audio drops are `write_failed` gaps). The gap thread retries the
-stop record until the deadline. Every capture thread is a daemon and every join uses the
-deadline (`StopDeadline`); a thread still running at the deadline is logged by name and
-abandoned, and the process exits.
+Stop has a deadline (`STOP_BUDGET_S`, 8 s from the stop request, or from the screen loop's return
+when capture itself stopped; the supervisor kills at 10 s). Once stop is set every capture
+connection waits at most 250 ms on a busy database (`capture/gaps.py`). The screen and audio
+writers drop what is still queued at their first busy write after stop (`stop_dropped`; audio
+drops are `write_failed` gaps). The gap thread retries the stop record until the deadline, and
+makes one attempt even when the deadline has already passed. Every capture thread is a daemon and
+every join uses the deadline (`StopDeadline`); a thread still running at the deadline is logged by
+name and abandoned, and the process exits.
 
 ## Health
 
@@ -235,6 +257,8 @@ process_info row and returned as `capture_problems` by `GET /api/status`.
 - `mic_segments_dropped`, `system_segments_dropped`: a segment of that stream was lost to a full
   writer queue or a failed write in the last 60 s (`DROP_PROBLEM_S`) and after the last resume;
   excluded, music and unknown-source drops are intended and never problems.
+- `voice_elsewhere`: voice chat was audible only on an unrecorded playback device within
+  `DROP_PROBLEM_S` after the last resume. It comes after the dropped codes.
 - `window_events_down`: the window event hook has been down for 30 s (`HOOK_DOWN_PROBLEM_S`).
 
 Screen problems are reported per monitor as `<code>@Monitor N`, numbered left to right, the same
@@ -244,7 +268,9 @@ every non-sticky problem; a resume reports `degraded` only for `audio_unavailabl
 publish catches up with the real state. Problem changes are logged once, codes only: warning level
 when problems are active, info level when the set becomes empty.
 Down codes come before dropped codes. The thresholds (`GRAB_FAILURE_RUN`, `DEVICE_DOWN_S`,
-`DROP_PROBLEM_S`, `HOOK_DOWN_PROBLEM_S` in `capture/health.py`) are not measured.
+`DROP_PROBLEM_S`, `HOOK_DOWN_PROBLEM_S` in `capture/health.py`) are not measured. Capture faults
+are counted by type only, never with content, in the Debug data: `screen`, `captures` (including
+the D3D device), `audio.faults` and `gaps`.
 
 ## Capture gaps
 
@@ -286,33 +312,35 @@ heartbeat to the start is recorded as `crashed`. The stop is written when it beg
 the audio drain: every open row is closed and `stopped` opened; drops the audio writer reports
 while draining are still written afterwards as closed rows. If the database stays busy, the stop
 is retried until the stop deadline. Then the pending gap events are dropped (`stop_dropped`) and
-no `stopped` is written, so the next start records `crashed` from the last heartbeat. Gaps queue
+no `stopped` is written, so the next start records `crashed` from the last heartbeat; this is
+accepted ([DECISIONS.md](DECISIONS.md)), no clean-stop marker dates it. Gaps queue
 at most 10,000 pending drops; transitions are always queued. Counters are under `gaps` in the
 capture Debug data, and `stop_dropped` under `writer` (screen), `audio.stats` (audio) and `gaps`.
 
 ## UI Automation timeouts
 
 `WindowsUia` sets `ConnectionTimeout` to 1000 ms and `TransactionTimeout` to 2000 ms
-(`platform/win/uia.py`), so a hung app fails a call instead of blocking the screen loop.
-Spike 2026-11-13, Edge and Chrome, a local page of about 30k elements, default UIA timeouts, 5
-runs each. Worst times of the readers that run without a budget: `browser_caption` 20 ms,
-`read_url` 626 ms (Chrome; Edge 554 ms). Zen (Gecko, throwaway profile, same page, about 20k UIA
-nodes, 5 runs): worst `browser_caption` 0 ms (returns at once for Firefox and Zen), `read_url`
-14 ms (`_firefox_bar` finds the address bar early). `read_text` took up to 4.5 s on the Chromium
-page and 3.1 s in Zen, because it fetched
-every node. It now applies the text-type, visible and non-password condition inside the
-`FindAll`, so `max_nodes` cuts the matching nodes (Chromium marks scrolled-away nodes
-`IsOffscreen`), and visible text far down a long page is kept. Re-measured 2026-11-13 on a page
-rebuilt to the description above (30k elements, autofocused password field, scrolled to the
-end, throwaway profiles), 5 runs of the full path (filtered `FindAll` plus the loop with
-`max_nodes` 3000): Edge worst 1912 ms (median 1864), Chrome worst 1770 ms (median 1740). The
-old unfiltered path took 6029 ms (Edge) and 5910 ms (Chrome) and kept only 16 of 59 (Edge)
-and 12 of 54 (Chrome) visible text nodes. The call can still approach the 2 s transaction
-timeout on pages that large, and then the frame falls back to OCR; its budget only records
-time after the call. Zen was not re-measured: the throwaway page exposed no web content in
-that run.
-The transaction timeout is the next 500 ms step above 3x the worst legitimate call
-(1878 ms), with a 1000 ms floor.
+(`platform/win/uia.py`), so a hung app fails a call instead of blocking the screen loop. The
+transaction timeout is the next 500 ms step above 3x the worst legitimate call (1878 ms), with a
+1000 ms floor.
+
+`read_text` applies the text-type, visible and non-password condition inside the `FindAll`, so
+`max_nodes` cuts the matching nodes (Chromium and Zen mark scrolled-away nodes `IsOffscreen`) and
+visible text far down a long page is kept. On a page as large as 30k elements the call can still
+approach the 2 s transaction timeout, and then the frame falls back to OCR; its budget only records
+time after the call. No faster reader exists
+([large page text](baselines/2026-11-17-large-page-text.md)).
+
+Spike 2026-11-13, Edge and Chrome, a local page of about 30k elements, default UIA timeouts, 5 runs
+each. Worst times of the readers that run without a budget: `browser_caption` 20 ms, `read_url`
+626 ms (Chrome; Edge 554 ms). Zen (Gecko, throwaway profile, same page, about 20k UIA nodes, 5
+runs): worst `browser_caption` 0 ms (returns at once for Firefox and Zen), `read_url` 14 ms
+(`_firefox_bar` finds the address bar early). The unfiltered `read_text` took up to 4.5 s on the
+Chromium page and 3.1 s in Zen, because it fetched every node. Re-measured on a page rebuilt to the
+description above (30k elements, autofocused password field, scrolled to the end, throwaway
+profiles), 5 runs of the full path (filtered `FindAll` plus the loop with `max_nodes` 3000): Edge
+worst 1912 ms (median 1864), Chrome worst 1770 ms (median 1740). The unfiltered path took 6029 ms
+(Edge) and 5910 ms (Chrome) and kept only 16 of 59 (Edge) and 12 of 54 (Chrome) visible text nodes.
 
 The two readers without a budget (`browser_caption`, `read_url`) are also time-boxed per window,
 unlike `read_text`, which has the per-app budget. A call that took 900 ms or more
@@ -325,27 +353,73 @@ call that returned a value starts a backoff. Remaining limit: a legitimate read 
 or more and still returns None (for example a huge page with no omnibox found) backs the window
 off for 30 s.
 
-Verdict reads and the focused window's text read run on the one capture thread. With the per-HWND
-backoff a hung window costs at most one timed-out UIA call per 30 s, and that call delays every
-monitor's checks.
+Every UIA read runs on a worker thread picked by the window's pid (`capture/uia_threads.py`): one
+worker per process, created on its first read, with its own `WindowsUia` built on that thread.
+Windows of unknown pid (0) share one worker. The screen loop waits for a read, per kind:
+
+- Caption and address, 50 ms (`WAIT_S`). Reads serialize across processes, so the loop waits on one
+  read at a time. A stalled process cost 1973-2026 ms per check and its sibling windows stalled with
+  it; 0 of 1128 warm reads took over 50 ms ([UIA under load](baselines/2026-11-17-uia-under-load.md)).
+- Text, 1.2 s (`TEXT_WAIT_S`). A text walk is far slower than the other reads. The wait sits above
+  the slowest measured walk and below the 2 s transaction timeout, which ends a walk anyway. With
+  50 ms such a walk would never be stored: its late result is dropped and the next check starts a
+  new walk that misses again.
+
+A worker still busy with an earlier call gives the next read an unfinished result at once and
+nothing is queued, so a stalled process costs a check one wait (50 ms, or 1.2 s for a text walk),
+not one timeout per window.
+
+Caption and address reads never delay another monitor beyond the 50 ms wait. A focused-window text
+walk blocks the screen loop, and so every monitor, for its whole duration, up to `TEXT_WAIT_S`,
+healthy walks on large pages included. The per-app budget allows at most one per interval (0-20 s,
+set by the app's average walk cost: none below 50 ms, 20 s at 250 ms or more). Accepted bound
+([DECISIONS](DECISIONS.md), 2026-11-18).
+
+A read that missed the wait goes on running; its result is kept per (kind, hwnd) and the next
+read of that kind for that window gets it once, without a new call, so the next check starts a
+fresh call. The backoff is timed on the worker, so a late result can back a window off at the check
+that receives it. At most 16 workers run; workers of processes with no window left are ended after
+each window enumeration, and a stuck one never holds up the stop. At the cap a new pid takes the
+place of the idle worker read least recently (its kept results are dropped); only when every worker
+is busy is the read unfinished and counted as a fault (`uia worker`). A worker whose `WindowsUia`
+could not be built stays unfinished and is counted as a fault (`uia worker`); it is idle, so the
+cap replaces it. Stats and logs count unfinished reads (`uia_unfinished`) and hold no title,
+address, text, hwnd or pid.
+
+Fail closed:
+
+- Unfinished reads fail closed, and so do late ones (started before the check that receives them:
+  the page may have changed since). An unfinished address never makes a window a main window; a
+  late one may recognize a main window but never keeps it. An unfinished caption counts as unknown.
+- Either holds a known main window, or excludes it by its rules, without reading its caption, and
+  keeps the failsafe halted. So does a None from a backed-off window.
+- `judge` and the normal reads still skip a backed-off window. The failsafe watch (only) reads a
+  backed-off window's address anyway, through its per-pid worker (a stalled process answers
+  unfinished at once); a slow None there renews the backoff, a fresh read clears nothing.
+- The halt ends only on a fresh finished non-own read, even during a backoff (about 2 watches after
+  the browser recovers), or when the window is no longer visible.
 
 Spike 2026-11-13, Chrome 157 and Edge 157, throwaway profiles, PC locked: a flagless window
 returned only the browser's own interface text through UIA, never page text, even after 10 s.
 With Chromium's occlusion tracking turned off, the first read enabled web accessibility and the
 page was readable from the next read (0.5 s); with `--force-renderer-accessibility` at once.
 So a blank page tree means Chromium considers the window occluded, not that UIA is enabled
-lazily. Address bar and caption reads worked in every mode. Not yet run unlocked with the window
-in front.
+lazily. Address bar and caption reads worked in every mode. Unlocked, with the window in front,
+Chrome showed page text and kept it while covered, so blanking under occlusion was not tested
+unlocked ([large page text](baselines/2026-11-17-large-page-text.md),
+[focus-surfaces](baselines/2026-11-18-focus-surfaces.md)).
 
 ## Validation boundaries
 
-WGC captures each window by itself; a failed capture leaves its window pending and is never
-replaced by a desktop grab. Controlled Zen checks established window rendering, updates, a
-mixed-DPI move and occlusion within that fixture. Those checks do not validate everyday browsers,
-Discord, games or protected surfaces. Firefox and Brave (title markers, address bar, caption) are
-unverified on this PC; Zen, Chrome and Edge were measured in the
-[browser reads](baselines/2026-11-16-browser-reads.md) baseline. French OCR availability and real
-bilingual accuracy must be checked on the target machine.
+WGC captures each window by itself; a failed capture leaves its window pending and is never replaced
+by a desktop grab. Controlled Zen checks established window rendering, updates, a mixed-DPI move and
+occlusion within that fixture. Those checks do not validate everyday browsers, Discord, games or
+protected surfaces. Firefox and Brave (title markers, address bar, caption) are unverified on this
+PC; Zen, Chrome and Edge were measured in the [browser reads](baselines/2026-11-16-browser-reads.md)
+baseline. Only the en-US OCR language is installed on this PC: `WindowsOcr("fr")` falls back to it
+and loses accents (accented words read exactly in 40-46%, 91-96% accent-folded; [OCR, decode and
+QUNS](baselines/2026-11-17-ocr-decode-quns.md)). Real bilingual accuracy must be checked on the
+target machine.
 
 Validate real app layouts, startup accessibility, focus/exclusion transitions, brief text on
 secondary monitors and concurrent media ownership. Use the
