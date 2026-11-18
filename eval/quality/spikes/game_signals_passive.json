@@ -1,0 +1,149 @@
+{
+ "summary": {
+  "quns_states": [
+   2
+  ],
+  "fg_is_steam_library": 10,
+  "cursor_showing": 0,
+  "cursor_clipped": 3,
+  "share_3d_median": {
+   "discord.exe": 10.2,
+   "dwm.exe": 18.7,
+   "steam-library-game": 0.0,
+   "steamwebhelper.exe": 0.0
+  },
+  "samples": 10
+ },
+ "rows": [
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": false,
+   "share_3d": {
+    "discord.exe": 10.4,
+    "steam-library-game": 0.0,
+    "dwm.exe": 32.8,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": true,
+   "share_3d": {
+    "discord.exe": 7.1,
+    "steam-library-game": 0.0,
+    "dwm.exe": 24.6,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": true,
+   "share_3d": {
+    "discord.exe": 12.7,
+    "steam-library-game": 0.0,
+    "dwm.exe": 42.9,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": true,
+   "share_3d": {
+    "discord.exe": 12.4,
+    "steam-library-game": 0.0,
+    "dwm.exe": 45.1,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": false,
+   "share_3d": {
+    "discord.exe": 10.2,
+    "steam-library-game": 0.0,
+    "dwm.exe": 22.0,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": false,
+   "share_3d": {
+    "discord.exe": 10.2,
+    "steam-library-game": 0.0,
+    "dwm.exe": 10.7,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": false,
+   "share_3d": {
+    "discord.exe": 11.1,
+    "steam-library-game": 0.0,
+    "dwm.exe": 10.0,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": false,
+   "share_3d": {
+    "discord.exe": 5.7,
+    "steam-library-game": 0.0,
+    "dwm.exe": 13.6,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": false,
+   "share_3d": {
+    "discord.exe": 5.6,
+    "steam-library-game": 0.0,
+    "dwm.exe": 14.1,
+    "steamwebhelper.exe": 0.0
+   }
+  },
+  {
+   "quns": 2,
+   "fg_is_steam_library": true,
+   "running_appid_set": true,
+   "cursor_showing": false,
+   "cursor_clipped": false,
+   "share_3d": {
+    "discord.exe": 6.0,
+    "steam-library-game": 0.0,
+    "dwm.exe": 15.4,
+    "steamwebhelper.exe": 0.0
+   }
+  }
+ ]
+}
