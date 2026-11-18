@@ -1,0 +1,587 @@
+{
+ "G1": {
+  "capture:conhost.exe": {
+   "n": 316,
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "capture:python.exe": {
+   "n": 632,
+   "p50": 0.0,
+   "p95": 33.51999999999989
+  },
+  "worker:conhost.exe": {
+   "n": 2449,
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "worker:llama-server.exe": {
+   "n": 1440,
+   "p50": 0.0,
+   "p95": 1.6
+  },
+  "worker:python.exe": {
+   "n": 2018,
+   "p50": 0.0,
+   "p95": 1.6
+  }
+ },
+ "G2": {
+  "capture:conhost.exe": {
+   "max_mib": 0.0,
+   "n": 32,
+   "p95_mib": 0.0
+  },
+  "capture:python.exe": {
+   "max_mib": 540.203125,
+   "n": 64,
+   "p95_mib": 540.203125
+  },
+  "worker:conhost.exe": {
+   "max_mib": 0.0,
+   "n": 261,
+   "p95_mib": 0.0
+  },
+  "worker:llama-server.exe": {
+   "max_mib": 4685.171875,
+   "n": 160,
+   "p95_mib": 4685.171875
+  },
+  "worker:python.exe": {
+   "max_mib": 4380.84375,
+   "n": 202,
+   "p95_mib": 4156.83984375
+  }
+ },
+ "G3": {
+  "game_tree_3d_share_pct": {
+   "reference": {
+    "n": 5,
+    "p50": 31.8,
+    "p95": 32.68
+   },
+   "run": {
+    "n": 12,
+    "p50": 76.0,
+    "p95": 81.365
+   }
+  },
+  "with_akashic": {
+   "borderless": {
+    "fps": 6414.013407644385,
+    "max": 28.5163,
+    "p50": 0.1293,
+    "p99": 1.0829095000000004
+   }
+  },
+  "without_akashic": {
+   "borderless": {
+    "fps": 3485.188648079387,
+    "max": 33.3897,
+    "p50": 0.2587,
+    "p99": 0.64435
+   },
+   "exclusive": {
+    "fps": 3453.773432459005,
+    "max": 105.9659,
+    "p50": 0.26,
+    "p99": 0.6481
+   }
+  }
+ },
+ "G4": {
+  "bytes_written_per_hour": {
+   "capture:conhost.exe": 0.0,
+   "capture:python.exe": 313567162.7761241,
+   "worker:conhost.exe": 0.0,
+   "worker:llama-server.exe": 5529473.568421438,
+   "worker:python.exe": 95066647.1111763
+  },
+  "store_growth_per_day_bytes": 1566446619.120362
+ },
+ "M1.1": {
+  "changes_lasting_dwell": 69,
+  "changes_logged": 212,
+  "n": 69,
+  "splits": {
+   "focused": {
+    "n": 13,
+    "value": 0.9230769230769231
+   },
+   "focused/borderless": {
+    "n": 8,
+    "value": 0.125
+   },
+   "unfocused": {
+    "n": 45,
+    "value": 0.8
+   },
+   "unfocused/borderless": {
+    "n": 3,
+    "value": 0.3333333333333333
+   }
+  },
+  "value": 0.7246376811594203
+ },
+ "M1.2": {
+  "left": {
+   "frames_per_hour": 203.99932000226667,
+   "n": 17,
+   "useful": 13,
+   "useless_ratio": 0.1875
+  },
+  "primary": {
+   "frames_per_hour": 347.9988400038667,
+   "n": 29,
+   "useful": 20,
+   "useless_ratio": 0.2857142857142857
+  },
+  "right": {
+   "frames_per_hour": 215.9992800024,
+   "n": 18,
+   "useful": 13,
+   "useless_ratio": 0.23529411764705888
+  }
+ },
+ "M1.3": {
+  "left": {
+   "max": 14.396,
+   "n": 12,
+   "p50": 5.8365,
+   "p90": 13.0352
+  },
+  "primary": {
+   "max": 11.613,
+   "n": 18,
+   "p50": 2.5545,
+   "p90": 10.865499999999999
+  },
+  "right": {
+   "max": 12.462,
+   "n": 20,
+   "p50": 4.98,
+   "p90": 11.988000000000001
+  }
+ },
+ "M10.1": {
+  "canaries": 16,
+  "frames_scanned": 64,
+  "hits": 0,
+  "locations": [],
+  "not_scanned": [
+   {
+    "location": "export",
+    "reason": "app shell out of scope for this harness"
+   }
+  ],
+  "temp_files_unreadable": 0
+ },
+ "M10.2": {
+  "hits": 0,
+  "locations": []
+ },
+ "M10.3": {
+  "connections": 0,
+  "locations": []
+ },
+ "M11.1": {
+  "conversation": {
+   "f1": 0,
+   "n_episodes": 1,
+   "n_truth": 2,
+   "precision": 0.0,
+   "recall": 0.0
+  },
+  "game": {
+   "f1": 0,
+   "n_episodes": 0,
+   "n_truth": 1,
+   "precision": 0,
+   "recall": 0.0
+  },
+  "video": {
+   "f1": 1.0,
+   "n_episodes": 1,
+   "n_truth": 1,
+   "precision": 1.0,
+   "recall": 1.0
+  }
+ },
+ "M11.2": {
+  "n": 4,
+  "value": 0.25
+ },
+ "M11.3": {
+  "distinct_people": 4,
+  "n": 4,
+  "truth_speakers": 4
+ },
+ "M11.4": {
+  "n": 2,
+  "value": 0.5
+ },
+ "M12.1": {
+  "delay_s_by_job": {
+   "embed": {
+    "max": 784.735,
+    "n": 13,
+    "p50": 76.476,
+    "p90": 412.5640000000001
+   },
+   "ocr_window": {
+    "max": 57.069,
+    "n": 15,
+    "p50": 30.289,
+    "p90": 56.9028
+   },
+   "speakers": {
+    "max": 75.053,
+    "n": 20,
+    "p50": 12.709,
+    "p90": 52.378900000000016
+   },
+   "transcribe": {
+    "max": 62.646,
+    "n": 20,
+    "p50": 11.95,
+    "p90": 48.94540000000001
+   }
+  },
+  "embeddings": {
+   "episode": 2
+  },
+  "segments_done": 20,
+  "segments_in_fts": 20,
+  "text_rows": 102,
+  "text_rows_in_fts": 118
+ },
+ "M13.1": {
+  "busy_disk": {
+   "events": 1,
+   "lost_seconds": 0.0,
+   "truth_seconds": 60.0
+  },
+  "pause": {
+   "events": 1,
+   "lost_seconds": 0.0,
+   "truth_seconds": 60.0
+  }
+ },
+ "M2.1": {
+  "focused_row": {
+   "n": 26,
+   "value": 1.0
+  },
+  "label_accuracy": {
+   "n": 75,
+   "value": 1.0
+  }
+ },
+ "M2.2": {
+  "n": 0,
+  "reason": "no case steps",
+  "value": null
+ },
+ "M3.1": {
+  "all": {
+   "cer_accent_folded": 0.22874767963589412,
+   "cer_exact": 0.22885890286595,
+   "n": 78,
+   "wer": 0.2253325128900157
+  },
+  "font=<=11": {
+   "cer_accent_folded": 0.4501643206476349,
+   "cer_exact": 0.4501643206476349,
+   "n": 23,
+   "wer": 0.5090597913087904
+  },
+  "font=>=16": {
+   "cer_accent_folded": 0.13615526612189344,
+   "cer_exact": 0.13631300088451812,
+   "n": 55,
+   "wer": 0.10668292373307359
+  },
+  "lang=en": {
+   "cer_accent_folded": 0.26742308208954113,
+   "cer_exact": 0.26742308208954113,
+   "n": 39,
+   "wer": 0.3039156363497608
+  },
+  "lang=fr": {
+   "cer_accent_folded": 0.21615475641560564,
+   "cer_exact": 0.21621807426667514,
+   "n": 31,
+   "wer": 0.15414227847839887
+  },
+  "lang=mixed": {
+   "cer_accent_folded": 0.08900267015298297,
+   "cer_exact": 0.08984173997313337,
+   "n": 8,
+   "wer": 0.11810194436877369
+  },
+  "resolution=2560x1440": {
+   "cer_accent_folded": 0.4262084183166521,
+   "cer_exact": 0.426257489651231,
+   "n": 40,
+   "wer": 0.41155912410226947
+  },
+  "resolution=3840x2160": {
+   "cer_accent_folded": 0.020894270498254135,
+   "cer_exact": 0.021070916776180535,
+   "n": 38,
+   "wer": 0.029304501087643358
+  },
+  "source=ocr": {
+   "cer_accent_folded": 0.21869690054899021,
+   "cer_exact": 0.21873195150226082,
+   "n": 56,
+   "wer": 0.20897965803932475
+  },
+  "source=ocr_deferred": {
+   "cer_accent_folded": 0.5086629618960264,
+   "cer_exact": 0.5092731944924995,
+   "n": 11,
+   "wer": 0.5339159232017309
+  },
+  "source=uia": {
+   "cer_accent_folded": 0.0,
+   "cer_exact": 0.0,
+   "n": 11,
+   "wer": 0.0
+  },
+  "theme=dark": {
+   "cer_accent_folded": 0.22874767963589412,
+   "cer_exact": 0.22885890286595,
+   "n": 78,
+   "wer": 0.2253325128900157
+  }
+ },
+ "M3.2": {
+  "n": 229696,
+  "per_hour_chars": 2756342.8121906263,
+  "value": 0.8632496865422123
+ },
+ "M3.3": {
+  "n": 172,
+  "value": 0.6802325581395349
+ },
+ "M4.1": {
+  "game_name": {
+   "missing": 0,
+   "n": 1,
+   "value": 1.0,
+   "wrong": 0
+  },
+  "tab_title": {
+   "missing": 0,
+   "n": 3,
+   "value": 1.0,
+   "wrong": 0
+  },
+  "url": {
+   "missing": 0,
+   "n": 3,
+   "value": 1.0,
+   "wrong": 0
+  },
+  "video_title": {
+   "missing": 0,
+   "n": 1,
+   "value": 1.0,
+   "wrong": 0
+  }
+ },
+ "M5.1": {
+  "n": 13,
+  "seconds": 109.715,
+  "truth_seconds": 300.001
+ },
+ "M5.2": {
+  "n": 9,
+  "seconds": 0.077
+ },
+ "M5.3": {
+  "n": 13,
+  "per_app": {
+   "Code.exe": 0.3907102199480375,
+   "Discord.exe": 0.3974488762907471,
+   "QualityGame.exe": 1.0,
+   "QualityVault.exe": 1.0,
+   "chrome.exe": 0.42598823122187607,
+   "python.exe": 0.7581568402976531
+  },
+  "total_abs_error_ratio": 0.5698247672507758
+ },
+ "M5.4": {
+  "pause": {
+   "n": 1,
+   "value": 0.9836833333333334
+  }
+ },
+ "M6.1": {
+  "game": {
+   "end_error_s": {
+    "max": 1.48,
+    "n": 1,
+    "p50": 1.48,
+    "p90": 1.48
+   },
+   "start_error_s": {
+    "max": 58.937,
+    "n": 1,
+    "p50": 58.937,
+    "p90": 58.937
+   },
+   "stored_rows": 1,
+   "truth_sessions": 1
+  },
+  "media": {
+   "end_error_s": {
+    "max": 0.721,
+    "n": 1,
+    "p50": 0.721,
+    "p90": 0.721
+   },
+   "n": 1,
+   "split_rows": 0,
+   "start_error_s": {
+    "max": 16.107,
+    "n": 1,
+    "p50": 16.107,
+    "p90": 16.107
+   }
+  }
+ },
+ "M7.1": {
+  "akashic_session_audible": true,
+  "leak_seconds": 112.576,
+  "leak_seconds_other_than_self": 0.0,
+  "n": 17,
+  "segments_listing_akashic_itself": 17,
+  "stored_seconds": 112.576
+ },
+ "M7.2": {
+  "n": 17,
+  "sources_exact": 0.0,
+  "tag_accuracy": 0.8823529411764706
+ },
+ "M8.1": {
+  "mic": {
+   "by_condition": {
+    "game": {
+     "recall": 1.0,
+     "truth_seconds": 20.736
+    },
+    "music": {
+     "recall": 1.0,
+     "truth_seconds": 7.424
+    }
+   },
+   "false_alarm_s_per_hour": 53.375822080593075,
+   "n": 14,
+   "recall": 1.0,
+   "truth_seconds": 28.16
+  },
+  "system": {
+   "by_condition": {
+    "clean": {
+     "recall": 0.7868477676169984,
+     "truth_seconds": 59.488
+    },
+    "game": {
+     "recall": 0.9946769988412515,
+     "truth_seconds": 27.616
+    },
+    "overlap": {
+     "recall": 0.4059530878859858,
+     "truth_seconds": 80.832
+    }
+   },
+   "false_alarm_s_per_hour": 183.86338712204292,
+   "n": 80,
+   "recall": 0.694155769999429,
+   "truth_seconds": 140.104
+  }
+ },
+ "M8.2": {
+  "confusion": 0.021331058020477817,
+  "der": 0.36833814649514307,
+  "false_alarm": 0.0,
+  "miss": 0.34700708847466527,
+  "n": 152
+ },
+ "M8.3": {
+  "correct": 14,
+  "fragmentation": {
+   "call_en1": 2,
+   "call_en2": 1,
+   "call_fr1": 1,
+   "tts_microsoftdaviddesktop": 0,
+   "tts_microsoftziradesktop": 1,
+   "video_en1": 1,
+   "video_en2": 1,
+   "video_fr1": 1,
+   "video_fr2": 0
+  },
+  "purity_mean": 0.9461079607522791,
+  "unknown": 2,
+  "wrong": 1
+ },
+ "M9.1": {
+  "all": {
+   "cer": 0.3936107854630715,
+   "ref_words": 638,
+   "wer": 0.40752351097178685
+  },
+  "en": {
+   "cer": 0.048252911813643926,
+   "ref_words": 219,
+   "wer": 0.0593607305936073
+  },
+  "fr": {
+   "cer": 0.2564450474898236,
+   "ref_words": 145,
+   "wer": 0.2896551724137931
+  },
+  "mixed": {
+   "cer": 0.23115577889447236,
+   "ref_words": 37,
+   "wer": 0.2702702702702703
+  },
+  "multi": {
+   "cer": 0.8241758241758241,
+   "ref_words": 237,
+   "wer": 0.8227848101265823
+  },
+  "no_overlap": {
+   "cer": 0.1425012456402591,
+   "ref_words": 375,
+   "wer": 0.16533333333333333
+  },
+  "overlap": {
+   "cer": 0.7523131672597865,
+   "ref_words": 263,
+   "wer": 0.752851711026616
+  }
+ },
+ "M9.2": {
+  "hallucinated_words_per_hour": 0.0,
+  "n": 20
+ },
+ "M9.3": {
+  "n": 3,
+  "value": 0.6666666666666666
+ },
+ "drain_timed_out": false,
+ "drive_seconds": 300.001,
+ "driver": {
+  "focus_misses": 0,
+  "late_actions_over_1s": 0,
+  "launch_failures": 0,
+  "refused_plays": 0
+ },
+ "length": "smoke",
+ "null_trees": {},
+ "run_id": "20261118-smoke-s11-target-2241",
+ "seed": 11
+}

@@ -1,0 +1,123 @@
+{
+ "akashic_head": "cdc02dd93d422d5ab151dff05ce2859715c9ee63",
+ "capture_endpoints": [
+  {
+   "id": "{0.0.1.00000000}.{9edc18b3-4d38-4e26-bf9d-8917976eb38f}",
+   "name": "Personal Mix (Elgato Virtual Audio)"
+  },
+  {
+   "id": "{0.0.1.00000000}.{a613ce85-ddbe-4602-af95-085f2ae44491}",
+   "name": "CABLE Output (VB-Audio Virtual Cable)"
+  },
+  {
+   "id": "{0.0.1.00000000}.{d3c512df-49f5-4c6a-9ab3-d920a9b24cff}",
+   "name": "Stream Mix (Elgato Virtual Audio)"
+  },
+  {
+   "id": "{0.0.1.00000000}.{fbd67948-fffa-40bb-958b-9dc97f08230e}",
+   "name": "Mic In (Elgato Wave:3)"
+  }
+ ],
+ "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+ "default_capture": "Stream Mix (Elgato Virtual Audio)",
+ "default_render": "DT-770 PRO (Realtek USB Audio)",
+ "fingerprint": "70ec7f8dfe2d180f",
+ "gpu": "NVIDIA GeForce RTX 4080 SUPER, 621.01, 16376 MiB",
+ "label": "target",
+ "monitors": [
+  {
+   "h": 1440,
+   "name": "left",
+   "primary": false,
+   "refresh": 120,
+   "scale": 1.0,
+   "w": 2560,
+   "work": [
+    -2560,
+    0,
+    2560,
+    1440
+   ],
+   "x": -2560,
+   "y": 0
+  },
+  {
+   "h": 2160,
+   "name": "primary",
+   "primary": true,
+   "refresh": 120,
+   "scale": 1.25,
+   "w": 3840,
+   "work": [
+    0,
+    0,
+    3840,
+    2100
+   ],
+   "x": 0,
+   "y": 0
+  },
+  {
+   "h": 1440,
+   "name": "right",
+   "primary": false,
+   "refresh": 120,
+   "scale": 1.0,
+   "w": 2560,
+   "work": [
+    3840,
+    0,
+    2560,
+    1440
+   ],
+   "x": 3840,
+   "y": 0
+  }
+ ],
+ "os_build": "10.0.26200",
+ "ram_gb": 32,
+ "render_endpoints": [
+  {
+   "id": "{0.0.0.00000000}.{0a595664-1692-4a2e-88d9-288f379539d9}",
+   "name": "Odyssey G80SD (NVIDIA High Definition Audio)"
+  },
+  {
+   "id": "{0.0.0.00000000}.{23a7395c-9d5e-4b1a-b7ae-fc1a678e2278}",
+   "name": "Elgato Wave:3 (Elgato Virtual Audio)"
+  },
+  {
+   "id": "{0.0.0.00000000}.{2ad63892-7361-4f75-9c0f-0a31c400d804}",
+   "name": "CABLE In 16ch (VB-Audio Virtual Cable)"
+  },
+  {
+   "id": "{0.0.0.00000000}.{4fd78dfd-8c23-4252-93c1-15f99e970f66}",
+   "name": "Voice Chat (Elgato Virtual Audio)"
+  },
+  {
+   "id": "{0.0.0.00000000}.{7b8408be-eb2c-4e66-a9e7-fff8529cfd69}",
+   "name": "CABLE Input (VB-Audio Virtual Cable)"
+  },
+  {
+   "id": "{0.0.0.00000000}.{9761cfc1-fb9e-43d0-89c4-0b5f1794b28d}",
+   "name": "DT-770 PRO (Realtek USB Audio)"
+  },
+  {
+   "id": "{0.0.0.00000000}.{aef7ca78-919a-45f2-98d9-e6220155e2ce}",
+   "name": "System (Elgato Virtual Audio)"
+  },
+  {
+   "id": "{0.0.0.00000000}.{c62c33df-5b1d-406c-91d3-0eabcd8957cf}",
+   "name": "Headphones (Elgato Wave:3)"
+  }
+ ],
+ "tree_dirty": false,
+ "versions": {
+  "chrome": "157.0.8103.79",
+  "discord": "1.0.9268",
+  "edge": "157.0.4341.60",
+  "outer_wilds": "20230391",
+  "steam": "01.00.00.02",
+  "zen": "1.24.1b"
+ },
+ "voice_elsewhere_endpoint": "Odyssey G80SD (NVIDIA Hig"
+}

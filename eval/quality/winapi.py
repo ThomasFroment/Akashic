@@ -102,7 +102,8 @@ def monitors() -> list[dict]:
         mode = DM(size=ctypes.sizeof(DM))
         user32.EnumDisplaySettingsW(info.device, ENUM_CURRENT_SETTINGS, byref(mode))
         out.append({"handle": handle, "x": info.rc.left, "y": info.rc.top, "w": info.rc.right - info.rc.left,
-                    "h": info.rc.bottom - info.rc.top, "scale": dpi_x.value / 96, "primary": bool(info.flags & 1), "refresh": mode.freq})
+                    "h": info.rc.bottom - info.rc.top, "work": [info.work.left, info.work.top, info.work.right - info.work.left, info.work.bottom - info.work.top],
+                    "scale": dpi_x.value / 96, "primary": bool(info.flags & 1), "refresh": mode.freq})
         return True
 
     user32.EnumDisplayMonitors(None, None, cb(visit), 0)

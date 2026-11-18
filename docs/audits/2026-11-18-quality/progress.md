@@ -7,8 +7,9 @@ its assets, truth logs, scorer output and baselines at the end of each session.
 ## Phase
 
 - Phase 0, scope: done 2026-11-18 (`scope.md`)
-- Phase 1, harness `eval/quality/`: built 2026-11-18 (base 7d6d213), not yet run on the desktop
-- Phase 2, audit: not started
+- Phase 1, harness `eval/quality/`: built 2026-11-18; smoke run twice on `target` (baseline
+  `docs/baselines/2026-11-18-quality.md`); standard and day pending (overnight)
+- Phase 2, audit: in progress (started 2026-11-18 after the smoke baseline)
 - Phase 3, research: not started
 - Phase 4, invent: not started
 - Phase 5, synthesis and refuters: not started
@@ -49,7 +50,7 @@ its assets, truth logs, scorer output and baselines at the end of each session.
 
 | Id | Monitors | GPU | Audio | Notes |
 | --- | --- | --- | --- | --- |
-| target (dev PC) | primary 3840x2160 (125%), right 2560x1440 at x=3840, left 2560x1440 at x=-2560 | RTX 4080 SUPER 16 GB | Wave:3 mic, DT-770 PRO default out, Wave Link virtual endpoints, VB-CABLE | Ryzen 7 7800X3D, 32 GB, Win 11 26200 |
+| target (dev PC) | primary 3840x2160 (125%), right 2560x1440 at x=3840, left 2560x1440 at x=-2560 | RTX 4080 SUPER 16 GB | Wave:3 mic, DT-770 PRO default out, Wave Link virtual endpoints, VB-CABLE | Ryzen 7 7800X3D, 32 GB, Win 11 26200; OCR languages en-US and fr-FR (fr-FR installed by the user 2026-11-18, before the first run) |
 
 ## Done
 
@@ -74,6 +75,42 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   and not declared in pyproject.toml.
   Not verified on the desktop: every driver path, exclusive re-entry after a focus loss, popups,
   private windows, Discord and Outer Wilds launch, click hit test, the scorer on a real store.
+
+## Runs and early findings
+
+- 2026-11-18 21:06 first smoke on the target PC: the drive, drain and score all completed
+  (0 of 143 required cells missing). Harness fixes it led to (the run itself was discarded, its
+  numbers came from the earlier harness):
+  - renamed exes share one folder: a DLL already loaded by a running player can't be recopied;
+  - side pages (shown beside the focused window, never focused) always loaded English, dark,
+    16 px; they now get a look from the profile's language mix, and the scorer reads each page's
+    look from the URL it loaded;
+  - M7 compared Akashic's lower-case exe names with the observer's image names;
+  - M1.1 counted 2 Hz game HUD ticks against Akashic's 60 s game-mode screenshot interval; changes
+    now last until their surface changes again, only changes shown for the 5 s dwell count, and
+    the game posts one text event every 10 s (assumed).
+- Akashic finding (dimension 7, to confirm in Phase 2): the capture process's own loopback stream
+  appears as an audible session on the recorded endpoint (observer peak 0.28), so every stored
+  system segment lists `python.exe`, Akashic itself, among its sources. M7.1 now reports
+  `segments_listing_akashic_itself` and leakage other than self apart.
+
+- 2026-11-18 21:34 and 21:55 smoke pair (seed 11, discarded after the fixes below): 52 values
+  differed by more than 5 %, almost all timings (job delays, frame-time max and p99, capture delay)
+  or small-n splits (n = 1 media boundary, 3 term hits, 4-5 mixed lines); headline rates stayed
+  within 5 %. Smoke is too short for the 5 % rule on small-n values; judge it on standard.
+  French transcription WER about 0.6 vs 0.26 English in both runs: to explain before Phase 2.
+  Fixes after it: the scorer skips %TEMP% files another program holds open (counted); windows are
+  placed in the work area (tags were under the taskbar on the primary); VS Code starts with seeded
+  settings (no welcome, walkthrough or AI sign-in prompts, telemetry off); Edge pages open in a
+  `--guest` window (a fresh Edge profile signed in with the PC's Microsoft account and synced
+  the synthetic test pages; its hidden Default profile still signs in, but holds no harness page).
+
+- 2026-11-18 22:20 and 22:41 definitive smoke pair (seed 11): results committed in
+  `eval/quality/results/20261118-smoke-s11-target-2220` and `-2241`, headline table in
+  `docs/baselines/2026-11-18-quality.md`. Scorer fixes made while reading them (both runs
+  re-scored): WER per overlap group with TTS clips as their own bucket (the midpoint rule turned a
+  segment cut into hallucinations and French deletions); M11 video truth from the page's real
+  play events.
 
 ## Harness commands
 
@@ -111,6 +148,9 @@ stay in `eval\quality\local\` (gitignored).
   `scores.json` and `coverage.toml` as a gap, not as "does not apply".
 
 ## Next
+
+- Phase 2 (`/frogg:audit`), with the smoke findings as leads.
+- Overnight: `run.py standard` twice (same seed, 5 % check) and `run.py day`; add them to the baseline.
 
 - Run smoke, then standard, with the user away; confirm the untested paths (exclusive game, Outer
   Wilds launch, hung window, real-app launches, wt.exe feed) and fix what a real drive shows.

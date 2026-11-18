@@ -41,7 +41,7 @@ DXGI_PRESENT_TEST = 0x1
 PRESENT_ALLOW_TEARING = 0x200
 SWAP_ALLOW_TEARING = 0x800
 FEATURE_PRESENT_ALLOW_TEARING = 0
-HUD_PERIOD_S = 0.5
+HUD_PERIOD_S = 10.0  # assumed: one in-game text event (objective, kill feed, chat line) every 10 s
 HUD_CELL = 8
 HUD_TAG_BASE = 0x800000  # above every id the site hands out
 

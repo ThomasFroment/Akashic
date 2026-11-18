@@ -38,6 +38,13 @@ BROWSERS = {
     "edge": (r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe", "--inprivate"),
     "zen": (r"C:\Program Files\Zen Browser\zen.exe", "-private-window"),
 }
+VSCODE_SETTINGS = {
+    "workbench.startupEditor": "none", "workbench.welcomePage.walkthroughs.openOnInstall": False,
+    "workbench.tips.enabled": False, "update.showReleaseNotes": False, "update.mode": "none",
+    "telemetry.telemetryLevel": "off", "chat.disableAIFeatures": True, "chat.commandCenter.enabled": False,
+    "workbench.secondarySideBar.defaultVisibility": "hidden", "extensions.ignoreRecommendations": True,
+    "security.workspace.trust.enabled": False, "git.openRepositoryInParentFolders": "never",
+}
 PRIVATE_APP = {"chrome_incognito": "chrome", "edge_inprivate": "edge", "zen_private": "zen"}
 TITLE_RE = {"calculator": r"Calculator|Calculatrice", "steam": r"^Steam", "notepad": r"Notepad|Bloc-notes", "explorer": r"quality-folder"}
 # one window per user: an already open or minimized one is taken, so `before` cannot exclude it
@@ -98,6 +105,7 @@ class Driver:
         self.steps = {s["id"]: s for s in scn["steps"]}
         self.window_app = {x["id"]: x["app"] for x in scn["windows"]}
         self.window_mon = {x["id"]: x["monitor"] for x in scn["windows"]}
+        self.window_look = {x["id"]: x.get("look", {}) for x in scn["windows"]}
         self.late = self.misses = 0
         self.shift_ms = 0
         self.exes_dir = run_dir / "exes"
@@ -114,12 +122,19 @@ class Driver:
         self.log.write(action=action, window=wid, hwnd=win.get("hwnd"), pid=proc.pid if proc else win.get("pid"), exe=win.get("exe"), lateness_ms=lateness, **extra)
 
     def _rect(self, mon: str) -> tuple[int, int, int, int]:
+        """The monitor's work area: windows placed on the whole monitor slide under the taskbar."""
+        m = self.monitors[mon]
+        return tuple(m["work"]) if m.get("work") else (m["x"], m["y"], m["w"], m["h"])
+
+    def _full(self, mon: str) -> tuple[int, int, int, int]:
         m = self.monitors[mon]
         return m["x"], m["y"], m["w"], m["h"]
 
     def slot_rect(self, mon: str, index: int, count: int, full: bool) -> tuple[int, int, int, int]:
+        if full:
+            return self._full(mon)
         x, y, wd, ht = self._rect(mon)
-        if full or count < 2:
+        if count < 2:
             return x, y, wd, ht
         return x + index * wd // 2, y, wd // 2, ht
 
@@ -183,6 +198,10 @@ class Driver:
             project.mkdir(exist_ok=True)
             (project / "main.rs").write_text('fn main() { println!("quality harness"); }\n', encoding="utf-8")
             code = Path(os.environ["LOCALAPPDATA"]) / "Programs" / "Microsoft VS Code" / "Code.exe"
+            # a fresh profile opens a welcome page and sign-in prompts the user never sees day to day
+            user = self.run_dir / "vscode-data" / "User"
+            user.mkdir(parents=True, exist_ok=True)
+            (user / "settings.json").write_text(json.dumps(VSCODE_SETTINGS, indent=2), encoding="utf-8")
             proc = self._spawn([str(code), "--user-data-dir", str(self.run_dir / "vscode-data"), "--extensions-dir", str(self.run_dir / "vscode-ext"), "--new-window", str(project)], "harness")
             self._register(wid, self._find(before, lambda x: project.name in x["title"] or "Visual Studio Code" in x["title"]), proc, "harness")
         elif app == "terminal":
@@ -228,6 +247,8 @@ class Driver:
             args = [exe, "-profile", str(profile)] + ([private_flag] if private else []) + [url]
         else:
             args = [exe, f"--user-data-dir={profile}", "--no-first-run", "--no-default-browser-check", f"--window-position={x},{y}", f"--window-size={wd // 2},{ht}"]
+            if browser == "edge" and not private:
+                args.append("--guest")  # a fresh Edge profile signs in with the PC's Microsoft account and syncs; a guest window does not
             args += [f"--app={url}"] if app == "assistant" else ([private_flag] if private else []) + [url]
         profile.mkdir(parents=True, exist_ok=True)
         proc = self._spawn(args, "harness")
@@ -237,7 +258,8 @@ class Driver:
 
     def fallback_step(self, wid: str) -> dict:
         """A page for a window the scenario only shows beside the focused one."""
-        return {"id": "f" + re.sub(r"[^A-Za-z0-9]+", "-", wid), "t0_ms": 0, "t1_ms": 1000, "kind": "focus", "params": {"app": self.window_app.get(wid, "chrome"), "page": "article", "lang": "en"}}
+        look = self.window_look.get(wid) or {"lang": "en"}
+        return {"id": "f" + re.sub(r"[^A-Za-z0-9]+", "-", wid), "t0_ms": 0, "t1_ms": 1000, "kind": "focus", "params": {"app": self.window_app.get(wid, "chrome"), "page": "article", **look}}
 
     def _launch_hung(self, wid: str, mon: str, before: set[int]) -> None:
         x, y, wd, ht = self.slot_rect(mon, 0, 2, False)
@@ -452,7 +474,7 @@ class Driver:
         sched = self.run_dir / f"schedule-game-{session['t0_ms']}.json"
         sched.write_text(json.dumps({"t0_wall_ms": now_ms() + 1500, "end_ms": round(seconds * 1000), "items": items}), encoding="utf-8")
         exe, env = renamed_python("QualityGame.exe", self.exes_dir)
-        x, y, wd, ht = self._rect("primary")
+        x, y, wd, ht = self._full("primary")
         for wid in [k for k, app in self.window_app.items() if app == "game"]:
             self.windows.pop(wid, None)  # the previous session's window is closing
         self.game_proc = self._spawn([str(exe), str(QUALITY / "game.py"), "--mode", session["mode"], "--rect", str(x), str(y), str(wd), str(ht), "--seconds", str(seconds),

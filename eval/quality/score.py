@@ -21,6 +21,7 @@ import tempfile
 import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment  # a transitive dependency (librosa), already in the environment
@@ -167,7 +168,7 @@ class Truth:
                     continue
                 clip = self.clips[u["clip"]]
                 start = e["start_wall_ms"]
-                stream = {"step": u["step"], "stream": "mic" if u["stream"] == "own" else "system", "source": u["stream"], "lang": clip["lang"]}
+                stream = {"step": u["step"], "stream": "mic" if u["stream"] == "own" else "system", "source": u["stream"], "lang": clip["lang"], "kind": clip.get("kind", "speech")}
                 spans = [(start + round(a * 1000), start + round(b * 1000)) for a, b in clip["spans"]]
                 if "parts" in clip:  # a mixed turn is two voices: each half is its own utterance
                     cut = start + round(clip["split_s"] * 1000)
@@ -305,11 +306,11 @@ def logged_changes(tr: Truth) -> list[dict]:
             continue
         w = tr.windows.get(e.get("w", ""))
         if e.get("type") == "change" and w:
-            changes.append({"t": e["wall_ms"], "tag": e["tag"], "mon": w["monitor"], "kind": "page"})
+            changes.append({"t": e["wall_ms"], "tag": e["tag"], "mon": w["monitor"], "kind": "page", "surface": e["w"]})
         elif e.get("type") == "media" and e.get("ev") == "tick" and w:
             built = video_of.get(tr.pages_video(e))
             if built:
-                changes.append({"t": e["wall_ms"], "tag": built["tag_base"] + int(e["t"]), "mon": w["monitor"], "kind": "video"})
+                changes.append({"t": e["wall_ms"], "tag": built["tag_base"] + int(e["t"]), "mon": w["monitor"], "kind": "video", "surface": e["w"] + "#video"})
     mode = None
     for e in tr.game:
         if e["type"] == "game_start":
@@ -317,8 +318,18 @@ def logged_changes(tr: Truth) -> list[dict]:
         elif e["type"] == "mode_change":
             mode = e["state"]
         elif e["type"] == "change":
-            changes.append({"t": e["wall_ms"], "tag": e["tag"], "mon": "primary", "kind": "hud", "mode": mode})
-    return sorted((c for c in changes if tr.t0 <= c["t"] <= tr.t1), key=lambda c: c["t"])
+            changes.append({"t": e["wall_ms"], "tag": e["tag"], "mon": "primary", "kind": "hud", "mode": mode, "surface": "hud"})
+    changes = sorted((c for c in changes if tr.t0 <= c["t"] <= tr.t1), key=lambda c: c["t"])
+    # A change lasts until the same surface changes again (or the drive ends): M1.1 counts only
+    # changes shown for at least DWELL_MS, and finds them in any frame stored while they were shown.
+    last: dict[str, dict] = {}
+    for c in changes:
+        if c["surface"] in last:
+            last[c["surface"]]["end"] = c["t"]
+        last[c["surface"]] = c
+    for c in changes:
+        c.setdefault("end", tr.t1)
+    return changes
 
 
 def m1(tr: Truth, conn, scan: FrameScan, mon_names) -> dict:
@@ -332,11 +343,14 @@ def m1(tr: Truth, conn, scan: FrameScan, mon_names) -> dict:
     fg = tr.fg_runs()
     run_starts = [r["t0"] for r in fg]
     focused_mon = lambda t: (fg[i]["monitor"] if (i := bisect.bisect_right(run_starts, t) - 1) >= 0 and t < fg[i]["t1"] else None)
-    sample = changes if len(changes) <= MAX_CHANGES else [changes[i] for i in np.linspace(0, len(changes) - 1, MAX_CHANGES).astype(int)]
+    lasting = [c for c in changes if c["end"] - c["t"] >= DWELL_MS]
+    if not lasting:
+        return {"M1.1": nul("no change lasted the dwell"), "M1.2": nul("no frames"), "M1.3": nul("no captured changes")}
+    sample = lasting if len(lasting) <= MAX_CHANGES else [lasting[i] for i in np.linspace(0, len(lasting) - 1, MAX_CHANGES).astype(int)]
     hits, per_split, delays = 0, defaultdict(lambda: [0, 0]), defaultdict(list)
     for ch in sample:
         ts_list = stamps.get(ch["mon"], [])
-        lo, hi = bisect.bisect_left(ts_list, ch["t"]), bisect.bisect_right(ts_list, ch["t"] + DWELL_MS)
+        lo, hi = bisect.bisect_left(ts_list, ch["t"]), bisect.bisect_left(ts_list, ch["end"])
         found = next((ts for ts, fid, path in frames[ch["mon"]][lo:hi] if path and ch["tag"] in scan.info(fid, path)[0]), None) if ts_list else None
         split = ("focused" if focused_mon(ch["t"]) == ch["mon"] else "unfocused") + ("/" + ch["mode"] if ch.get("mode") else "")
         per_split[split][1] += 1
@@ -353,7 +367,7 @@ def m1(tr: Truth, conn, scan: FrameScan, mon_names) -> dict:
         ct = change_times[mon]
         useful = sum(1 for (ts, _, _), (prev, _, _) in zip(fl[1:], fl, strict=False) if bisect.bisect_right(ct, ts) > bisect.bisect_right(ct, prev))
         m12[mon] = {"frames_per_hour": len(fl) / hours, "useful": useful, "useless_ratio": 1 - useful / max(1, len(fl) - 1), "n": len(fl)}
-    return {"M1.1": {"value": hits / len(sample), "n": len(sample), "changes_logged": len(changes), "splits": {k: {"value": v[0] / v[1], "n": v[1]} for k, v in per_split.items()}},
+    return {"M1.1": {"value": hits / len(sample), "n": len(sample), "changes_logged": len(changes), "changes_lasting_dwell": len(lasting), "splits": {k: {"value": v[0] / v[1], "n": v[1]} for k, v in per_split.items()}},
             "M1.2": m12, "M1.3": {mon: summarize([x / 1000 for x in d]) for mon, d in delays.items()} or nul("no change was captured")}
 
 
@@ -450,7 +464,13 @@ def m3(tr: Truth, conn) -> dict:
                 lines[ln["id"]] = {**ln, "w": e["w"], "s": e["s"]}
     visible = visible_reports(tr)
     report_times = {wid: [t for t, _ in reports] for wid, reports in visible.items()}
+    # The look a page really loaded with is in its URL (side pages load a look of their own).
     focus_params = {s["id"]: s["params"] for s in tr.scn["steps"] if s["kind"] == "focus"}
+    for d in tr.driver:
+        if d["action"] == "page_load" and d.get("url"):
+            q = {k: v[0] for k, v in parse_qs(urlsplit(d["url"]).query).items()}
+            if "s" in q:
+                focus_params[q["s"]] = {"lang": q.get("lang"), "theme": q.get("theme"), "font_px": int(q.get("px", 16))}
     rows = conn.execute("SELECT w.hwnd, f.ts_ms, w.text, w.text_source FROM frame_windows w JOIN frames f ON f.id = w.frame_id WHERE w.role = 'app' AND w.text IS NOT NULL ORDER BY f.ts_ms").fetchall()
     by_hwnd = defaultdict(list)
     for h, ts, text, src in rows:
@@ -653,22 +673,36 @@ def audible_spans(tr: Truth) -> dict[str, list[tuple[int, int]]]:
 
 
 def m7(tr: Truth, conn) -> dict:
-    aud = audible_spans(tr)
+    # Akashic stores lower-case exe names; the observer logs the image name as Windows reports it.
+    aud = defaultdict(list)
+    for exe, spans in audible_spans(tr).items():
+        aud[exe if exe == "foreign" else exe.lower()].extend(spans)
     segs = conn.execute("SELECT stream, start_ms, end_ms, sources FROM audio_segments WHERE stream = 'system'").fetchall()
     if not segs:
         return {"M7.1": nul("no system segments"), "M7.2": nul("no system segments")}
-    leak = tot = 0
+    # Akashic's own processes (their audio sessions are 'foreign' in the OS log): a loopback capture
+    # shows up as an audible session on the endpoint it records, so Akashic can list itself.
+    self_pids = {int(pid) for e in tr.guard if e.get("t") == "guard" for tree in ("capture", "worker")
+                 for pid in e.get("trees", {}).get(tree, {})}
+    self_names = {m["exe"].lower() for e in tr.guard if e.get("t") == "guard" for tree in ("capture", "worker")
+                  for m in e.get("trees", {}).get(tree, {}).values()}
+    self_audible = any(e["t"] == "audio" and e.get("pid") in self_pids and e["audible"] for e in tr.os)
+    leak = tot = leak_other = 0
     exact = 0
     tagok = 0
+    self_listed = 0
     for _, a, b, src in segs:
-        sources = set(json.loads(src))
+        sources = {x.lower() for x in json.loads(src)}
         truth = {exe for exe, spans in aud.items() if overlap_ms(spans, [(a, b)]) > (b - a) * 0.2 and exe != "foreign"}
         extra = sources - {exe for exe, spans in aud.items() if overlap_ms(spans, [(a, b)]) > 0}
         leak += (b - a) * len(extra)
+        leak_other += (b - a) * len(extra - self_names)
+        self_listed += bool(sources & self_names)
         tot += b - a
         exact += sources == truth
         tagok += tag_of(sources) == tag_of(truth)
-    return {"M7.1": {"leak_seconds": leak / 1000, "stored_seconds": tot / 1000, "n": len(segs)},
+    return {"M7.1": {"leak_seconds": leak / 1000, "leak_seconds_other_than_self": leak_other / 1000, "stored_seconds": tot / 1000,
+                     "segments_listing_akashic_itself": self_listed, "akashic_session_audible": self_audible, "n": len(segs)},
             "M7.2": {"sources_exact": exact / len(segs), "tag_accuracy": tagok / len(segs), "n": len(segs)}}
 
 
@@ -710,33 +744,42 @@ def m8_m9(tr: Truth, conn) -> dict:
         fa = sum(b - a for a, b in stored) - overlap_ms(stored, truth)
         m81[stream] = {"recall": overlap_ms(truth, stored) / total, "false_alarm_s_per_hour": fa / 1000 / max((tr.t1 - tr.t0) / 3_600_000, 1e-9), "truth_seconds": total / 1000, "n": len(truth),
                        "by_condition": {k: {"recall": v[0] / v[1] if v[1] else None, "truth_seconds": v[1] / 1000} for k, v in cond.items()}}
-    # per-segment reference
+    # WER per overlap group: segments and truth utterances of one stream that overlap in time form a
+    # group (an utterance cut across two segments, or two segments of one utterance, stay together).
+    # A group's language is its utterances' one language, else "multi"; TTS clips (English voices,
+    # some reading French text) are their own bucket; groups with overlapping speakers are split out.
     wer = defaultdict(lambda: [0, 0, 0, 0])
     halluc = 0
-    used = set()
-    for sid, stream, a, b, _, text, spk, lang in segs:
-        hyp = fold(text or "")
-        inside = [(i, u) for i, u in enumerate(utts) if u["stream"] == stream and a <= (u["t0"] + u["t1"]) / 2 < b]
-        used.update(i for i, _ in inside)
-        ref = fold(" ".join(u["text"] for _, u in inside))
-        if not inside:
-            halluc += len(hyp.split())
-            continue
-        key = inside[0][1]["lang"]
-        for k in (key, "all"):
-            w = wer[k]
-            rw, hw = ref.split(), hyp.split()
-            w[0] += lev(rw, hw)
-            w[1] += len(rw)
-            w[2] += lev(ref, hyp)
-            w[3] += len(ref)
-    for i, u in enumerate(utts):
-        if i not in used:
-            w = wer[u["lang"]]
-            w[0] += len(fold(u["text"]).split())
-            w[1] += len(fold(u["text"]).split())
-            w[2] += len(fold(u["text"]))
-            w[3] += len(fold(u["text"]))
+    for stream in ("mic", "system"):
+        items = [("u", u["t0"], u["t1"], u) for u in utts if u["stream"] == stream]
+        items += [("s", a, b, (text or "")) for _, st, a, b, _, text, *_ in segs if st == stream]
+        items.sort(key=lambda x: x[1])
+        groups, cur, cur_end = [], [], -1
+        for it in items:
+            if cur and it[1] >= cur_end:
+                groups.append(cur)
+                cur = []
+            cur.append(it)
+            cur_end = max(cur_end, it[2]) if len(cur) > 1 else it[2]
+        if cur:
+            groups.append(cur)
+        for g in groups:
+            us = [x[3] for x in g if x[0] == "u"]
+            hyp = fold(" ".join(x[3] for x in sorted((x for x in g if x[0] == "s"), key=lambda x: x[1])))
+            if not us:
+                halluc += len(hyp.split())
+                continue
+            ref = fold(" ".join(u["text"] for u in us))
+            langs = {u["lang"] for u in us if u.get("kind") != "tts"}
+            lang = "tts" if not langs else (langs.pop() if len(langs) == 1 else "multi")
+            overlapped = any(us[i]["t1"] > us[j]["t0"] for i in range(len(us)) for j in range(i + 1, len(us)))
+            for k in (lang, "all", "overlap" if overlapped else "no_overlap"):
+                w = wer[k]
+                rw, hw = ref.split(), hyp.split()
+                w[0] += lev(rw, hw)
+                w[1] += len(rw)
+                w[2] += lev(ref, hyp)
+                w[3] += len(ref)
     m91 = {k: {"wer": v[0] / v[1] if v[1] else None, "cer": v[2] / v[3] if v[3] else None, "ref_words": v[1]} for k, v in wer.items()}
     terms = [c["text"] for c in tr.manifest["clips"] if c["kind"] == "tts"]
     present = [(t, u) for u in utts for t in set(terms) if u["text"] == t]
@@ -837,9 +880,17 @@ def m10(tr: Truth, run: Path, run_id: str, conn, scan: FrameScan, paths) -> dict
     temp = Path(tempfile.gettempdir())
     snapshot = LOCAL / "runs" / run_id / "temp-before.json"
     before = set(json.loads(snapshot.read_text())) if snapshot.exists() else None
+    temp_unreadable = 0
     if before is not None:
         for p in temp.iterdir():
-            if p.name not in before and p.is_file() and any(n.encode() in p.read_bytes() for n in canaries | nonces):
+            if p.name in before or not p.is_file():
+                continue
+            try:
+                data = p.read_bytes()
+            except OSError:  # held open by another program: counted, not read
+                temp_unreadable += 1
+                continue
+            if any(n.encode() in data for n in canaries | nonces):
                 hits.append({"where": "temp:" + p.name})
     plain = []
     for p in sorted(paths.root.rglob("*")):
@@ -859,7 +910,7 @@ def m10(tr: Truth, run: Path, run_id: str, conn, scan: FrameScan, paths) -> dict
         if any(n.encode() in data for n in canaries | nonces):
             plain.append({"where": f"content:{rel.as_posix()}"})
     outbound = [{"proto": e["proto"], "exe": e["exe"], "rport": e["rport"]} for e in tr.guard if e.get("t") == "conn"]
-    return {"M10.1": {"hits": len(hits), "locations": hits, "frames_scanned": frames_scanned, "canaries": len(canaries),
+    return {"M10.1": {"hits": len(hits), "locations": hits, "frames_scanned": frames_scanned, "canaries": len(canaries), "temp_files_unreadable": temp_unreadable,
                       "not_scanned": [{"location": "export", "reason": "app shell out of scope for this harness"}]},
             "M10.2": {"hits": len(plain), "locations": plain}, "M10.3": {"connections": len(outbound), "locations": outbound}}
 
@@ -884,9 +935,15 @@ def m11(tr: Truth, conn) -> dict:
     eps = conn.execute("SELECT id, kind, start_ms, end_ms, title FROM episodes").fetchall()
     video_titles = {e["video"]: e["title"].lower() for e in tr.pages if e.get("type") == "video_built"}
     truth = []
-    for s in tr.scn["steps"]:
-        if s["kind"] == "video":
-            truth.append(("video", *tr.span(s), video_titles.get(s["params"]["title_id"])))
+    # a video's truth span is what the page really played (first play to its last media event), not its step
+    played = defaultdict(list)
+    for e in tr.pages:
+        if e.get("type") == "media" and e.get("ev") in ("play", "pause", "ended", "tick") and (vid := tr.pages_video(e)):
+            played[vid].append(e)
+    for vid, evs in played.items():
+        starts = [e["wall_ms"] for e in evs if e["ev"] == "play"]
+        if starts:
+            truth.append(("video", min(starts), max(e["wall_ms"] for e in evs), video_titles.get(vid)))
     truth += [("conversation", a, b, "discord") for a, b in tr.call_spans().values()]
     for a, b in zip([e for e in tr.game if e["type"] == "game_start"], [e for e in tr.game if e["type"] == "game_end"], strict=False):
         truth.append(("game", a["wall_ms"], b["wall_ms"], "quality game"))

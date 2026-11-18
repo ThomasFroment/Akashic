@@ -1,0 +1,3 @@
+{"mono_ns":32466391402000,"states":[{"capture":"starting","t":1795038143458,"worker":"starting"},{"capture":"ready","t":1795038144458,"worker":"ready"},{"capture":"ready","t":1795038145459,"worker":"ready"}],"type":"warmup","wall_ms":1795038145459}
+{"mono_ns":33476410185400,"timed_out":false,"type":"drain","wall_ms":1795039155477}
+{"mono_ns":33476410283400,"restarts":{"capture":0,"worker":0},"sup_states":{"capture":"stopped","worker":"ready"},"timed_out":false,"type":"drain_result","wall_ms":1795039155478}

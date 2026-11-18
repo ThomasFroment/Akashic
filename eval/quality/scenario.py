@@ -923,6 +923,15 @@ def attempt_build(length, seed, profile, coverage, manifest, apps, rng):  # noqa
     steps += silence_steps(steps, total, asleep)
     steps.sort(key=lambda s: (s["t0_ms"], s["kind"], s["t1_ms"]))
     steps = [fill_ids(s, i) for i, s in enumerate(steps)]
+    # A window shown only beside the focused one loads its own page: give it a look drawn from the
+    # same language mix and fonts as focused pages (its own rng, so the timeline above is unchanged).
+    look_rng = random.Random(f"{seed}-side-looks")
+    lang_shares = shares(profile, "shared.language")
+    for wdef in sorted(windows.values(), key=lambda x: x["id"]):
+        if APPS[wdef["app"]][2] == "browser" and "-v" not in wdef["id"]:
+            x, acc = look_rng.random(), 0.0
+            lang = next((k for k, v in sorted(lang_shares.items()) if (acc := acc + v) > x), sorted(lang_shares)[-1])
+            wdef["look"] = {"lang": lang, "font_px": FONTS[look_rng.randrange(len(FONTS))], "theme": look_rng.choice(("dark", "light"))}
     tag_overlaps(steps)
     for s in steps:
         s["tags"] = sorted(set(s["tags"]))

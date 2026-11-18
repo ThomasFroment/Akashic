@@ -1,0 +1,246 @@
+{"hwnd":460248,"kind":"foreign","mono_ns":31169584146400,"pid":13524,"src":"poll","t":"fg","wall_ms":1795036848651}
+{"exe":"QualityGame.exe","hwnd":4393130,"kind":"game","mono_ns":31169908957600,"pid":20820,"src":"hook","t":"fg","title":"Quality Game","wall_ms":1795036848976}
+{"hwnd":197706,"kind":"foreign","mono_ns":31181652685800,"n":1,"pid":7924,"t":"names","wall_ms":1795036860720}
+{"hwnd":65866,"kind":"foreign","mono_ns":31190129409600,"pid":9532,"src":"poll","t":"fg","wall_ms":1795036869197}
+{"exe":"QualityGame.exe","hwnd":852214,"kind":"game","mono_ns":31190360841600,"pid":17340,"src":"hook","t":"fg","title":"Quality Game","wall_ms":1795036869428}
+{"hwnd":0,"kind":"foreign","mono_ns":31211622239500,"pid":0,"src":"poll","t":"fg","wall_ms":1795036890690}
+{"hwnd":65866,"kind":"foreign","mono_ns":31211744771500,"pid":9532,"src":"hook","t":"fg","wall_ms":1795036890812}
+{"exe":"chrome.exe","hwnd":4786404,"kind":"harness","mono_ns":31222648859800,"pid":32340,"src":"hook","t":"fg","title":"Untitled - Google Chrome","wall_ms":1795036901716}
+{"exe":"chrome.exe","hwnd":4786404,"kind":"harness","mono_ns":31222897094500,"n":2,"pid":32340,"t":"names","title":"kalvundaxmunmuntirgimdax Harbour notes, notes du port - Google Chrome","wall_ms":1795036901964}
+{"exe":"msedge.exe","hwnd":1312604,"kind":"harness","mono_ns":31222979344500,"pid":22296,"src":"hook","t":"fg","title":"Untitled - [Guest] - Microsoft\u200b Edge","wall_ms":1795036902047}
+{"exe":"chrome.exe","hwnd":526512,"kind":"harness","mono_ns":31223415204300,"pid":30156,"src":"hook","t":"fg","title":"Untitled - Google Chrome","wall_ms":1795036902483}
+{"exe":"msedge.exe","hwnd":460178,"kind":"harness","mono_ns":31223771658200,"pid":1580,"src":"hook","t":"fg","title":"Untitled - [Guest] - Microsoft\u200b Edge","wall_ms":1795036902839}
+{"exe":"msedge.exe","hwnd":1312604,"kind":"harness","mono_ns":31223911655300,"n":2,"pid":22296,"t":"names","title":"zorvexquarebyemcidlopbav The long road to the quiet harbour - [Guest] - Microsoft\u200b Edge","wall_ms":1795036902979}
+{"exe":"chrome.exe","hwnd":526512,"kind":"harness","mono_ns":31223911763000,"n":2,"pid":30156,"t":"names","title":"heskmunbavdrenbavsabhokfel The long road to the quiet harbour - Google Chrome","wall_ms":1795036902979}
+{"exe":"msedge.exe","hwnd":460178,"kind":"harness","mono_ns":31223912182100,"n":1,"pid":1580,"t":"names","title":"rebfelpaxkalboldaxsabkal Le long chemin vers le port tranquille - [Guest] - Microsoft\u200b Edge","wall_ms":1795036902979}
+{"exe":"chrome.exe","hwnd":1639350,"kind":"harness","mono_ns":31224278491300,"pid":25876,"src":"hook","t":"fg","title":"Untitled - Google Chrome","wall_ms":1795036903346}
+{"exe":"chrome.exe","hwnd":918988,"kind":"harness","mono_ns":31224552262500,"pid":34420,"src":"hook","t":"fg","title":"Untitled - Google Chrome","wall_ms":1795036903620}
+{"exe":"msedge.exe","hwnd":460178,"kind":"harness","mono_ns":31224907825700,"n":1,"pid":1580,"t":"names","title":"rebfelpaxkalboldaxsabkal Le long chemin vers le port tranquille - [Guest] - Microsoft\u200b Edge","wall_ms":1795036903975}
+{"exe":"msedge.exe","hwnd":395346,"kind":"harness","mono_ns":31224908227000,"n":1,"pid":1580,"t":"names","title":"Translate page from French?","wall_ms":1795036903976}
+{"exe":"chrome.exe","hwnd":1639350,"kind":"harness","mono_ns":31224908321400,"n":2,"pid":25876,"t":"names","title":"hesktovsabgroquaquadaxbol The long road to the quiet harbour - Google Chrome","wall_ms":1795036903976}
+{"exe":"chrome.exe","hwnd":918988,"kind":"harness","mono_ns":31224908402000,"n":2,"pid":34420,"t":"names","title":"fyldrenvunhokfeltirdrenyem The long road to the quiet harbour - Google Chrome","wall_ms":1795036903976}
+{"exe":"Code.exe","hwnd":1247744,"kind":"harness","mono_ns":31225039845100,"pid":6492,"src":"hook","t":"fg","title":"Visual Studio Code","wall_ms":1795036904107}
+{"exe":"Code.exe","hwnd":1247744,"kind":"harness","mono_ns":31225911940500,"n":1,"pid":6492,"t":"names","title":"Visual Studio Code","wall_ms":1795036904979}
+{"exe":"Code.exe","hwnd":1247744,"kind":"harness","mono_ns":31226913817300,"n":1,"pid":6492,"t":"names","title":"quality-ulnvundrenlopfelrhodrenvun-rust-project - Visual Studio Code","wall_ms":1795036905981}
+{"exe":"Discord.exe","hwnd":460248,"kind":"real","mono_ns":31228152650900,"pid":13524,"src":"hook","t":"fg","wall_ms":1795036907220}
+{"exe":"QualityGame.exe","hwnd":3541254,"kind":"game","mono_ns":31228690080300,"pid":32136,"src":"hook","t":"fg","title":"Quality Game","wall_ms":1795036907757}
+{"hwnd":197706,"kind":"foreign","mono_ns":31228921967900,"n":1,"pid":7924,"t":"names","wall_ms":1795036907989}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31237222934100,"peak":0.281,"pid":34044,"t":"audio","wall_ms":1795036916290}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31237232689100,"peak":0.2611,"pid":32136,"t":"audio","wall_ms":1795036916300}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31237857994700,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036916925}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31237858083000,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036916925}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31238078754800,"peak":0.2373,"pid":34044,"t":"audio","wall_ms":1795036917146}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31238086722400,"peak":0.2408,"pid":32136,"t":"audio","wall_ms":1795036917154}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31239336535400,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036918404}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31239336588500,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036918404}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31239450804900,"peak":0.0012,"pid":32136,"t":"audio","wall_ms":1795036918518}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31239565625300,"peak":0.2452,"pid":34044,"t":"audio","wall_ms":1795036918633}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31240299105000,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036919366}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31240299146200,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036919366}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31243337767500,"peak":0.5294,"pid":34044,"t":"audio","wall_ms":1795036922405}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31243344386000,"peak":0.4705,"pid":32136,"t":"audio","wall_ms":1795036922412}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31243349234600,"peak":0.0163,"pid":35184,"t":"audio","wall_ms":1795036922417}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31244601373200,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036923669}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31245854074400,"peak":0.5718,"pid":32136,"t":"audio","wall_ms":1795036924921}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31247520922000,"peak":0.0,"pid":35184,"t":"audio","wall_ms":1795036926588}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31247831820200,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036926899}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31247831870300,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036926899}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31250024394000,"peak":0.5402,"pid":34044,"t":"audio","wall_ms":1795036929092}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31250031915700,"peak":0.4924,"pid":32136,"t":"audio","wall_ms":1795036929099}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31250036314500,"peak":0.3667,"pid":35184,"t":"audio","wall_ms":1795036929104}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31251805043000,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036930872}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31253585356400,"peak":0.5786,"pid":32136,"t":"audio","wall_ms":1795036932653}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31254934850200,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036934002}
+{"exe":"chrome.exe","hwnd":657296,"kind":"harness","mono_ns":31255308151100,"pid":4468,"src":"hook","t":"fg","title":"Untitled - Google Chrome","wall_ms":1795036934375}
+{"exe":"QualityGame.exe","hwnd":3541254,"kind":"game","mono_ns":31255453664400,"pid":32136,"src":"hook","t":"fg","title":"Quality Game","wall_ms":1795036934521}
+{"exe":"chrome.exe","hwnd":4786404,"kind":"harness","mono_ns":31255473892400,"pid":32340,"src":"poll","t":"fg","title":"kalvundaxmunmuntirgimdax Harbour notes, notes du port - Google Chrome","wall_ms":1795036934541}
+{"exe":"chrome.exe","hwnd":657296,"kind":"harness","mono_ns":31256061510300,"n":2,"pid":4468,"t":"names","title":"vexcidwultovhokhokwulvun The long road to the quiet harbour - Google Chrome","wall_ms":1795036935129}
+{"exe":"chrome.exe","hwnd":4786404,"kind":"harness","mono_ns":31256061588700,"n":1,"pid":32340,"t":"names","title":"bavfylfyldaxfelvexfelhesk Harbour notes, notes du port - Google Chrome","wall_ms":1795036935129}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31257756311000,"peak":0.5967,"pid":32136,"t":"audio","wall_ms":1795036936824}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31259210136500,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036938277}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31261717530900,"peak":0.2509,"pid":32136,"t":"audio","wall_ms":1795036940785}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31262133900700,"peak":0.0004,"pid":35184,"t":"audio","wall_ms":1795036941201}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31263277977000,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036942345}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31263278014200,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036942345}
+{"audible":true,"endpoint":"CABLE Input (VB-Audio Virtual Cable)","exe":"Mic.exe","mono_ns":31263387908100,"peak":0.0012,"pid":7480,"t":"audio","wall_ms":1795036942455}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31263499933800,"peak":0.2022,"pid":34044,"t":"audio","wall_ms":1795036942567}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31263506308600,"peak":0.4639,"pid":32136,"t":"audio","wall_ms":1795036942574}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31264337572700,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036943405}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31264337616400,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036943405}
+{"hwnd":197706,"kind":"foreign","mono_ns":31265120561600,"n":1,"pid":7924,"t":"names","wall_ms":1795036944188}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31267157466200,"peak":0.281,"pid":34044,"t":"audio","wall_ms":1795036946225}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31267163660600,"peak":0.2611,"pid":32136,"t":"audio","wall_ms":1795036946231}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31267890204700,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036946958}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31267890244900,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036946958}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31268107402800,"peak":0.2373,"pid":34044,"t":"audio","wall_ms":1795036947175}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31268115541600,"peak":0.2408,"pid":32136,"t":"audio","wall_ms":1795036947183}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31269367025100,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036948434}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31269367077500,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036948434}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31269478822900,"peak":0.2452,"pid":34044,"t":"audio","wall_ms":1795036948546}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31269487841000,"peak":0.2438,"pid":32136,"t":"audio","wall_ms":1795036948555}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31270211280100,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036949279}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31270211327300,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036949279}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31273340308900,"peak":0.5299,"pid":34044,"t":"audio","wall_ms":1795036952408}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31273346625100,"peak":0.4705,"pid":32136,"t":"audio","wall_ms":1795036952414}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31274589653900,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036953657}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31274589705400,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036953657}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31275851484500,"peak":0.5758,"pid":34044,"t":"audio","wall_ms":1795036954919}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31275858971400,"peak":0.5717,"pid":32136,"t":"audio","wall_ms":1795036954926}
+{"audible":false,"endpoint":"CABLE Input (VB-Audio Virtual Cable)","exe":"Mic.exe","mono_ns":31277206160400,"peak":0.0,"pid":7480,"t":"audio","wall_ms":1795036956273}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31277832074600,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036956899}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31277832115500,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036956899}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31280019549500,"peak":0.3818,"pid":34044,"t":"audio","wall_ms":1795036959087}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31280025651800,"peak":0.4421,"pid":32136,"t":"audio","wall_ms":1795036959093}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31281169402200,"peak":0.0036,"pid":35184,"t":"audio","wall_ms":1795036960237}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31281793035500,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036960860}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31283569897300,"peak":0.5786,"pid":32136,"t":"audio","wall_ms":1795036962637}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31284925265900,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036963993}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31287748637300,"peak":0.5967,"pid":32136,"t":"audio","wall_ms":1795036966816}
+{"exe":"QualityGame.exe","hwnd":3541254,"kind":"game","mono_ns":31288484392300,"pid":32136,"src":"hook","t":"fg","title":"Quality Game","wall_ms":1795036967552}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31289209284600,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036968277}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31291709125900,"peak":0.2509,"pid":32136,"t":"audio","wall_ms":1795036970776}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31293061013900,"peak":0.0,"pid":35184,"t":"audio","wall_ms":1795036972128}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31293270380000,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036972338}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31293270428300,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036972338}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31293484794900,"peak":0.4639,"pid":32136,"t":"audio","wall_ms":1795036972552}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31293597028200,"peak":0.4295,"pid":34044,"t":"audio","wall_ms":1795036972664}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31293706627800,"peak":0.007,"pid":35184,"t":"audio","wall_ms":1795036972774}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31294334212900,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036973402}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31297141967300,"peak":0.2611,"pid":32136,"t":"audio","wall_ms":1795036976209}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31297867127500,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036976934}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31298081607900,"peak":0.2408,"pid":32136,"t":"audio","wall_ms":1795036977149}
+{"audible":true,"endpoint":"CABLE Input (VB-Audio Virtual Cable)","exe":"Mic.exe","mono_ns":31298608205200,"peak":0.0107,"pid":7480,"t":"audio","wall_ms":1795036977676}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31299334266300,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036978402}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31299443881300,"peak":0.0012,"pid":32136,"t":"audio","wall_ms":1795036978511}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31299857907100,"peak":0.0,"pid":35184,"t":"audio","wall_ms":1795036978925}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31300274067800,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036979341}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31300274113300,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036979341}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31303295678000,"peak":0.5062,"pid":34044,"t":"audio","wall_ms":1795036982363}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31303302814000,"peak":0.4705,"pid":32136,"t":"audio","wall_ms":1795036982370}
+{"hwnd":197706,"kind":"foreign","mono_ns":31304380253100,"n":1,"pid":7924,"t":"names","wall_ms":1795036983448}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31304654346500,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036983722}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31304654380900,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036983722}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31305809618100,"peak":0.0134,"pid":34044,"t":"audio","wall_ms":1795036984877}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31305818185400,"peak":0.5718,"pid":32136,"t":"audio","wall_ms":1795036984885}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31307791502700,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036986859}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31307895459600,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036986963}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31310088725800,"peak":0.5639,"pid":34044,"t":"audio","wall_ms":1795036989156}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31310093618000,"peak":0.4924,"pid":32136,"t":"audio","wall_ms":1795036989161}
+{"audible":false,"endpoint":"CABLE Input (VB-Audio Virtual Cable)","exe":"Mic.exe","mono_ns":31311133339500,"peak":0.0,"pid":7480,"t":"audio","wall_ms":1795036990201}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31311860308900,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795036990928}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31311860351500,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036990928}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31313530349300,"peak":0.5581,"pid":32136,"t":"audio","wall_ms":1795036992598}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31313640618300,"peak":0.7043,"pid":34044,"t":"audio","wall_ms":1795036992708}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31313750139600,"peak":0.0107,"pid":35184,"t":"audio","wall_ms":1795036992817}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31314890873200,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036993958}
+{"hwnd":2492264,"kind":"foreign","mono_ns":31317478422900,"n":1,"pid":9532,"t":"names","wall_ms":1795036996546}
+{"exe":"msedge.exe","hwnd":460178,"kind":"harness","mono_ns":31317478541900,"n":1,"pid":1580,"t":"names","title":"zorquabavulnlopnimhokhesk update - [Guest] - Microsoft\u200b Edge","wall_ms":1795036996546}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31317700117100,"peak":0.5438,"pid":32136,"t":"audio","wall_ms":1795036996767}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31319154053300,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795036998221}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31321756093600,"peak":0.2509,"pid":32136,"t":"audio","wall_ms":1795037000823}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31322585640700,"peak":0.0,"pid":35184,"t":"audio","wall_ms":1795037001653}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31323208309800,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795037002276}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31323312505700,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037002380}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31323530606600,"peak":0.4295,"pid":34044,"t":"audio","wall_ms":1795037002598}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31323537002200,"peak":0.4639,"pid":32136,"t":"audio","wall_ms":1795037002604}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31324366619900,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037003434}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31324366669700,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795037003434}
+{"hwnd":197706,"kind":"foreign","mono_ns":31324528649500,"n":1,"pid":7924,"t":"names","wall_ms":1795037003596}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31327175488300,"peak":0.281,"pid":34044,"t":"audio","wall_ms":1795037006243}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31327183172000,"peak":0.2611,"pid":32136,"t":"audio","wall_ms":1795037006250}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31327808025700,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795037006875}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31327911049100,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037006978}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31328123183800,"peak":0.2373,"pid":34044,"t":"audio","wall_ms":1795037007190}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31328128836200,"peak":0.2408,"pid":32136,"t":"audio","wall_ms":1795037007196}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31329268785200,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795037008336}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31329372706300,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037008440}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31329483137600,"peak":0.2452,"pid":34044,"t":"audio","wall_ms":1795037008550}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31329488620900,"peak":0.2438,"pid":32136,"t":"audio","wall_ms":1795037008556}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31330216230900,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037009284}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31330216269000,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795037009284}
+{"exe":"chrome.exe","hwnd":4786404,"kind":"harness","mono_ns":31333122669800,"pid":32340,"src":"poll","t":"fg","title":"bavfylfyldaxfelvexfelhesk Harbour notes, notes du port - Google Chrome","wall_ms":1795037012190}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31333338610300,"peak":0.5299,"pid":34044,"t":"audio","wall_ms":1795037012406}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31333345118500,"peak":0.4705,"pid":32136,"t":"audio","wall_ms":1795037012412}
+{"exe":"chrome.exe","hwnd":4786404,"kind":"harness","mono_ns":31333586973000,"n":1,"pid":32340,"t":"names","title":"nurrhosilhesknurfelsildren Fil : quel build tient en fin de partie - Google Chrome","wall_ms":1795037012654}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityGame.exe","mono_ns":31334076481000,"peak":0.0,"pid":32136,"t":"audio","wall_ms":1795037013144}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31334283521800,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037013351}
+{"exe":"python.exe","hwnd":1116616,"kind":"harness","mono_ns":31334764147700,"pid":17020,"src":"hook","t":"fg","title":"Quality popup s0008","wall_ms":1795037013831}
+{"exe":"python.exe","hwnd":3606790,"kind":"harness","mono_ns":31334772048800,"pid":17020,"src":"hook","t":"fg","title":"Quality popup s0008","wall_ms":1795037013839}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Spotify.exe","mono_ns":31338234607000,"peak":0.007,"pid":34640,"t":"audio","wall_ms":1795037017302}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31338344303900,"peak":0.4206,"pid":34044,"t":"audio","wall_ms":1795037017412}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31355755956000,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037034823}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Spotify.exe","mono_ns":31363748413100,"peak":0.0,"pid":34640,"t":"audio","wall_ms":1795037042816}
+{"exe":"chrome.exe","hwnd":1639350,"kind":"harness","mono_ns":31380752946600,"n":1,"pid":25876,"t":"names","title":"rhofylrebpaxyemheskdrenvun update - Google Chrome","wall_ms":1795037059820}
+{"exe":"chrome.exe","hwnd":918988,"kind":"harness","mono_ns":31397660434400,"pid":34420,"src":"hook","t":"fg","title":"fyldrenvunhokfeltirdrenyem The long road to the quiet harbour - Google Chrome","wall_ms":1795037076728}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31399424788800,"peak":0.0013,"pid":31368,"t":"audio","wall_ms":1795037078492}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31404730385600,"peak":0.2691,"pid":35184,"t":"audio","wall_ms":1795037083798}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Spotify.exe","mono_ns":31406288332300,"peak":0.2915,"pid":34640,"t":"audio","wall_ms":1795037085356}
+{"audible":true,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31409504751400,"peak":0.2373,"pid":12188,"t":"audio","wall_ms":1795037088572}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31414685837300,"peak":0.0002,"pid":35184,"t":"audio","wall_ms":1795037093753}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31415419444300,"peak":0.2254,"pid":34044,"t":"audio","wall_ms":1795037094487}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31415426913100,"peak":0.0023,"pid":35184,"t":"audio","wall_ms":1795037094494}
+{"audible":false,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31417500625000,"peak":0.0001,"pid":12188,"t":"audio","wall_ms":1795037096568}
+{"audible":true,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31417613099000,"peak":0.0404,"pid":12188,"t":"audio","wall_ms":1795037096680}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Discord.exe","mono_ns":31419377410300,"peak":0.0,"pid":35184,"t":"audio","wall_ms":1795037098445}
+{"audible":true,"endpoint":"CABLE Input (VB-Audio Virtual Cable)","exe":"Mic.exe","mono_ns":31419794363700,"peak":0.0018,"pid":7480,"t":"audio","wall_ms":1795037098862}
+{"hwnd":197706,"kind":"foreign","mono_ns":31420958009800,"n":1,"pid":7924,"t":"names","wall_ms":1795037100025}
+{"audible":false,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31422489674600,"peak":0.0001,"pid":12188,"t":"audio","wall_ms":1795037101557}
+{"exe":"chrome.exe","hwnd":526512,"kind":"harness","mono_ns":31424986260400,"n":1,"pid":30156,"t":"names","title":"gimbolmunzordrenvunmunqua update - Google Chrome","wall_ms":1795037104054}
+{"audible":true,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31425422927900,"peak":0.0027,"pid":12188,"t":"audio","wall_ms":1795037104490}
+{"audible":false,"endpoint":"CABLE Input (VB-Audio Virtual Cable)","exe":"Mic.exe","mono_ns":31428741553100,"peak":0.0,"pid":7480,"t":"audio","wall_ms":1795037107809}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"Spotify.exe","mono_ns":31430815963800,"peak":0.0,"pid":34640,"t":"audio","wall_ms":1795037109883}
+{"audible":false,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31431020315800,"peak":0.0,"pid":12188,"t":"audio","wall_ms":1795037110088}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31432070766800,"peak":0.0,"pid":31368,"t":"audio","wall_ms":1795037111138}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31432174188900,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037111241}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31432493715200,"peak":0.1145,"pid":34044,"t":"audio","wall_ms":1795037111561}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31432499751900,"peak":0.1264,"pid":31368,"t":"audio","wall_ms":1795037111567}
+{"audible":true,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31432812675500,"peak":0.0096,"pid":12188,"t":"audio","wall_ms":1795037111880}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31434788261100,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037113856}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31434788303100,"peak":0.0,"pid":31368,"t":"audio","wall_ms":1795037113856}
+{"exe":"QualityVault.exe","hwnd":1247688,"kind":"harness","mono_ns":31435091077700,"pid":24396,"src":"hook","t":"fg","title":"CANARY-VAULT-7f3a9c vault window","wall_ms":1795037114158}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31435731859400,"peak":0.0123,"pid":34044,"t":"audio","wall_ms":1795037114799}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31435739270000,"peak":0.0015,"pid":31368,"t":"audio","wall_ms":1795037114807}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityVault.exe","mono_ns":31435747824400,"peak":0.0149,"pid":24396,"t":"audio","wall_ms":1795037114815}
+{"exe":"Code.exe","hwnd":1247744,"kind":"harness","mono_ns":31435796615000,"pid":6492,"src":"hook","t":"fg","title":"quality-ulnvundrenlopfelrhodrenvun-rust-project - Visual Studio Code","wall_ms":1795037114864}
+{"audible":false,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31440008948800,"peak":0.0002,"pid":12188,"t":"audio","wall_ms":1795037119076}
+{"audible":true,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31440534541700,"peak":0.0799,"pid":12188,"t":"audio","wall_ms":1795037119602}
+{"audible":false,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31441881183100,"peak":0.0002,"pid":12188,"t":"audio","wall_ms":1795037120948}
+{"audible":true,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31442410082600,"peak":0.1244,"pid":12188,"t":"audio","wall_ms":1795037121477}
+{"audible":false,"endpoint":"Odyssey G80SD (NVIDIA High Definition Audio)","exe":"Discord.exe","mono_ns":31446460659300,"peak":0.0,"pid":12188,"t":"audio","wall_ms":1795037125528}
+{"hwnd":197706,"kind":"foreign","mono_ns":31456053551700,"n":1,"pid":7924,"t":"names","wall_ms":1795037135121}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"QualityVault.exe","mono_ns":31456954885700,"peak":0.0,"pid":24396,"t":"audio","wall_ms":1795037136022}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31474069272500,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037153137}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31474069309900,"peak":0.0007,"pid":31368,"t":"audio","wall_ms":1795037153137}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31474596847000,"peak":0.0011,"pid":34044,"t":"audio","wall_ms":1795037153664}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31474707308700,"peak":0.1278,"pid":31368,"t":"audio","wall_ms":1795037153775}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31482314802700,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037161382}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31482314841500,"peak":0.0,"pid":31368,"t":"audio","wall_ms":1795037161382}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31482634976900,"peak":0.0012,"pid":34044,"t":"audio","wall_ms":1795037161702}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31482642988900,"peak":0.0012,"pid":31368,"t":"audio","wall_ms":1795037161710}
+{"exe":"Discord.exe","hwnd":460248,"kind":"real","mono_ns":31485867520100,"pid":13524,"src":"hook","t":"fg","wall_ms":1795037164935}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31492821515200,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037171889}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31492821554700,"peak":0.0,"pid":31368,"t":"audio","wall_ms":1795037171889}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31493241783600,"peak":0.1329,"pid":34044,"t":"audio","wall_ms":1795037172309}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31493247518400,"peak":0.1572,"pid":31368,"t":"audio","wall_ms":1795037172315}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31495323718300,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037174391}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31495323753600,"peak":0.0,"pid":31368,"t":"audio","wall_ms":1795037174391}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31496678472300,"peak":0.0766,"pid":34044,"t":"audio","wall_ms":1795037175746}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31496684242800,"peak":0.1784,"pid":31368,"t":"audio","wall_ms":1795037175752}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31499066931600,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037178134}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31499066966500,"peak":0.0,"pid":31368,"t":"audio","wall_ms":1795037178134}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31500004569900,"peak":0.0024,"pid":31368,"t":"audio","wall_ms":1795037179072}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31500113430600,"peak":0.0044,"pid":34044,"t":"audio","wall_ms":1795037179181}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31513701253300,"peak":0.0007,"pid":31368,"t":"audio","wall_ms":1795037192769}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31513804574300,"peak":0.0009,"pid":34044,"t":"audio","wall_ms":1795037192872}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31514228289300,"peak":0.0022,"pid":34044,"t":"audio","wall_ms":1795037193296}
+{"audible":true,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31514236786500,"peak":0.002,"pid":31368,"t":"audio","wall_ms":1795037193304}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"chrome.exe","mono_ns":31527933351200,"peak":0.0,"pid":31368,"t":"audio","wall_ms":1795037207001}
+{"audible":false,"endpoint":"DT-770 PRO (Realtek USB Audio)","exe":"foreign","mono_ns":31528036876300,"peak":0.0,"pid":34044,"t":"audio","wall_ms":1795037207104}
+{"hwnd":197706,"kind":"foreign","mono_ns":31548428765000,"n":1,"pid":7924,"t":"names","wall_ms":1795037227496}
+{"hwnd":197706,"kind":"foreign","mono_ns":31758653510300,"n":1,"pid":7924,"t":"names","wall_ms":1795037437721}
+{"hwnd":197706,"kind":"foreign","mono_ns":31813952080200,"n":1,"pid":7924,"t":"names","wall_ms":1795037493019}
+{"hwnd":197706,"kind":"foreign","mono_ns":31814953574600,"n":1,"pid":7924,"t":"names","wall_ms":1795037494021}
+{"hwnd":197706,"kind":"foreign","mono_ns":31842083079600,"n":1,"pid":7924,"t":"names","wall_ms":1795037521150}
+{"hwnd":197706,"kind":"foreign","mono_ns":31859165781200,"n":1,"pid":7924,"t":"names","wall_ms":1795037538233}
+{"hwnd":197706,"kind":"foreign","mono_ns":31890310098600,"n":1,"pid":7924,"t":"names","wall_ms":1795037569377}
+{"hwnd":197706,"kind":"foreign","mono_ns":31941589967700,"n":1,"pid":7924,"t":"names","wall_ms":1795037620657}

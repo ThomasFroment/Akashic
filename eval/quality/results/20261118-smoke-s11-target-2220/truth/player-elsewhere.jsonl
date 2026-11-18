@@ -1,0 +1,3 @@
+{"id":"s0018-180528","mono_ns":31408582717100,"n":218400,"planned_ms":180528,"rate":16000,"speaker":"call_fr1","start_wall_ms":1795037088167,"stream":"elsewhere","type":"start","wall_ms":1795037087650}
+{"id":"s0018-196778","mono_ns":31424835705800,"n":81920,"planned_ms":196778,"rate":16000,"speaker":"call_en1","start_wall_ms":1795037104417,"stream":"elsewhere","type":"start","wall_ms":1795037103903}
+{"id":"s0018-203498","mono_ns":31431332622100,"n":221760,"planned_ms":203498,"rate":16000,"speaker":"call_fr1","start_wall_ms":1795037111137,"stream":"elsewhere","type":"start","wall_ms":1795037110400}

@@ -1,0 +1,839 @@
+{
+ "attempt": 0,
+ "blocks": [
+  {
+   "kind": "gaming",
+   "t0_ms": 0,
+   "t1_ms": 105000
+  },
+  {
+   "kind": "desk",
+   "t0_ms": 105000,
+   "t1_ms": 300000
+  }
+ ],
+ "cast": {
+  "call_en1": {
+   "corpus": "librispeech",
+   "corpus_speaker": "en1272",
+   "lang": "en",
+   "role": "call"
+  },
+  "call_en2": {
+   "corpus": "librispeech",
+   "corpus_speaker": "en1462",
+   "lang": "en",
+   "role": "call"
+  },
+  "call_fr1": {
+   "corpus": "mls_french",
+   "corpus_speaker": "fr10179",
+   "lang": "fr",
+   "role": "call"
+  },
+  "call_fr2": {
+   "corpus": "mls_french",
+   "corpus_speaker": "fr12080",
+   "lang": "fr",
+   "role": "call"
+  },
+  "mixed1": {
+   "corpus": "splice",
+   "corpus_speaker": "spare_en2+spare_fr2",
+   "lang": "mixed",
+   "role": "extra"
+  },
+  "user_en1": {
+   "corpus": "librispeech",
+   "corpus_speaker": "en1673",
+   "lang": "en",
+   "role": "user"
+  }
+ },
+ "duration_ms": 300000,
+ "game_sessions": [
+  {
+   "mode": "borderless",
+   "t0_ms": 0,
+   "t1_ms": 105000
+  }
+ ],
+ "hashes": {
+  "coverage": "0aee18ec38f5ec9e067145605ce4240f6e2fad5252b7bce90f1fdc70c83501af",
+  "manifest": "33b9078dccb4bb852000c93f1204db5e6dd273a95d9d9598b1f74cd4da119891",
+  "profile": "2fb079c930e8593d9ad98401a1a1cd87e4f7b3bbb6b6e34af05de6f858f898bc"
+ },
+ "length": "smoke",
+ "run_p90_s": {
+  "desk": 600.0,
+  "gaming": 160.0
+ },
+ "seed": 11,
+ "steps": [
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0000",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 0,
+   "t1_ms": 26992,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "chrome@primary",
+    "edge@primary",
+    "chrome@right",
+    "edge@right",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    7
+   ],
+   "id": "s0001",
+   "kind": "game_sound",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 6000,
+   "t1_ms": 104000,
+   "tags": [],
+   "windows": []
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0002",
+   "kind": "both",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 13000,
+   "t1_ms": 104000,
+   "tags": [],
+   "windows": []
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9,
+    11,
+    12
+   ],
+   "id": "s0003",
+   "kind": "call",
+   "monitor": "left",
+   "params": {
+    "cast": [
+     "call_fr1",
+     "call_en1"
+    ],
+    "t0_ms": 13000,
+    "t1_ms": 104000,
+    "utterances": [
+     {
+      "clip": "call_en1-000",
+      "dur_ms": 3700,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 13500
+     },
+     {
+      "clip": "call_fr1-000",
+      "dur_ms": 12820,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 19800
+     },
+     {
+      "clip": "mixed1-000",
+      "dur_ms": 13337,
+      "speaker": "mixed1",
+      "stream": "own",
+      "t_ms": 35220
+     },
+     {
+      "clip": "call_fr1-001",
+      "dur_ms": 11780,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 51157
+     },
+     {
+      "clip": "call_en1-001",
+      "dur_ms": 5640,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 63837
+     },
+     {
+      "clip": "user_en1-000",
+      "dur_ms": 11995,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 70377
+     },
+     {
+      "clip": "call_en1-002",
+      "dur_ms": 4225,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 83972
+     },
+     {
+      "clip": "call_en1-003",
+      "dur_ms": 4700,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 87597
+     }
+    ]
+   },
+   "t0_ms": 13000,
+   "t1_ms": 104000,
+   "tags": [
+    "call_across_gaming",
+    "discord",
+    "mic_and_system",
+    "overlap_speakers"
+   ],
+   "windows": [
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    10,
+    2
+   ],
+   "id": "s0004",
+   "kind": "excluded_pages",
+   "monitor": "primary",
+   "params": {
+    "private": "chrome_incognito"
+   },
+   "t0_ms": 26992,
+   "t1_ms": 60318,
+   "tags": [
+    "chrome",
+    "excluded_pages"
+   ],
+   "windows": [
+    "chrome@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0005",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "chrome",
+    "font_px": 24,
+    "lang": "mixed",
+    "page": "article",
+    "popups": false,
+    "private": "chrome_incognito",
+    "theme": "dark"
+   },
+   "t0_ms": 26992,
+   "t1_ms": 60318,
+   "tags": [
+    "chrome",
+    "res_4k",
+    "scrolling",
+    "side_monitor_change",
+    "text_mixed",
+    "theme_dark"
+   ],
+   "windows": [
+    "chrome@primary",
+    "edge@primary",
+    "chrome@right",
+    "edge@right",
+    "discord@left",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    4,
+    6
+   ],
+   "id": "s0006",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "game",
+    "mode": "borderless"
+   },
+   "t0_ms": 60318,
+   "t1_ms": 105000,
+   "tags": [
+    "game_borderless",
+    "res_4k",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "game@primary",
+    "chrome@primary",
+    "chrome@right",
+    "edge@right",
+    "discord@left",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0007",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 88984,
+   "t1_ms": 90984,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "edge@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0008",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "chrome",
+    "font_px": 14,
+    "lang": "fr",
+    "page": "forum",
+    "popups": true,
+    "theme": "dark"
+   },
+   "t0_ms": 105000,
+   "t1_ms": 169540,
+   "tags": [
+    "chrome",
+    "popups",
+    "res_4k",
+    "scrolling",
+    "side_monitor_change",
+    "text_fr",
+    "theme_dark"
+   ],
+   "windows": [
+    "chrome@primary",
+    "game@primary",
+    "chrome@right",
+    "edge@right",
+    "discord@left",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    12,
+    13
+   ],
+   "id": "s0009",
+   "kind": "busy_disk",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 107888,
+   "t1_ms": 167888,
+   "tags": [
+    "busy_disk"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    7
+   ],
+   "id": "s0010",
+   "kind": "music",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 110000,
+   "t1_ms": 135000,
+   "tags": [
+    "music"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    5,
+    13
+   ],
+   "id": "s0011",
+   "kind": "pause",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 127158,
+   "t1_ms": 187158,
+   "tags": [
+    "pause"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0012",
+   "kind": "silence",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 135000,
+   "t1_ms": 169000,
+   "tags": [
+    "silence"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0013",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 151491,
+   "t1_ms": 153491,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4,
+    6
+   ],
+   "id": "s0014",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "chrome",
+    "font_px": 16,
+    "lang": "en",
+    "page": "video_page",
+    "theme": "dark",
+    "video": {
+     "episode": false,
+     "number": 3,
+     "season": 1,
+     "span_s": 68,
+     "title_id": "v1"
+    },
+    "video_k": 1
+   },
+   "t0_ms": 169540,
+   "t1_ms": 207670,
+   "tags": [
+    "chrome",
+    "res_4k",
+    "side_monitor_change",
+    "text_en",
+    "theme_dark"
+   ],
+   "windows": [
+    "chrome-v1@primary",
+    "chrome@primary",
+    "chrome@right",
+    "edge@right",
+    "discord@left",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0015",
+   "kind": "video",
+   "monitor": "primary",
+   "params": {
+    "app": "chrome",
+    "episode": false,
+    "number": 3,
+    "season": 1,
+    "span_s": 68,
+    "title_id": "v1"
+   },
+   "t0_ms": 169540,
+   "t1_ms": 207670,
+   "tags": [
+    "chrome",
+    "tts_voices",
+    "video_during_call"
+   ],
+   "windows": [
+    "chrome-v1@primary"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9,
+    11,
+    12
+   ],
+   "id": "s0016",
+   "kind": "call",
+   "monitor": "left",
+   "params": {
+    "cast": [
+     "call_fr2",
+     "call_en2",
+     "call_en1",
+     "call_fr1"
+    ],
+    "t0_ms": 174000,
+    "t1_ms": 203000,
+    "utterances": [
+     {
+      "clip": "call_fr1-002",
+      "dur_ms": 10670,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 174500
+     },
+     {
+      "clip": "call_en2-000",
+      "dur_ms": 3430,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 185570
+     },
+     {
+      "clip": "user_en1-001",
+      "dur_ms": 8430,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 191600
+     }
+    ]
+   },
+   "t0_ms": 174000,
+   "t1_ms": 203000,
+   "tags": [
+    "discord",
+    "mic_and_system",
+    "returning_speaker",
+    "video_during_call"
+   ],
+   "windows": [
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    7
+   ],
+   "id": "s0017",
+   "kind": "music",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 178000,
+   "t1_ms": 202000,
+   "tags": [
+    "music"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0018",
+   "kind": "voice_elsewhere",
+   "monitor": "right",
+   "params": {
+    "utterances": [
+     {
+      "clip": "call_fr1-004",
+      "dur_ms": 13650,
+      "speaker": "call_fr1",
+      "stream": "elsewhere",
+      "t_ms": 180528
+     },
+     {
+      "clip": "call_en1-004",
+      "dur_ms": 5120,
+      "speaker": "call_en1",
+      "stream": "elsewhere",
+      "t_ms": 196778
+     },
+     {
+      "clip": "call_fr1-005",
+      "dur_ms": 13860,
+      "speaker": "call_fr1",
+      "stream": "elsewhere",
+      "t_ms": 203498
+     }
+    ]
+   },
+   "t0_ms": 180028,
+   "t1_ms": 225028,
+   "tags": [],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0019",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 195588,
+   "t1_ms": 197588,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@right"
+   ]
+  },
+  {
+   "dims": [
+    10,
+    7
+   ],
+   "id": "s0020",
+   "kind": "canary",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 205341,
+   "t1_ms": 230341,
+   "tags": [
+    "canary"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0021",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "vscode",
+    "lang": "en"
+   },
+   "t0_ms": 207670,
+   "t1_ms": 257737,
+   "tags": [
+    "code_project",
+    "res_1440p",
+    "side_monitor_change",
+    "text_en"
+   ],
+   "windows": [
+    "vscode@right",
+    "chrome@primary",
+    "chrome-v1@primary",
+    "edge@right",
+    "discord@left",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0022",
+   "kind": "silence",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 230000,
+   "t1_ms": 300000,
+   "tags": [
+    "silence"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0023",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 257737,
+   "t1_ms": 300000,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "chrome@primary",
+    "chrome-v1@primary",
+    "edge@right",
+    "vscode@right",
+    "chrome@left"
+   ]
+  }
+ ],
+ "version": 1,
+ "windows": [
+  {
+   "app": "chrome",
+   "id": "chrome-v1@primary",
+   "monitor": "primary"
+  },
+  {
+   "app": "chrome",
+   "id": "chrome@left",
+   "look": {
+    "font_px": 11,
+    "lang": "en",
+    "theme": "dark"
+   },
+   "monitor": "left"
+  },
+  {
+   "app": "chrome",
+   "id": "chrome@primary",
+   "look": {
+    "font_px": 16,
+    "lang": "mixed",
+    "theme": "light"
+   },
+   "monitor": "primary"
+  },
+  {
+   "app": "chrome",
+   "id": "chrome@right",
+   "look": {
+    "font_px": 10,
+    "lang": "en",
+    "theme": "dark"
+   },
+   "monitor": "right"
+  },
+  {
+   "app": "discord",
+   "id": "discord@left",
+   "monitor": "left"
+  },
+  {
+   "app": "edge",
+   "id": "edge@primary",
+   "look": {
+    "font_px": 13,
+    "lang": "en",
+    "theme": "dark"
+   },
+   "monitor": "primary"
+  },
+  {
+   "app": "edge",
+   "id": "edge@right",
+   "look": {
+    "font_px": 24,
+    "lang": "fr",
+    "theme": "dark"
+   },
+   "monitor": "right"
+  },
+  {
+   "app": "game",
+   "id": "game@primary",
+   "monitor": "primary"
+  },
+  {
+   "app": "vscode",
+   "id": "vscode@right",
+   "monitor": "right"
+  }
+ ]
+}

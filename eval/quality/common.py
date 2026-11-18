@@ -165,7 +165,9 @@ def renamed_python(name: str, dest_dir: Path) -> tuple[Path, dict[str, str]]:
     exe = dest_dir / name
     if not exe.is_file():
         shutil.copy2(base, exe)
-        for dll in base.parent.glob("*.dll"):
+    for dll in base.parent.glob("*.dll"):
+        # Several renamed exes share one folder: a DLL already copied may be loaded by a running one.
+        if not (dest_dir / dll.name).is_file():
             shutil.copy2(dll, dest_dir / dll.name)
     site = Path(sys.prefix) / "Lib" / "site-packages"
     env = {"PYTHONHOME": sys.base_prefix, "PYTHONPATH": os.pathsep.join([str(site), str(QUALITY)])}

@@ -1,0 +1,8 @@
+{"id":"s0003-13500","mono_ns":32496703192000,"n":59200,"planned_ms":13500,"rate":16000,"speaker":"call_en1","start_wall_ms":1795038176255,"stream":"call","type":"start","wall_ms":1795038175770}
+{"id":"s0003-19800","mono_ns":32502942095400,"n":205120,"planned_ms":19800,"rate":16000,"speaker":"call_fr1","start_wall_ms":1795038182555,"stream":"call","type":"start","wall_ms":1795038182009}
+{"id":"s0003-51157","mono_ns":32534194344300,"n":188480,"planned_ms":51157,"rate":16000,"speaker":"call_fr1","start_wall_ms":1795038213913,"stream":"call","type":"start","wall_ms":1795038213262}
+{"id":"s0003-63837","mono_ns":32546942236100,"n":90240,"planned_ms":63837,"rate":16000,"speaker":"call_en1","start_wall_ms":1795038226593,"stream":"call","type":"start","wall_ms":1795038226010}
+{"id":"s0003-83972","mono_ns":32566943222600,"n":67600,"planned_ms":83972,"rate":16000,"speaker":"call_en1","start_wall_ms":1795038246728,"stream":"call","type":"start","wall_ms":1795038246011}
+{"id":"s0003-87597","mono_ns":32570691970600,"n":75200,"planned_ms":87597,"rate":16000,"speaker":"call_en1","start_wall_ms":1795038250352,"stream":"call","type":"start","wall_ms":1795038249759}
+{"id":"s0016-174500","mono_ns":32657694422000,"n":170720,"planned_ms":174500,"rate":16000,"speaker":"call_fr1","start_wall_ms":1795038337256,"stream":"call","type":"start","wall_ms":1795038336762}
+{"id":"s0016-185570","mono_ns":32668692324000,"n":54880,"planned_ms":185570,"rate":16000,"speaker":"call_en2","start_wall_ms":1795038348326,"stream":"call","type":"start","wall_ms":1795038347760}
