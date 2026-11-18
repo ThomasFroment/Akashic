@@ -167,16 +167,9 @@ def test_dropped_callbacks_queue_nothing(
     assert events.drain().events == ()
 
 
-def test_client_area_name_change_is_a_title_event(
-    events: ev.Win32WindowEvents, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(ev, "time", SimpleNamespace(monotonic=lambda: 7.0))
-    fire(events, 0x800C, obj=-4)
-    assert events.drain().events == (WindowEvent(HWND, "title", 7.0),)
-
-
-@pytest.mark.parametrize(("event", "child"), [(0x800B, 0), (0x8002, 0), (0x800C, 1)])
-def test_client_object_only_counts_for_a_name_change_on_the_window_itself(
+@pytest.mark.parametrize("event", [0x800C, 0x800B, 0x8002])
+@pytest.mark.parametrize("child", [-620, -152, -619, -271, -1, 0, 1])
+def test_client_object_events_queue_nothing(
     events: ev.Win32WindowEvents, event: int, child: int
 ) -> None:
     fire(events, event, obj=-4, child=child)

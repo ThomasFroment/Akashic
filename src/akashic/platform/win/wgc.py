@@ -100,11 +100,11 @@ def _interval(ms: int) -> timedelta:
     return timedelta(milliseconds=max(ms, 0))
 
 
-def _new_device() -> IDirect3DDevice | None:
+def _new_device(faults: FaultLog) -> IDirect3DDevice | None:
     try:
         return create_direct3d11_device()
     except Exception as error:  # noqa: BLE001
-        log.warning("no D3D device: %s", _hresult_text(error))
+        faults.note("D3D device", _hresult_text(error))
         return None
 
 
@@ -151,14 +151,18 @@ class WgcCaptures:
         self._max_captures = max_captures
         self._lock = threading.Lock()
         self._loop = asyncio.new_event_loop()
-        self._device = _new_device()
+        # A window WGC refuses (an elevated one) is retried at every check: a line per failure
+        # would be one a second.
+        self.faults = FaultLog(log)
+        self._device = _new_device(self.faults)
         self._captures: dict[int, _Capture] = {}
         self._counter = itertools.count(1)
         self._lost = False
         self._closed = False
-        # A window WGC refuses (an elevated one) is retried at every check: a line per failure
-        # would be one a second.
-        self.faults = FaultLog(log)
+
+    @_never_raises(default={})
+    def fault_counts(self) -> dict[str, int]:
+        return self.faults.counts()
 
     @_never_raises(default=False)
     def start(self, hwnd: int, min_interval_ms: int) -> bool:
@@ -178,7 +182,7 @@ class WgcCaptures:
         if live >= self._max_captures:
             return False
         if self._device is None:
-            self._device = _new_device()
+            self._device = _new_device(self.faults)
         if self._device is None:
             return False
         return self._open(self._device, hwnd, min_interval_ms)
@@ -336,7 +340,7 @@ class WgcCaptures:
         if old_device is not None:
             with contextlib.suppress(Exception):
                 old_device.close()
-        device = self._device = _new_device()
+        device = self._device = _new_device(self.faults)
         for cap in old:
             if device is None or not self._open(device, cap.hwnd, cap.interval_ms):
                 with self._lock:

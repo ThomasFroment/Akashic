@@ -26,6 +26,36 @@ Three parts:
 - **Part C, needs the real dataset:** transcription, speaker identity and episode rules whose right
   behaviour depends on the user's own audio, screens and habits. Starts on the A8 export.
 
+## Epic: Part A unattended
+
+Untouchable: none
+Tracks the unticked Part A items and A-headings of OPEN.md that need no user interaction.
+
+- [x] F1 Faults in the Debug data
+- [x] F2 Stop deadline from the request (after F1)
+- [x] F3 Pause write off the restart lock
+- [x] F4 Voice elsewhere as a problem (after F1)
+- [x] F5 Media and game rows across sleep, UAC and busy writes (after F1, F2)
+- [x] F6 Re-check held monitors sooner (after F5)
+- [x] F7 Export cancel during VACUUM
+- [x] F8 Spike: UIA under load
+- [x] F9 Spike: large-page text readers
+- [x] F10 Spike: title-hold pages
+- [x] F11 Spike: presence and failsafe timing
+- [x] F12 Spike: OCR, decode and QUNS timings
+- [x] F13 Spike: media sessions per browser
+- [x] F14 Spike: process loopback
+- [x] F15 Spike: continuation on recorded speech
+- [x] F16 Large-page text reader, conditional (after F9): not built, F9 found no eligible reader
+- [x] F17 Hold bounds, conditional (after F10): bounds unchanged; dead OBJID_CLIENT branch removed
+- [x] F18 Several media sessions per browser, conditional (after F13, F5): not built, F13 saw one session per browser (Chrome; Zen published none)
+- [x] F19 Per-process UIA thread, conditional (after F8, F6, F16, F17)
+- [x] F23 Speech tag per segment (after F4)
+- [x] F20 Guides and ticks (after F1–F19, F23)
+- [x] F21 Spike: focus-taking surfaces, user asked first (after F20); `docs/baselines/2026-11-18-focus-surfaces.md`
+- [x] F22 Popup rules from that spike: every browser popup stays blank (2026-11-18)
+- [x] Integration + full tests
+
 ## Epic: Recording readiness
 
 Untouchable: none
@@ -81,7 +111,7 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
 - [x] F22 Evidence images (after F7, F13, F14, F19)
 - [x] F23 Timeline (after F20, F22)
 - [x] F24 Drop the focused-window copy (after F21, F23)
-- [ ] F25 Per-HWND UIA thread, conditional (after F17)
+- [x] F25 Per-process UIA thread, conditional (after F17)
 - [x] F26 Guides (after F18, F24, F25)
 - [x] Integration + full tests
 
@@ -141,7 +171,11 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
     (replaces `_log_fault` in capture/audio.py, `_log_loop_fault` in capture/screen.py and
     `warn` in platform/win/wgc.py)
   - [x] Report dropped audio segments and failed frame writes as capture problems (with #143)
-  - [ ] Keep UIA text on very large pages (filtered `read_text` on the 30k-element page: worst 1.9 s Edge, 1.8 s Chrome, against the 2 s timeout; target <= 666 ms)
+  - [ ] Faster UIA text reader on very large pages, to shorten the screen-loop hold
+    - [x] Keep the text: walks wait up to `TEXT_WAIT_S` (1.2 s), accepted 2026-11-18
+    - [x] Spike other readers: none eligible; TextPattern blocks Chrome for about 22 s
+      (`docs/baselines/2026-11-17-large-page-text.md`)
+    - [ ] Reach 666 ms or less on the 30k page: Chrome median 815 ms, max 996 ms, Zen max 434 ms
 
 ### A4. Screen coverage
 
@@ -152,7 +186,10 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
 - [x] #82 `FakeUia` returns `TextBlock`s; test the controls-only OCR fallback and `MAX_TEXT_CHARS`
 - [ ] Lead: spike Chrome 138+ native UIA as the cause of the blank Edge probe (§9)
   - [x] Locked PC (2026-11-13): occlusion, not lazy UIA, blanks page text; URL and caption still read
-  - [ ] Rerun unlocked, window foreground (scratchpad `chrome-uia/run.py`, not kept)
+  - [x] Rerun unlocked, window foreground: markers after 0.55 s in 5 of 5 launches, and while covered
+    (`2026-11-18-focus-surfaces.md`)
+  - [ ] Unlocked occlusion blanking not tested: Chrome did not treat the covered window as hidden
+    (2026-11-18 `focus-surfaces`)
 
 ### A5. Audio recording
 
@@ -160,8 +197,10 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
 - [x] #151 Attribute only the recorded endpoint's processes; log a gap when voice plays elsewhere
 - [ ] Record a second loopback on the device voice chat plays on when it is not the recorded one
   (today only a `voice_elsewhere` gap; check the Wave Link routing first, CHECKLIST audio 7)
-- [ ] #152 Music-app audio: drop songs, keep segments with evidence of real speech (D7)
+- [x] #152 Music-app audio: speech tag only; music-app songs still dropped (D7, 2026-11-17)
 - [ ] #110 Spike per-process loopback for the Discord process tree before building it
+  - [x] Synthetic tone tree: activation works, all-zero capture, undecided
+    (`docs/baselines/2026-11-17-process-loopback.md`)
 - [ ] Explore per-app audio streams (process loopback, include and exclude modes) (after #110)
   - [ ] Drop only an excluded app's sound, not the overlapping speech of other apps
   - [ ] Browser as its own stream, dropped while a private or excluded page is open (after A9;
@@ -174,7 +213,8 @@ Tracks A9 below (and B10 #1 as F0); A9's lines are ticked when their feature lan
 - [x] #142 After a poll gap (suspend), close at `last_poll_ms`; close games when last seen
 - [x] #146 Close media rows only on Akashic pause, not on lock or UAC prompts
 - [x] #145 `find_url`: same process, title prefix, skip search engines, no lock-in within 120 s
-- [ ] Lead: spike several media sessions per browser (§9)
+- [x] Lead: spike several media sessions per browser (§9): Chrome lists one
+  session per browser, Zen none (`docs/baselines/2026-11-17-media-sessions.md`)
 
 ### A7. Capture gaps
 
@@ -197,23 +237,30 @@ captured pixels and titles in memory; reports hold numbers only.
 - [x] Ask the user: the WGC packages (`winrt` Graphics.Capture and DirectX projections: what they
   do, network calls, alternative) before building on them (approved 2026-11-15, TOOLING.md)
 - [ ] Remaining spikes on the real PC
-  - [ ] Popups not yet seen: password-manager extension popup, autofill and save-password
-    bubbles, IME and emoji panels, credential prompts, WebView2 popups (until then every browser
-    popup is blank, a temporary default of 2026-11-16)
-  - [ ] Shell surfaces: taskbar previews kept out of the composite, the snipping overlay
-    outliving its window, notifications, elevated windows, the 1,292 marker pixels seen with
-    PowerToys Command Palette
-  - [x] Title-change hold: same-title and in-page navigation, switching to a loaded tab, late
-    titles, back/forward cache, Zen (20+ runs, title-change event hook); baseline 2026-11-16
-    `title-change-hold.md`
+  - [x] Popups not yet seen (`2026-11-18-focus-surfaces.md`; open points: OPEN.md A9 F21)
+    - [x] Password-manager extension popup, autofill and save-password bubbles
+    - [x] IME and emoji panels, credential prompts, WebView2 popups
+    - [x] Every browser popup stays blank (F22, 2026-11-18)
+  - [x] Shell surfaces (`2026-11-18-focus-surfaces.md`; open points: OPEN.md A9 F21)
+    - [x] Taskbar previews kept out of the composite
+    - [x] The snipping overlay outliving its window, notifications, elevated windows
+    - [x] The 1,292 marker pixels seen with PowerToys Command Palette
+  - [x] Title-change hold (20+ runs, title-change event hook)
+    - [x] Same-title and in-page navigation, switching to a loaded tab, late titles, Zen
+    - [x] Back/forward cache
+    - [x] Baseline 2026-11-16 `title-change-hold.md`; leaking pages 2026-11-17 `title-hold-pages.md`
   - [ ] Game frame times below the frame cap, exclusive fullscreen, DRM video, HDR output
-  - [ ] A normal day: number of windows, capture VRAM, frame-copy CPU, composition time;
-    side-monitor check time and the post-game `ocr_window` backlog
-  - [ ] Disk per normal day at native resolution (WebP vs AV1 NVENC), OCR of stored frames;
-    measurement only: video compaction waits until disk usage demands it (AGENTS.md)
-  - [ ] OCR time of whole windows on 1440p and 4K; decode time of several frames per moment
-  - [ ] Caption and address reads for every visible browser; a hung side browser; timed-out UIA
-    reads and the checks they delay (decides F25)
+  - [ ] A normal day
+    - [ ] Number of windows, capture VRAM, frame-copy CPU, composition time
+    - [ ] Side-monitor check time and the post-game `ocr_window` backlog
+  - [ ] Disk per normal day at native resolution (WebP vs AV1 NVENC), OCR of stored frames
+    - [ ] Measurement only: video compaction waits until disk usage demands it (AGENTS.md)
+  - [x] OCR and decode times (baseline 2026-11-17 `ocr-decode-quns.md`)
+    - [x] OCR time of whole windows on 1440p and 4K
+    - [x] Decode time of several frames per moment
+  - [x] UIA reads under load (baseline 2026-11-17 `uia-under-load.md`; decides F25)
+    - [x] Caption and address reads for every visible browser
+    - [x] A hung side browser; timed-out UIA reads and the checks they delay
   - [ ] Monitor identity across reboot and replug, incl. two identical monitors
 - [ ] Ask the user: resolution, format and store drive, with disk per day
   - [ ] If the store leaves the system drive: Settings chooses the data folder; documented move
@@ -234,6 +281,9 @@ captured pixels and titles in memory; reports hold numbers only.
   - [x] The utterance in progress is kept; the worker keeps processing recorded work
   - [x] Drop the `own_ui` verdict and the own-UI title rule (#27 origin check): Akashic's address
     now triggers the pause
+- [ ] Keep the UI-open halt for a short grace after a page's hidden report
+  - [ ] A minimize or tab switch must not capture Akashic's own UI: 2 of 92 hides, presence timing
+    (`docs/baselines/2026-11-17-presence-timing.md`)
 - [x] Verdicts: process, private mode and readable address (plus the popup, ghost, child-window
   and copy-surface rules below)
   - [x] Remove all title exclusions (built-in, user list, media) and the password check
@@ -271,19 +321,21 @@ captured pixels and titles in memory; reports hold numbers only.
   - [x] Per-window text keeps D3: expiry clears copied excerpts and answers that used it (#57)
   - [x] States shown/hidden/dropped/failed, no reason; "not recording" from gaps (after A7 #143)
   - [x] Retention and "Delete all" cover them (after B4 #10)
-- [ ] Capture loop per monitor (after A3 per-HWND UIA backoff)
+- [x] Capture loop per monitor (after A3 per-HWND UIA backoff)
   - [x] Rate and change detection kept per monitor identity
   - [x] Compose only when a window on the monitor sent a frame or the window list changed
   - [x] Change measured against the last stored picture; lost frames mark dropped or failed
   - [x] Side monitors checked <= 30 s; every check refreshes media verdicts, even if dropped
   - [x] Input also captures the monitor under the cursor
   - [x] Game mode: game monitor at the game rate, others at the side rate, no UIA, OCR deferred
-  - [ ] If one timed-out UIA call per HWND per 30 s still delays other monitors: per-HWND UIA thread
-    (`Verdicts` and the focused-window text read share the one capture thread today)
-    - [x] Spike first: comtypes UIA calls from several MTA threads (`WindowsUia` is one-thread today)
-  - [ ] A slow or hung window on one monitor never delays another
-  - [ ] Re-check a monitor sooner (`min_gap_s`) while its frame shows a held or pending window,
-    so a held browser is not blank until the side rate (also while the event hook is down)
+  - [x] If a timed-out UIA call per HWND per 30 s still delays other monitors: per-process UIA thread
+    - [x] Built (F19); siblings of a stalled window stall with their process
+    - [x] Spike first: comtypes UIA calls from several MTA threads
+  - [x] Caption and address reads never delay another monitor beyond the 50 ms wait
+    - [x] A focused-window text walk holds the screen loop up to `TEXT_WAIT_S`
+    - [x] At most once per app budget interval, healthy walks included (accepted 2026-11-18)
+  - [x] Re-check a monitor sooner (`min_gap_s`) while its frame shows a held or pending window
+    - [x] So a held browser is not blank until the side rate; also while the event hook is down
   - [x] Black monitor stores no image, only its window list and any focused-window UIA text
   - [x] Encoding off the loop, bounded queue; full: drop the oldest side-monitor frame
   - [x] Health per monitor: failure and drop runs; full disk reported as a problem
@@ -612,6 +664,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 ### C6. Conditional extensions (spike or evidence first)
 
 - [ ] Speech and speakers
+  - [ ] Keep music-app segments with evidence of real speech, such as a podcast (D7)
   - [ ] #106 Word timestamps; each word goes to the most-overlapping turn; refit the gate after
   - [ ] Speakers Route B: C7 span statistics plus C9; derived ONNX output pinned by checksum
   - [ ] Route B: `OPENBLAS_NUM_THREADS=1` in the worker; re-run the vector scan harnesses (§7.5)

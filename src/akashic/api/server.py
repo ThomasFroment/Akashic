@@ -256,6 +256,7 @@ def _utterance_json(u: transcripts.Utterance) -> Json:
         "speaker_id": u.speaker_id,
         "speaker": u.speaker,
         "confidence": u.confidence,
+        "tag": u.tag,
     }
 
 

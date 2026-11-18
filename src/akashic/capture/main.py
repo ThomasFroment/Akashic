@@ -47,6 +47,10 @@ if TYPE_CHECKING:
 log = logging.getLogger("capture")
 
 
+def _monotonic_ms() -> int:
+    return time.monotonic_ns() // 1_000_000
+
+
 def _now_ms() -> int:
     return time.time_ns() // 1_000_000
 
@@ -101,7 +105,9 @@ def _start_audio(
 
 
 PUBLISH_INTERVAL_S: Final = 5.0
-STOP_BUDGET_S: Final = 8.0  # the supervisor kills a stop that takes more than STOP_TIMEOUT_S = 10
+# From the stop request, else from the screen loop's return.
+# The supervisor kills a stop after STOP_TIMEOUT_S = 10.
+STOP_BUDGET_S: Final = 8.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,6 +172,7 @@ def _collect(  # noqa: PLR0913, PLR0917 - wiring: each argument is a distinct co
             "halted": halted,
             "problems": problems,
             "screen": dict(sorted(capture.stats_snapshot().items())),
+            "captures": dict(sorted(capture.capture_faults().items())),
             "media": dict(sorted(tracker.stats_snapshot().items())),
             "writer": dict(sorted(writer.stats_snapshot().items())),
             "audio": audio.snapshot() if audio is not None else None,
@@ -343,7 +350,7 @@ def run_capture(
         facts=platform.facts,
         events=platform.events,
         captures=platform.captures,
-        uia=platform.uia,
+        new_uia=platform.new_uia,
         writer=writer,
         exclusions=exclusions,
         browsers=browsers,
@@ -365,6 +372,8 @@ def run_capture(
         exclusions=exclusions,
         focused_window=platform.windows.focused_window,
         now_ms=_now_ms,
+        monotonic_ms=_monotonic_ms,
+        awake_ms=platform.windows.awake_ms,
         browsers=browsers,
     )
     media_thread = threading.Thread(
@@ -383,7 +392,15 @@ def run_capture(
     gap_thread.start()
     threading.Thread(
         target=_publish_info,
-        args=(ctx, capture, writer, audio[0] if audio is not None else None, tracker, status, gaps),
+        args=(
+            ctx,
+            capture,
+            writer,
+            audio[0] if audio is not None else None,
+            tracker,
+            status,
+            gaps,
+        ),
         name="debug-info",
         daemon=True,
     ).start()
@@ -392,7 +409,7 @@ def run_capture(
         capture.run(ctx.stop, ctx.halt, ctx.paused)
     finally:
         ctx.stop.set()
-        deadline = StopDeadline(time.monotonic() + STOP_BUDGET_S)
+        deadline = StopDeadline((ctx.stop_requested_at or time.monotonic()) + STOP_BUDGET_S)
         stop_ms = _now_ms()
         limit_wait_at_stop(ctx.conn)
         _close_capture(capture, writer, writer_stop, writer_thread, writer_conn, deadline)

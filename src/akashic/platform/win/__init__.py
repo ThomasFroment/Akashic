@@ -39,7 +39,7 @@ def build_capture_platform(ocr_language: str) -> CapturePlatform:
         facts=windows,
         events=Win32WindowEvents(),
         captures=WgcCaptures(),
-        uia=WindowsUia(),
+        new_uia=WindowsUia,
         ocr=ocr,
         media=WindowsMedia(),
     )

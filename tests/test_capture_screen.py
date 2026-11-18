@@ -913,6 +913,172 @@ def test_verdicts_are_published_for_the_browsers_on_a_checked_monitor_even_if_un
     assert rig.browsers.media_reason("zen.exe", None) == "private_window"
 
 
+# --- incomplete monitors are re-checked ---------------------------------------------------------
+
+
+def _hold_side_browser(rig: Rig) -> None:
+    """A kept browser on m2 gets a title event: its next checks hold it."""
+    rig.show(3, "chrome.exe", "Page", MON_B, focus=False, url="https://example.org/one")
+    rig.quiet()
+    rig.events.push(3, "title", 2.0)
+    rig.tick(2.0)
+
+
+def test_a_held_side_browser_is_rechecked_every_second_and_shown_within_a_few_seconds(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig(monitors=TWO)
+    rig.show(2, "notepad.exe", "Notes", SCREEN)
+    _hold_side_browser(rig)
+    m1, m2 = rig.count("m1"), rig.count("m2")
+    for now in (2.5, 3.0, 3.5, 4.0, 4.5, 5.0):
+        rig.tick(now)
+    assert rig.count("m2") > m2
+    assert rig.count("m1") == m1
+    assert rig.pictures("m2")[-1].trigger == "window"
+
+
+def test_a_held_side_browser_is_rechecked_while_the_window_hook_is_down(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig(monitors=TWO)
+    rig.show(2, "notepad.exe", "Notes", SCREEN)
+    rig.show(3, "chrome.exe", "Page", MON_B, focus=False, url="https://example.org/one")
+    rig.quiet()
+    rig.events.healthy = False
+    rig.tick(2.0)  # the unhealthy drain restarts every hold
+    m2 = rig.count("m2")
+    for now in (2.5, 3.0, 3.5, 4.0, 4.5, 5.0):
+        rig.tick(now)
+    assert rig.count("m2") > m2
+    assert rig.pictures("m2")[-1].trigger == "window"
+
+
+def test_a_frameless_started_window_is_rechecked_for_five_seconds_only(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig(monitors=TWO)
+    rig.show(2, "notepad.exe", "Notes", SCREEN)
+    rig.show(3, "notepad.exe", "Secret", MON_B, focus=False)
+    rig.captures.images.pop(3)
+    rig.settle(0.0)
+    checks = [rig.count("m2")]
+    for now in (1.2, 2.4, 3.6, 4.8):
+        rig.tick(now)
+        checks.append(rig.count("m2"))
+    assert checks[-1] > checks[1]  # checks keep coming within the first 5 s
+    rig.tick(6.0)
+    rig.tick(7.2)
+    done = rig.count("m2")
+    for now in (8.4, 9.6, 10.8, 12.0, 13.2, 14.4):
+        rig.tick(now)
+    assert rig.count("m2") == done  # back to the 15 s side rate
+
+
+def test_a_window_whose_capture_will_not_start_does_not_speed_up_its_monitor(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig(monitors=TWO)
+    rig.show(2, "notepad.exe", "Notes", SCREEN)
+    rig.captures.refuse.add(3)
+    rig.show(3, "notepad.exe", "Elevated", MON_B, focus=False)
+    rig.quiet()
+    m2 = rig.count("m2")
+    for now in (2.0, 3.0, 4.0, 5.0, 6.0, 7.0):
+        rig.tick(now)
+    assert rig.count("m2") == m2
+    assert "images_failing" not in str(rig.capture.stats_snapshot())
+
+
+def test_a_capture_that_failed_and_restarted_in_one_check_does_not_speed_up_its_monitor(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig(monitors=TWO)
+    rig.show(2, "notepad.exe", "Notes", SCREEN)
+    rig.show(3, "notepad.exe", "Side", MON_B, focus=False)
+    rig.quiet()
+    rig.captures.failures.add(3)
+    rig.captures.images.pop(3)  # the restarted capture gives no frame
+    rig.tick(15.2)
+    m2 = rig.count("m2")
+    for now in (16.2, 17.2, 18.2, 19.2):
+        rig.tick(now)
+    assert rig.count("m2") == m2
+
+
+def test_a_held_window_makes_only_its_own_monitor_incomplete(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig(monitors=TWO)
+    rig.show(2, "notepad.exe", "Notes", SCREEN)
+    _hold_side_browser(rig)
+    seen: list[bool] = []
+    desk = rig.capture._desk  # pyright: ignore[reportPrivateUsage]
+    check = desk.check
+
+    def spy(*args: object, **kwargs: object) -> object:
+        checked = check(*args, **kwargs)  # type: ignore[arg-type]
+        seen.extend(s.incomplete for s in checked.snapshots if s.monitor.key == "m1")
+        return checked
+
+    desk.check = spy  # type: ignore[method-assign]
+    for now in (2.5, 3.0, 3.5):
+        rig.tick(now)
+    assert not any(seen)
+
+
+def test_a_held_window_spanning_two_monitors_makes_both_incomplete(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = make_rig(monitors=TWO)
+    rig.show(2, "notepad.exe", "Notes", SCREEN, focus=False)
+    rig.show(3, "chrome.exe", "Page", Rect(400, 0, 1200, 600), focus=False, url="https://a.org/")
+    rig.quiet()
+    rig.events.push(3, "title", 2.0)
+    rig.tick(2.0)
+    m1, m2 = rig.count("m1"), rig.count("m2")
+    for now in (2.5, 3.0, 3.5, 4.0, 4.5):
+        rig.tick(now)
+    assert rig.count("m1") > m1
+    assert rig.count("m2") > m2
+
+
+def test_a_held_side_window_is_not_rechecked_in_game_mode(make_rig: Callable[..., Rig]) -> None:
+    rig = game_rig(make_rig)
+    rig.show(3, "chrome.exe", "Page", MON_B, focus=False, url="https://example.org/one")
+    rig.settle(0.0)
+    rig.events.push(3, "title", 2.0)
+    m1, m2 = rig.count("m1"), rig.count("m2")
+    for now in (2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 8.0):
+        rig.tick(now)
+    assert (rig.count("m1"), rig.count("m2")) == (m1, m2)
+    for now in (15.2, 15.7, 16.2):
+        rig.tick(now)
+    assert rig.count("m2") > m2
+
+
+def test_a_private_side_window_is_published_during_a_game_at_the_side_rate(
+    make_rig: Callable[..., Rig],
+) -> None:
+    rig = game_rig(make_rig)
+    rig.show(3, "zen.exe", "Private - Zen Browser", MON_B, focus=False, url="https://example.org/")
+    rig.uia.captions[3] = "Private - Zen Browser (Private Browsing)"
+    rig.settle(0.0)
+    rig.tick(1.0)
+    assert rig.browsers.media_reason("zen.exe", None) == "private_window"
+    rig.browsers.clear()
+    rig.tick(15.2)
+    assert rig.browsers.media_reason("zen.exe", None) == "private_window"
+
+
+def test_a_kept_side_browser_publishes_no_reason(make_rig: Callable[..., Rig]) -> None:
+    rig = make_rig(monitors=TWO)
+    rig.show(2, "notepad.exe", "Notes", SCREEN)
+    rig.show(3, "zen.exe", "Zen Browser", MON_B, focus=False, url="https://example.org/")
+    rig.quiet()
+    assert rig.browsers.media_reason("zen.exe", None) is None
+
+
 # --- game mode ----------------------------------------------------------------------------------
 
 
@@ -1306,7 +1472,7 @@ def test_stats_are_logged_every_five_minutes_and_hold_only_counts(
     with caplog.at_level(logging.INFO, logger="akashic.capture.screen"):
         rig.capture.run(CountingStop(8), threading.Event(), threading.Event())
     logged = [r.getMessage() for r in caplog.records if "capture stats" in r.getMessage()]
-    assert len(logged) == 3  # every second pass
+    assert len(logged) == 4  # the first pass reads the clock twice more, for its text read
     assert all(isinstance(v, int) for v in rig.capture.stats_snapshot().values())
     assert "secret" not in caplog.text
     assert "private.example" not in caplog.text
@@ -1353,7 +1519,7 @@ class Fakes:
             facts=self.facts,
             events=self.events,
             captures=self.captures,
-            uia=FakeUia(texts={1: LONG_TEXT}),
+            new_uia=lambda: FakeUia(texts={1: LONG_TEXT}),
             ocr=FakeOcr(),
             media=FakeMedia(),
         )
@@ -1581,6 +1747,7 @@ def test_the_debug_screen_data_is_the_capture_stats(make_rig: Callable[..., Rig]
     from akashic.capture.health import CaptureStatus  # noqa: PLC0415
 
     rig = make_rig()
+    rig.captures.faults = {"capture start: HRESULT 0x887A0064": 5, "a: b": 1}
     rig.settle(0.0)
     from akashic.log import FaultLog  # noqa: PLC0415
 
@@ -1601,6 +1768,7 @@ def test_the_debug_screen_data_is_the_capture_stats(make_rig: Callable[..., Rig]
         SimpleNamespace(stats_snapshot=lambda: {"tick_failed": 2} | gaps_faults.counts()),  # type: ignore[arg-type]
     )
     assert collected is not None
+    assert collected[2]["captures"] == {"a: b": 1, "capture start: HRESULT 0x887A0064": 5}
     assert collected[2]["media"] == {"close_failed": 2, "media poll: OSError": 1}
     assert collected[2]["gaps"] == {"capture gap tick: ValueError": 2, "tick_failed": 2}
     assert collected[2]["writer"] == dict(sorted(rig.writer.stats.items()))
@@ -1634,3 +1802,4 @@ def test_the_windows_platform_is_built_from_the_per_monitor_ports(
     assert platform.facts is platform.windows  # one object is both the window source and facts
     assert type(platform.events) is kinds["Events"]
     assert type(platform.captures) is kinds["Wgc"]
+    assert platform.new_uia is Marker  # the class itself: each worker builds its own

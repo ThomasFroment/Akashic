@@ -36,7 +36,7 @@ function lineRow(line) {
   const who = line.speaker || (line.stream === "mic" ? "You" : "Heard");
   const link = line.episode_id ? h("a", { href: `#/episode/${line.episode_id}` }, "open episode") : "";
   return h("div", { class: "row" }, btn,
-    h("div", { class: "row-body" }, metaLine(fmtTime(line.start_ms), who, link), h("div", unclearAttrs(line.confidence), line.text)));
+    h("div", { class: "row-body" }, metaLine(fmtTime(line.start_ms), who, line.tag, link), h("div", unclearAttrs(line.confidence), line.text)));
 }
 
 function section(title, rows) {

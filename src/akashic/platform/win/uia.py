@@ -7,7 +7,8 @@ properties cached, instead of a cross-process round trip per property (spike: 23
 failed (``capture/uia_budget.py``).
 
 COM runs multithreaded (``coinit_flags = 0``) so it can share the process with WinRT (OCR).
-Use one instance from one thread only.
+An instance belongs to the thread that built it: each UIA worker builds its own
+(``capture/uia_threads.py``).
 
 Calls into a hung app fail after the connection/transaction timeouts (a COMError) and
 take the readers' existing None/unknown paths instead of blocking the capture loop.
@@ -76,6 +77,7 @@ _ERRORS = (comtypes.COMError, OSError, ValueError, AttributeError)
 
 class WindowsUia:
     def __init__(self) -> None:
+        comtypes.CoInitializeEx(comtypes.COINIT_MULTITHREADED)
         self._auto = comtypes_client.CreateObject(uia.CUIAutomation8, interface=uia.IUIAutomation2)
         self._auto.ConnectionTimeout = UIA_CONNECTION_TIMEOUT_MS
         self._auto.TransactionTimeout = UIA_TRANSACTION_TIMEOUT_MS

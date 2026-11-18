@@ -513,14 +513,21 @@ def test_windows_uia_uses_the_v8_automation_object_with_named_timeouts(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     created: list[tuple[object, object]] = []
+    order: list[str] = []
     fake = _FakeComObject()
 
     def create(clsid: object, interface: object = None) -> _FakeComObject:
+        order.append("create")
         created.append((clsid, interface))
         return fake
 
+    def init(flags: int) -> None:
+        order.append(f"mta{flags}")
+
+    monkeypatch.setattr(win_uia.comtypes, "CoInitializeEx", init)
     monkeypatch.setattr(win_uia.comtypes_client, "CreateObject", create)
     reader = win_uia.WindowsUia()
+    assert order == [f"mta{win_uia.comtypes.COINIT_MULTITHREADED}", "create"]
     assert created == [(win_uia.uia.CUIAutomation8, win_uia.uia.IUIAutomation2)]
     assert reader._auto is fake
     assert fake.ConnectionTimeout == win_uia.UIA_CONNECTION_TIMEOUT_MS
@@ -865,6 +872,16 @@ def test_pid_and_process_of_the_window_itself(monkeypatch: pytest.MonkeyPatch) -
     assert (listed[1].pid, listed[1].process, listed[1].uwp_unresolved) == (10, "app.exe", False)
     assert (listed[2].pid, listed[2].process) == (999, "")
     assert (listed[3].pid, listed[3].process) == (0, "")
+
+
+def test_the_focused_window_carries_its_pid(monkeypatch: pytest.MonkeyPatch) -> None:
+    windows = _desk(monkeypatch, {1: _Win(pid=10)})
+    monkeypatch.setattr(win_windows, "shell32", _FakeShell32((0, 2)))
+    monkeypatch.setattr(win_windows.user32, "GetForegroundWindow", lambda: 1, raising=False)
+    monkeypatch.setattr(win_windows.user32, "IsIconic", _per_hwnd(0), raising=False)
+    focused = windows.focused_window()
+    assert focused is not None
+    assert (focused.pid, focused.process) == (10, "app.exe")
 
 
 def test_a_frame_host_resolves_to_its_core_window_app(monkeypatch: pytest.MonkeyPatch) -> None:

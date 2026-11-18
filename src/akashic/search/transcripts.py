@@ -8,13 +8,18 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
+from akashic.capture.ports import VOICE_APPS
 from akashic.jsonish import as_list
 from akashic.search.keyword import HIGHLIGHT_END, HIGHLIGHT_START, MAX_LIMIT, build_match
+from akashic.storage.sessions import GameSession, games_spanning
 
 if TYPE_CHECKING:
     from sqlite3 import Connection
+
+
+type SpeechTag = Literal["you", "voice chat", "game", "media", ""]
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,25 +34,60 @@ class Utterance:
     speaker_id: int | None = None
     speaker: str | None = None  # the name, once the user has given one
     confidence: float | None = None  # Whisper's, 0-1; None when unknown
+    tag: SpeechTag = ""  # what the sound was, see speech_tag
 
 
-def _sources(raw: object) -> tuple[str, ...]:
+def parse_sources(raw: object) -> tuple[str, ...]:
     return tuple(str(n) for n in as_list(json.loads(str(raw))) or [])
 
 
-def _utterance(row: tuple[object, ...]) -> Utterance:
+def heard_tag(
+    sources: tuple[str, ...], games: list[GameSession], start_ms: int, end_ms: int
+) -> SpeechTag:
+    """What the sound from the PC was: a call, a game (in-game chat), or other media."""
+    if VOICE_APPS.intersection(sources):
+        return "voice chat"
+    if any(p in sources and start < end_ms and end > start_ms for p, start, end in games):
+        return "game"
+    return "media" if sources else ""
+
+
+def speech_tag(
+    stream: str,
+    sources: tuple[str, ...],
+    games: list[GameSession],
+    start_ms: int,
+    end_ms: int,
+) -> SpeechTag:
+    """What a segment was: you on the microphone, else what ``heard_tag`` says."""
+    if stream == "mic":
+        return "you"
+    return heard_tag(sources, games, start_ms, end_ms)
+
+
+def _utterance(row: tuple[object, ...], games: list[GameSession]) -> Utterance:
+    start_ms, end_ms = int(str(row[2])), int(str(row[3]))
+    sources = parse_sources(row[5])
     return Utterance(
         int(str(row[0])),
         str(row[1]),
-        int(str(row[2])),
-        int(str(row[3])),
+        start_ms,
+        end_ms,
         None if row[4] is None else str(row[4]),
-        _sources(row[5]),
+        sources,
         str(row[6] or ""),
         None if row[7] is None else int(str(row[7])),
         None if row[8] is None else str(row[8]),
         None if row[9] is None else float(str(row[9])),
+        speech_tag(str(row[1]), sources, games, start_ms, end_ms),
     )
+
+
+def _utterances(conn: Connection, rows: list[tuple[object, ...]]) -> list[Utterance]:
+    """Rows of ``search`` and ``browse`` (start_ms and end_ms at index 2 and 3), tagged with one
+    game lookup for their whole span."""
+    games = games_spanning(conn, ((int(str(r[2])), int(str(r[3]))) for r in rows))
+    return [_utterance(r, games) for r in rows]
 
 
 def _clamp(limit: int) -> int:
@@ -83,7 +123,7 @@ def search(  # noqa: PLR0913 - a query, a time window and paging
             "offset": max(0, offset),
         },
     ).fetchall()
-    return [_utterance(r) for r in rows]
+    return _utterances(conn, rows)
 
 
 def browse(  # noqa: PLR0913
@@ -105,4 +145,4 @@ def browse(  # noqa: PLR0913
         f" ORDER BY s.start_ms {order}, s.id {order} LIMIT :limit OFFSET :offset",
         {"start": start_ms, "end": end_ms, "limit": _clamp(limit), "offset": max(0, offset)},
     ).fetchall()
-    return [_utterance(r) for r in rows]
+    return _utterances(conn, rows)

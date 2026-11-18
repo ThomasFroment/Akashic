@@ -5,11 +5,14 @@ sessions, title changes (YouTube autoplay), play/pause and sessions that vanish,
 event can't leave a row open forever. A media session becomes a row when it first plays; the
 row stays open across pauses (``played_ms`` counts only the time spent playing; ``end_ms`` stays
 at the pause point while paused) and closes when the title changes, the source disappears, a pause
-lasts too long (at the pause point), a poll gap passes (at the last poll; a still-playing session
-gets a new row) or capture halts. The lock does not close rows and none is opened while locked.
-Locking clears the browser verdicts, so an open row whose verdict is ``url_unknown`` is kept
-while locked and for one poll after. A close that fails on a busy
-database stays pending and is retried at every poll; the session gets nothing else until it
+lasts too long (at the pause point), the PC sleeps (at the last poll; a still-playing session gets
+a new row) or capture halts. A sleep is monotonic time advancing without awake time; a stall of
+this thread or a wall-clock step is not one, and ``played_ms`` grows by the awake time. The lock
+does not close rows and none is opened while locked. Locking and a UAC prompt clear the browser
+verdicts (UAC is not always seen as a lock), so an open row whose verdict is ``url_unknown`` is
+kept while locked or cleared, and for one poll after. A play/pause event that fails on a busy
+database is kept and written at a later poll with its own time. A close that fails stays pending
+and is retried at every poll, unsent events first; the session gets nothing else until it
 closes. Rows still open at the next start are closed at their last heartbeat. On stop, ``run``
 returns within one interval, the poll in flight and one short busy timeout
 (``gaps.STOP_BUSY_TIMEOUT_MS``) per open session.
@@ -29,12 +32,12 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlsplit
 
 from akashic.capture.gaps import limit_wait_at_stop
-from akashic.capture.ports import BROWSERS
+from akashic.capture.ports import BROWSERS, slept
 from akashic.log import FaultLog
 
 if TYPE_CHECKING:
@@ -49,7 +52,6 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 POLL_INTERVAL_S: Final = 2.0
-MAX_POLL_GAP_MS: Final = 10_000  # a longer gap (suspend, stall) closes the row at the last poll
 PAUSE_CLOSE_MS: Final = 10 * 60_000  # a session paused this long is over
 WRITE_INTERVAL_MS: Final = 10_000  # heartbeat for end_ms / played_ms
 URL_SEARCH_WINDOW_MS: Final = 120_000  # keep looking for the page address this long
@@ -122,6 +124,9 @@ def process_for_app(app: str) -> str:
     return name if name.endswith(".exe") else f"{name}.exe"
 
 
+type _Event = tuple[int, PlaybackState]  # (ts_ms, state)
+
+
 @dataclass(slots=True)
 class _Open:
     session_id: int
@@ -132,11 +137,14 @@ class _Open:
     start_ms: int
     last_poll_ms: int
     last_write_ms: int
+    last_mono_ms: int
+    last_awake_ms: int
     played_ms: int = 0
     paused_since_ms: int | None = None
     url: str | None = None
     url_tried_ms: int = -URL_SEARCH_EVERY_MS
     close_at: tuple[int, int] | None = None  # (end_ms, played_ms) once a close was attempted
+    unsent: list[_Event] = field(default_factory=list[_Event])
 
     @property
     def end_ms(self) -> int:
@@ -153,6 +161,8 @@ class MediaTracker:
         exclusions: Exclusions,
         focused_window: Callable[[], WindowInfo | None],
         now_ms: Callable[[], int],
+        monotonic_ms: Callable[[], int],
+        awake_ms: Callable[[], int],
         browsers: BrowserState,
         interval_s: float = POLL_INTERVAL_S,
     ) -> None:
@@ -161,10 +171,13 @@ class MediaTracker:
         self._exclusions = exclusions
         self._focused_window = focused_window
         self._now_ms = now_ms
+        self._monotonic_ms = monotonic_ms
+        self._awake_ms = awake_ms
         self._interval_s = interval_s
         self._browsers = browsers
         self._open: dict[str, _Open] = {}
         self._locked_last_poll = False
+        self._generation = browsers.generation
         self._names: dict[str, str] = {}  # resolved display names only
         self._name_retry: dict[str, tuple[int, int]] = {}  # app id -> (retry at ms, misses)
         self.stats: dict[str, int] = {}
@@ -209,32 +222,37 @@ class MediaTracker:
 
     def close_all(self) -> None:
         """One close attempt per session, pending ones included; a failure leaves the others be."""
-        now = self._now_ms()
-        for app_id in list(self._open):
-            self._try_close(app_id, now)
+        now, mono, awake = self._now_ms(), self._monotonic_ms(), self._awake_ms()
+        for app_id, current in list(self._open.items()):
+            self._try_close(app_id, self._ends_now(current, now, mono, awake))
 
     def poll(self, *, locked: bool = False) -> None:
-        # Locking clears the browser verdicts; an open row keeps going through that and one poll
-        # after it. No row is opened while locked.
+        # A UAC clear can come without a lock, so the generation is read after the verdict:
+        # a mid-poll clear holds a `url_unknown` row too.
         hold = locked or self._locked_last_poll
         self._locked_last_poll = locked
+        previous, self._generation = self._generation, self._browsers.generation
         self._retry_pending()
-        now = self._now_ms()
+        now, mono, awake = self._now_ms(), self._monotonic_ms(), self._awake_ms()
         seen: set[str] = set()
         for state in self._source.sessions():
             if state.app_id in seen or not state.title.strip():
                 continue  # untitled, or a second session from one app: the first (current) wins
             app, known = self._app_name(state.app_id, now)
             reason = self._reason(state, app, known=known)
-            held = reason == "url_unknown" and hold and self._has_live_row(state.app_id)
+            held = (
+                reason == "url_unknown"
+                and self._has_live_row(state.app_id)
+                and (hold or self._browsers.generation != previous)
+            )
             if reason is not None and not held:
                 self.stats[f"excluded:{reason}"] = self.stats.get(f"excluded:{reason}", 0) + 1
                 continue
             seen.add(state.app_id)
-            self._update(state, app, now, may_open=not locked and not held)
+            self._update(state, app, (now, mono, awake), may_open=not locked and not held)
         for app_id, current in list(self._open.items()):
             if app_id not in seen and current.close_at is None:  # gone: it ended when last seen
-                self._try_close(app_id, current.last_poll_ms)
+                self._try_close(app_id, (current.end_ms, current.played_ms))
 
     # --- internals ---------------------------------------------------------------------------
 
@@ -283,31 +301,36 @@ class MediaTracker:
         current = self._open.get(app_id)
         return current is not None and current.close_at is None
 
-    def _update(self, state: MediaState, app: str, now: int, *, may_open: bool) -> None:
+    def _update(
+        self, state: MediaState, app: str, clocks: tuple[int, int, int], *, may_open: bool
+    ) -> None:
+        now, mono, awake = clocks
         current = self._open.get(state.app_id)
         if current is not None and current.close_at is not None:
             return  # a pending close gets nothing but close attempts
         if current is not None and (
-            now - current.last_poll_ms > MAX_POLL_GAP_MS
+            self._slept(current, mono, awake)
             or (current.title, current.artist) != (state.title, state.artist)
         ):
-            if not self._try_close(state.app_id, now):
+            if not self._try_close(state.app_id, self._ends_now(current, now, mono, awake)):
                 return
             current = None
         if current is None:
             if may_open and state.state == "playing":  # a paused leftover was not watched
-                self._open_session(state, app, now)
+                self._open_session(state, app, clocks)
             return
         if current.state == "playing":
-            current.played_ms += now - current.last_poll_ms
-        current.last_poll_ms = now
+            current.played_ms += awake - current.last_awake_ms
+        now = max(now, current.last_poll_ms)  # a clock stepped back never moves the row back
+        current.last_poll_ms, current.last_mono_ms, current.last_awake_ms = now, mono, awake
         changed = state.state != current.state
         if changed:
             current.state = state.state
             current.paused_since_ms = now if state.state != "playing" else None
-            self._store.add_event(current.session_id, now, state.state)
+            current.unsent.append((now, state.state))
+        self._try_send_events(current)
         if current.paused_since_ms is not None and now - current.paused_since_ms >= PAUSE_CLOSE_MS:
-            self._try_close(state.app_id, now)
+            self._try_close(state.app_id, (current.end_ms, current.played_ms))
             return
         self._find_url(current, now)
         if changed or now - current.last_write_ms >= WRITE_INTERVAL_MS:
@@ -316,7 +339,33 @@ class MediaTracker:
                 current.session_id, end_ms=current.end_ms, played_ms=current.played_ms
             )
 
-    def _open_session(self, state: MediaState, app: str, now: int) -> None:
+    @staticmethod
+    def _slept(current: _Open, mono: int, awake: int) -> bool:
+        return slept(mono - current.last_mono_ms, awake - current.last_awake_ms)
+
+    def _ends_now(self, current: _Open, now: int, mono: int, awake: int) -> tuple[int, int]:
+        """(end_ms, played_ms) of a close at this reading: the pause point or last poll when
+        paused or after a sleep, else now with the awake time since the last poll played."""
+        if current.paused_since_ms is not None or self._slept(current, mono, awake):
+            return current.end_ms, current.played_ms
+        return max(now, current.last_poll_ms), current.played_ms + awake - current.last_awake_ms
+
+    def _try_send_events(self, current: _Open) -> None:
+        try:
+            self._send_events(current)
+        except Exception as exc:  # noqa: BLE001 - kept on the session, retried at the next poll
+            self.stats["event_failed"] = self.stats.get("event_failed", 0) + 1
+            self._faults.note("writing a media event", exc)
+
+    def _send_events(self, current: _Open) -> None:
+        """Write the unsent events, oldest first; each leaves the list once written."""
+        while current.unsent:
+            ts_ms, state = current.unsent[0]
+            self._store.add_event(current.session_id, ts_ms, state)
+            del current.unsent[0]
+
+    def _open_session(self, state: MediaState, app: str, clocks: tuple[int, int, int]) -> None:
+        now, mono, awake = clocks
         session_id = self._store.open(
             app_id=state.app_id,
             app=app,
@@ -334,6 +383,8 @@ class MediaTracker:
             start_ms=now,
             last_poll_ms=now,
             last_write_ms=now,
+            last_mono_ms=mono,
+            last_awake_ms=awake,
         )
         self._open[state.app_id] = opened
         self.stats["opened"] = self.stats.get("opened", 0) + 1
@@ -357,11 +408,11 @@ class MediaTracker:
             self._store.set_url(current.session_id, url)
             current.url = url
 
-    def _try_close(self, app_id: str, end_ms: int) -> bool:
+    def _try_close(self, app_id: str, ends: tuple[int, int]) -> bool:
         """Close the session; on a failure it stays open, pending, and is retried by the next
         poll. Returns whether the row is closed."""
         try:
-            self._close(app_id, end_ms)
+            self._close(app_id, ends)
         except Exception as exc:  # noqa: BLE001 - the session is kept and retried
             self.stats["close_failed"] = self.stats.get("close_failed", 0) + 1
             self._faults.note("closing a media session", exc)
@@ -371,17 +422,13 @@ class MediaTracker:
     def _retry_pending(self) -> None:
         for app_id, current in list(self._open.items()):
             if current.close_at is not None:
-                self._try_close(app_id, current.close_at[0])
+                self._try_close(app_id, current.close_at)
 
-    def _close(self, app_id: str, end_ms: int) -> None:
+    def _close(self, app_id: str, ends: tuple[int, int]) -> None:
         current = self._open[app_id]
         if current.close_at is None:  # fixed on the first attempt so a retry keeps the same row
-            elapsed = end_ms - current.last_poll_ms
-            if current.paused_since_ms is None and 0 <= elapsed <= MAX_POLL_GAP_MS:
-                current.close_at = (end_ms, current.played_ms + elapsed)
-            else:
-                # Paused, or a gap (suspend, stall): it ends at the last poll, gap not played.
-                current.close_at = (current.end_ms, current.played_ms)
+            current.close_at = ends
+        self._send_events(current)  # the stopped event must come last
         end, played = current.close_at
         self._store.close(current.session_id, end_ms=end, played_ms=played)
         del self._open[app_id]

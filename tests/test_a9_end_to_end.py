@@ -23,7 +23,6 @@ from capture_fakes import FakeOcr, monitor, window, with_text_block
 from memory_data import NOW
 from oracles import HashEmbedder
 from PIL import Image
-from screen_rig import Rig, build_rig
 from sink_spy import SECRET
 from store_reads import latest_frames
 from test_delete_all import assert_empty
@@ -53,6 +52,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator
     from sqlite3 import Connection
 
+    from screen_rig import Rig
     from sink_spy import PrivacyRig
 
     from akashic.capture.ports import WindowInfo
@@ -457,13 +457,13 @@ def embed_everything(conn: Connection) -> None:
 
 
 def test_the_answer_for_a_video_on_a_side_monitor_is_its_masked_crop_and_opens_its_moment(
-    paths: Paths, conn: Connection, media: MediaStore, key: DataKey
+    paths: Paths, conn: Connection, key: DataKey, make_rig: Callable[..., Rig]
 ) -> None:
     afternoon = resolve("yesterday afternoon", NOW)
     assert afternoon is not None
     base = afternoon.start_ms + 2 * 3_600_000
     left, right = Rect(0, 0, 800, 600), Rect(800, 0, 1600, 600)
-    rig = build_rig(conn, media, monitors=[left, right], shown=False, ts_start=base)
+    rig = make_rig(monitors=[left, right], shown=False, ts_start=base)
     video = Rect(900, 50, 1500, 450)
     rig.show(1, "notepad.exe", "Notes", left, image=solid(WHITE))
     rig.show(2, "zen.exe", f"{TITLE} - YouTube — Zen Browser", video, focus=False,
@@ -481,6 +481,8 @@ def test_the_answer_for_a_video_on_a_side_monitor_is_its_masked_crop_and_opens_i
         exclusions=Exclusions(UserExclusions()),
         focused_window=rig.windows.focused_window,
         now_ms=lambda: base - 1_000 + int(rig.clock[0] * 1000),
+        monotonic_ms=lambda: int(rig.clock[0] * 1000),
+        awake_ms=lambda: int(rig.clock[0] * 1000),
         browsers=rig.browsers,
     )
     source.states = [MediaState("Z1", TITLE, "A channel", "playing")]
@@ -634,11 +636,11 @@ def test_game_mode_rates_window_captures_and_the_texts_read_after_the_game(
 
 
 def test_the_stage_at_any_moment_on_three_monitors_with_mixed_scale_and_negative_coordinates(
-    conn: Connection, media: MediaStore
+    conn: Connection, make_rig: Callable[..., Rig]
 ) -> None:
     base = 1_700_000_000_000
     a, b, c = Rect(-800, 0, 0, 600), Rect(0, 0, 800, 600), Rect(800, 0, 1600, 600)
-    rig = build_rig(conn, media, monitors=[a, b, c], shown=False)
+    rig = make_rig(monitors=[a, b, c], shown=False)
     rig.displays.monitor_list = [
         monitor(key="a", name="Monitor 1", rect=a, scale=1.5, primary=False),
         monitor(key="b", name="Monitor 2", rect=b, scale=1.0, primary=True),

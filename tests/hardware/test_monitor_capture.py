@@ -90,7 +90,7 @@ def test_every_monitor_stores_a_composite_at_its_native_size_and_lists_the_synth
         facts=windows,
         events=Win32WindowEvents(),
         captures=WgcCaptures(),
-        uia=WindowsUia(),
+        new_uia=WindowsUia,
         writer=writer,
         exclusions=Exclusions(UserExclusions(), "http://127.0.0.1:5123"),
         browsers=BrowserState(),

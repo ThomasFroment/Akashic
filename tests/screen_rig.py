@@ -24,6 +24,7 @@ from capture_fakes import (
     blank,
     monitor,
     top_window,
+    wait_until_idle,
     window,
 )
 from store_reads import latest_frames
@@ -121,6 +122,14 @@ class Rig:
         """Two passes 0.1 s apart: the first starts the captures, the second paints them."""
         self.tick(now)
         self.tick(now + 0.1)
+
+    def close(self) -> None:
+        """End the capture's UIA worker threads."""
+        self.capture._threads.close()  # pyright: ignore[reportPrivateUsage]
+
+    def wait_until_uia_idle(self) -> None:
+        """Wait until the UIA worker of the default pid has kept its late result."""
+        wait_until_idle(self.capture._threads)  # pyright: ignore[reportPrivateUsage]
 
     def drain(self) -> None:
         """Store everything queued, on this thread."""
@@ -236,6 +245,14 @@ def build_rig(  # noqa: PLR0913 - one switch per scenario input
     shared = browsers or BrowserState(clock=lambda: clock_cell[0])
     displays = FakeDisplays(monitor_infos(monitors or [SCREEN]))
     windows = windows or FakeWindows()
+    awake_cell = [0.0]  # follows the loop's clock, so the rig never sleeps
+
+    def reading() -> float:
+        assert clock is not None
+        awake_cell[0] = clock()
+        return awake_cell[0]
+
+    windows.awake_clock = (lambda: awake_cell[0]) if clock else (lambda: clock_cell[0])
     facts = FakeWindowFacts()
     events = FakeWindowEvents()
     captures = ImageCaptures()
@@ -250,7 +267,7 @@ def build_rig(  # noqa: PLR0913 - one switch per scenario input
         facts=facts,
         events=events,
         captures=captures,
-        uia=uia,
+        new_uia=lambda: uia,
         writer=writer,
         exclusions=Exclusions(user or UserExclusions(), api_origin),
         browsers=shared,
@@ -260,7 +277,7 @@ def build_rig(  # noqa: PLR0913 - one switch per scenario input
         budget=budget,
         on_game=on_game or flags.append,
         on_own_address=own_flags.append,
-        clock=clock or (lambda: clock_cell[0]),
+        clock=reading if clock else lambda: clock_cell[0],
         now_ms=now_ms or (lambda: next(counter)),
     )
     rig = Rig(
@@ -282,7 +299,7 @@ def fake_platform(
         facts=FakeWindowFacts([top_window(hwnd=1)]),
         events=FakeWindowEvents(),
         captures=ImageCaptures(images={1: blank()}),
-        uia=FakeUia(texts={1: [text]}),
+        new_uia=lambda: FakeUia(texts={1: [text]}),
         ocr=ocr,
         media=FakeMedia(),
     )

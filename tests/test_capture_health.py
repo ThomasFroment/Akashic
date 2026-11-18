@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import logging
+import re
 import threading
 import time
 from pathlib import Path
@@ -290,7 +291,9 @@ def test_each_run_kind_has_its_own_length(kind: Any, length: int) -> None:  # no
 # --- audio segments dropped by the writer ------------------------------------------------------
 
 
-def audio_capture(dropped_at: dict[str, float], *, down: bool = False) -> AudioCapture:
+def audio_capture(
+    dropped_at: dict[str, float], *, down: bool = False, elsewhere_at: float | None = None
+) -> AudioCapture:
     capture = object.__new__(AudioCapture)
     rigs = [RecorderRig("mic"), RecorderRig("system")]
     if not down:
@@ -302,6 +305,7 @@ def audio_capture(dropped_at: dict[str, float], *, down: bool = False) -> AudioC
         return frozenset(k for k, v in dropped_at.items() if v >= t)
 
     capture._writer = cast("Any", SimpleNamespace(dropped_since=dropped_since))  # pyright: ignore[reportPrivateUsage]
+    capture._sampler = cast("Any", SimpleNamespace(voice_elsewhere_at=lambda: elsewhere_at))  # pyright: ignore[reportPrivateUsage]
     return capture
 
 
@@ -329,6 +333,37 @@ def test_down_codes_come_first_then_dropped_mic_then_system() -> None:
         "mic_segments_dropped",
         "system_segments_dropped",
     )
+
+
+def test_voice_elsewhere_is_a_problem_within_the_window_only() -> None:
+    assert audio_capture({}).problems(1000.0, 0.0) == ()
+    assert audio_capture({}, elsewhere_at=995.0).problems(1000.0, 0.0) == ("voice_elsewhere",)
+    assert audio_capture({}, elsewhere_at=940.0).problems(1000.0, 0.0) == ("voice_elsewhere",)
+    assert audio_capture({}, elsewhere_at=939.9).problems(1000.0, 0.0) == ()
+
+
+def test_voice_elsewhere_before_the_resume_is_not_a_problem() -> None:
+    assert audio_capture({}, elsewhere_at=990.0).problems(1000.0, 990.0) == ("voice_elsewhere",)
+    assert audio_capture({}, elsewhere_at=989.9).problems(1000.0, 990.0) == ()
+
+
+def test_voice_elsewhere_comes_last() -> None:
+    capture = audio_capture({"system": 999.0, "mic": 999.0}, down=True, elsewhere_at=999.0)
+    assert capture.problems(1000.0, 0.0) == (
+        "mic_unavailable",
+        "system_audio_unavailable",
+        "mic_segments_dropped",
+        "system_segments_dropped",
+        "voice_elsewhere",
+    )
+
+
+def test_voice_elsewhere_degrades_even_during_a_game() -> None:
+    status, reported = make_status()
+    status.set_gaming(True)
+    status.set_problems(["voice_elsewhere"], 0)
+    status.set_problems([], 0)
+    assert reported.states == ["gaming", "degraded", "gaming"]
 
 
 @pytest.fixture
@@ -399,3 +434,8 @@ def test_segments_thrown_away_at_stop_do_not_set_a_drop_time(store: AudioStore) 
 def test_the_sidebar_words_each_dropped_code(code: str, words: str) -> None:
     js = (Path(__file__).parents[1] / "src" / "akashic" / "ui" / "app.js").read_text("utf-8")
     assert f'{code}: "{words}"' in js
+
+
+def test_the_sidebar_words_voice_elsewhere_in_a_plain_sentence() -> None:
+    js = (Path(__file__).parents[1] / "src" / "akashic" / "ui" / "app.js").read_text("utf-8")
+    assert re.search(r'^\s*voice_elsewhere: "[^"]+",$', js, re.MULTILINE)

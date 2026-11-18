@@ -540,6 +540,14 @@ def test_media_only_deletion_keeps_searchable_text(client: Client, paths: Paths)
     assert audio.get(segment) is None
 
 
+def test_the_debug_page_shows_the_fault_rows_with_a_dash_when_missing() -> None:
+    ui = Path(__file__).resolve().parents[1] / "src" / "akashic" / "ui"
+    debug_js = (ui / "debug.js").read_text("utf-8")
+    assert '["Faults", JSON.stringify(a.faults)]' in debug_js
+    assert '["Window capture faults", c ? JSON.stringify(c.data.captures) : null]' in debug_js
+    assert '["Capture gaps", c ? JSON.stringify(c.data.gaps) : null]' in debug_js
+
+
 def test_the_pages_show_no_low_disk_space_warning() -> None:
     ui = Path(__file__).resolve().parents[1] / "src" / "akashic" / "ui"
     settings_js = (ui / "settings.js").read_text("utf-8")

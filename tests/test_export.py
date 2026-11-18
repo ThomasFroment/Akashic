@@ -431,6 +431,42 @@ def test_a_cancel_at_any_step_removes_the_partial_and_leaves_the_live_store_alon
     assert live_state(world) == before
 
 
+def test_a_cancel_during_the_vacuum_aborts_it_and_leaves_no_partial_and_the_live_store_alone(
+    world: World, live_keyfile: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    del live_keyfile
+    before = live_state(world)
+    cancel = ExportCancel()
+    target = tmp_path / "out"
+    progress: list[tuple[int, int]] = []
+    real_rebuild = export_module._rebuild_indexes
+
+    hook_calls: list[None] = []
+
+    def cancel_from_another_thread() -> int:
+        hook_calls.append(None)
+        if not cancel.cancelled:
+            thread = threading.Thread(target=cancel.cancel)
+            thread.start()
+            thread.join()
+        return 0
+
+    def rebuild_then_watch_the_vacuum(conn: Connection) -> None:
+        real_rebuild(conn)
+        conn.set_progress_handler(cancel_from_another_thread, 1)
+
+    monkeypatch.setattr(export_module, "_rebuild_indexes", rebuild_then_watch_the_vacuum)
+    with pytest.raises(ExportCancelled):
+        run_export(world, target, cancel=cancel, report=lambda d, t: progress.append((d, t)))
+    assert hook_calls
+    assert all(done < total for done, total in progress)
+    done, total = progress[-1]
+    assert done == total - 1
+    assert not target.exists()
+    assert not target.with_name("out.partial").exists()
+    assert live_state(world) == before
+
+
 def test_a_cancel_interrupts_the_running_statement() -> None:
     cancel = ExportCancel()
     conn = sqlcipher3.connect(":memory:", check_same_thread=False)

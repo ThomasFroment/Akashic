@@ -252,6 +252,8 @@ def build_rig(  # noqa: PLR0913 - one switch per scenario input
         exclusions=Exclusions(user or UserExclusions(), api_origin),
         focused_window=rig.windows.focused_window,
         now_ms=lambda: int(rig.clock[0] * 1000),
+        monotonic_ms=lambda: int(rig.clock[0] * 1000),
+        awake_ms=lambda: int(rig.clock[0] * 1000),
         browsers=rig.browsers,
     )
     private = PrivacyRig(spy, conn, media_conn, rig, media, tracker)
@@ -262,6 +264,7 @@ def build_rig(  # noqa: PLR0913 - one switch per scenario input
 
 def close_rig(rig: PrivacyRig) -> None:
     rig.spy.close()
+    rig.rig.close()
     rig.conn.close()
     rig.media_conn.close()
 

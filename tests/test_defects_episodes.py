@@ -32,7 +32,7 @@ from memory_data import (
 
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
-from akashic.capture.media import MAX_POLL_GAP_MS, PAUSE_CLOSE_MS, MediaTracker, page_url
+from akashic.capture.media import PAUSE_CLOSE_MS, MediaTracker, page_url
 from akashic.capture.ports import MediaState
 from akashic.config import Exclusions as UserExclusions
 from akashic.pipeline.episodes import (
@@ -415,6 +415,12 @@ class Rig:
     source: FakeMedia
     conn: Connection
     clock: list[int]
+    slept: list[int]
+
+    def wake_at(self, seconds: float, state: PlaybackState | None = None) -> None:
+        """Poll after the PC slept since the last poll: the awake clock stands still."""
+        self.slept[0] += int(seconds * 1000) - self.clock[0]
+        self.at(seconds, state)
 
     def at(self, seconds: float, state: PlaybackState | None = None) -> None:
         if state is not None:
@@ -431,6 +437,7 @@ class Rig:
 @pytest.fixture
 def rig(conn: Connection) -> Rig:
     clock = [0]
+    slept = [0]
     source = FakeMedia(names={"C1": "Google Chrome"})
     tracker = MediaTracker(
         source=source,
@@ -438,10 +445,12 @@ def rig(conn: Connection) -> Rig:
         exclusions=Exclusions(UserExclusions()),
         focused_window=lambda: None,
         now_ms=lambda: clock[0],
+        monotonic_ms=lambda: clock[0],
+        awake_ms=lambda: clock[0] - slept[0],
         interval_s=0.01,
         browsers=BrowserState(),
     )
-    return Rig(tracker, source, conn, clock)
+    return Rig(tracker, source, conn, clock, slept)
 
 
 def _play_one_minute(rig: Rig) -> None:
@@ -465,7 +474,7 @@ def test_a_paused_video_does_not_span_the_night_after_a_suspend(rig: Rig) -> Non
     _play_one_minute(rig)
     rig.at(62, "paused")
     rig.at(64, "paused")
-    rig.at(9 * 3600, "paused")  # the PC slept; the first poll after waking
+    rig.wake_at(9 * 3600, "paused")  # the PC slept; the first poll after waking
     ((_, end_ms, closed, _),) = rig.rows()
     assert closed == 1
     assert end_ms <= 64_000
@@ -473,10 +482,10 @@ def test_a_paused_video_does_not_span_the_night_after_a_suspend(rig: Rig) -> Non
 
 def test_a_suspend_while_playing_ends_the_row_at_the_last_poll(rig: Rig) -> None:
     _play_one_minute(rig)
-    rig.at(9 * 3600, "playing")
+    rig.wake_at(9 * 3600, "playing")
     rig.tracker.close_all()
     first = rig.rows()[0]
-    assert first[1] <= 60_000 + MAX_POLL_GAP_MS
+    assert first[1] == 60_000
 
 
 def _frame(conn: Connection, ts_ms: int, process: str, title: str, url: str) -> None:

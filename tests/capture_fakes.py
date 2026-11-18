@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import threading
+import time
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING
 
 from PIL import Image, ImageDraw
@@ -22,6 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from akashic.capture.ports import BrowserFamily, MediaState, WindowChange
+    from akashic.capture.uia_threads import ThreadedUia
 
 SCREEN = Rect(0, 0, 800, 600)
 
@@ -155,6 +158,10 @@ class FakeWindowCaptures:
     starts: list[int] = field(default_factory=list[int])
     stops: list[int] = field(default_factory=list[int])
     seq_counter: int = 0
+    faults: dict[str, int] = field(default_factory=dict[str, int])
+
+    def fault_counts(self) -> dict[str, int]:
+        return dict(self.faults)
 
     def start(self, hwnd: int, min_interval_ms: int) -> bool:
         if hwnd in self.refuse:
@@ -196,6 +203,7 @@ class FakeWindows:
     cursor: tuple[int, int] = (10, 10)
     locked: bool = False
     last_input: int = 0
+    awake_clock: Callable[[], float] = time.monotonic  # seconds
 
     def focused_window(self) -> WindowInfo | None:
         return self.focused
@@ -208,6 +216,9 @@ class FakeWindows:
 
     def last_input_ms(self) -> int:
         return self.last_input
+
+    def awake_ms(self) -> int:
+        return int(self.awake_clock() * 1000)
 
 
 @dataclass
@@ -243,6 +254,43 @@ class FakeUia:
         del family
         self.url_reads += 1
         return self.urls.get(window.hwnd)
+
+
+@dataclass
+class GatedUia(FakeUia):
+    """Reads of the ``gated`` kinds (the address by default) block until ``release`` is set.
+    ``threads`` holds the thread of each gated read."""
+
+    release: threading.Event = field(default_factory=threading.Event)
+    threads: list[int] = field(default_factory=list[int])
+    gated: frozenset[str] = frozenset({"address"})
+
+    def _gate(self, kind: str) -> None:
+        if kind in self.gated:
+            self.threads.append(threading.get_ident())
+            assert self.release.wait(5)
+
+    def read_text(self, window: WindowInfo, max_nodes: int) -> list[TextBlock] | None:
+        self._gate("text")
+        return super().read_text(window, max_nodes)
+
+    def browser_caption(self, window: WindowInfo, family: BrowserFamily) -> str | None:
+        self._gate("caption")
+        return super().browser_caption(window, family)
+
+    def read_url(self, window: WindowInfo, family: BrowserFamily) -> str | None:
+        self._gate("address")
+        return super().read_url(window, family)
+
+
+def wait_until_idle(threads: ThreadedUia, pid: int = 100, within: float = 5.0) -> None:
+    """Wait until the pid's worker has finished its read and kept the late result; fail after
+    ``within`` seconds."""
+    probe = replace(window(hwnd=999), pid=pid)
+    deadline = time.monotonic() + within
+    while threads.caption(probe, "chromium").started_at is None:
+        assert time.monotonic() < deadline, "the UIA worker stayed busy"
+        time.sleep(0.01)
 
 
 @dataclass

@@ -853,6 +853,8 @@ def test_a_media_row_closes_once_the_database_is_free(conn: Connection) -> None:
         exclusions=Exclusions(UserExclusions()),
         focused_window=lambda: None,
         now_ms=lambda: clock[0],
+        monotonic_ms=lambda: clock[0],
+        awake_ms=lambda: clock[0],
         browsers=BrowserState(),
     )
     source.states = [MediaState("Z1", "Video", "Chan", "playing")]

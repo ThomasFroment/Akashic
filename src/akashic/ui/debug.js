@@ -138,7 +138,7 @@ function debugOverview(root) {
     }
     if (c && c.data.audio) {
       const a = c.data.audio;
-      parts.push(h("h2", {}, "Audio capture"), dbgKv([["Energy floor", a.energy_floor], ...Object.entries(a.stats)]));
+      parts.push(h("h2", {}, "Audio capture"), dbgKv([["Energy floor", a.energy_floor], ...Object.entries(a.stats), ["Faults", JSON.stringify(a.faults)]]));
       for (const [kind, s] of Object.entries(a.streams)) {
         parts.push(h("h3", {}, kind), dbgKv([
           ["Device", s.device || "not open"],
@@ -153,8 +153,10 @@ function debugOverview(root) {
       ["Frames", `${o.frames.total.toLocaleString()} total · ${o.frames.last_minute} in the last minute`],
       ["Latest frame", o.frames.latest_ts_ms ? fmtAge(o.now_ms - o.frames.latest_ts_ms) : "none"],
       ["Screen outcomes", c ? JSON.stringify(c.data.screen) : null],
+      ["Window capture faults", c ? JSON.stringify(c.data.captures) : null],
       ["Media outcomes", c ? JSON.stringify(c.data.media) : null],
       ["Screen writer outcomes", c ? JSON.stringify(c.data.writer) : null],
+      ["Capture gaps", c ? JSON.stringify(c.data.gaps) : null],
       ["Database", `${o.disk.db_mb ?? "?"} MB · schema v${o.schema}`], ["Free disk", `${o.disk.free_gb ?? "?"} GB`]]));
     parts.push(h("h2", {}, "Settings in effect"), dbgKv(Object.entries(o.settings)));
     body.replaceChildren(...parts);

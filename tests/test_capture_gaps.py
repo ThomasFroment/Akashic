@@ -793,6 +793,29 @@ def test_events_still_pending_at_the_deadline_are_dropped_and_no_stopped_row_is_
     assert not rig.gaps._has_pending()
 
 
+def test_a_deadline_already_past_with_a_free_database_still_writes_queue_and_stop(
+    rig: Rig,
+) -> None:
+    rig.tick()
+    rig.gaps.drop("system", "backlog", 48_000, 49_000)
+    rig.gaps.finish(50_000, until(-1.0))
+    assert [r[:2] for r in rows(rig.conn)] == [("system", "backlog"), ("all", "stopped")]
+    assert rig.gaps.stats["stop_dropped"] == 0
+
+
+def test_a_deadline_already_past_with_a_busy_database_drops_the_queue_within_one_timeout(
+    rig: Rig,
+) -> None:
+    rig.tick()
+    rig.gaps.drop("system", "backlog", 48_000, 49_000)
+    rig.log.fail["add"] = [busy()] * 10_000
+    started = time.monotonic()
+    rig.gaps.finish(50_000, until(-1.0))
+    assert time.monotonic() - started < STOP_BUSY_TIMEOUT_MS / 1000 + 1.0
+    assert rows(rig.conn) == []
+    assert rig.gaps.stats["stop_dropped"] == 1
+
+
 def test_a_stop_that_stays_busy_to_the_deadline_is_recorded_as_a_crash_next_time(
     conn: Connection, rig: Rig
 ) -> None:

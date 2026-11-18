@@ -16,6 +16,11 @@ pixels of a new page are never painted under the old page's verdict.
 A visible main browser window that shows Akashic's own address sets ``Judgement.own_address``; the
 screen loop then halts capture (the failsafe) and ``shows_own_address`` watches for it to go.
 
+A UIA read can come back unfinished or late, started before this check (``capture/uia_threads.py``).
+An unfinished address never makes a window a main window; a late one may recognize a main window
+but never keeps it. Either holds a known main window, or excludes it by its rules, without reading
+its caption; an unfinished caption counts as None; either keeps the failsafe halted.
+
 Nothing here logs or exposes a title, an address or the reason of an exclusion, except to
 ``BrowserState``, which needs the reason to reject that browser's media.
 """
@@ -36,6 +41,7 @@ if TYPE_CHECKING:
     from akashic.capture.exclusions import Exclusions
     from akashic.capture.ports import TopWindow, WindowChanges
     from akashic.capture.uia_budget import BudgetedUia
+    from akashic.capture.uia_threads import UiaRead
 
 type Verdict = Literal["keep", "hold", "exclude"]
 
@@ -120,7 +126,9 @@ def _is_shell_kept(window: TopWindow) -> bool:
 
 
 def _info(window: TopWindow) -> WindowInfo:
-    return WindowInfo(window.hwnd, window.process, window.title, window.rect, window.has_frame)
+    return WindowInfo(
+        window.hwnd, window.process, window.title, window.rect, window.has_frame, pid=window.pid
+    )
 
 
 class Verdicts:
@@ -142,7 +150,7 @@ class Verdicts:
         self._now = 0.0
         self._results: dict[tuple[str, int], _Result] = {}
         self._active: set[tuple[str, int]] = set()
-        self._addresses: dict[int, tuple[str | None, float]] = {}
+        self._addresses: dict[int, UiaRead[str]] = {}
         self._visible: Collection[int] = ()
         self._saw_own_address = False
 
@@ -188,7 +196,9 @@ class Verdicts:
         self, windows: Sequence[TopWindow], visible: Collection[int], now: float
     ) -> bool:
         """Whether a visible, ownerless browser window shows Akashic's own address. Reads only
-        addresses (the failsafe watch): no caption, no text, no verdict."""
+        addresses (the failsafe watch): no caption, no text, no verdict. A window whose address
+        is not really read (unfinished, late, or None while backed off) counts as showing it.
+        The backoff never skips the read here: the halted screen loop has no other work."""
         for window in windows:
             if (
                 window.hwnd not in visible
@@ -197,8 +207,13 @@ class Verdicts:
                 or window.is_ghost
             ):
                 continue
-            address = self._uia.address(_info(window), BROWSERS[window.process], now)
-            url = normalize_url(address)
+            backed_off = self._uia.backed_off(window.hwnd, now)
+            read = self._uia.address(
+                _info(window), BROWSERS[window.process], now, ignore_backoff=True
+            )
+            if read.started_since(now) is None or (backed_off and read.value is None):
+                return True
+            url = normalize_url(read.value)
             if url is not None and self._exclusions.is_own_address(url):
                 return True
         return False
@@ -301,17 +316,17 @@ class Verdicts:
             result = self._other(window)
         return replace(result, publishes=result.verdict != "hold" and (is_main or not window.popup))
 
-    def _address(self, window: TopWindow) -> tuple[str | None, float]:
-        """The address bar text and the clock time just before it was read; read once per call."""
+    def _address(self, window: TopWindow) -> UiaRead[str]:
+        """The address bar read; read once per call."""
         if window.hwnd not in self._addresses:
-            at = self._clock()
-            raw = self._uia.address(_info(window), BROWSERS[window.process], self._now)
-            self._addresses[window.hwnd] = (raw, at)
+            self._addresses[window.hwnd] = self._uia.address(
+                _info(window), BROWSERS[window.process], self._now
+            )
         return self._addresses[window.hwnd]
 
     def _recognize(self, window: TopWindow) -> None:
         """A readable address that is not DevTools' makes this window a main window for good."""
-        address, _ = self._address(window)
+        address = self._address(window).value
         if address is not None and not address.casefold().startswith(DEVTOOLS_PREFIX):
             self._state.mains.add(window.hwnd)
 
@@ -319,7 +334,7 @@ class Verdicts:
         """Picture-in-picture, DevTools, bar-less windows: their browser's main windows decide.
         Chrome and Brave also need a caption that reads without a private marker."""
         if window.process in CAPTION_ONLY_BROWSERS:
-            caption = self._uia.caption(_info(window), BROWSERS[window.process], self._now)
+            caption = self._uia.caption(_info(window), BROWSERS[window.process], self._now).value
             if caption is None:
                 return _excluded("caption_unknown")
             if self._exclusions.is_private_title(caption):
@@ -337,20 +352,24 @@ class Verdicts:
         return _strictest(*(self._verdict(hwnd) for hwnd in mains))
 
     def _main(self, window: TopWindow, rules: str | None) -> _Result:
-        address, at = self._address(window)
-        url = normalize_url(address)
+        read = self._address(window)
+        url = normalize_url(read.value)
         if (
             url is not None
             and window.hwnd in self._visible
             and self._exclusions.is_own_address(url)
         ):
             self._saw_own_address = True
-        return self._held(window, self._fresh(window, rules, url), address, at)
+        event_at = self._state.title_at.get(window.hwnd)
+        started_at = read.started_since(self._now)
+        if started_at is None or (event_at is not None and started_at < event_at):
+            return _Result("hold") if rules is None else _excluded(rules)
+        return self._held(window, self._fresh(window, rules, url), read.value, started_at)
 
     def _fresh(self, window: TopWindow, rules: str | None, url: str | None) -> _Result:
         if rules is not None:
             return _excluded(rules)
-        caption = self._uia.caption(_info(window), BROWSERS[window.process], self._now)
+        caption = self._uia.caption(_info(window), BROWSERS[window.process], self._now).value
         if caption and self._exclusions.is_private_title(caption):
             return _excluded("private_window")
         if caption is None and window.process in CAPTION_ONLY_BROWSERS:
@@ -404,4 +423,4 @@ class Verdicts:
         if address is not None and kept_address is not None and address != kept_address:
             return True
         hold.reads += 1
-        return self._now - hold.start >= HOLD_MIN_S and hold.reads >= HOLD_MIN_READS
+        return read_at - hold.start >= HOLD_MIN_S and hold.reads >= HOLD_MIN_READS

@@ -31,7 +31,9 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 from akashic.capture.ports import VOICE_APPS
+from akashic.search.transcripts import heard_tag
 from akashic.storage import db, state
+from akashic.storage.sessions import games_between
 
 if TYPE_CHECKING:
     from sqlite3 import Connection
@@ -244,25 +246,6 @@ def build_games(conn: Connection, horizon: int) -> int:
 # --- conversations -------------------------------------------------------------------------
 
 
-def _games(conn: Connection, start_ms: int, end_ms: int) -> list[tuple[str, int, int]]:
-    """Game sessions (process, start, end) overlapping the range."""
-    rows = conn.execute(
-        "SELECT process, start_ms, end_ms FROM game_sessions WHERE start_ms < ? AND end_ms > ?",
-        (end_ms, start_ms),
-    ).fetchall()
-    return [(r[0], r[1], r[2]) for r in rows]
-
-
-def _is_voice(seg: _Segment, games: list[tuple[str, int, int]]) -> bool:
-    """Sound from a voice app, or from the game that was running at that moment (in-game chat)."""
-    if VOICE_APPS.intersection(seg.sources):
-        return True
-    return any(
-        process in seg.sources and start < seg.end_ms and end > seg.start_ms
-        for process, start, end in games
-    )
-
-
 def _conversation_clusters(
     conn: Connection, horizon: int, since_ms: int
 ) -> tuple[list[_Cluster], int | None]:
@@ -280,10 +263,12 @@ def _conversation_clusters(
     segments = [_segment(r) for r in rows]
     if not segments:
         return [], None
-    games = _games(conn, segments[0].start_ms, segments[-1].end_ms)
+    games = games_between(conn, segments[0].start_ms, segments[-1].end_ms)
     clusters: list[_Cluster] = []
     for seg in segments:
-        if not _is_voice(seg, games):
+        # every stream: mic speech with a voice-app source still bridges a call
+        tag = heard_tag(seg.sources, games, seg.start_ms, seg.end_ms)
+        if tag not in ("voice chat", "game"):
             continue
         if clusters and seg.start_ms - clusters[-1].end_ms <= CLOSE_GAP_MS:
             clusters[-1].segments.append(seg)

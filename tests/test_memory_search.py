@@ -299,7 +299,7 @@ def test_mixed_speakers_are_retrievable_without_false_quotations(
         assert found.lines[0].speaker is None
         assert found.lines[0].start_ms == start
         assert found.lines[0].context[0].who == "someone"
-        assert build_sources(found)[0].label == "someone heard said"
+        assert build_sources(found)[0].label == "someone heard said (voice chat)"
     assert browse(conn)[0].speaker is None
     assert all(t.transcript is None for t in store.turns_of(first))
 

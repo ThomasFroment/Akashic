@@ -11,7 +11,8 @@ One ``check`` works out which windows are visible on any monitor, then, in this 
    check, so nothing from before the flip can be painted later; a ``keep`` starts a capture.
 4. Each due monitor's layers and entries are built, a monitor with a window pending for less
    than ``PENDING_WAIT_S`` is left out unless a capture failed on it, and the picture is
-   composed only when it changed.
+   composed only when it changed. A snapshot is ``incomplete`` while a shown window is held or
+   a started one awaits a frame (for at most ``PENDING_RECHECK_S``).
 
 Held and excluded windows are blank rectangles with no title, URL or pixels in any entry.
 Nothing is logged.
@@ -34,6 +35,9 @@ if TYPE_CHECKING:
 
 FRAME_INTERVAL_MS: Final = 1000
 PENDING_WAIT_S: Final = 0.5
+# A started window with no frame (for example capture-excluded) stops speeding up its
+# monitor's checks after this long.
+PENDING_RECHECK_S: Final = 5.0
 
 type _Signature = tuple[tuple[object, ...], ...]
 
@@ -45,6 +49,7 @@ class Snapshot:
     composite: Composite | None  # set only when ``changed``
     entries: tuple[Entry, ...]  # front first
     capture_failures: int
+    incomplete: bool  # a shown window is held or awaiting a frame: check this monitor again soon
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,7 +130,12 @@ class Desk:
             failures = sum(1 for row in shown if row.window.hwnd in failed)
             if not failures and any(self._still_waiting(row, now) for row in shown):
                 continue
-            snapshots.append(self._snapshot(monitor, shown, focused_hwnd, failures))
+            incomplete = any(self._awaited(row, failed, now) for row in shown)
+            snapshots.append(
+                self._snapshot(
+                    monitor, shown, focused_hwnd, failures=failures, incomplete=incomplete
+                )
+            )
         return Checked(snapshots, judgement.own_address)
 
     def retake(self, monitor_key: str) -> None:
@@ -191,8 +201,26 @@ class Desk:
     def _still_waiting(self, row: _Row, now: float) -> bool:
         return row.pending and now - self._pending_since[row.window.hwnd] < PENDING_WAIT_S
 
+    def _awaited(self, row: _Row, failed: Collection[int], now: float) -> bool:
+        hwnd = row.window.hwnd
+        if hwnd in failed:
+            return False
+        if row.judged.verdict == "hold":
+            return True
+        return (
+            row.pending
+            and hwnd in self._started
+            and now - self._pending_since[hwnd] < PENDING_RECHECK_S
+        )
+
     def _snapshot(
-        self, monitor: MonitorInfo, shown: list[_Row], focused_hwnd: int | None, failures: int
+        self,
+        monitor: MonitorInfo,
+        shown: list[_Row],
+        focused_hwnd: int | None,
+        *,
+        failures: int,
+        incomplete: bool,
     ) -> Snapshot:
         entries = tuple(_entry(row, z, focused_hwnd) for z, row in enumerate(shown))
         signature = _signature(entries, shown)
@@ -210,7 +238,7 @@ class Desk:
             ]
             composite = compose(monitor.rect, layers)
         self._returned[monitor.key] = signature
-        return Snapshot(monitor, changed, composite, entries, failures)
+        return Snapshot(monitor, changed, composite, entries, failures, incomplete)
 
 
 def visible_monitors(

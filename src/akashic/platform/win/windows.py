@@ -1,7 +1,7 @@
 # pyright: basic
 """Foreground window (with the D3D fullscreen state), every visible top-level window with its
 facts (minimized, cloaked, owner, styles, constant alpha, hosted UWP process, foreign children,
-ghost), cursor and session-lock facts (ctypes, no deps)."""
+ghost), cursor, session-lock facts and awake time (ctypes, no deps)."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from akashic.platform.win.process import image_name
 user32 = ctypes.WinDLL("user32", use_last_error=True)
 dwmapi = ctypes.WinDLL("dwmapi", use_last_error=True)
 shell32 = ctypes.WinDLL("shell32")
+kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
 
 _GW_OWNER = 4
 _GWL_STYLE = -16
@@ -32,7 +33,7 @@ _DWMWA_EXTENDED_FRAME_BOUNDS = 9
 _DESKTOP_SWITCHDESKTOP = 0x100
 _CORE_WINDOW_CLASS = "Windows.UI.Core.CoreWindow"
 _QUNS_RUNNING_D3D_FULL_SCREEN = 3
-_D3D_CACHE_S = 1.0  # the focus poll runs ~10 Hz; the shell query need not
+_D3D_CACHE_S = 1.0  # bounds the fullscreen query to one per second however often it is asked
 _WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
 
 user32.GetForegroundWindow.restype = wintypes.HWND
@@ -59,6 +60,8 @@ user32.IsHungAppWindow.argtypes = [wintypes.HWND]
 user32.OpenInputDesktop.restype = wintypes.HANDLE
 user32.OpenInputDesktop.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
 user32.CloseDesktop.argtypes = [wintypes.HANDLE]
+kernel32.QueryUnbiasedInterruptTime.argtypes = [ctypes.POINTER(ctypes.c_ulonglong)]
+kernel32.QueryUnbiasedInterruptTime.restype = wintypes.BOOL
 
 
 class _LastInputInfo(ctypes.Structure):
@@ -132,6 +135,12 @@ class Win32Windows:
         user32.CloseDesktop(desktop)
         return False
 
+    def awake_ms(self) -> int:
+        """Milliseconds awake since boot; sleep and hibernation do not count."""
+        ticks = ctypes.c_ulonglong()  # 100 ns units
+        kernel32.QueryUnbiasedInterruptTime(ctypes.byref(ticks))
+        return ticks.value // 10_000
+
     def _d3d_fullscreen(self) -> bool:
         now = time.monotonic()
         if now - self._d3d_read_at >= _D3D_CACHE_S:
@@ -152,9 +161,9 @@ class Win32Windows:
         rect = self._rect(hwnd)
         if rect is None:
             return None
-        _, process, _ = self._identity(hwnd)
+        pid, process, _ = self._identity(hwnd)
         style = user32.GetWindowLongW(hwnd, _GWL_STYLE) & 0xFFFFFFFF
-        return WindowInfo(int(hwnd), process, _title(hwnd), rect, _has_frame(style))
+        return WindowInfo(int(hwnd), process, _title(hwnd), rect, _has_frame(style), pid=pid)
 
     def _top_window(self, hwnd: int) -> TopWindow | None:
         rect = self._rect(hwnd)

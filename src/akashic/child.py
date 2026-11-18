@@ -44,6 +44,7 @@ class ChildContext:
     conn: Connection
     api_port: int | None = None  # where the app's local server listens (its address halts capture)
     stop: threading.Event = field(default_factory=threading.Event)
+    stop_requested_at: float | None = None  # monotonic time of the first stop request
     paused: threading.Event = field(default_factory=threading.Event)  # the user's Pause
     halt: threading.Event = field(default_factory=threading.Event)  # paused, UI open or failsafe
     pause_epoch: int = 0  # counts halt flips; guards status computed before a flip
@@ -56,6 +57,11 @@ class ChildContext:
     _status_out: IO[bytes] | None = None
     _status_lock: threading.Lock = field(default_factory=threading.Lock)
 
+    def request_stop(self) -> None:
+        if self.stop_requested_at is None:
+            self.stop_requested_at = time.monotonic()
+        self.stop.set()
+
     def report(self, state: ipc.State) -> None:
         with self._status_lock:
             self._send(state)
@@ -67,7 +73,7 @@ class ChildContext:
         try:
             ipc.send_status(self._status_out, state)
         except OSError:
-            self.stop.set()  # parent is gone
+            self.request_stop()  # parent is gone
 
     def _reported(self) -> ipc.State:
         if self.paused.is_set():
@@ -153,7 +159,7 @@ def _listen(ctx: ChildContext, stdin: ipc.LineReader, log: logging.Logger) -> No
                 ctx.set_ui_open(ui_open=command == "ui_open")
     except (ipc.ProtocolError, OSError, ValueError) as exc:
         log.error("command channel failed: %s", type(exc).__name__)  # noqa: TRY400 - no message: may quote data
-    ctx.stop.set()
+    ctx.request_stop()
 
 
 def run_child(

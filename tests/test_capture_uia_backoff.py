@@ -2,23 +2,28 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass, field
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
-from capture_fakes import LONG_TEXT, SCREEN, FakeUia, blank, window, with_text_block
+from capture_fakes import LONG_TEXT, SCREEN, FakeUia, GatedUia, blank, window, with_text_block
 from screen_rig import MON_B, Rig
 from store_reads import latest_frames
 
-from akashic.capture import uia_budget
+from akashic.capture import uia_threads
 from akashic.capture.uia_budget import BudgetedUia, UiaBudget
+from akashic.capture.uia_threads import ThreadedUia, UiaRead
+from akashic.log import FaultLog
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterator
 
     from akashic.capture.ports import BrowserFamily, TextBlock, WindowInfo
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -67,7 +72,7 @@ def slow_rig(make_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch) -> C
         fake_time = SimpleNamespace(
             monotonic=time.monotonic, time_ns=time.time_ns, perf_counter=lambda: slow.perf[0]
         )
-        monkeypatch.setattr(uia_budget, "time", fake_time)
+        monkeypatch.setattr(uia_threads, "time", fake_time)
         return rig
 
     return build
@@ -256,11 +261,24 @@ def test_expired_backoffs_are_pruned() -> None:
     assert budget.window_allowed(1, 0.0)  # hwnd 1's entry is gone, not just expired
 
 
+_budgeted_threads: list[ThreadedUia] = []
+
+
+@pytest.fixture(autouse=True)
+def _close_budgeted_threads() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction] - autouse
+    yield
+    for threads in _budgeted_threads:
+        threads.close()
+    _budgeted_threads.clear()
+
+
 def _budgeted(
     slow_rig: Callable[..., Rig], budget: UiaBudget | None = None
 ) -> tuple[BudgetedUia, SlowUia]:
     slow = slow_uia(slow_rig(budget=budget))
-    return BudgetedUia(slow, budget), slow
+    threads = ThreadedUia(lambda: slow, FaultLog(log), lambda: 0.0)
+    _budgeted_threads.append(threads)
+    return BudgetedUia(threads, budget), slow
 
 
 def test_address_returns_the_raw_bar_text_and_counts_the_read(
@@ -268,7 +286,7 @@ def test_address_returns_the_raw_bar_text_and_counts_the_read(
 ) -> None:
     uia, slow = _budgeted(slow_rig)
     slow.script["url"] = [(40.0, "  example.org/page ")]
-    assert uia.address(window(process="zen.exe"), "firefox", 0.0) == "  example.org/page "
+    assert uia.address(window(process="zen.exe"), "firefox", 0.0).value == "  example.org/page "
     assert uia.stats["uia_reads:zen.exe"] == 1
     assert uia.stats["uia_ms:zen.exe"] == 40
 
@@ -279,13 +297,13 @@ def test_a_backed_off_hwnd_gets_none_from_caption_and_address_without_a_call(
     uia, slow = _budgeted(slow_rig)
     slow.script["url"] = [(1000.0, None)]
     chrome = window(hwnd=5, process="chrome.exe")
-    assert uia.address(chrome, "chromium", 10.0) is None
+    assert uia.address(chrome, "chromium", 10.0).value is None
     assert uia.stats["uia_backoff"] == 1
     calls = len(slow.calls)
-    assert uia.caption(chrome, "chromium", 39.9) is None
-    assert uia.address(chrome, "chromium", 39.9) is None
+    assert uia.caption(chrome, "chromium", 39.9) == UiaRead(None, 39.9)
+    assert uia.address(chrome, "chromium", 39.9) == UiaRead(None, 39.9)
     assert len(slow.calls) == calls
-    assert uia.caption(chrome, "chromium", 40.0) == "Notes"  # backoff ended at now + 30
+    assert uia.caption(chrome, "chromium", 40.0).value == "Notes"  # backoff ended at now + 30
 
 
 def test_a_slow_none_caption_backs_off_and_a_fast_one_does_not(
@@ -293,9 +311,9 @@ def test_a_slow_none_caption_backs_off_and_a_fast_one_does_not(
 ) -> None:
     uia, slow = _budgeted(slow_rig)
     slow.script["caption"] = [(850.0, None), (950.0, None)]
-    assert uia.caption(window(hwnd=1), "chromium", 0.0) is None
+    assert uia.caption(window(hwnd=1), "chromium", 0.0).value is None
     assert uia.stats["uia_backoff"] == 0
-    assert uia.caption(window(hwnd=2), "chromium", 0.0) is None
+    assert uia.caption(window(hwnd=2), "chromium", 0.0).value is None
     assert uia.stats["uia_backoff"] == 1
 
 
@@ -327,3 +345,52 @@ def test_stats_are_keyed_by_browser_exe_only(slow_rig: Callable[..., Rig]) -> No
     uia.caption(window(hwnd=424244, process="firefox.exe", title="Secret"), "firefox", 0.0)
     assert set(uia.stats) <= {"uia_reads:firefox.exe", "uia_ms:firefox.exe"}
     assert not [k for k in uia.stats if "424244" in k or "Secret" in k]
+
+
+# --- late, unfinished and failed reads ---------------------------------------------------------
+
+
+def test_a_late_slow_none_backs_the_window_off(slow_rig: Callable[..., Rig]) -> None:
+    uia, slow = _budgeted(slow_rig)  # the worker clock reads 0.0: a check at 5.0 gets a late read
+    slow.script["url"] = [(1000.0, None)]
+    chrome = window(hwnd=5, process="chrome.exe")
+    assert uia.address(chrome, "chromium", 5.0).value is None
+    assert uia.stats["uia_backoff"] == 1
+    assert uia.caption(chrome, "chromium", 6.0) == UiaRead(None, 6.0)
+
+
+def test_a_late_text_returns_none_but_its_cost_is_recorded(slow_rig: Callable[..., Rig]) -> None:
+    budget = UiaBudget()
+    uia, slow = _budgeted(slow_rig, budget)
+    slow.delay_ms["text"] = 200
+    assert uia.text(window(hwnd=1), 5.0) is None  # started at 0.0, before this check
+    assert budget.average_ms("notepad.exe") == pytest.approx(200)
+
+
+def test_a_raising_reads_cost_goes_through_the_backoff(
+    slow_rig: Callable[..., Rig], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    uia, slow = _budgeted(slow_rig)
+
+    def raising(window: WindowInfo, family: BrowserFamily) -> str | None:
+        del window, family
+        slow.perf[0] += 1.0
+        raise OSError
+
+    monkeypatch.setattr(slow, "read_url", raising)
+    assert uia.address(window(hwnd=5, process="chrome.exe"), "chromium", 0.0).value is None
+    assert uia.stats["uia_backoff"] == 1
+
+
+def test_an_unfinished_read_is_counted(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(uia_threads, "WAIT_S", 0.05)
+    gated = GatedUia(urls={5: "a.org"}, texts={5: ["words"]}, gated=frozenset({"address", "text"}))
+    threads = ThreadedUia(lambda: gated, FaultLog(log), lambda: 0.0)
+    uia = BudgetedUia(threads)
+    chrome = window(hwnd=5, process="chrome.exe")
+    assert uia.address(chrome, "chromium", 0.0) == UiaRead(None, None)
+    assert uia.text(chrome, 0.0) is None
+    assert uia.stats["uia_unfinished"] == 2
+    gated.release.set()
+    threads.close()
+    gated.release.set()

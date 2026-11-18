@@ -1,5 +1,6 @@
 # pyright: basic
-"""Windows.Media.Ocr. CPU only, ~10-60 ms per frame (measured in spikes)."""
+"""Windows.Media.Ocr. CPU only. A whole window takes about 55-150 ms empty or sparse and
+250-415 ms dense, 1440p to 4K (docs/baselines/2026-11-17-ocr-decode-quns.md)."""
 
 from __future__ import annotations
 

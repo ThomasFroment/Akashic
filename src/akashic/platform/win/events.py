@@ -73,8 +73,9 @@ user32.GetAncestor.argtypes = [wintypes.HWND, wintypes.UINT]
 user32.GetAncestor.restype = wintypes.HWND
 
 _WINEVENT_OUTOFCONTEXT = 0
+# only the window object: Chrome's OBJID_CLIENT (-4) NAMECHANGE, sent on every navigation
+# with a negative idChild, is not a title change (docs/baselines/2026-11-17-title-hold-pages.md)
 _OBJID_WINDOW = 0
-_OBJID_CLIENT = -4  # Chrome reports a same-title navigation only here
 _CHILDID_SELF = 0
 _GA_ROOT = 2
 _PM_NOREMOVE = 0
@@ -260,10 +261,9 @@ class Win32WindowEvents:
     ) -> None:
         at = time.monotonic()
         change = _CHANGES.get(event)
-        client_name = id_object == _OBJID_CLIENT and event == _EVENT_OBJECT_NAMECHANGE
         if (
             change is None
-            or not (id_object == _OBJID_WINDOW or client_name)
+            or id_object != _OBJID_WINDOW
             or id_child != _CHILDID_SELF
             or not hwnd
             or _is_child(hwnd)

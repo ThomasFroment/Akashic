@@ -282,7 +282,7 @@ function speechSearch(root) {
     const via = u.sources.length ? u.sources.map(appName).join(", ") : "";
     return h("div", { class: "row" }, btn,
       h("div", { class: "row-body" },
-        metaLine(fmtTime(u.start_ms), who, u.language || "", via),
+        metaLine(fmtTime(u.start_ms), who, u.tag, u.language || "", via),
         h("div", unclearAttrs(u.confidence), ...highlighted(u.snippet)),
         h("a", { class: "small muted", href: `#/settings?tab=models&segment=${u.id}` }, "Compare speech models on this clip")));
   }
@@ -437,6 +437,7 @@ const PROBLEM_WORDS = {
   system_audio_unavailable: "system audio could not be read for a minute",
   mic_segments_dropped: "some microphone speech could not be saved in the last minute",
   system_segments_dropped: "some system audio could not be saved in the last minute",
+  voice_elsewhere: "voice chat played in the last minute on an audio device that is not recorded",
   screen_images_failing: (where) => `screenshots are failing${where}`,
   screen_frames_dropped: (where) => `screenshots${where} are being dropped because saving cannot keep up`,
   screen_disk_full: (where) => `screenshots${where} can't be saved because the disk is full`,

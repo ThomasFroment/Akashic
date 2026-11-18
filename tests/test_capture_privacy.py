@@ -417,7 +417,7 @@ def test_the_capture_process_wiring_halts_on_the_local_ui(
         facts=FakeWindowFacts([top_window(hwnd=1, process="chrome.exe", title=page.title)]),
         events=FakeWindowEvents(),
         captures=ImageCaptures(images={1: blank()}),
-        uia=uia,
+        new_uia=lambda: uia,
         ocr=FakeOcr(),
         media=media,
     )

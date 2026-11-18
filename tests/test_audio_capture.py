@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import sqlite3
 import threading
 import time
 from collections import Counter
@@ -738,6 +739,114 @@ def test_the_snapshot_holds_the_fault_counts() -> None:
     recorder.run(_CountingStop(4), threading.Event(), threading.Event())
     faults = recorder.snapshot()["faults"]
     assert faults == {"mic audio loop iteration: OSError": 4}
+
+
+def _assert_no_private_text(faults: dict[str, int], caplog: pytest.LogCaptureFixture) -> None:
+    assert "private" not in str(faults)
+    assert "secret" not in caplog.text
+    assert "private" not in caplog.text
+
+
+def test_a_failed_poll_is_counted_by_type_and_stored_as_unknown(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    sessions = FakeSessions(error=OSError(_PRIVATE))
+    sampler = SourceSampler(sessions, Clock(T0), Exclusions(UserExclusions()))
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
+        sampler.sample()
+        sampler.sample()
+    assert sampler.faults.counts() == {"audio source sampling: OSError": 2}
+    assert not sampler.check(T0, T0 + 1_000, SYSTEM.device_id).complete
+    assert len(_fault_warnings(caplog)) == 1
+    _assert_no_private_text(sampler.faults.counts(), caplog)
+
+
+def test_the_run_guard_counts_a_sample_that_raises(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    sampler = SourceSampler(FakeSessions(), Clock(T0), Exclusions(UserExclusions()))
+
+    def broken() -> None:
+        raise RuntimeError(_PRIVATE)
+
+    monkeypatch.setattr(sampler, "sample", broken)
+    stop = threading.Event()
+    stop.wait = lambda _timeout=None: stop.set() or True  # type: ignore[method-assign]
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
+        sampler.run(stop, threading.Event())
+    assert sampler.faults.counts() == {"audio source sampling: RuntimeError": 1}
+    _assert_no_private_text(sampler.faults.counts(), caplog)
+
+
+def test_a_full_writer_queue_is_counted_as_behind(
+    store: AudioStore, caplog: pytest.LogCaptureFixture
+) -> None:
+    writer, stats, _ = make_writer(store, FakeSessions(), Clock(T0))
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
+        for _ in range(audio_module.WRITER_QUEUE + 2):
+            writer.submit("mic", _utterance(), MIC)
+    assert stats["dropped_backlog"] == 2
+    assert writer.faults.counts() == {"storing a mic segment: writer behind": 2}
+    assert "mic" in writer.dropped_since(0.0)
+
+
+def test_a_segment_write_that_raises_is_counted_by_type(
+    store: AudioStore, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    writer, stats, _ = make_writer(store, FakeSessions(), Clock(T0))
+
+    def broken(*_args: object) -> int | None:
+        raise OSError(_PRIVATE)
+
+    monkeypatch.setattr(writer, "write", broken)
+    writer._last_id["system"] = 7
+    writer.submit("system", _utterance(), SYSTEM)
+    stop = threading.Event()
+    stop.set()
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
+        writer.run(stop)
+    assert writer.faults.counts() == {"storing a system segment: OSError": 1}
+    assert stats["write_failed"] == 1
+    assert writer._last_id["system"] is None
+    _assert_no_private_text(writer.faults.counts(), caplog)
+
+
+def test_a_busy_database_at_stop_drops_the_queue_with_the_plain_warning(
+    store: AudioStore, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    writer, stats, _ = make_writer(store, FakeSessions(), Clock(T0))
+
+    def busy(*_args: object) -> int | None:
+        raise sqlite3.OperationalError("database is locked")
+
+    monkeypatch.setattr(writer, "write", busy)
+    for _ in range(3):
+        writer.submit("mic", _utterance(), MIC)
+    stop = threading.Event()
+    stop.set()
+    with caplog.at_level(logging.WARNING, logger="akashic.capture.audio"):
+        writer.run(stop)
+    assert stats["stop_dropped"] == 2
+    assert "database busy at stop; dropped 2 queued audio segments" in caplog.text
+    assert writer.faults.counts() == {"storing a mic segment: OperationalError": 1}
+
+
+def test_the_capture_snapshot_merges_sampler_and_writer_faults(
+    store: AudioStore, caplog: pytest.LogCaptureFixture
+) -> None:
+    capture = _capture(
+        store, FakeDevices(), FakeSessions(error=OSError(_PRIVATE)), UserExclusions()
+    )
+    assert capture.snapshot()["faults"] == {}
+    capture._sampler.sample()
+    for _ in range(audio_module.WRITER_QUEUE + 1):
+        capture._writer.submit("mic", _utterance(), MIC)
+    faults = cast("dict[str, int]", capture.snapshot()["faults"])
+    assert faults == {
+        "audio source sampling: OSError": 1,
+        "storing a mic segment: writer behind": 1,
+    }
+    _assert_no_private_text(faults, caplog)
 
 
 def test_a_close_that_raises_still_clears_the_device_state() -> None:

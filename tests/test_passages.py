@@ -191,7 +191,7 @@ def test_passage_limit_counts_segments_and_filters_first(
     assert "Le jeu sort vendredi." in source.text
     assert source.start_ms == 2000
     assert source.ref_id == target
-    assert source.label == "Minlo said"
+    assert source.label == "Minlo said (voice chat)"
     assert (
         passages.top(conn, "m", np.array([1, 0], dtype=np.float32), start_ms=0, end_ms=1000) == []
     )
@@ -214,7 +214,7 @@ def test_passages_keep_mixed_speech_unattributed(conn: Connection) -> None:
     passages.publish(conn, segment, "m", text, vectors(text))
     found = search_memory(conn, Plan(people=("Minlo",)), np.array([1, 0], dtype=np.float32), "m")
     (source,) = build_sources(found)
-    assert source.label == "someone heard said"
+    assert source.label == "someone heard said (voice chat)"
     assert "Le jeu sort vendredi." in source.text
 
 

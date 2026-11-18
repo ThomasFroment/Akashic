@@ -5,7 +5,9 @@ rate says so: the focus monitor every few seconds, the others less often. All mo
 tick share one window list and one ``Desk.check``; the desk decides what each monitor shows and the
 screen writer stores it off this loop. A picture is submitted only when the monitor changed. The
 focused window's UI Automation text rides along with the picture, and is dropped when the window or
-its address changed while it was read.
+its address changed while it was read, or when a read did not finish in time. Reads go to
+per-process UIA workers (``uia_threads``), so a slow window delays no other monitor. A monitor
+showing a held or not-yet-painted window is checked again ``min_gap_s`` later, except in game mode.
 
 A check that finds a visible browser window on Akashic's own address keeps nothing of it and halts
 capture (the failsafe); while halted by it, the addresses of visible browser windows are re-read
@@ -32,6 +34,7 @@ from akashic.capture.ports import BROWSERS
 from akashic.capture.screen_writer import Picture
 from akashic.capture.text import assemble_text
 from akashic.capture.uia_budget import BudgetedUia
+from akashic.capture.uia_threads import ThreadedUia
 from akashic.capture.verdicts import Verdicts
 from akashic.log import FaultLog
 
@@ -48,6 +51,7 @@ if TYPE_CHECKING:
         Entry,
         MonitorInfo,
         Rect,
+        TextSource,
         TopWindow,
         Trigger,
         WindowCaptures,
@@ -57,7 +61,6 @@ if TYPE_CHECKING:
         WindowInfo,
         WindowSource,
     )
-    from akashic.capture.ports import TextSource as UiaSource
     from akashic.capture.screen_writer import ScreenWriter
     from akashic.capture.uia_budget import UiaBudget
     from akashic.storage.monitors import MonitorState
@@ -76,7 +79,7 @@ class Settings:
 
     focus_interval_s: float = 5.0  # the monitor with the focused window: checked this often
     side_interval_s: float = 15.0  # every other monitor
-    min_gap_s: float = 1.0  # minimum time between triggered checks of one monitor
+    min_gap_s: float = 1.0  # minimum time between triggered checks; re-check period if incomplete
     poll_s: float = 0.1  # one loop pass; also how often the foreground window is polled
 
 
@@ -112,7 +115,7 @@ class ScreenCapture:
         facts: WindowFacts,
         events: WindowEvents,
         captures: WindowCaptures,
-        uia: UiaSource,
+        new_uia: Callable[[], TextSource],
         writer: ScreenWriter,
         exclusions: Exclusions,
         browsers: BrowserState,
@@ -132,7 +135,9 @@ class ScreenCapture:
         self._captures = captures
         self._writer = writer
         self._browsers = browsers
-        self._uia = BudgetedUia(uia, budget)
+        self._faults = FaultLog(log, clock=clock)
+        self._threads = ThreadedUia(new_uia, self._faults, clock)
+        self._uia = BudgetedUia(self._threads, budget)
         self._verdicts = Verdicts(exclusions, self._uia, browsers, clock)
         self._desk = Desk(captures, self._verdicts)
         self._settings = settings or Settings()
@@ -158,12 +163,15 @@ class ScreenCapture:
         self._down_since: float | None = None  # first unhealthy drain of the current run
         self._down_acted_at = float("-inf")
         self._stats: Counter[str] = Counter()
-        self._faults = FaultLog(log, clock=clock)
 
     def stats_snapshot(self) -> dict[str, int]:
         """Loop, UI Automation and fault counters, merged into a copy that is safe to read
         elsewhere."""
         return dict(self._stats) | dict(self._uia.stats) | self._faults.counts()
+
+    def capture_faults(self) -> dict[str, int]:
+        """Fault counts of the window captures, a copy."""
+        return self._captures.fault_counts()
 
     def problems(self, now: float) -> list[str]:
         """``[WINDOW_EVENTS_DOWN]`` once drains have stayed unhealthy for ``HOOK_DOWN_PROBLEM_S``;
@@ -194,6 +202,7 @@ class ScreenCapture:
         self._desk.drop_all()
         self._captures.close()
         self._events.close()
+        self._threads.close()
 
     def _end_game(self, *, notify: bool = False) -> None:
         """End the current game session, if any (pause, lock or shutdown). ``notify`` reports the
@@ -268,6 +277,7 @@ class ScreenCapture:
         windows = self._facts.windows()
         if monitors is None or windows is None:
             return  # unknown: stay halted
+        self._threads.retire({w.pid for w in windows})
         visible = visible_monitors(windows, monitors)
         if not self._verdicts.shows_own_address(windows, visible.keys(), now):
             self._end_own_address()
@@ -293,6 +303,7 @@ class ScreenCapture:
         if windows is None:
             self._fail_checks(due, tick)
             return
+        self._threads.retire({w.pid for w in windows})
         rects = {window.hwnd: window.rect for window in windows}
         if window_due:
             self._request_event_monitors(monitors, rects, now)
@@ -322,8 +333,11 @@ class ScreenCapture:
         """Poll the foreground window and the game state, once for the whole tick."""
         focused = self._windows.focused_window()
         ts_ms = self._now_ms()
+        awake_ms = self._windows.awake_ms()
         self._record_transition(
-            self._game_mode.observe(focused, [m.rect for m in monitors], now, ts_ms), now, ts_ms
+            self._game_mode.observe(focused, [m.rect for m in monitors], now, ts_ms, awake_ms),
+            now,
+            ts_ms,
         )
         game = self._game_mode.current
         if game is not None:
@@ -492,6 +506,8 @@ class ScreenCapture:
         state.trigger = None
         state.pending = False
         state.last_check = tick.now
+        if snapshot.incomplete and not tick.game_active:
+            self._request(key, "window", tick.now)
         self._writer.capture_failures(key, snapshot.capture_failures)
         composite = snapshot.composite
         if not snapshot.changed:
@@ -542,20 +558,23 @@ class ScreenCapture:
             return None
         if not tick.text_read:
             tick.text_read = True
-            tick.text = self._read_text(tick.focused, entry, tick.now)
+            tick.text = self._read_text(tick.focused, entry)
         return tick.text
 
-    def _read_text(self, window: WindowInfo, entry: Entry, now: float) -> str | None:
-        text = assemble_text(self._uia.text(window, now) or ())
+    def _read_text(self, window: WindowInfo, entry: Entry) -> str | None:
+        asked = self._clock()
+        blocks = self._uia.text(window, asked)
+        if not blocks:
+            return None
         fresh = self._windows.focused_window()
         if fresh is None or fresh.hwnd != entry.hwnd or fresh.title != entry.title:
             return None
         family = BROWSERS.get(fresh.process)
         if family is not None:
-            address = self._uia.address(fresh, family, now)
-            if normalize_url(address) != entry.url:
+            read = self._uia.address(fresh, family, asked)
+            if read.started_since(asked) is None or normalize_url(read.value) != entry.url:
                 return None
-        return text or None
+        return assemble_text(blocks) or None
 
     # --- gaming mode -------------------------------------------------------------------------
 

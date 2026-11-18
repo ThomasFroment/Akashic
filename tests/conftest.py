@@ -11,6 +11,7 @@ from export_world import World, build_world
 from screen_rig import Rig, build_rig
 from sink_spy import close_rig, make_rig_factory
 
+from akashic.capture import uia_threads
 from akashic.config import Paths
 from akashic.storage import db, export
 from akashic.storage.crypto import Argon2Params, DataKey, wrap_data_key
@@ -58,6 +59,13 @@ def _no_real_capture(monkeypatch: pytest.MonkeyPatch) -> None:  # pyright: ignor
     monkeypatch.setenv("AKASHIC_CAPTURE", "0")
 
 
+@pytest.fixture(autouse=True)
+def _patient_uia(monkeypatch: pytest.MonkeyPatch) -> None:  # pyright: ignore[reportUnusedFunction] - autouse
+    """Fake UIA reads are instant; a loaded machine must not make one miss a wait."""
+    monkeypatch.setattr(uia_threads, "WAIT_S", 5.0)
+    monkeypatch.setattr(uia_threads, "TEXT_WAIT_S", 5.0)
+
+
 @pytest.fixture
 def key() -> DataKey:
     return DataKey.generate()
@@ -89,16 +97,17 @@ def privacy_rig(
 
 
 @pytest.fixture
-def make_rig(paths: Paths, key: DataKey) -> Iterator[Callable[..., Rig]]:
-    conn = db.connect(paths.db_file, key.subkey("db"))
-    db.migrate(conn)
-    media = MediaStore(paths.media_dir, key.subkey("media"))
+def make_rig(conn: Connection, media: MediaStore) -> Iterator[Callable[..., Rig]]:
+    created: list[Rig] = []
 
     def build(**kwargs: Any) -> Rig:  # noqa: ANN401 - forwarded to build_rig
-        return build_rig(conn, media, **kwargs)
+        rig = build_rig(conn, media, **kwargs)
+        created.append(rig)
+        return rig
 
     yield build
-    conn.close()
+    for rig in created:
+        rig.close()
 
 
 @pytest.fixture

@@ -66,6 +66,7 @@ def _line_json(line: hybrid.LineHit) -> Json:
         "text": line.text,
         "episode_id": line.episode_id,
         "confidence": line.confidence,
+        "tag": line.tag,
     }
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from collections import Counter
 from typing import TYPE_CHECKING, Any
 
@@ -391,6 +392,54 @@ def test_no_voice_elsewhere_is_reported(heard: Any, recorded: str | None) -> Non
     s.poll()
     s.poll()
     assert s.drops.events == []
+
+
+def test_voice_elsewhere_at_is_none_until_a_poll_finds_voice_elsewhere() -> None:
+    s = Stretch(polls({"game.exe"}))
+    s.poll()
+    assert s.sampler.voice_elsewhere_at() is None
+    before = time.monotonic()
+    s.poll(VOICE_ELSEWHERE)
+    first = s.sampler.voice_elsewhere_at()
+    assert first is not None
+    assert before <= first <= time.monotonic()
+    time.sleep(0.01)
+    s.poll()
+    second = s.sampler.voice_elsewhere_at()
+    assert second is not None
+    assert second > first
+
+
+@pytest.mark.parametrize(
+    ("heard", "recorded"),
+    [
+        pytest.param(VOICE_ELSEWHERE, None, id="no endpoint recorded"),
+        pytest.param(polls({MIXER}, {"discord.exe"}), A, id="mixer on the recorded endpoint"),
+    ],
+)
+def test_voice_elsewhere_at_ignores_polls_that_do_not_count(
+    heard: Any,  # noqa: ANN401
+    recorded: str | None,
+) -> None:
+    s = Stretch(heard, recorded=recorded)
+    s.poll()
+    assert s.sampler.voice_elsewhere_at() is None
+
+
+def test_voice_elsewhere_at_keeps_its_value_over_quiet_and_failed_polls() -> None:
+    s = Stretch()
+    s.poll()
+    seen = s.sampler.voice_elsewhere_at()
+    assert seen is not None
+    s.poll(polls({"game.exe"}))
+    s.poll(None)
+    assert s.sampler.voice_elsewhere_at() == seen
+
+
+def test_voice_elsewhere_at_ignores_an_excluded_voice_app() -> None:
+    s = Stretch(user=UserExclusions(processes=("discord.exe",)))
+    s.poll()
+    assert s.sampler.voice_elsewhere_at() is None
 
 
 def test_an_excluded_voice_app_elsewhere_writes_no_gap() -> None:

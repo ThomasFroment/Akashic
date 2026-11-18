@@ -40,6 +40,7 @@ class Rig:
     clock: list[int]
     focus: list[WindowInfo | None]
     browsers: BrowserState
+    slept: list[int]
 
     def focus_browser(self, win: WindowInfo, reason: str | None = None) -> None:
         """Focus a browser window the way the screen loop leaves it: with its verdict published."""
@@ -49,6 +50,11 @@ class Rig:
     def at(self, seconds: float, *, locked: bool = False) -> None:
         self.clock[0] = int(seconds * 1000)
         self.tracker.poll(locked=locked)
+
+    def wake_at(self, seconds: float, *, locked: bool = False) -> None:
+        """Poll after the PC slept since the last poll: the awake clock stands still."""
+        self.slept[0] += int(seconds * 1000) - self.clock[0]
+        self.at(seconds, locked=locked)
 
     def rows(self) -> list[tuple[str, str, str | None, int, int, int, int]]:
         return self.conn.execute(
@@ -73,6 +79,7 @@ def make_rig(paths: Paths) -> Callable[..., Rig]:
     def build(user: UserExclusions | None = None) -> Rig:
         clock = [0]
         focus: list[WindowInfo | None] = [None]
+        slept = [0]
         source = FakeMedia(names={"Z1": "Zen", "C1": "Google Chrome"})
         browsers = BrowserState()
         tracker = MediaTracker(
@@ -81,10 +88,12 @@ def make_rig(paths: Paths) -> Callable[..., Rig]:
             exclusions=Exclusions(user or UserExclusions()),
             focused_window=lambda: focus[0],
             now_ms=lambda: clock[0],
+            monotonic_ms=lambda: clock[0],
+            awake_ms=lambda: clock[0] - slept[0],
             interval_s=0.01,
             browsers=browsers,
         )
-        return Rig(tracker, source, conn, clock, focus, browsers)
+        return Rig(tracker, source, conn, clock, focus, browsers, slept)
 
     return build
 
@@ -187,11 +196,11 @@ def test_unknown_app_falls_back_to_its_id(make_rig: Callable[..., Rig]) -> None:
     assert rig.rows()[0][0] == "Weird.App"
 
 
-def test_stalled_polling_is_not_counted_as_playing_time(make_rig: Callable[..., Rig]) -> None:
+def test_a_sleep_is_not_counted_as_playing_time(make_rig: Callable[..., Rig]) -> None:
     rig = make_rig()
     rig.source.states = [playing()]
     rig.at(0)
-    rig.at(3600)  # the PC slept: the gap closes the row and is not played
+    rig.wake_at(3600)  # the PC slept: the gap closes the row and is not played
     rig.tracker.close_all()
     assert [r[3:] for r in rig.rows()] == [(0, 0, 0, 1), (3_600_000, 3_600_000, 0, 1)]
 
@@ -269,7 +278,7 @@ def test_a_gap_while_playing_closes_at_the_last_poll_and_reopens_on_the_same_pol
     rig.source.states = [playing()]
     rig.at(0)
     rig.at(2)
-    rig.at(100)
+    rig.wake_at(100)
     assert [r[3:] for r in rig.rows()] == [(0, 2000, 2000, 1), (100_000, 100_000, 0, 0)]
 
 
@@ -279,6 +288,7 @@ def test_a_halt_after_a_gap_closes_at_the_last_poll(make_rig: Callable[..., Rig]
     rig.at(0)
     rig.at(2)
     rig.clock[0] = 9 * 3_600_000
+    rig.slept[0] = rig.clock[0] - 2000  # no awake time passed
     rig.tracker.close_all()
     assert rig.rows()[0][4:] == (2000, 2000, 1)
 
@@ -341,7 +351,7 @@ def test_a_sleep_onto_the_lock_screen_closes_at_the_last_poll_and_reopens_when_u
     rig.source.states = [playing()]
     rig.at(0)
     rig.at(2)
-    rig.at(30_000, locked=True)
+    rig.wake_at(30_000, locked=True)
     assert [r[3:] for r in rig.rows()] == [(0, 2000, 2000, 1)]
     rig.at(30_002)
     assert [r[3:] for r in rig.rows()] == [(0, 2000, 2000, 1), (30_002_000, 30_002_000, 0, 0)]
@@ -592,6 +602,8 @@ def tracker_for(conn: Connection, source: FakeMedia, clock: list[int]) -> MediaT
         exclusions=Exclusions(UserExclusions()),
         focused_window=lambda: None,
         now_ms=lambda: clock[0],
+        monotonic_ms=lambda: clock[0],
+        awake_ms=lambda: clock[0],
         browsers=BrowserState(),
     )
 

@@ -124,6 +124,9 @@ class Owned:
     def is_locked(self) -> bool:
         return self.real.is_locked()
 
+    def awake_ms(self) -> int:
+        return self.real.awake_ms()
+
 
 @pytest.fixture
 def synthetic() -> Iterator[list[subprocess.Popen[str]]]:
@@ -195,7 +198,7 @@ def test_focus_and_exclusion_transitions_on_three_mixed_dpi_monitors(  # noqa: P
         facts=owned,
         events=Win32WindowEvents(),
         captures=WgcCaptures(),
-        uia=WindowsUia(),
+        new_uia=WindowsUia,
         writer=writer,
         exclusions=Exclusions(UserExclusions(), "http://127.0.0.1:5123"),
         settings=Settings(min_gap_s=0.2),

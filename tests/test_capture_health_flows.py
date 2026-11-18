@@ -168,6 +168,7 @@ def test_audio_capture_names_each_recorder_down_for_a_minute(since: float, down:
     rigs = [RecorderRig("mic"), RecorderRig("system")]
     capture._recorders = [r.recorder for r in rigs]  # pyright: ignore[reportPrivateUsage]
     capture._writer = cast("Any", SimpleNamespace(dropped_since=_no_drops))  # pyright: ignore[reportPrivateUsage]
+    capture._sampler = cast("Any", SimpleNamespace(voice_elsewhere_at=lambda: None))  # pyright: ignore[reportPrivateUsage]
     assert list(capture.problems(1000.0, since)) == down
 
 
@@ -177,6 +178,7 @@ def test_audio_capture_reports_only_the_recorder_that_is_down() -> None:
     rigs[0].recorder._ok_at = 990.0  # pyright: ignore[reportPrivateUsage]
     capture._recorders = [r.recorder for r in rigs]  # pyright: ignore[reportPrivateUsage]
     capture._writer = cast("Any", SimpleNamespace(dropped_since=_no_drops))  # pyright: ignore[reportPrivateUsage]
+    capture._sampler = cast("Any", SimpleNamespace(voice_elsewhere_at=lambda: None))  # pyright: ignore[reportPrivateUsage]
     assert capture.problems(1000.0, 0.0) == ("system_audio_unavailable",)
 
 
@@ -190,7 +192,7 @@ def _platform() -> CapturePlatform:
         facts=FakeWindowFacts([top_window(hwnd=1)]),
         events=FakeWindowEvents(),
         captures=ImageCaptures(images={1: blank()}),
-        uia=FakeUia(texts={1: ["x" * 80]}),
+        new_uia=lambda: FakeUia(texts={1: ["x" * 80]}),
         ocr=FakeOcr(),
         media=FakeMedia(),
     )
@@ -438,6 +440,35 @@ def test_a_health_reading_that_raises_is_skipped_not_fatal(
         )
     assert got is None
     assert "collecting capture health failed: ZeroDivisionError" in caplog.text
+
+
+def _with_stats[T](obj: T) -> T:
+    vars(obj)["stats_snapshot"] = dict
+    return obj
+
+
+def test_a_capture_fault_reading_that_raises_is_skipped_not_fatal(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    ctx = cast("Any", SimpleNamespace(health_snapshot=lambda: (0, False, 0.0)))
+
+    def broken() -> dict[str, int]:
+        raise KeyError
+
+    capture = _with_stats(_fake_capture())
+    vars(capture)["capture_faults"] = broken
+    with caplog.at_level("WARNING"):
+        got = capture_main._collect(  # pyright: ignore[reportPrivateUsage]
+            ctx,
+            _status(audio_failed=False),
+            capture,
+            _with_stats(_fake_writer(failing=False)),
+            None,
+            cast("Any", SimpleNamespace(stats={})),
+            cast("Any", SimpleNamespace(stats={})),
+        )
+    assert got is None
+    assert "collecting capture health failed: KeyError" in caplog.text
 
 
 # --- the status API ---------------------------------------------------------------------------

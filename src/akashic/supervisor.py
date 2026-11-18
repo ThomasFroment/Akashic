@@ -96,6 +96,7 @@ class Supervisor:
         self._children = {s.name: _Child(s) for s in specs}
         self._lock = threading.Lock()
         self._restart_lock = threading.RLock()
+        self._remember_lock = threading.Lock()
         self._stopping = False
         self._shut_down = threading.Event()
         self._paused = False
@@ -214,8 +215,18 @@ class Supervisor:
                     self.start(paused=was_paused)
 
     def send(self, command: ipc.Command) -> None:
+        """Tell every live child the command. Pause and resume are remembered after the restart
+        lock is released, so a busy database never delays ``poll``, restarts or shutdown.
+        Writes are serialized and each stores the current state, so the last write wins."""
+        remember = command in {"pause", "resume"}
         with self._restart_lock:
-            self._send(command)
+            if remember:
+                self._paused = command == "pause"
+            for child in self._children.values():
+                self._tell(child, command)
+        if remember:
+            with self._remember_lock:
+                self._remember_paused(self._paused)
 
     def set_ui_open(self, ui_open: bool) -> None:  # noqa: FBT001 - the Controls callback signature
         """Halt capture while Akashic's UI is open; launches carry it, so a restart stays halted."""
@@ -227,14 +238,6 @@ class Supervisor:
             for child in self._children.values():
                 if child.spec.pauses_for_ui:
                     self._tell(child, command)
-
-    def _send(self, command: ipc.Command) -> None:
-        if command in {"pause", "resume"}:
-            self._paused = command == "pause"
-        for child in self._children.values():
-            self._tell(child, command)
-        if command in {"pause", "resume"}:
-            self._remember_paused(self._paused)
 
     @staticmethod
     def _tell(child: _Child, command: ipc.Command) -> None:

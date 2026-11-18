@@ -192,7 +192,8 @@ class CaptureGaps:
             time.sleep(STOP_RETRY_S)
 
     def _try_stop(self, stop_ms: int, until: float) -> bool:
-        flush_s = min(STOP_FLUSH_S, max(0.0, until - time.monotonic()))
+        # Floor of one busy timeout: a free database still writes the queue after the deadline.
+        flush_s = min(STOP_FLUSH_S, max(STOP_BUSY_TIMEOUT_MS / 1000, until - time.monotonic()))
         if not self._settle() or not self._flush(flush_s) or self._has_pending():
             return False
         try:

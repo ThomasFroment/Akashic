@@ -98,6 +98,8 @@ def test_the_media_thread_limits_its_wait_before_closing_at_stop(conn: Connectio
         exclusions=Exclusions(UserExclusions()),
         focused_window=lambda: None,
         now_ms=lambda: T0,
+        monotonic_ms=lambda: T0,
+        awake_ms=lambda: T0,
         browsers=BrowserState(),
     )
     stop = threading.Event()

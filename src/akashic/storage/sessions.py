@@ -12,10 +12,13 @@ from typing import TYPE_CHECKING, Final
 from akashic.storage import db
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from sqlite3 import Connection
 
 # A game row whose heartbeat is older than this is treated as finished (crashed capture).
 GAME_HEARTBEAT_MAX_AGE_MS: Final = 30_000
+
+type GameSession = tuple[str, int, int]  # process, start_ms, end_ms
 
 
 class MediaLog:
@@ -136,3 +139,20 @@ def gaming_now(conn: Connection, now_ms: int) -> bool:
         (now_ms - GAME_HEARTBEAT_MAX_AGE_MS,),
     ).fetchone()
     return row is not None
+
+
+def games_between(conn: Connection, start_ms: int, end_ms: int) -> list[GameSession]:
+    """Game sessions, open or closed, overlapping the range."""
+    rows = conn.execute(
+        "SELECT process, start_ms, end_ms FROM game_sessions WHERE start_ms < ? AND end_ms > ?",
+        (end_ms, start_ms),
+    ).fetchall()
+    return [(r[0], r[1], r[2]) for r in rows]
+
+
+def games_spanning(conn: Connection, spans: Iterable[tuple[int, int]]) -> list[GameSession]:
+    """Game sessions overlapping the whole range covered by ``spans`` (none for no spans)."""
+    bounds = list(spans)
+    if not bounds:
+        return []
+    return games_between(conn, min(s for s, _ in bounds), max(e for _, e in bounds))

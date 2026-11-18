@@ -18,6 +18,7 @@ from akashic.platform.win.wgc import WgcCaptures
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
+    from typing import Any
 
     type Handler = Callable[[object, object], None]
 
@@ -154,9 +155,9 @@ class World:
         self.window_size = SIZE
         self.pending_hwnd = 0  # the pool factory is not told the hwnd; the item call just before is
 
-    def new_device(self) -> FakeDevice | None:
+    def create_device(self) -> FakeDevice:
         if not self.device_available:
-            return None
+            raise hresult_error(REMOVED)
         device = FakeDevice()
         self.devices.append(device)
         return device
@@ -209,7 +210,7 @@ class World:
 @pytest.fixture
 def world(monkeypatch: pytest.MonkeyPatch) -> World:
     w = World()
-    monkeypatch.setattr(wgc, "_new_device", w.new_device)
+    monkeypatch.setattr(wgc, "create_direct3d11_device", w.create_device)
     monkeypatch.setattr(
         wgc, "GraphicsCaptureSession", SimpleNamespace(is_supported=lambda: w.supported)
     )
@@ -302,6 +303,77 @@ def test_start_false_when_no_device_can_be_created_and_works_once_one_can(
         assert captures.start(10, 100) is True
     finally:
         captures.close()
+
+
+D3D_FAULT = {"D3D device: HRESULT 0x887A0005": 1}
+
+
+def test_a_failed_device_in_init_is_counted_and_init_still_works(world: World) -> None:
+    world.device_available = False
+    captures = WgcCaptures()
+    try:
+        assert captures.fault_counts() == D3D_FAULT
+    finally:
+        captures.close()
+
+
+def test_a_failed_device_in_start_is_counted(world: World) -> None:
+    world.device_available = False
+    captures = WgcCaptures()
+    try:
+        assert captures.start(10, 100) is False
+        assert captures.fault_counts() == {"D3D device: HRESULT 0x887A0005": 2}
+    finally:
+        captures.close()
+
+
+def test_a_failed_device_after_a_loss_is_counted(world: World, caps: WgcCaptures) -> None:
+    caps.start(1, 0)
+    world.copy_error = hresult_error(REMOVED)
+    world.deliver(1)
+    world.device_available = False
+    assert caps.failed() == {1}
+    assert caps.fault_counts() == D3D_FAULT | {"frame: HRESULT 0x887A0005": 1}
+
+
+def test_a_failed_device_is_logged_once_per_interval_without_the_old_warning(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING, logger=wgc.log.name)
+    world.device_available = False
+    captures = WgcCaptures()
+    try:
+        for _ in range(3):
+            captures.start(10, 0)
+        assert caplog.text.count("D3D device failed: HRESULT 0x887A0005") == 1
+        assert "(1 so far)" in caplog.text
+        assert "no D3D device" not in caplog.text
+    finally:
+        captures.close()
+
+
+def test_fault_counts_never_raises(caps: WgcCaptures) -> None:
+    class Broken:
+        def counts(self) -> dict[str, int]:
+            raise RuntimeError("x")
+
+        def note(self, *_args: object) -> int:
+            return 0
+
+    caps.faults = cast("Any", Broken())
+    assert caps.fault_counts() == {}
+
+
+def test_fault_counts_is_a_copy_and_empty_without_faults(world: World, caps: WgcCaptures) -> None:
+    assert caps.fault_counts() == {}
+    world.device_available = False
+    broken = WgcCaptures()
+    try:
+        counts = broken.fault_counts()
+        counts.clear()
+        assert broken.fault_counts() == D3D_FAULT
+    finally:
+        broken.close()
 
 
 def test_failed_open_leaves_nothing_allocated(world: World, caps: WgcCaptures) -> None:

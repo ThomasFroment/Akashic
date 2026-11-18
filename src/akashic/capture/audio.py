@@ -15,7 +15,7 @@ closing it early; an unexpected fault drops it. Process exclusions
 apply to the processes that were making sound on any playback device: a segment during which an
 excluded process was audible is dropped, in memory. A system segment's stored sources are the
 processes audible on the recorded device; voice chat audible only on another device is reported
-as a ``voice_elsewhere`` gap.
+as a ``voice_elsewhere`` gap and capture problem.
 """
 
 from __future__ import annotations
@@ -37,6 +37,7 @@ from akashic.capture.health import (
     DEVICE_DOWN_S,
     DROP_PROBLEM_S,
     SEGMENTS_DROPPED_CODES,
+    VOICE_ELSEWHERE,
 )
 from akashic.capture.ports import VOICE_APPS, AudioError
 from akashic.capture.vad import WINDOW
@@ -299,6 +300,7 @@ class SourceSampler:
         self._interval_s = interval_s
         self._keep_ms = keep_ms
         self._gaps = gaps
+        self.faults = FaultLog(log)
         # None marks a poll that failed: nobody knows what was audible then.
         self._samples: deque[tuple[int, Poll | None]] = deque()
         self._lock = threading.Lock()
@@ -306,6 +308,11 @@ class SourceSampler:
         self._refresh = False  # the next poll re-reads the endpoints
         self._previous: tuple[int, bool] | None = None  # last poll's time, voice_elsewhere
         self._noted_at = -VOICE_ELSEWHERE_NOTE_EVERY_MS  # when voice_elsewhere was last logged
+        self._elsewhere_at: float | None = None  # written by the sampler thread, read unlocked
+
+    def voice_elsewhere_at(self) -> float | None:
+        """The ``time.monotonic()`` of the last poll that found voice chat elsewhere."""
+        return self._elsewhere_at
 
     def set_recorded(self, endpoint_id: str | None) -> None:
         """The playback endpoint being recorded, None when none is."""
@@ -320,7 +327,7 @@ class SourceSampler:
         try:
             poll = self._sessions.active_processes(refresh=refresh)
         except Exception as exc:  # noqa: BLE001 - a failed poll is an unknown, never "silence"
-            log.warning("audio source sampling failed: %s", type(exc).__name__)
+            self.faults.note("audio source sampling", exc)
             poll = None
         with self._lock:
             self._samples.append((now, poll))
@@ -344,6 +351,7 @@ class SourceSampler:
         self._previous = (now, elsewhere)
         if not elsewhere:
             return
+        self._elsewhere_at = time.monotonic()
         continued = previous is not None and previous[1]
         if not continued and now - self._noted_at >= VOICE_ELSEWHERE_NOTE_EVERY_MS:
             self._noted_at = now
@@ -389,7 +397,7 @@ class SourceSampler:
                 try:
                     self.sample()
                 except Exception as exc:  # noqa: BLE001 - attribution is best effort
-                    log.warning("audio source sampling failed: %s", type(exc).__name__)
+                    self.faults.note("audio source sampling", exc)
             stop.wait(self._interval_s)
 
 
@@ -412,6 +420,7 @@ class SegmentWriter:
         self._clock_ms = clock_ms
         self._stats = stats
         self._gaps = gaps
+        self.faults = FaultLog(log)
         self._queue: queue.Queue[tuple[AudioKind, Utterance, AudioDevice]] = queue.Queue(
             WRITER_QUEUE
         )
@@ -438,7 +447,7 @@ class SegmentWriter:
             self._note_dropped(kind)
             self._stats["dropped_backlog"] += 1
             self._gaps.drop(kind, "backlog", utterance.start_ms, utterance.end_ms)
-            log.warning("audio writer is behind; dropped a %s segment", kind)
+            self.faults.note(f"storing a {kind} segment", "writer behind")
 
     def run(self, stop: threading.Event) -> None:
         """Write until told to stop, then finish what is already queued. Once stopping, the first
@@ -462,7 +471,7 @@ class SegmentWriter:
                 self._stats["write_failed"] += 1
                 self._last_id[kind] = None
                 self._report_drop(kind, "write_failed", utterance)
-                log.warning("storing a %s segment failed: %s", kind, type(exc).__name__)
+                self.faults.note(f"storing a {kind} segment", exc)
                 if stopping and db.is_busy(exc):
                     self._drop_queued()
                     return
@@ -798,7 +807,9 @@ class AudioCapture:
 
     def problems(self, now: float, since: float) -> tuple[str, ...]:
         """The down code of each recorder that has read nothing for too long, then the dropped
-        code of each stream that lost a segment within ``DROP_PROBLEM_S`` and after ``since``."""
+        code of each stream that lost a segment within ``DROP_PROBLEM_S`` and after ``since``,
+        then ``voice_elsewhere`` when voice chat was audible only on an unrecorded device within
+        ``DROP_PROBLEM_S`` and after ``since``."""
         recent = max(since, now - DROP_PROBLEM_S)
         down = tuple(
             DEVICE_DOWN_CODES[r.kind]
@@ -809,12 +820,17 @@ class AudioCapture:
         dropped = tuple(
             code for kind, code in SEGMENTS_DROPPED_CODES.items() if kind in dropped_kinds
         )
-        return down + dropped
+        elsewhere_at = self._sampler.voice_elsewhere_at()
+        elsewhere = (
+            (VOICE_ELSEWHERE,) if elsewhere_at is not None and elsewhere_at >= recent else ()
+        )
+        return down + dropped + elsewhere
 
     def snapshot(self) -> dict[str, object]:
-        """Counters, device names, levels and recent drops, for the Debug page."""
+        """Counters, fault counts, device names, levels and recent drops, for the Debug page."""
         return {
             "stats": dict(sorted(self.stats.items())),
+            "faults": self._sampler.faults.counts() | self._writer.faults.counts(),
             "energy_floor": self._energy_floor,
             "available": self._available(),
             "streams": {r.kind: r.snapshot() for r in self._recorders},

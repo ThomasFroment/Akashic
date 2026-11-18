@@ -22,8 +22,10 @@ from typing import TYPE_CHECKING, Final
 from akashic.pipeline.transcribe import UNCLEAR_BELOW
 from akashic.search.keyword import HIGHLIGHT_END, HIGHLIGHT_START, STARTS_RUN_SQL, Hit, build_match
 from akashic.search.timeparse import normalize
+from akashic.search.transcripts import SpeechTag, parse_sources, speech_tag
 from akashic.storage import embeddings, passages
 from akashic.storage.monitors import SHOWN_SQL
+from akashic.storage.sessions import GameSession, games_spanning
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
@@ -88,6 +90,7 @@ class LineHit:
     score: float
     confidence: float | None = None
     context: tuple[ContextLine, ...] = ()  # the lines around it (search_memory fills it)
+    tag: SpeechTag = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -306,8 +309,8 @@ def _line_rows(conn: Connection, ids: list[int]) -> dict[int, tuple[object, ...]
     rows = conn.execute(
         "SELECT s.id, s.stream, s.start_ms, s.end_ms, s.speaker_id, k.name, k.is_self,"  # noqa: S608
         " s.transcript, (SELECT episode_id FROM episode_items i WHERE i.item_kind = 'segment'"
-        "                AND i.item_id = s.id LIMIT 1), s.confidence"
-        " FROM audio_segments s LEFT JOIN speakers k ON k.id = s.speaker_id"
+        "                AND i.item_id = s.id LIMIT 1), s.confidence,"
+        " s.sources FROM audio_segments s LEFT JOIN speakers k ON k.id = s.speaker_id"
         f" WHERE s.id IN ({marks})",
         ids,
     ).fetchall()
@@ -424,13 +427,15 @@ def _episode_hit(r: tuple[object, ...], who: tuple[list[str], int], score: float
     )  # fmt: skip
 
 
-def _line_hit(r: tuple[object, ...], score: float) -> LineHit:
+def _line_hit(r: tuple[object, ...], score: float, games: list[GameSession]) -> LineHit:
+    start, end = int(str(r[2])), int(str(r[3]))
     speaker = "You" if r[6] else (None if r[5] is None else str(r[5]))
     return LineHit(
-        int(str(r[0])), str(r[1]), int(str(r[2])), int(str(r[3])),
+        int(str(r[0])), str(r[1]), start, end,
         None if r[4] is None else int(str(r[4])), speaker,
         str(r[7] or "")[:LINE_CHARS], None if r[8] is None else int(str(r[8])), score,
         None if r[9] is None else float(str(r[9])),
+        tag=speech_tag(str(r[1]), parse_sources(r[10]), games, start, end),
     )  # fmt: skip
 
 
@@ -491,7 +496,9 @@ def episode_lines(conn: Connection, episode_id: int, limit: int) -> list[LineHit
         return []
     rows = _line_rows(conn, ids)
     ordered = sorted(rows.values(), key=lambda r: (int(str(r[2])), int(str(r[0]))))
-    return [_line_hit(r, 0.0) for r in ordered[:limit] if r[7]]
+    shown = [r for r in ordered[:limit] if r[7]]
+    games = games_spanning(conn, ((int(str(r[2])), int(str(r[3]))) for r in shown))
+    return [_line_hit(r, 0.0, games) for r in shown]
 
 
 def _ranked_frames(conn: Connection, scope: _Scope, limit: int) -> list[Hit]:
@@ -609,7 +616,10 @@ def search_memory(
     ranked_lines = all_lines[:limit]
     if ranked_lines:
         line_rows = _line_rows(conn, [i for i, _ in ranked_lines])
-        lines = [_line_hit(line_rows[i], score) for i, score in ranked_lines if i in line_rows]
+        games = games_spanning(conn, ((int(str(r[2])), int(str(r[3]))) for r in line_rows.values()))
+        lines = [
+            _line_hit(line_rows[i], score, games) for i, score in ranked_lines if i in line_rows
+        ]
         excerpts = _matched_excerpts(conn, plan.keywords, [line.segment_id for line in lines])
         for line in lines:
             hit = passage_matches.get(line.segment_id)

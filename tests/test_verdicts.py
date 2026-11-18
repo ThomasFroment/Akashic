@@ -3,23 +3,29 @@
 from __future__ import annotations
 
 import dataclasses
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pytest
-from capture_fakes import SCREEN, FakeUia, top_window
+from capture_fakes import SCREEN, GatedUia, top_window, wait_until_idle
 
+from akashic.capture import uia_threads
 from akashic.capture.browser_state import BrowserState
 from akashic.capture.exclusions import Exclusions
 from akashic.capture.ports import TopWindow, WindowChanges, WindowEvent, WindowInfo
-from akashic.capture.uia_budget import BudgetedUia
+from akashic.capture.uia_budget import BudgetedUia, UiaBudget
+from akashic.capture.uia_threads import ThreadedUia
 from akashic.capture.verdicts import Judged, Verdicts
 from akashic.config import Exclusions as UserExclusions
+from akashic.log import FaultLog
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping, Sequence
+    from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 
     from akashic.capture.ports import BrowserFamily
+
+log = logging.getLogger(__name__)
 
 P1 = "P1 - Google Chrome"
 P2 = "P2 - Google Chrome"
@@ -36,7 +42,10 @@ class Clock:
 
 
 @dataclass
-class ClockedUia(FakeUia):
+class ClockedUia(GatedUia):
+    """Nothing is gated until a test sets ``gated``; ``release`` then lets the reads finish."""
+
+    gated: frozenset[str] = frozenset()
     clock: Clock = dataclasses.field(default_factory=Clock)
     reads: list[int] = dataclasses.field(default_factory=list[int])
     caption_reads: list[int] = dataclasses.field(default_factory=list[int])
@@ -52,14 +61,31 @@ class ClockedUia(FakeUia):
         return super().browser_caption(window, family)
 
 
+_harness_threads: list[ThreadedUia] = []
+
+
+@pytest.fixture(autouse=True)
+def _close_harness_threads() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction] - autouse
+    yield
+    for threads in _harness_threads:
+        threads.close()
+    _harness_threads.clear()
+
+
 class Harness:
     def __init__(self, user: UserExclusions | None = None, step: float = 0.0) -> None:
         self.clock = Clock()
         self.clock.step = step
         self.uia = ClockedUia(clock=self.clock)
+        self.threads = ThreadedUia(lambda: self.uia, FaultLog(log), self.clock)
+        _harness_threads.append(self.threads)
         self.browsers = BrowserState(self.clock)
+        self.budget = UiaBudget()
         self.verdicts = Verdicts(
-            Exclusions(user or UserExclusions()), BudgetedUia(self.uia), self.browsers, self.clock
+            Exclusions(user or UserExclusions()),
+            BudgetedUia(self.threads, self.budget),
+            self.browsers,
+            self.clock,
         )
 
     def judge(
@@ -76,6 +102,10 @@ class Harness:
 
     def verdict(self, window: TopWindow, at: float = 0.0) -> str:
         return self.judge([window], at)[window.hwnd].verdict
+
+    def idle(self, pid: int = 100) -> None:
+        """Wait until the pid's worker has finished its read, so the late result is kept."""
+        wait_until_idle(self.threads, pid)
 
     def title_event(self, hwnd: int, at: float) -> None:
         self.verdicts.note_events(WindowChanges((WindowEvent(hwnd, "title", at),), healthy=True))
@@ -785,3 +815,172 @@ def test_a_private_or_bank_page_on_a_side_monitor_rejects_media_for_a_minute(
     assert h.rejected() == reason
     h.clock.t = 61.0
     assert h.rejected() is None
+
+
+# --- unfinished and late reads -----------------------------------------------------------------
+
+
+@pytest.fixture
+def slow(monkeypatch: pytest.MonkeyPatch) -> Iterator[Harness]:
+    """Address reads finish until a test clears ``release``; then they block and miss the wait."""
+    monkeypatch.setattr(uia_threads, "WAIT_S", 0.05)
+    monkeypatch.setattr(uia_threads, "TEXT_WAIT_S", 0.05)
+    h = Harness()
+    h.uia.gated = frozenset({"address"})
+    h.uia.release.set()
+    yield h
+    h.uia.release.set()
+
+
+def stall(h: Harness) -> None:
+    h.uia.release.clear()
+
+
+def unstall(h: Harness) -> None:
+    h.uia.release.set()
+    h.idle()
+
+
+def test_an_unfinished_address_never_makes_a_window_a_main_window(slow: Harness) -> None:
+    slow.uia.urls[1] = "a.org"
+    stall(slow)
+    assert slow.verdict(chrome(), 1.0) == "exclude"
+    assert slow.verdict(chrome(), 1.5) == "exclude"  # still busy, still unknown
+
+
+@pytest.mark.parametrize(
+    ("title", "expected"),
+    [(P1, "hold"), ("Page - Mozilla Firefox Private Browsing", "exclude")],
+)
+def test_an_unfinished_address_holds_a_known_main_or_excludes_it_by_its_rules(
+    slow: Harness, title: str, expected: str
+) -> None:
+    slow.uia.urls[1] = "a.org"
+    assert slow.verdict(browser("zen.exe", 1, P1), 0.0) == "keep"
+    stall(slow)
+    assert slow.verdict(browser("zen.exe", 1, title), 1.0) == expected
+    assert slow.uia.caption_reads == [1]  # only the first check's
+
+
+def test_a_late_address_holds_a_known_main_once(slow: Harness) -> None:
+    slow.uia.urls[1] = "a.org"
+    kept_main(slow)
+    stall(slow)
+    assert at(slow, 1.0, P1).verdict == "hold"
+    unstall(slow)
+    slow.uia.urls[1] = "https://www.paypal.com/myaccount"  # the page changed meanwhile
+    captions = len(slow.uia.caption_reads)
+    assert at(slow, 2.0, P1).verdict == "hold"  # the late read started before this check
+    assert len(slow.uia.caption_reads) == captions
+    assert at(slow, 3.0, P1).verdict == "exclude"  # a fresh call, finished inside the wait
+
+
+@pytest.mark.parametrize("trigger", ["title_event", "lost_events"])
+def test_an_address_read_before_a_pending_event_is_held_and_the_event_stays_pending(
+    slow: Harness, trigger: str
+) -> None:
+    kept_main(slow)
+    stall(slow)
+    assert at(slow, 1.0, P1).verdict == "hold"
+    unstall(slow)
+    if trigger == "title_event":
+        slow.title_event(1, 2.0)
+    else:
+        slow.lost_events(2.0)
+    assert at(slow, 3.0, P1).verdict == "hold"  # the late read
+    assert at(slow, 4.0, P1).verdict == "hold"  # the event now starts its hold
+
+
+def test_unfinished_and_late_reads_leave_the_hold_count_unchanged(slow: Harness) -> None:
+    kept_main(slow)
+    assert at(slow, 1.0).verdict == "hold"  # the hold's first read
+    stall(slow)
+    assert at(slow, 2.0).verdict == "hold"
+    assert at(slow, 2.2).verdict == "hold"
+    unstall(slow)
+    assert at(slow, 3.0).verdict == "hold"  # late
+    assert at(slow, 4.0).verdict == "hold"  # second read
+    assert at(slow, 5.0).verdict == "keep"  # third read, after half a second
+
+
+def test_an_unfinished_caption_excludes_a_chrome_main_window(slow: Harness) -> None:
+    kept_main(slow)
+    slow.uia.gated = frozenset({"caption"})
+    stall(slow)
+    assert at(slow, 1.0, P1).verdict == "exclude"
+
+
+def test_shows_own_address_stays_halted_on_an_unfinished_or_late_address(slow: Harness) -> None:
+    def shows(now: float) -> bool:
+        slow.clock.t = now
+        return slow.verdicts.shows_own_address([chrome()], {1}, now)
+
+    slow.uia.urls[1] = "a.org"
+    assert not shows(0.0)
+    stall(slow)
+    assert shows(1.0)
+    unstall(slow)
+    assert shows(2.0)  # late
+    assert not shows(3.0)
+
+
+OWN = "127.0.0.1:5123/"
+
+
+def frozen_own_address_window(slow: Harness) -> Callable[..., bool]:
+    """A watch on a browser that showed the own address, then froze; its window is backed off
+    until 50.0 (a slow None recorded at 20.0)."""
+
+    def shows(now: float, windows: Sequence[TopWindow] | None = None) -> bool:
+        slow.clock.t = now
+        return slow.verdicts.shows_own_address([chrome()] if windows is None else windows, {1}, now)
+
+    slow.uia.urls[1] = OWN
+    assert shows(0.0)
+    stall(slow)
+    assert shows(1.0)
+    slow.budget.record_failure(1, 1000.0, 20.0)
+    return shows
+
+
+def test_shows_own_address_stays_halted_through_and_past_the_backoff_while_frozen(
+    slow: Harness,
+) -> None:
+    shows = frozen_own_address_window(slow)
+    assert all(shows(now) for now in (2.0, 21.0, 49.9, 50.0, 60.0, 90.0))
+
+
+def test_shows_own_address_ends_within_two_watches_of_a_non_own_page_despite_the_backoff(
+    slow: Harness,
+) -> None:
+    shows = frozen_own_address_window(slow)
+    unstall(slow)
+    slow.uia.urls[1] = "a.org"
+    assert shows(21.0)  # the stalled read's late result
+    assert not shows(22.0)  # a fresh read, though the backoff lasts until 50.0
+    assert not slow.budget.window_allowed(1, 22.0)
+
+
+def test_shows_own_address_stays_halted_when_the_recovered_page_still_shows_it(
+    slow: Harness,
+) -> None:
+    shows = frozen_own_address_window(slow)
+    unstall(slow)
+    assert all(shows(now) for now in (21.0, 22.0, 23.0, 24.0))
+
+
+def test_shows_own_address_ignores_a_backed_off_window_that_is_gone_or_hidden(
+    slow: Harness,
+) -> None:
+    shows = frozen_own_address_window(slow)
+    assert not shows(10.0, [])
+    slow.clock.t = 10.0
+    assert not slow.verdicts.shows_own_address([chrome()], set(), 10.0)
+
+
+def test_judge_still_keeps_a_backed_off_main_window_with_no_address(slow: Harness) -> None:
+    slow.uia.urls[1] = "a.org"
+    assert slow.verdict(browser("zen.exe"), 0.0) == "keep"
+    slow.budget.record_failure(1, 1000.0, 1.0)
+    judged = slow.judge([browser("zen.exe")], 2.0)[1]
+    assert (judged.verdict, judged.url) == ("keep", None)

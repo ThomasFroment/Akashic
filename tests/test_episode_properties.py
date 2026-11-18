@@ -156,7 +156,7 @@ def _calls(rng: random.Random, ids: _Ids) -> list[Seg]:
 
 def _games(rng: random.Random, segs: list[Seg]) -> list[Game]:
     """Game sessions over parts of the span. Each starts before the last segment start (segments
-    added later start no earlier), so the ``_games`` query bound (first start, last-started
+    added later start no earlier), so the ``games_between`` query bound (first start, last-started
     segment's end) never hides one; that bound is pinned separately below."""
     first = min(s.start_ms for s in segs)
     last_start = max(s.start_ms for s in segs)
@@ -488,7 +488,7 @@ def test_one_mic_segment_joins_at_most_one_call(conn: Connection) -> None:
 @pytest.mark.xfail(  # not an audit finding, so not known_defect
     strict=True,
     raises=AssertionError,
-    reason="not in the audits: _games bounds by the last-started segment's end, so a game"
+    reason="not in the audits: games_between bounds by the last-started segment's end, so a game"
     " session starting after it is never read for an earlier, longer segment",
 )
 def test_a_game_session_starting_late_still_makes_earlier_game_sound_voice(

@@ -433,6 +433,8 @@ class MediaRig:
             exclusions=Exclusions(UserExclusions()),
             focused_window=lambda: None,
             now_ms=lambda: self.clock[0],
+            monotonic_ms=lambda: self.clock[0],
+            awake_ms=lambda: self.clock[0],
             interval_s=0.01,
             browsers=BrowserState(),
         )

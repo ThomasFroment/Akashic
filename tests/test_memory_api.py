@@ -281,3 +281,27 @@ def test_the_memory_endpoints_need_the_token(client: Client) -> None:
     conn.request("GET", "/api/memory/search?q=x")
     assert conn.getresponse().status == 401
     conn.close()
+
+
+def test_the_tag_is_in_transcripts_memory_lines_and_episode_lines(
+    client: Client, conn: Connection
+) -> None:
+    start = today_ms()
+    call = add_segment(conn, start, text="salut appel")
+    mine = add_segment(conn, start + MINUTE, text="salut moi", stream="mic", sources=())
+    media = add_segment(conn, start + 2 * MINUTE, text="salut video", sources=("zen.exe",))
+    episode = add_episode(conn, "conversation", start, start + 3 * MINUTE, "Call")
+    for s in (call, mine, media):
+        conn.execute("INSERT INTO episode_items VALUES (?, 'segment', ?)", (episode, s))
+    want = {call: "voice chat", mine: "you", media: "media"}
+
+    _, items = client.get("/api/transcripts?q=salut")
+    assert {t["id"]: t["tag"] for t in cast("list[Json]", items)} == want
+    _, items = client.get("/api/transcripts")
+    assert {t["id"]: t["tag"] for t in cast("list[Json]", items)} == want
+    _, found = client.get("/api/memory/search?q=salut%20today")
+    lines = cast("list[Json]", cast("Json", found)["lines"])
+    assert {line["segment_id"]: line["tag"] for line in lines} == want
+    _, found = client.get(f"/api/episodes/{episode}")
+    lines = cast("list[Json]", cast("Json", found)["lines"])
+    assert {line["segment_id"]: line["tag"] for line in lines} == want

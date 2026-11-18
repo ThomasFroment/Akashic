@@ -7,7 +7,8 @@ the desktop shell. Both lists are configurable and win over the heuristic: ``gam
 detection for a process that does have a frame, ``not_games`` overrides even D3D evidence.
 
 Leaving the game takes a short grace period so alt-tab flicker and notification windows don't
-split one session into many.
+split one session into many. A sleep (monotonic time advancing without awake time) ends the game
+at the last tick before it, with no grace, and a game still in front starts a new session.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from akashic.capture.ports import BROWSERS, FRAME_HOST
+from akashic.capture.ports import BROWSERS, FRAME_HOST, slept
 
 if TYPE_CHECKING:
     from akashic.capture.ports import Rect, WindowInfo
@@ -116,14 +117,16 @@ class GameMode:
         self.current: Game | None = None
         self._last_seen = 0.0
         self._last_seen_ms = 0  # wall clock of the same tick
+        self._last_tick: tuple[float, int] | None = None  # (monotonic s, awake ms)
 
     @property
     def active(self) -> bool:
         return self.current is not None
 
     def observe(
-        self, window: WindowInfo | None, monitors: list[Rect], now: float, ts_ms: int
+        self, window: WindowInfo | None, monitors: list[Rect], now: float, ts_ms: int, awake_ms: int
     ) -> Transition:
+        slept = self._slept(now, awake_ms)
         game = (
             Game(window.process, window.title)
             if window is not None and is_game_window(window, monitors, self._settings)
@@ -135,14 +138,22 @@ class GameMode:
             if self.current is None:
                 self.current = game
                 return Transition(started=game)
-            if self.current.process != game.process:  # straight from one game to another
+            if slept or self.current.process != game.process:  # a wake, or another game
                 ended, self.current = self.current, game
                 return Transition(ended=ended, ended_ms=ended_ms, started=game)
             return Transition()
-        if self.current is not None and now - self._last_seen >= self._settings.end_grace_s:
+        if self.current is not None and (
+            slept or now - self._last_seen >= self._settings.end_grace_s
+        ):
             ended, self.current = self.current, None
             return Transition(ended=ended, ended_ms=self._last_seen_ms)
         return Transition()
+
+    def _slept(self, now: float, awake_ms: int) -> bool:
+        last, self._last_tick = self._last_tick, (now, awake_ms)
+        if last is None:
+            return False
+        return slept((now - last[0]) * 1000, awake_ms - last[1])
 
     def stop(self) -> Transition:
         """Forget the current game (pause, shutdown). Returns its end so the caller can close its

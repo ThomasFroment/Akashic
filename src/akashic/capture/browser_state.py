@@ -14,6 +14,9 @@ The state is conservative about what it does not know:
 * An excluding verdict keeps rejecting that browser's sessions for ``HOLD_MS`` after the window
   was last seen, so moving focus off a bank page does not release a session it was playing.
 
+Every ``clear()`` bumps ``generation``, so the media tracker can tell that the verdicts were
+dropped since its last poll even when ``is_locked`` missed it (a UAC prompt of a second).
+
 What this cannot see is a playing tab of a browser window that is neither focused nor on a
 monitor the screen loop looked at: that is the accepted background-session gap (docs/CAPTURE.md).
 """
@@ -49,6 +52,12 @@ class BrowserState:
         self._clock = clock
         self._lock = threading.Lock()
         self._windows: dict[int, _Verdict] = {}
+        self._generation = 0
+
+    @property
+    def generation(self) -> int:
+        """How many times the state was cleared."""
+        return self._generation
 
     def publish(self, window: WindowInfo | TopWindow, reason: str | None) -> None:
         """Record the verdict on a browser window (``reason`` is the exclusion category)."""
@@ -65,6 +74,7 @@ class BrowserState:
         """Forget everything (capture was paused or locked): a stale verdict proves nothing."""
         with self._lock:
             self._windows.clear()
+            self._generation += 1
 
     def media_reason(self, process: str | None, focus: WindowInfo | None) -> str | None:
         """Why a browser's media session must not be logged, or None.

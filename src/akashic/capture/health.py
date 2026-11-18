@@ -1,9 +1,10 @@
 """What capture tells the app about its own health: ``ready``, ``gaming`` or ``degraded``.
 
 Problem codes are fixed strings, never captured content; a screen problem is followed by the
-label of its monitor ("Monitor 2", counted left to right). The screen loop and the audio recorders
-detect problems; the publisher thread hands them to ``CaptureStatus``, which turns them into the
-one state the supervisor sees. Pausing clears every problem except ``audio_unavailable``.
+label of its monitor ("Monitor 2", counted left to right). The screen loop, the audio recorders
+and the audio source sampler detect problems; the publisher thread hands them to ``CaptureStatus``,
+which turns them into the one state the supervisor sees. Pausing clears every problem except
+``audio_unavailable``.
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ WINDOW_EVENTS_DOWN: Final = "window_events_down"
 SCREEN_IMAGES_FAILING: Final = "screen_images_failing"
 SCREEN_FRAMES_DROPPED: Final = "screen_frames_dropped"
 SCREEN_DISK_FULL: Final = "screen_disk_full"
+VOICE_ELSEWHERE: Final = "voice_elsewhere"
 MONITOR_SEPARATOR: Final = "@"  # a screen problem reads "<code>@<monitor label>"
 DEVICE_DOWN_CODES: Final = {"mic": "mic_unavailable", "system": "system_audio_unavailable"}
 SEGMENTS_DROPPED_CODES: Final = {"mic": "mic_segments_dropped", "system": "system_segments_dropped"}

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, Literal, Protocol
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     import numpy as np
     from numpy.typing import NDArray
@@ -28,6 +28,14 @@ BROWSERS: Final[dict[str, BrowserFamily]] = {
     "firefox.exe": "firefox",
     "zen.exe": "firefox",
 }
+_SLEEP_SPLIT_MS: Final = 5_000
+
+
+def slept(mono_gap_ms: float, awake_gap_ms: float) -> bool:
+    """A sleep is a monotonic gap minus an awake gap of at least a few seconds."""
+    return mono_gap_ms - awake_gap_ms >= _SLEEP_SPLIT_MS
+
+
 FRAME_HOST: Final = "applicationframehost.exe"  # hosts every UWP window; the app behind is unknown
 # Lower-case executable names whose sound means people are talking to each other.
 VOICE_APPS: Final = frozenset(
@@ -83,6 +91,8 @@ class WindowInfo:
     # True when the OS reports a Direct3D exclusive-fullscreen app (set on the focused window
     # only; not part of window identity).
     exclusive_fullscreen: bool = field(default=False, compare=False)
+    # The owning process, which picks the UIA worker thread; 0 when unknown.
+    pid: int = field(default=0, compare=False)
 
     @property
     def key(self) -> tuple[int, str]:
@@ -102,6 +112,11 @@ class WindowSource(Protocol):
 
     def is_locked(self) -> bool:
         """True while the session is locked or the secure desktop is showing."""
+        ...
+
+    def awake_ms(self) -> int:
+        """Milliseconds awake since boot (QueryUnbiasedInterruptTime): does not advance during
+        sleep or hibernation. Compare gaps only. Never raises."""
         ...
 
 
@@ -209,10 +224,10 @@ class WindowEvents(Protocol):
     def start(self) -> None: ...
 
     def drain(self) -> WindowChanges:
-        """Events since the last drain, oldest first. Mapping: show, UNCLOAKED (0x8018) and
-        MINIMIZEEND (0x17) -> "shown"; hide, CLOAKED (0x8017) and MINIMIZESTART (0x16) ->
-        "hidden"; destroy -> "destroyed"; LOCATIONCHANGE on OBJID_WINDOW and REORDER (0x8004) ->
-        "moved"; NAMECHANGE on a top-level window (OBJID_WINDOW or OBJID_CLIENT) -> "title";
+        """Events since the last drain, oldest first. Only events on OBJID_WINDOW / CHILDID_SELF
+        of a top-level window are delivered: show, UNCLOAKED (0x8018) and MINIMIZEEND (0x17) ->
+        "shown"; hide, CLOAKED (0x8017) and MINIMIZESTART (0x16) -> "hidden"; destroy ->
+        "destroyed"; LOCATIONCHANGE and REORDER (0x8004) -> "moved"; NAMECHANGE -> "title";
         foreground -> "focus".
         ``healthy`` is False when events may have been lost; the first drain after the event
         hook is reinstalled is still unhealthy."""
@@ -243,6 +258,10 @@ class WindowCaptures(Protocol):
 
     def failed(self) -> frozenset[int]:
         """The started hwnds whose capture has failed."""
+        ...
+
+    def fault_counts(self) -> dict[str, int]:
+        """Fault counts keyed "what: label", as a copy."""
         ...
 
     def close(self) -> None: ...
@@ -362,6 +381,6 @@ class CapturePlatform:
     facts: WindowFacts
     events: WindowEvents
     captures: WindowCaptures
-    uia: TextSource
+    new_uia: Callable[[], TextSource]  # called on a UIA worker thread
     ocr: OcrEngine | None  # None: no recognizer is installed, frames get no OCR text
     media: MediaSource

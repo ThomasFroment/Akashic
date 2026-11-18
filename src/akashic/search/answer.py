@@ -111,7 +111,7 @@ class Source:
     ref_id: int  # episode id, audio segment id or frame id
     start_ms: int
     end_ms: int
-    label: str  # "Video: <title> (Zen)", "Minlo", "Zen: <window title>"
+    label: str  # "Video: <title> (Zen)", "Minlo said (voice chat)", "Zen: <window title>"
     text: str
     episode_id: int | None = None  # for a line: the episode it belongs to
     unclear: bool = False  # for a line: Whisper was unsure of it
@@ -154,8 +154,9 @@ def build_sources(found: Results, *, overview: bool = False) -> list[Source]:
         exchange, included = _exchange(line)
         shown.update(included)
         speaker = line.speaker or ("You" if line.stream == "mic" else "someone heard")
+        label = f"{speaker} said" + (f" ({line.tag})" if line.tag not in ("", "you") else "")
         wanted.append(
-            Source(0, "line", line.segment_id, line.start_ms, line.end_ms, f"{speaker} said",
+            Source(0, "line", line.segment_id, line.start_ms, line.end_ms, label,
                    exchange, line.episode_id, is_unclear(line.confidence), tuple(sorted(included)))
         )  # fmt: skip
     for f in found.frames[:MAX_FRAMES]:
