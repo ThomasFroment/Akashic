@@ -1,0 +1,56 @@
+[
+ {
+  "category": "other",
+  "target": "renderer",
+  "packets": 300,
+  "silent_flagged": 0,
+  "samples": 264600,
+  "rms_dbfs": -15.0,
+  "peak_dbfs": -12.0
+ },
+ {
+  "category": "other",
+  "target": "launcher",
+  "packets": 300,
+  "silent_flagged": 0,
+  "samples": 264600,
+  "rms_dbfs": -15.0,
+  "peak_dbfs": -12.0
+ },
+ {
+  "category": "other",
+  "target": "unrelated",
+  "packets": 300,
+  "silent_flagged": 0,
+  "samples": 264600,
+  "rms_dbfs": -96.7,
+  "peak_dbfs": -90.3
+ },
+ {
+  "category": "other",
+  "target": "self",
+  "packets": 300,
+  "silent_flagged": 0,
+  "samples": 264600,
+  "rms_dbfs": -96.7,
+  "peak_dbfs": -90.3
+ },
+ {
+  "category": "communications",
+  "target": "renderer",
+  "packets": 300,
+  "silent_flagged": 0,
+  "samples": 264600,
+  "rms_dbfs": -96.7,
+  "peak_dbfs": -90.3
+ },
+ {
+  "category": "communications",
+  "target": "launcher",
+  "packets": 300,
+  "silent_flagged": 0,
+  "samples": 264600,
+  "rms_dbfs": -96.7,
+  "peak_dbfs": -90.3
+ }
+]
