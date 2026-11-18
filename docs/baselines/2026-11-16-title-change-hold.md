@@ -2,8 +2,14 @@
 
 Revised 2026-11-16: the "rule 2" and "rule 3" below refer to the numbering of the deleted design,
 now [CAPTURE.md](../CAPTURE.md) "Which windows are captured". "None is implemented" for the open
-cases is outdated: site-wide user path rules exist ([DECISIONS.md](../DECISIONS.md) row 18) and F5
-reports the `OBJID_CLIENT` `NAMECHANGE` as `title`.
+cases is outdated: site-wide user path rules exist ([DECISIONS.md](../DECISIONS.md) row 18).
+
+Revised 2026-11-18: "row 18" above is the DECISIONS.md row "Exclusions for now" (path rules cover
+their whole site); the rows have moved since.
+
+Revised 2026-11-17: F5 never reported the `OBJID_CLIENT` `NAMECHANGE` (Chrome's carry a negative
+idChild, which F5 drops), and F17 removed the unused branch, so it stays undelivered; see
+[title-hold pages](2026-11-17-title-hold-pages.md), "The -4 events and F5" and "Decision for F17".
 
 Measurements behind TODO A9 (F9) of the monitor-capture rules ([CAPTURE.md](../CAPTURE.md)),
 rule 3: when a kept browser window changes its title, how long after the title event do the
