@@ -1,0 +1,126 @@
+{
+ "own_pid": 36944,
+ "player_pid": 24420,
+ "tone_only": [
+  {
+   "pid": 7392,
+   "own": false,
+   "state": 1,
+   "peak": 0.251,
+   "system": false
+  },
+  {
+   "pid": 8440,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 17436,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 15324,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 0,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": true
+  }
+ ],
+ "captured_samples": 47809,
+ "tone_and_loopback": [
+  {
+   "pid": 7392,
+   "own": false,
+   "state": 1,
+   "peak": 0.251,
+   "system": false
+  },
+  {
+   "pid": 8440,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 17436,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 15324,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 0,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": true
+  },
+  {
+   "pid": 36944,
+   "own": true,
+   "state": 1,
+   "peak": 0.251,
+   "system": false
+  }
+ ],
+ "akashic_active_processes_cable": [
+  "python.exe"
+ ],
+ "after_close": [
+  {
+   "pid": 8440,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 17436,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 15324,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  },
+  {
+   "pid": 0,
+   "own": false,
+   "state": 0,
+   "peak": 0.0,
+   "system": true
+  },
+  {
+   "pid": 36944,
+   "own": true,
+   "state": 0,
+   "peak": 0.0,
+   "system": false
+  }
+ ]
+}
