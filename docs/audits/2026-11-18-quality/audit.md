@@ -17,9 +17,16 @@ not part of this request.
 | Storage | 1 | 1 |
 | Tests | 2 | 11 |
 | Approaches | 0 | 2 |
-| **Total** | **9** | **24** |
+| Architecture (2026-11-19) | 1 | 6 |
+| Creep and redundancy (2026-11-19) | 6 | 8 |
+| **Total** | **16** | **38** |
 
-Refuted: 0 of 16 checked; 8 narrowed (fixes below are the narrowed ones).
+Refuted: 0 of 33 checked; 17 narrowed (fixes below are the narrowed ones). Workspace: a separate
+table, not numbered (`/frogg:create-workspace`).
+
+The architecture, creep and workspace dimensions were added on 2026-11-19 at the user's request,
+under the user's rule: "Treat the app as a fresh one, no migration, no data to keep, no
+compatibility code."
 
 Top 5 by impact on the target questions:
 
@@ -95,6 +102,58 @@ Top 5 by impact on the target questions:
 | 195 | SHOULD | `src/akashic/capture/compose.py:69`, `capture/imaging.py:47, 67` | Each changed canvas is shrunk by 4 twice per frame (RGB for `is_black`, again for the signature), on the capture thread (G1 p95 33 % of a core); a few ms per composite (signature 2.7-2.8 ms on a 41 % 4K crop). A gray-max shortcut would change the black verdict on dim saturated frames. | invent: one reduction per frame feeding both the black check (max over RGB) and the signature (`convert("L")` of the same reduced image), byte-identical verdicts. |
 | 204 | SHOULD (recurring, TODO C4) | `src/akashic/pipeline/speakers.py:227-236` | Segmentation windows are laid end to end and the last is zero-padded; a 10.5 s segment gets a 0.5 s tail whose unidentified turn clears the author (report: authorship 0.464 at 0.5-2 s past a boundary vs 0.701). Nearest-centre ownership was measured only inside C7, never alone: alone it can split a speaker into two halves under `MIN_IDENTIFY_MS`. | invent: evenly spread full-length windows with frame ownership, measured alone with `eval/segment-speaker-attribution` before it ships outside C2/C7 (TODO C4 "Spread windows evenly"). |
 
+## Architecture (2026-11-19)
+
+| # | Sev | Where | Problem | Fix |
+| :- | :- | :- | :- | :- |
+| 225 | MUST | `src/akashic/api/settings.py:502-516`, `storage/retention.py:419-445` | `_purge_category` rebuilds retention's per-category sequence, and the two copies have diverged: the API path never calls `expire_monitor_history`, against "monitor history follows the frame rows" (STORAGE.md). A per-kind `purge()` cannot hold the spent-row steps: `apply_retention` runs them once after the loop, only when both paired kinds have limits, at the smaller cutoff. | One helper both call, e.g. `delete_spent_screen(conn, cutoff)` = `delete_spent_frames` + `expire_monitor_history`; or add the monitor-history call to the API path. |
+| 226 | SHOULD | `src/akashic/storage/debuginfo.py:21-26, 110-124` | Storage owns the app-shell verdict on what the tray and sidebar show (`TRAY_CAPTURE_RUNS`, `SIDEBAR_CAPTURE_RUNS`, `processing_attention`). Process-state strings have no single owner: `ipc.State` lacks "stopped" and "crashed", `supervisor._Child.state` is a plain `str`, more sets live in `api/server.py:90`, `app.py:62-79`, `tray.py:38-59`. | A typed `ProcessState` beside `ipc.State`; move `Processing`, `processing_status`, `processing_attention` and the run sets into an app-shell module (e.g. `akashic/status.py`); `debuginfo` keeps `ProcessInfo`. |
+| 227 | SHOULD | `src/akashic/platform/win/ocr.py:17, 63-76`, `capture/ports.py:296-297` | The OCR adapter imports core capture logic (`ocr_gate.pick_language`, `text.render_blocks`), decides word grouping and returns rendered text (business rules in Windows glue). | `OcrEngine.recognize` returns `list[TextBlock]` and the installed languages; language choice, grouping and rendering move into `capture/`; `pipeline/ocr_windows.py` renders through the same helper; a `test_layout.py` rule: platform imports only `capture.ports`. Pairs with #190 and #214. |
+| 228 | SHOULD | `src/akashic/api/server.py:105-111, 146-159, 406-428` | `Services` takes six optional collaborators and `Controls` optional hooks "for tests on other systems" (multi-OS, out of scope); production always passes them all (`app.py:231-264`). Routers mount conditionally, `None` guards follow (`settings.py:540-541, 638-647`, `debug.py:183-184`, `server.py:366-367`), handlers rebuild `Paths` from the config file (`stt.py:112-115`, `settings.py:614`). Also a creep finding. | Make them required, pass `Paths` once, register every router; tests build `Services` from one fixture (27 constructions in 20 files move); delete the `None` branches and `available` (`ui/settings.js:311`, `test_settings.py:375`). |
+| 229 | SHOULD | `src/akashic/app.py:97-165`, `api/settings.py:433-447`, `api/stt.py:257` | Four shell helpers each call `load_config` with a different fallback; Settings wraps `parse_config` again; `api/stt.py` calls `load_config`, which writes a default file as a side effect. | One reader (`config.read(paths) -> Config | ConfigError`, no write) passed through `Services`; `load_config` only at process start. |
+| 230 | SHOULD | `src/akashic/api/settings.py:488`, `capture/audio.py:835` | Settings reads its device list from capture's Debug payload (`process_info.capture.audio.available`), which `debuginfo` documents as a Debug aid. | Publish devices under a named key read by both, or document `process_info` in ARCHITECTURE.md as the capture-to-shell status channel with its keys. |
+| 231 | SHOULD | `docs/ARCHITECTURE.md:24-25, 38` | Says `search/` is shared below the processes, but it imports `pipeline` (recurring #2); silent on api → pipeline, platform → capture (`ocr.py`), platform → storage (`audio.py` → `storage.opus`); omits `config_edit.py`, `fold.py`, `jsonish.py`; presents the storage-resident `processing_attention` as intended. | After #226-#229, list the real package edges and top-level helpers. |
+
+## Creep and redundancy (2026-11-19)
+
+| # | Sev | Where | Problem | Fix |
+| :- | :- | :- | :- | :- |
+| 220 | MUST | `src/akashic/config.py:339-346, 367-368` | `disk_warning_free_gb` and `[exclusions] window_titles` are accepted and ignored only so old config.toml files load, against the file's own rule (unknown keys are errors). A fresh folder gets `DEFAULT_CONFIG_TOML`, which has neither. | Remove both keys and comments; delete only the "accepted" and "survives a save" checks (`test_config.py:68-73, 82-87`, `test_settings.py:206-211, 221-226`) or turn them into "unknown key is an error"; keep the checks that neither is offered as a setting (`test_settings.py:203-205, 217-220`) and the default checks. Also drops TODO.md:605's "old configs still load". |
+| 221 | MUST | `src/akashic/storage/db.py:172-192`, `app.py:337`, `docs/STORAGE.md:13-16`, `tests/test_db.py:115-155, 174-179`, `tests/test_export.py:181` | `StaleSchemaError` and `_refuse_stale_schema` refuse data folders of older schema edits: code kept for old data. The user confirmed (2026-11-19) that the old data folder was moved aside. | Delete the class, the check, the `except`, the STORAGE.md sentences and those tests. |
+| 222 | MUST | `src/akashic/storage/db.py:30-42, 130-173`; `tests/test_db.py:75-79, 94-113, 206-208, 224-230`; `schema vN` displays (`app.py:224`, `child.py:218`, `api/debug.py:65`, `tests/test_processes.py:63`, `tests/test_debug.py:123`) | A full migration runner (filename regex, gap-free sequence, "newer than this app" refusal, injectable list) serves one schema file edited in place. Part C plans schema changes once real data exists (#129, #134, #137, #164). | User decision 2026-11-19: drop it now. One create step that runs the script and sets `user_version = 1` when it is 0, refusing any other version; keep the name `db.migrate` (about 60 call sites in tests and scripts); move the file to `storage/schema.sql`; keep `user_version` where `storage/export.py:292-295` copies it. Bring numbered migrations back with the first schema change after real recording starts. |
+| 223 | MUST | `src/akashic/storage/migrations/0001_schema.sql:1`, `docs/STORAGE.md:12-13` | Line 1 says later changes go in new numbered files, with no time condition. | With #222: say "The whole schema; edited in place until real data exists, then numbered migrations come back" and align STORAGE.md. |
+| 224 | MUST | `src/akashic/config.py:33, 117, 203, 383, 417`, `api/settings.py:154, 590`, `pipeline/main.py:207, 240`, `pipeline/models.py:521` | The speech-model key is `[audio] whisper_model`, commented as a "legacy key", though it also selects Qwen3-ASR and Canary. | Rename to `speech_model` (and `DEFAULT_SPEECH_MODEL`) everywhere, no alias; update `test_config.py:159-189`, `test_settings.py:235-263`, `test_models.py:350-359`, `tests/hardware/test_real_hardware.py`. |
+| 232 | MUST | `TODO.md` #49, #51, #56, #73, #84, #85, #87, #89 | Done or obsolete items still unticked: #49 (`db.py:83-95`), #51 (`0001_schema.sql:80`), #56 (`retention.py:103-105`), #73 (`api/settings.py:531-532`), #84 (`conftest.py:75-80`), #85 (`test_network_guard.py:31`), #87 (`test_whisper_and_worker_body.py:265`); #89's targets no longer exist. | Tick them (#89 as obsolete); no OPEN.md leftovers. |
+| 233 | SHOULD | `TODO.md` epics (lines 29-116), A2, A6 | Every box ticked; TODO.md's own rule says to drop them; their open points are already in OPEN.md. A8 is the gate to Part C (its last line and the references "before A8", "after A8"). | Drop the three epics, A2 and A6; keep A8's heading and its gate sentence, or move that sentence into the Part A intro and reword the references. |
+| 234 | SHOULD | `docs/DECISIONS.md:46` | The #47 decision says "old segments lose meaning-search until re-embedded", which assumes data to keep. `TODO.md:648` (#108, "existing keyfiles must unlock first") stays: real recording and its export will create keyfiles before B11 is done. | Change the DECISIONS line with a dated edit, on the user's word only (DECISIONS.md rules). |
+| 235 | SHOULD (recurring #210) | `tests/test_settings.py:332-333`, `tests/test_timeline_api.py:390-391`, `tests/test_db.py:82-91`, `tests/test_platform_win.py:46-50`, `tests/test_frames_storage.py:407-441`, `tests/test_ask_job.py:122` | More guards of removed routes, columns and methods, an "old format paths still read" test with no current writer, an "old plans remain readable" line. | Delete them with #210; at `test_db.py` and `test_ask_job.py:122` strip only the lines inside behaviour tests. |
+| 236 | SHOULD | `src/akashic/capture/imaging.py:3`, `capture/ocr_gate.py:1`, `capture/media.py:1`, `capture/screen.py:78` | Comments cite "research §3.2", "§5", "§3.1" by number. | Drop the references or name the file and topic. |
+| 237 | SHOULD | `src/akashic/pipeline/main.py:225-226`, `scripts/selftest.ps1:1` | Comments narrate a change ("no longer swaps them twice", "used to be manual"). | State the why only. |
+| 238 | SHOULD (recurring #97) | `src/akashic/pipeline/main.py:205, 210` | `build_runner` builds two identical `MediaStore`s (as `app.py:225-226`). | One, shared, with #97. |
+| 239 | SHOULD | `src/akashic/storage/retention.py:21-45` | Bullets for episodes, embeddings, gaps and monitor history sit after "Safety rules:" and read as rules. | Move them into the per-type list above it. |
+| 240 | SHOULD | `pyproject.toml:70-72` | `TD002`, `TD003`, `FIX002` ignored, but `src`, `tests` and `scripts` hold no TODO/FIXME comment. | Drop the three ignores (any future TODO comment then fails the check, which fits tracking work in TODO.md). |
+
+## Workspace (2026-11-19)
+
+Read-only survey (`/frogg:create-workspace` § Survey and § Checklist). Not numbered and not
+queued: apply with `/frogg:create-workspace`. The survey ran `uv audit --frozen`, which sends the
+project's package names and versions to OSV (no captured data): no known vulnerability in 134
+packages. TODO.md B12 asks for the user's OK before such an audit; it was not asked first.
+
+| Item | State | Action |
+| :- | :- | :- |
+| GitHub visibility | public | AGENTS.md says the code holds screenpipe logic ported under a personal, non-commercial licence: decide whether the repo stays public. |
+| Remote branch `claude/akashic-data-collection-audit-e91ad3` | unmerged | Holds `docs/audits/2026-11-17-data-collection.md` and `eval/data-collection-2026-11-17/`, not on main: merge (`/frogg:merge`) or delete. |
+| Local branches and worktrees | stale | Five local branches fully merged, four with worktrees under `.claude/worktrees/` (one holds untracked `.epic-notes/`): remove on the user's yes. |
+| `.gitignore` | missing groups | OS files, secrets, `.claude/settings.local.json` and `.claude/worktrees/` (ignored only in `.git/info/exclude`), `CLAUDE.local.md`, logs, `*.egg-info/` (TODO B12). |
+| `.gitattributes` | missing | `* text=auto eol=lf` on top (the `-text` lines still win) and `binary` for `*.npy`, `*.npz`, `*.png`, `*.opus`, `*.pdf`, `*.webp`; renormalize in its own commit (TODO B12). |
+| AGENTS.md | bloat, missing | 132 lines, 9 KB: move "What this is" product intent to a DESIGN.md or keep the split with DECISIONS.md on purpose; add `## Commands` / `## Dev loop` (check, selftest, hardware tests, test store, `eval/quality/run.py`); add `docs/research/` to the guides list; the commit rule repeats `frogg:commit`. |
+| README.md, LICENSE | missing | License line and an all-rights-reserved LICENSE (TODO B12). |
+| `.claude/settings.json` | missing | Shared `permissions.allow` for the check and test commands (TODO B12). |
+| Dev loop | missing | No headless start/stop/status (`uv run akashic` needs the passphrase dialog and tray); document what exists before building one. |
+| ISSUES.md | missing | No tracker; OPEN.md and TODO.md stand in: mark it deliberate or add ISSUES.md. |
+| Machine tools | missing | `pdftoppm` (Poppler) not installed. |
+
 #190, #196 and #201 are also Approaches findings (upscaling before OCR, zero-order hold, lossless
 OCR source); they are listed once, in their bug dimension.
 
@@ -104,11 +163,22 @@ OCR source); they are listed once, in their bug dimension.
 #196 (three bounds), #204 (unmeasured alone), #195 (exact-equivalent reduction), #207 (keep the
 lower-case invariant), #209 (import rule not enforced elsewhere), #210 (guard lines inside
 behaviour tests), and the zero-order-hold Approaches item merged into #196.
+2026-11-19 dimensions: 17 checked, 0 refuted, 9 narrowed: #220 (keep the not-offered and default
+checks), #221 (only once the old data folder is moved: the user confirmed it), #222 (Part C needs
+migrations again once real data exists: the user chose drop now, re-add later), #223 (STORAGE.md
+already says it right), #225 (a per-kind purge cannot hold the spent-row steps), #233 (A8 is the
+Part C gate), #234 (#108's keyfile check stays; the DECISIONS line needs the user's dated edit),
+#235 (strip lines inside behaviour tests).
+
+User answers 2026-11-19 (architect question): the old data folder was moved aside; the migration
+runner is dropped now and numbered migrations come back with the first schema change after real
+recording starts.
 
 ## Queued
 
 All 33 findings (#187-#219), at the user's choice (2026-11-18): TODO.md `## Audit 2026-11-18`,
-#195 and #204 as `/frogg:invent` items.
+#195 and #204 as `/frogg:invent` items. All 21 findings of 2026-11-19 (#220-#240), at the user's
+choice, in the same section. Workspace rows: `/frogg:create-workspace`.
 
 ## Open questions
 
