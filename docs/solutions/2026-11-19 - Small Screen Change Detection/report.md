@@ -35,7 +35,7 @@ Cost: mask and count 0.43 ms against today's int16 path 1.40 ms; flatnonzero 0.0
 
 Fails when: a draft that never holds still for one interval is stored at most partially (9 of 70 complete in the extra stream; today stores none) → late or partial drafts. A 2 px underscore caret 9-11 px wide fires in 1/4 of 4K placements, and 2-row hover lines in 1/4-1/2 → one frame per blink or hover until the toggle budget runs out. A block caret stores up to 8 frames per blink episode. The > 6 threshold is more sensitive to faint tints, unmeasured on real screens. Taskbar badges stay missed, as today.
 
-Reproduce: `uv run python _dev/invent/screen-change-small-text/harness/run.py _dev/invent/screen-change-small-text/C5/c5.py <out>` and `harness/live_replay.py --seconds 600 C5/c5.py`.
+Reproduce: `uv run python eval/small-screen-change-detection/harness/run.py eval/small-screen-change-detection/C5/c5.py <out>` and `harness/live_replay.py --seconds 600 C5/c5.py`.
 
 ## Findings
 ### Screen recorders and remote desktop
