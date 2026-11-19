@@ -230,6 +230,16 @@ its assets, truth logs, scorer output and baselines at the end of each session.
     10 times faster within 30 s of the 100 game-mode switches (2.4 GB in 45 min) than elsewhere
     (2.0 GB in 381 min), when per-window captures are stopped and restarted.
 
+- 2026-11-19 Phase 4 invent 1 of 5, small screen changes (#208): done.
+  `docs/solutions/2026-11-19 - Small Screen Change Detection/report.md`, artifact
+  https://claude.ai/artifact/2CFUBV51hgt32UUJkikDvt. Best fit C5: today's test OR exact clusters
+  of the moved points, minus regions that ticked at the previous checks, exact toggles capped,
+  taskbar band as today. Synthetic: 0 of 442,368 word placements and 0 badges missed (today
+  misses all), bar carets never fire, +0.03 ms. Real desktop 10 min (GDI grab, counts only):
+  +5 primary / +9 right stores over today, unlabelled. C1, C4, C6 refuted; C2, C3 work but store
+  spinners and block carets at every check. Not done: quality-harness M1.1/M1.2 with C5
+  (needs a production change). Harness in `_dev/invent/screen-change-small-text/` (local).
+
 ## Harness commands
 
 ```powershell
