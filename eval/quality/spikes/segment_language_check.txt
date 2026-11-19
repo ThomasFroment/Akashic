@@ -1,0 +1,4 @@
+20261118-smoke-s11-target-2220 truth->detected: {('en', 'en'): 12, ('fr', 'fr'): 4, ('mixed', 'fr'): 1, ('multi/tts', 'en'): 3}
+  FR single-language segments (dur s, detected, WER, utterances): [(11.6, 'fr', 0.03, 1), (11.7, 'fr', 0.03, 1), (6.5, 'fr', 0.38, 1), (4.9, 'fr', 0.74, 1)]
+20261118-smoke-s11-target-2241 truth->detected: {('en', 'en'): 13, ('fr', 'fr'): 3, ('mixed', 'fr'): 1, ('multi/tts', 'en'): 3}
+  FR single-language segments (dur s, detected, WER, utterances): [(11.9, 'fr', 0.07, 1), (11.8, 'fr', 0.06, 1), (12.2, 'fr', 0.13, 1)]
