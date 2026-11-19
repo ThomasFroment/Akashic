@@ -9,9 +9,10 @@ its assets, truth logs, scorer output and baselines at the end of each session.
 - Phase 0, scope: done 2026-11-18 (`scope.md`)
 - Phase 1, harness `eval/quality/`: built 2026-11-18; smoke run twice on `target` (baseline
   `docs/baselines/2026-11-18-quality.md`); standard and day pending (overnight)
-- Phase 2, audit: done 2026-11-18 (`audit.md`: 9 MUST, 24 SHOULD, #187-#219, 0 refuted, all
-  queued in TODO.md `## Audit 2026-11-18`, which is not committed: the user's commit rule)
-- Phase 3, research: next
+- Phase 2, audit: done 2026-11-18 (`audit.md`: #187-#219), plus architecture, creep and workspace
+  dimensions 2026-11-19 (#220-#240); 0 refuted; all queued in TODO.md `## Audit 2026-11-18`,
+  which is not committed: the user's commit rule
+- Phase 3, research: done 2026-11-19 (8 reports in `docs/research/`, listed under Report paths)
 - Phase 4, invent: not started
 - Phase 5, synthesis and refuters: not started
 - Phase 6, `quality.md`: not started
@@ -113,6 +114,27 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   segment cut into hallucinations and French deletions); M11 video truth from the page's real
   play events.
 
+- 2026-11-19 Phase 3 research, 8 items, each with in-memory spikes in `eval/quality/spikes/`
+  (results committed beside each script):
+  1. Small-text OCR: 3x Lanczos upscaling takes 9-10 px CER from 0.62-0.73 to about 0.02.
+  2. Akashic's loopback capture is its own audible session; a pid check excludes it.
+  3. Process loopback works (tree inclusion through the launcher); Communications-category
+     streams stay silent.
+  4. Game signals: QUNS reads 2 for a real game; GameConfigStore is clean but incomplete; Steam
+     `RunningAppID` works.
+  5. The 16 s media delay was a Pause artefact, not a defect: the scorer was fixed and the
+     baseline corrected.
+  6. Language choice was right on 32 of 32 segments; the French WER comes from a cut and from
+     overlapping speech.
+  7. Small changes: all 40 one-word replies and badges are missed. Candidate: a per-tile span of
+     3x3 over four grids. Two refuter rounds narrowed it.
+  8. App time: holding each session to the next one, bounded by the monitor's "unchanged"
+     confirmations, takes holes from 116 / 110 s to 1.6 / 0.3 s.
+
+  The item 7 WGC dirty-region spike opened a Tk window on the right monitor. It took the
+  foreground despite WS_EX_NOACTIVATE + SW_SHOWNOACTIVATE. Do not open spike windows while the
+  user is at the PC.
+
 ## Harness commands
 
 ```powershell
@@ -144,6 +166,15 @@ stay in `eval\quality\local\` (gitignored).
 - `docs/research/conversational-speech-datasets-fr-en.md`: written by an agent during the Phase 1
   planning; public conversational corpora (SUMM-RE FR, AMI EN) as a later replacement for the
   read-speech bank. Input for Phase 3.
+- Phase 3 reports in `docs/research/`:
+  - `windows-ocr-small-text-upscaling.md` (#190)
+  - `wasapi-loopback-own-session.md` (#187)
+  - `windows-process-loopback-capture.md` (A5 #110)
+  - `windows-game-detection-signals.md` (#188, #192)
+  - `browser-media-session-timing.md` (#189)
+  - `whisper-language-choice-fr-en.md` (#139)
+  - `screen-change-detection-small-text.md` (#208)
+  - `app-usage-time-from-samples.md` (#196)
 
 ## Deferred
 
@@ -152,8 +183,9 @@ stay in `eval\quality\local\` (gitignored).
 
 ## Next
 
-- Phase 3 (`/frogg:research`, batch): one item per open question blocking a Phase 4 run or a
-  recommendation.
+- Phase 4 (`/frogg:invent` full, one per problem picked, `eval/quality/` named as the harness in
+  Context). Phase 3 measured candidates for #190, #196 and #208. #187 needs only a pid check. #188,
+  #110 and the overlap WER are open method problems.
 - Overnight: `run.py standard` twice (same seed, 5 % check) and `run.py day`; add them to the baseline.
 - Untested until standard: exclusive-fullscreen re-entry, the Outer Wilds launch (confirm the Steam
   launch arguments once by hand), real-app launches beyond smoke's.
