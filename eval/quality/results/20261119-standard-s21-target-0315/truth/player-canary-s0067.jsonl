@@ -1,0 +1,3 @@
+{"id":"s0067-spare_en1-000","mono_ns":51915095320600,"n":55520,"planned_ms":500,"rate":16000,"speaker":null,"start_wall_ms":1795057594663,"stream":"excluded","type":"start","wall_ms":1795057594163}
+{"id":"s0067-spare_en1-001","mono_ns":51918866995600,"n":94080,"planned_ms":4470,"rate":16000,"speaker":null,"start_wall_ms":1795057598649,"stream":"excluded","type":"start","wall_ms":1795057597934}
+{"id":"s0067-spare_en1-002","mono_ns":51925367039600,"n":166480,"planned_ms":10850,"rate":16000,"speaker":null,"start_wall_ms":1795057605029,"stream":"excluded","type":"start","wall_ms":1795057604434}

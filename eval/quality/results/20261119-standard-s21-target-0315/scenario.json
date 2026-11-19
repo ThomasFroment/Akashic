@@ -1,0 +1,4111 @@
+{
+ "attempt": 0,
+ "blocks": [
+  {
+   "kind": "gaming",
+   "t0_ms": 0,
+   "t1_ms": 1365000
+  },
+  {
+   "kind": "desk",
+   "t0_ms": 1365000,
+   "t1_ms": 3900000
+  }
+ ],
+ "cast": {
+  "call_en1": {
+   "corpus": "librispeech",
+   "corpus_speaker": "en1272",
+   "lang": "en",
+   "role": "call"
+  },
+  "call_en2": {
+   "corpus": "librispeech",
+   "corpus_speaker": "en1462",
+   "lang": "en",
+   "role": "call"
+  },
+  "call_fr1": {
+   "corpus": "mls_french",
+   "corpus_speaker": "fr10179",
+   "lang": "fr",
+   "role": "call"
+  },
+  "call_fr2": {
+   "corpus": "mls_french",
+   "corpus_speaker": "fr12080",
+   "lang": "fr",
+   "role": "call"
+  },
+  "mixed1": {
+   "corpus": "splice",
+   "corpus_speaker": "spare_en2+spare_fr2",
+   "lang": "mixed",
+   "role": "extra"
+  },
+  "user_en1": {
+   "corpus": "librispeech",
+   "corpus_speaker": "en1673",
+   "lang": "en",
+   "role": "user"
+  },
+  "user_fr1": {
+   "corpus": "mls_french",
+   "corpus_speaker": "fr12977",
+   "lang": "fr",
+   "role": "user"
+  }
+ },
+ "duration_ms": 3900000,
+ "game_sessions": [
+  {
+   "mode": "borderless",
+   "t0_ms": 0,
+   "t1_ms": 682500
+  },
+  {
+   "mode": "exclusive",
+   "t0_ms": 682500,
+   "t1_ms": 1365000
+  }
+ ],
+ "hashes": {
+  "coverage": "0aee18ec38f5ec9e067145605ce4240f6e2fad5252b7bce90f1fdc70c83501af",
+  "manifest": "33b9078dccb4bb852000c93f1204db5e6dd273a95d9d9598b1f74cd4da119891",
+  "profile": "2fb079c930e8593d9ad98401a1a1cd87e4f7b3bbb6b6e34af05de6f858f898bc"
+ },
+ "length": "standard",
+ "run_p90_s": {
+  "desk": 300.0,
+  "gaming": 160.0
+ },
+ "seed": 21,
+ "steps": [
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0000",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "zen",
+    "font_px": 11,
+    "lang": "en",
+    "page": "article",
+    "theme": "dark"
+   },
+   "t0_ms": 0,
+   "t1_ms": 6113,
+   "tags": [
+    "res_1440p",
+    "scrolling",
+    "side_monitor_change",
+    "small_fonts",
+    "text_en",
+    "theme_dark",
+    "zen"
+   ],
+   "windows": [
+    "zen@left",
+    "chrome@primary",
+    "edge@primary",
+    "chrome@right",
+    "edge@right",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    7
+   ],
+   "id": "s0001",
+   "kind": "game_sound",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 0,
+   "t1_ms": 1229000,
+   "tags": [],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    4,
+    6
+   ],
+   "id": "s0002",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "game",
+    "mode": "borderless"
+   },
+   "t0_ms": 6113,
+   "t1_ms": 166113,
+   "tags": [
+    "game_borderless",
+    "res_4k",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "game@primary",
+    "edge@primary",
+    "chrome@right",
+    "edge@right",
+    "zen@left",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0003",
+   "kind": "both",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 41000,
+   "t1_ms": 1229000,
+   "tags": [],
+   "windows": []
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9,
+    11,
+    12
+   ],
+   "id": "s0004",
+   "kind": "call",
+   "monitor": "left",
+   "params": {
+    "cast": [
+     "call_fr1",
+     "call_en1",
+     "call_en2"
+    ],
+    "t0_ms": 41000,
+    "t1_ms": 1229000,
+    "utterances": [
+     {
+      "clip": "call_en2-000",
+      "dur_ms": 3430,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 41500
+     },
+     {
+      "clip": "call_fr1-000",
+      "dur_ms": 12820,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 45830
+     },
+     {
+      "clip": "user_en1-000",
+      "dur_ms": 11995,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 59050
+     },
+     {
+      "clip": "call_fr1-001",
+      "dur_ms": 11780,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 72645
+     },
+     {
+      "clip": "call_en1-000",
+      "dur_ms": 3700,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 85325
+     },
+     {
+      "clip": "mixed1-000",
+      "dur_ms": 13337,
+      "speaker": "mixed1",
+      "stream": "own",
+      "t_ms": 90625
+     },
+     {
+      "clip": "call_en2-001",
+      "dur_ms": 6055,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 104362
+     },
+     {
+      "clip": "call_en2-002",
+      "dur_ms": 3265,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 109817
+     },
+     {
+      "clip": "user_en1-001",
+      "dur_ms": 8430,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 113482
+     },
+     {
+      "clip": "call_fr1-002",
+      "dur_ms": 10670,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 124512
+     },
+     {
+      "clip": "call_fr1-003",
+      "dur_ms": 10590,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 136782
+     },
+     {
+      "clip": "user_en1-002",
+      "dur_ms": 11180,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 147772
+     },
+     {
+      "clip": "call_fr1-004",
+      "dur_ms": 13650,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 159352
+     },
+     {
+      "clip": "call_en1-001",
+      "dur_ms": 5640,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 173902
+     },
+     {
+      "clip": "user_en1-003",
+      "dur_ms": 14470,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 179942
+     },
+     {
+      "clip": "call_fr1-005",
+      "dur_ms": 13860,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 193812
+     },
+     {
+      "clip": "mixed1-001",
+      "dur_ms": 13887,
+      "speaker": "mixed1",
+      "stream": "call",
+      "t_ms": 210272
+     },
+     {
+      "clip": "user_fr1-000",
+      "dur_ms": 14960,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 224559
+     },
+     {
+      "clip": "call_en1-002",
+      "dur_ms": 4225,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 241119
+     },
+     {
+      "clip": "call_fr1-006",
+      "dur_ms": 11480,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 246244
+     },
+     {
+      "clip": "user_fr1-001",
+      "dur_ms": 12370,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 259324
+     },
+     {
+      "clip": "call_en2-003",
+      "dur_ms": 4440,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 272094
+     },
+     {
+      "clip": "call_en2-004",
+      "dur_ms": 6195,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 277434
+     },
+     {
+      "clip": "user_en1-004",
+      "dur_ms": 9330,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 283029
+     },
+     {
+      "clip": "call_fr1-007",
+      "dur_ms": 12560,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 293959
+     },
+     {
+      "clip": "call_en2-005",
+      "dur_ms": 10245,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 309119
+     },
+     {
+      "clip": "user_fr1-002",
+      "dur_ms": 14520,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 319764
+     },
+     {
+      "clip": "call_fr1-008",
+      "dur_ms": 14720,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 336884
+     },
+     {
+      "clip": "call_en1-003",
+      "dur_ms": 4700,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 354204
+     },
+     {
+      "clip": "user_en1-005",
+      "dur_ms": 9895,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 361504
+     },
+     {
+      "clip": "call_en1-004",
+      "dur_ms": 5120,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 371799
+     },
+     {
+      "clip": "call_fr1-009",
+      "dur_ms": 12670,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 376319
+     },
+     {
+      "clip": "user_en1-006",
+      "dur_ms": 12655,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 390589
+     },
+     {
+      "clip": "call_en2-006",
+      "dur_ms": 4715,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 405844
+     },
+     {
+      "clip": "call_fr1-010",
+      "dur_ms": 13250,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 412159
+     },
+     {
+      "clip": "mixed1-002",
+      "dur_ms": 14362,
+      "speaker": "mixed1",
+      "stream": "own",
+      "t_ms": 426309
+     },
+     {
+      "clip": "call_en1-005",
+      "dur_ms": 6860,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 441571
+     },
+     {
+      "clip": "call_fr1-011",
+      "dur_ms": 12710,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 450031
+     },
+     {
+      "clip": "user_en1-007",
+      "dur_ms": 9350,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 465341
+     },
+     {
+      "clip": "call_en1-006",
+      "dur_ms": 11475,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 474091
+     },
+     {
+      "clip": "call_fr1-012",
+      "dur_ms": 15220,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 486466
+     },
+     {
+      "clip": "user_en1-008",
+      "dur_ms": 6675,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 503286
+     },
+     {
+      "clip": "call_en1-007",
+      "dur_ms": 6635,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 510361
+     },
+     {
+      "clip": "call_fr1-013",
+      "dur_ms": 14680,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 519596
+     },
+     {
+      "clip": "user_en1-009",
+      "dur_ms": 15920,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 535876
+     },
+     {
+      "clip": "call_en2-007",
+      "dur_ms": 3760,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 552696
+     },
+     {
+      "clip": "call_fr1-014",
+      "dur_ms": 12590,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 557356
+     },
+     {
+      "clip": "user_fr1-003",
+      "dur_ms": 12160,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 569346
+     },
+     {
+      "clip": "call_en1-008",
+      "dur_ms": 3180,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 581906
+     },
+     {
+      "clip": "call_en2-008",
+      "dur_ms": 11080,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 585986
+     },
+     {
+      "clip": "user_en1-010",
+      "dur_ms": 13985,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 598666
+     },
+     {
+      "clip": "call_fr1-015",
+      "dur_ms": 13780,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 614251
+     },
+     {
+      "clip": "call_fr1-016",
+      "dur_ms": 12810,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 628431
+     },
+     {
+      "clip": "user_en1-011",
+      "dur_ms": 7095,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 643841
+     },
+     {
+      "clip": "call_en1-009",
+      "dur_ms": 5380,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 653536
+     },
+     {
+      "clip": "mixed1-003",
+      "dur_ms": 14597,
+      "speaker": "mixed1",
+      "stream": "call",
+      "t_ms": 658316
+     },
+     {
+      "clip": "user_fr1-004",
+      "dur_ms": 10750,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 673313
+     },
+     {
+      "clip": "call_en1-010",
+      "dur_ms": 9240,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 684963
+     },
+     {
+      "clip": "call_en2-009",
+      "dur_ms": 4190,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 694603
+     },
+     {
+      "clip": "user_fr1-005",
+      "dur_ms": 15900,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 700393
+     },
+     {
+      "clip": "call_en1-011",
+      "dur_ms": 7520,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 717893
+     },
+     {
+      "clip": "call_en2-010",
+      "dur_ms": 4860,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 725813
+     },
+     {
+      "clip": "user_en1-012",
+      "dur_ms": 14675,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 731573
+     },
+     {
+      "clip": "call_fr1-017",
+      "dur_ms": 14200,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 745648
+     },
+     {
+      "clip": "call_fr1-018",
+      "dur_ms": 14630,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 762448
+     },
+     {
+      "clip": "user_fr1-006",
+      "dur_ms": 16000,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 778678
+     },
+     {
+      "clip": "call_en1-012",
+      "dur_ms": 8660,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 797278
+     },
+     {
+      "clip": "call_fr1-019",
+      "dur_ms": 15320,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 806838
+     },
+     {
+      "clip": "user_en1-013",
+      "dur_ms": 14195,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 823758
+     },
+     {
+      "clip": "call_en1-013",
+      "dur_ms": 8995,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 839553
+     },
+     {
+      "clip": "call_fr1-020",
+      "dur_ms": 13910,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 849448
+     },
+     {
+      "clip": "user_en1-014",
+      "dur_ms": 7850,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 862758
+     },
+     {
+      "clip": "call_fr1-021",
+      "dur_ms": 15920,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 871008
+     },
+     {
+      "clip": "call_fr1-022",
+      "dur_ms": 12070,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 887828
+     },
+     {
+      "clip": "user_en1-015",
+      "dur_ms": 13030,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 900798
+     },
+     {
+      "clip": "call_en2-011",
+      "dur_ms": 3010,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 914228
+     },
+     {
+      "clip": "call_en1-014",
+      "dur_ms": 8620,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 917638
+     },
+     {
+      "clip": "user_fr1-007",
+      "dur_ms": 10550,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 927858
+     },
+     {
+      "clip": "call_en1-015",
+      "dur_ms": 4930,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 940008
+     },
+     {
+      "clip": "call_fr1-023",
+      "dur_ms": 14400,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 944338
+     },
+     {
+      "clip": "user_en1-016",
+      "dur_ms": 15285,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 960338
+     },
+     {
+      "clip": "mixed1-004",
+      "dur_ms": 14767,
+      "speaker": "mixed1",
+      "stream": "call",
+      "t_ms": 977223
+     },
+     {
+      "clip": "call_en1-016",
+      "dur_ms": 5420,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 992890
+     },
+     {
+      "clip": "user_en1-017",
+      "dur_ms": 6305,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 998710
+     },
+     {
+      "clip": "call_fr1-024",
+      "dur_ms": 14620,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1005415
+     },
+     {
+      "clip": "call_en1-017",
+      "dur_ms": 4625,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 1020935
+     },
+     {
+      "clip": "user_en1-018",
+      "dur_ms": 12000,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 1026460
+     },
+     {
+      "clip": "call_fr1-025",
+      "dur_ms": 12950,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1037860
+     },
+     {
+      "clip": "call_fr1-026",
+      "dur_ms": 15400,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1051710
+     },
+     {
+      "clip": "user_en1-019",
+      "dur_ms": 8895,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 1068710
+     },
+     {
+      "clip": "call_fr1-027",
+      "dur_ms": 11600,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1078005
+     },
+     {
+      "clip": "call_en2-012",
+      "dur_ms": 9645,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 1091205
+     },
+     {
+      "clip": "user_fr1-008",
+      "dur_ms": 13040,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 1103450
+     },
+     {
+      "clip": "call_fr1-028",
+      "dur_ms": 10880,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1118090
+     },
+     {
+      "clip": "call_en2-013",
+      "dur_ms": 8580,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 1129370
+     },
+     {
+      "clip": "user_en1-020",
+      "dur_ms": 7055,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 1137350
+     },
+     {
+      "clip": "call_fr1-029",
+      "dur_ms": 11690,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1144805
+     },
+     {
+      "clip": "call_fr1-030",
+      "dur_ms": 14960,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1157395
+     },
+     {
+      "clip": "user_fr1-009",
+      "dur_ms": 11660,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 1174955
+     },
+     {
+      "clip": "call_fr1-031",
+      "dur_ms": 10520,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1187015
+     },
+     {
+      "clip": "call_fr1-032",
+      "dur_ms": 14780,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 1197935
+     },
+     {
+      "clip": "mixed1-005",
+      "dur_ms": 15377,
+      "speaker": "mixed1",
+      "stream": "own",
+      "t_ms": 1213115
+     }
+    ]
+   },
+   "t0_ms": 41000,
+   "t1_ms": 1229000,
+   "tags": [
+    "call_across_gaming",
+    "discord",
+    "mic_and_system",
+    "overlap_speakers"
+   ],
+   "windows": [
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    12,
+    13
+   ],
+   "id": "s0005",
+   "kind": "busy_disk",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 120684,
+   "t1_ms": 180684,
+   "tags": [
+    "busy_disk"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0006",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 136631,
+   "t1_ms": 138631,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "edge@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0007",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 137152,
+   "t1_ms": 139152,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0008",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "edge",
+    "font_px": 10,
+    "lang": "fr",
+    "page": "forum",
+    "theme": "light"
+   },
+   "t0_ms": 166113,
+   "t1_ms": 170371,
+   "tags": [
+    "edge",
+    "res_1440p",
+    "scrolling",
+    "side_monitor_change",
+    "small_fonts",
+    "text_fr",
+    "theme_light"
+   ],
+   "windows": [
+    "edge@right",
+    "edge@primary",
+    "game@primary",
+    "chrome@right",
+    "zen@left",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0009",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "explorer"
+   },
+   "t0_ms": 170371,
+   "t1_ms": 176371,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "explorer@right",
+    "edge@primary",
+    "game@primary",
+    "edge@right",
+    "zen@left",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0010",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 176371,
+   "t1_ms": 179530,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "edge@primary",
+    "game@primary",
+    "edge@right",
+    "explorer@right",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0011",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "notepad",
+    "lang": "fr"
+   },
+   "t0_ms": 179530,
+   "t1_ms": 185293,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "text_fr"
+   ],
+   "windows": [
+    "notepad@right",
+    "edge@primary",
+    "game@primary",
+    "explorer@right",
+    "chrome@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    4,
+    6
+   ],
+   "id": "s0012",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "outer_wilds"
+   },
+   "t0_ms": 185293,
+   "t1_ms": 493500,
+   "tags": [
+    "res_4k",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "outer_wilds@primary",
+    "game@primary",
+    "explorer@right",
+    "notepad@right",
+    "chrome@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0013",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 295366,
+   "t1_ms": 297366,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0014",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 341111,
+   "t1_ms": 343111,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0015",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 493500,
+   "t1_ms": 497983,
+   "tags": [
+    "discord",
+    "res_1440p"
+   ],
+   "windows": [
+    "discord@left",
+    "game@primary",
+    "outer_wilds@primary",
+    "explorer@right",
+    "notepad@right",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    4,
+    6
+   ],
+   "id": "s0016",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "game",
+    "mode": "exclusive"
+   },
+   "t0_ms": 497983,
+   "t1_ms": 1250809,
+   "tags": [
+    "game_exclusive",
+    "res_4k",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "game@primary",
+    "outer_wilds@primary",
+    "explorer@right",
+    "notepad@right",
+    "chrome@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0017",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 672017,
+   "t1_ms": 674017,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0018",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 848032,
+   "t1_ms": 850032,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0019",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1026412,
+   "t1_ms": 1028412,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0020",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1119493,
+   "t1_ms": 1121493,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0021",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1120453,
+   "t1_ms": 1122453,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    7
+   ],
+   "id": "s0022",
+   "kind": "game_sound",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 1243000,
+   "t1_ms": 1283000,
+   "tags": [],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0023",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 1250809,
+   "t1_ms": 1257281,
+   "tags": [
+    "discord",
+    "res_1440p"
+   ],
+   "windows": [
+    "discord@left",
+    "outer_wilds@primary",
+    "game@primary",
+    "explorer@right",
+    "notepad@right",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0024",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "calculator"
+   },
+   "t0_ms": 1257281,
+   "t1_ms": 1260864,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "uwp"
+   ],
+   "windows": [
+    "calculator@right",
+    "outer_wilds@primary",
+    "game@primary",
+    "notepad@right",
+    "chrome@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0025",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 1260864,
+   "t1_ms": 1272127,
+   "tags": [
+    "discord",
+    "res_1440p"
+   ],
+   "windows": [
+    "discord@left",
+    "outer_wilds@primary",
+    "game@primary",
+    "notepad@right",
+    "calculator@right",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0026",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "chrome",
+    "font_px": 11,
+    "lang": "en",
+    "page": "docs_code",
+    "theme": "dark"
+   },
+   "t0_ms": 1272127,
+   "t1_ms": 1277536,
+   "tags": [
+    "chrome",
+    "res_1440p",
+    "scrolling",
+    "small_fonts",
+    "text_en",
+    "theme_dark"
+   ],
+   "windows": [
+    "chrome@left",
+    "outer_wilds@primary",
+    "game@primary",
+    "notepad@right",
+    "calculator@right",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0027",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 1277536,
+   "t1_ms": 1323459,
+   "tags": [
+    "discord",
+    "res_1440p"
+   ],
+   "windows": [
+    "discord@left",
+    "outer_wilds@primary",
+    "game@primary",
+    "notepad@right",
+    "calculator@right",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0028",
+   "kind": "silence",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 1283000,
+   "t1_ms": 1342000,
+   "tags": [
+    "silence"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0029",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "hung",
+    "launch_ms": 1315459
+   },
+   "t0_ms": 1323459,
+   "t1_ms": 1325492,
+   "tags": [
+    "hung_ghost",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "hung#1",
+    "outer_wilds@primary",
+    "game@primary",
+    "calculator@right",
+    "chrome@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0030",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 1325492,
+   "t1_ms": 1346119,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "outer_wilds@primary",
+    "game@primary",
+    "calculator@right",
+    "chrome@right",
+    "chrome@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0031",
+   "kind": "voice_elsewhere",
+   "monitor": "left",
+   "params": {
+    "utterances": [
+     {
+      "clip": "call_en1-029",
+      "dur_ms": 4755,
+      "speaker": "call_en1",
+      "stream": "elsewhere",
+      "t_ms": 1343271
+     },
+     {
+      "clip": "call_en1-030",
+      "dur_ms": 6535,
+      "speaker": "call_en1",
+      "stream": "elsewhere",
+      "t_ms": 1348926
+     },
+     {
+      "clip": "call_fr1-038",
+      "dur_ms": 15040,
+      "speaker": "call_fr1",
+      "stream": "elsewhere",
+      "t_ms": 1356361
+     },
+     {
+      "clip": "call_en1-031",
+      "dur_ms": 8725,
+      "speaker": "call_en1",
+      "stream": "elsewhere",
+      "t_ms": 1374001
+     }
+    ]
+   },
+   "t0_ms": 1342771,
+   "t1_ms": 1387771,
+   "tags": [],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0032",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "zen",
+    "font_px": 18,
+    "lang": "mixed",
+    "page": "chat_growing",
+    "theme": "dark"
+   },
+   "t0_ms": 1346119,
+   "t1_ms": 1348417,
+   "tags": [
+    "chat_growing",
+    "res_1440p",
+    "side_monitor_change",
+    "text_mixed",
+    "theme_dark",
+    "zen"
+   ],
+   "windows": [
+    "zen@left",
+    "outer_wilds@primary",
+    "game@primary",
+    "calculator@right",
+    "chrome@right",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0033",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 1348417,
+   "t1_ms": 1356276,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "outer_wilds@primary",
+    "game@primary",
+    "calculator@right",
+    "chrome@right",
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0034",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "steam"
+   },
+   "t0_ms": 1356276,
+   "t1_ms": 1359000,
+   "tags": [
+    "launcher",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "steam@right",
+    "outer_wilds@primary",
+    "game@primary",
+    "chrome@right",
+    "zen@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0035",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 1359000,
+   "t1_ms": 1365000,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "outer_wilds@primary",
+    "game@primary",
+    "chrome@right",
+    "steam@right",
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0036",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "assistant",
+    "lang": "mixed"
+   },
+   "t0_ms": 1365000,
+   "t1_ms": 1522849,
+   "tags": [
+    "pwa",
+    "res_1440p",
+    "side_monitor_change",
+    "text_mixed"
+   ],
+   "windows": [
+    "assistant@right",
+    "outer_wilds@primary",
+    "game@primary",
+    "steam@right",
+    "zen@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0037",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1375615,
+   "t1_ms": 1377615,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0038",
+   "kind": "silence",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 1387000,
+   "t1_ms": 2012000,
+   "tags": [
+    "silence"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0039",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1399093,
+   "t1_ms": 1401093,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0040",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 1415135,
+   "t1_ms": 1417135,
+   "tags": [
+    "res_1440p",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0041",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 1416645,
+   "t1_ms": 1418645,
+   "tags": [
+    "res_1440p",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0042",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 1446257,
+   "t1_ms": 1448257,
+   "tags": [
+    "res_1440p",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0043",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1454437,
+   "t1_ms": 1456437,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0044",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1456533,
+   "t1_ms": 1458533,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0045",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 1479648,
+   "t1_ms": 1481648,
+   "tags": [
+    "res_1440p",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0046",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1506560,
+   "t1_ms": 1508560,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0047",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1506686,
+   "t1_ms": 1508686,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0048",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 1508332,
+   "t1_ms": 1510332,
+   "tags": [
+    "res_1440p",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0049",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1510053,
+   "t1_ms": 1512053,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0050",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "vscode",
+    "lang": "en"
+   },
+   "t0_ms": 1522849,
+   "t1_ms": 1975746,
+   "tags": [
+    "code_project",
+    "res_1440p",
+    "side_monitor_change",
+    "text_en"
+   ],
+   "windows": [
+    "vscode@right",
+    "outer_wilds@primary",
+    "game@primary",
+    "assistant@right",
+    "zen@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0051",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "assistant",
+    "lang": "fr"
+   },
+   "t0_ms": 1975746,
+   "t1_ms": 2005746,
+   "tags": [
+    "pwa",
+    "res_4k",
+    "side_monitor_change",
+    "text_fr"
+   ],
+   "windows": [
+    "assistant@primary",
+    "game@primary",
+    "assistant@right",
+    "vscode@right",
+    "zen@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0052",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 1981172,
+   "t1_ms": 1983172,
+   "tags": [
+    "res_4k",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0053",
+   "kind": "title_change",
+   "monitor": "left",
+   "params": {},
+   "t0_ms": 1986452,
+   "t1_ms": 1988452,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0054",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "vscode",
+    "lang": "en"
+   },
+   "t0_ms": 2005746,
+   "t1_ms": 2017577,
+   "tags": [
+    "code_project",
+    "res_1440p",
+    "side_monitor_change",
+    "text_en"
+   ],
+   "windows": [
+    "vscode@right",
+    "game@primary",
+    "assistant@primary",
+    "assistant@right",
+    "zen@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9,
+    11,
+    12
+   ],
+   "id": "s0055",
+   "kind": "call",
+   "monitor": "left",
+   "params": {
+    "cast": [
+     "call_fr2",
+     "call_en2",
+     "call_en1",
+     "call_fr1"
+    ],
+    "t0_ms": 2012000,
+    "t1_ms": 2332000,
+    "utterances": [
+     {
+      "clip": "call_fr1-033",
+      "dur_ms": 12550,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 2012500
+     },
+     {
+      "clip": "call_en2-015",
+      "dur_ms": 6510,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 2025450
+     },
+     {
+      "clip": "user_fr1-010",
+      "dur_ms": 12820,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 2034560
+     },
+     {
+      "clip": "mixed1-006",
+      "dur_ms": 15822,
+      "speaker": "mixed1",
+      "stream": "call",
+      "t_ms": 2048980
+     },
+     {
+      "clip": "call_en2-016",
+      "dur_ms": 3150,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 2067402
+     },
+     {
+      "clip": "user_en1-021",
+      "dur_ms": 11740,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 2072152
+     },
+     {
+      "clip": "call_en1-018",
+      "dur_ms": 3640,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 2085492
+     },
+     {
+      "clip": "call_fr1-034",
+      "dur_ms": 13030,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 2088532
+     },
+     {
+      "clip": "user_fr1-011",
+      "dur_ms": 12710,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 2101962
+     },
+     {
+      "clip": "call_fr1-035",
+      "dur_ms": 10160,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 2116272
+     },
+     {
+      "clip": "call_en1-019",
+      "dur_ms": 4320,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 2127332
+     },
+     {
+      "clip": "user_en1-022",
+      "dur_ms": 5160,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 2132052
+     },
+     {
+      "clip": "call_en1-020",
+      "dur_ms": 4650,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 2139812
+     },
+     {
+      "clip": "call_fr2-000",
+      "dur_ms": 10000,
+      "speaker": "call_fr2",
+      "stream": "call",
+      "t_ms": 2145362
+     },
+     {
+      "clip": "user_en1-023",
+      "dur_ms": 15695,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 2156262
+     },
+     {
+      "clip": "mixed1-007",
+      "dur_ms": 16427,
+      "speaker": "mixed1",
+      "stream": "call",
+      "t_ms": 2171357
+     },
+     {
+      "clip": "call_en1-021",
+      "dur_ms": 5810,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 2189384
+     },
+     {
+      "clip": "user_en1-024",
+      "dur_ms": 15485,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 2196794
+     },
+     {
+      "clip": "call_en1-022",
+      "dur_ms": 7130,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 2213879
+     },
+     {
+      "clip": "call_en1-023",
+      "dur_ms": 11130,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 2221409
+     },
+     {
+      "clip": "user_en1-025",
+      "dur_ms": 9395,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 2232939
+     },
+     {
+      "clip": "mixed1-000",
+      "dur_ms": 13337,
+      "speaker": "mixed1",
+      "stream": "call",
+      "t_ms": 2243934
+     },
+     {
+      "clip": "call_fr2-001",
+      "dur_ms": 10050,
+      "speaker": "call_fr2",
+      "stream": "call",
+      "t_ms": 2258171
+     },
+     {
+      "clip": "user_fr1-012",
+      "dur_ms": 12760,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 2267621
+     },
+     {
+      "clip": "call_en2-017",
+      "dur_ms": 4645,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 2280781
+     },
+     {
+      "clip": "call_en2-018",
+      "dur_ms": 6670,
+      "speaker": "call_en2",
+      "stream": "call",
+      "t_ms": 2286326
+     },
+     {
+      "clip": "user_fr1-013",
+      "dur_ms": 14250,
+      "speaker": "user_fr1",
+      "stream": "own",
+      "t_ms": 2293396
+     },
+     {
+      "clip": "call_en1-024",
+      "dur_ms": 6570,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 2309246
+     },
+     {
+      "clip": "mixed1-001",
+      "dur_ms": 13887,
+      "speaker": "mixed1",
+      "stream": "call",
+      "t_ms": 2317416
+     }
+    ]
+   },
+   "t0_ms": 2012000,
+   "t1_ms": 2332000,
+   "tags": [
+    "discord",
+    "mic_and_system",
+    "overlap_speakers",
+    "returning_speaker",
+    "video_during_call"
+   ],
+   "windows": [
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4,
+    6
+   ],
+   "id": "s0056",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "chrome",
+    "font_px": 16,
+    "lang": "en",
+    "page": "video_episode",
+    "theme": "dark",
+    "video": {
+     "episode": true,
+     "number": 3,
+     "season": 1,
+     "span_s": 791,
+     "title_id": "v1"
+    },
+    "video_k": 1
+   },
+   "t0_ms": 2017577,
+   "t1_ms": 2084982,
+   "tags": [
+    "chrome",
+    "res_1440p",
+    "side_monitor_change",
+    "text_en",
+    "theme_dark"
+   ],
+   "windows": [
+    "chrome-v1@left",
+    "game@primary",
+    "assistant@primary",
+    "assistant@right",
+    "vscode@right",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0057",
+   "kind": "video",
+   "monitor": "left",
+   "params": {
+    "app": "chrome",
+    "episode": true,
+    "number": 3,
+    "season": 1,
+    "span_s": 791,
+    "title_id": "v1"
+   },
+   "t0_ms": 2017577,
+   "t1_ms": 2779235,
+   "tags": [
+    "chrome",
+    "tts_voices",
+    "video_during_call"
+   ],
+   "windows": [
+    "chrome-v1@left"
+   ]
+  },
+  {
+   "dims": [
+    7
+   ],
+   "id": "s0058",
+   "kind": "music",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 2025000,
+   "t1_ms": 2282000,
+   "tags": [
+    "music"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0059",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 2033814,
+   "t1_ms": 2035814,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0060",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 2046445,
+   "t1_ms": 2048445,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0061",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 2084982,
+   "t1_ms": 2096009,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "game@primary",
+    "assistant@primary",
+    "assistant@right",
+    "vscode@right",
+    "chrome-v1@left"
+   ]
+  },
+  {
+   "dims": [
+    5,
+    13
+   ],
+   "id": "s0062",
+   "kind": "pause",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 2091471,
+   "t1_ms": 2151471,
+   "tags": [
+    "pause"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4,
+    6
+   ],
+   "id": "s0063",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "chrome",
+    "font_px": 16,
+    "keep_page": true,
+    "lang": "en",
+    "page": "video_episode",
+    "theme": "dark",
+    "video": {
+     "episode": true,
+     "number": 3,
+     "season": 1,
+     "span_s": 791,
+     "title_id": "v1"
+    },
+    "video_k": 1
+   },
+   "t0_ms": 2096009,
+   "t1_ms": 2104074,
+   "tags": [
+    "chrome",
+    "res_1440p",
+    "side_monitor_change",
+    "text_en",
+    "theme_dark"
+   ],
+   "windows": [
+    "chrome-v1@left",
+    "game@primary",
+    "assistant@primary",
+    "assistant@right",
+    "vscode@right",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    10,
+    2
+   ],
+   "id": "s0064",
+   "kind": "excluded_pages",
+   "monitor": "primary",
+   "params": {
+    "private": "zen_private"
+   },
+   "t0_ms": 2104074,
+   "t1_ms": 2748090,
+   "tags": [
+    "excluded_pages",
+    "zen"
+   ],
+   "windows": [
+    "zen@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0065",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "zen",
+    "font_px": 18,
+    "lang": "fr",
+    "page": "article",
+    "popups": false,
+    "private": "zen_private",
+    "theme": "light"
+   },
+   "t0_ms": 2104074,
+   "t1_ms": 2748090,
+   "tags": [
+    "res_4k",
+    "scrolling",
+    "side_monitor_change",
+    "text_fr",
+    "theme_light",
+    "zen"
+   ],
+   "windows": [
+    "zen@primary",
+    "assistant@primary",
+    "assistant@right",
+    "vscode@right",
+    "discord@left",
+    "chrome-v1@left"
+   ]
+  },
+  {
+   "dims": [
+    7
+   ],
+   "id": "s0066",
+   "kind": "music",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 2580000,
+   "t1_ms": 2897000,
+   "tags": [
+    "music"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    10,
+    7
+   ],
+   "id": "s0067",
+   "kind": "canary",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 2736072,
+   "t1_ms": 2761072,
+   "tags": [
+    "canary"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4,
+    6
+   ],
+   "id": "s0068",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "chrome",
+    "font_px": 16,
+    "keep_page": true,
+    "lang": "en",
+    "page": "video_episode",
+    "theme": "dark",
+    "video": {
+     "episode": true,
+     "number": 3,
+     "season": 1,
+     "span_s": 791,
+     "title_id": "v1"
+    },
+    "video_k": 1
+   },
+   "t0_ms": 2748090,
+   "t1_ms": 2779235,
+   "tags": [
+    "chrome",
+    "res_1440p",
+    "side_monitor_change",
+    "text_en",
+    "theme_dark"
+   ],
+   "windows": [
+    "chrome-v1@left",
+    "assistant@primary",
+    "zen@primary",
+    "assistant@right",
+    "vscode@right",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0069",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 2760649,
+   "t1_ms": 2762649,
+   "tags": [
+    "res_4k",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0070",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 2769737,
+   "t1_ms": 2771737,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0071",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 2770226,
+   "t1_ms": 2772226,
+   "tags": [
+    "res_4k",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0072",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 2773304,
+   "t1_ms": 2775304,
+   "tags": [
+    "res_4k",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0073",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 2779235,
+   "t1_ms": 2802663,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "assistant@primary",
+    "zen@primary",
+    "assistant@right",
+    "vscode@right",
+    "chrome-v1@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0074",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "hung",
+    "launch_ms": 2794663
+   },
+   "t0_ms": 2802663,
+   "t1_ms": 2806926,
+   "tags": [
+    "hung_ghost",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "hung#2",
+    "assistant@primary",
+    "zen@primary",
+    "vscode@right",
+    "chrome-v1@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4,
+    6
+   ],
+   "id": "s0075",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "edge",
+    "font_px": 16,
+    "lang": "en",
+    "page": "video_page",
+    "theme": "dark",
+    "video": {
+     "episode": false,
+     "number": 4,
+     "season": 2,
+     "span_s": 840,
+     "title_id": "v2"
+    },
+    "video_k": 2
+   },
+   "t0_ms": 2806926,
+   "t1_ms": 2823063,
+   "tags": [
+    "edge",
+    "res_4k",
+    "side_monitor_change",
+    "text_en",
+    "theme_dark"
+   ],
+   "windows": [
+    "edge-v2@primary",
+    "zen@primary",
+    "vscode@right",
+    "chrome@right",
+    "chrome-v1@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0076",
+   "kind": "video",
+   "monitor": "primary",
+   "params": {
+    "app": "edge",
+    "episode": false,
+    "number": 4,
+    "season": 2,
+    "span_s": 840,
+    "title_id": "v2"
+   },
+   "t0_ms": 2806926,
+   "t1_ms": 3617066,
+   "tags": [
+    "edge",
+    "tts_voices",
+    "video_during_call"
+   ],
+   "windows": [
+    "edge-v2@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0077",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 2820611,
+   "t1_ms": 2822611,
+   "tags": [
+    "res_4k",
+    "title_churn"
+   ],
+   "windows": [
+    "zen@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0078",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 2823063,
+   "t1_ms": 2853063,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "zen@primary",
+    "edge-v2@primary",
+    "vscode@right",
+    "chrome@right",
+    "chrome-v1@left"
+   ]
+  },
+  {
+   "dims": [
+    10,
+    2
+   ],
+   "id": "s0079",
+   "kind": "excluded_pages",
+   "monitor": "primary",
+   "params": {
+    "private": "chrome_incognito"
+   },
+   "t0_ms": 2853063,
+   "t1_ms": 3191287,
+   "tags": [
+    "chrome",
+    "excluded_pages"
+   ],
+   "windows": [
+    "chrome@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0080",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "chrome",
+    "font_px": 9,
+    "lang": "fr",
+    "page": "forum",
+    "popups": true,
+    "private": "chrome_incognito",
+    "theme": "dark"
+   },
+   "t0_ms": 2853063,
+   "t1_ms": 3191287,
+   "tags": [
+    "chrome",
+    "popups",
+    "res_4k",
+    "scrolling",
+    "side_monitor_change",
+    "small_fonts",
+    "text_fr",
+    "theme_dark"
+   ],
+   "windows": [
+    "chrome@primary",
+    "edge-v2@primary",
+    "vscode@right",
+    "chrome@right",
+    "chrome-v1@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4,
+    6
+   ],
+   "id": "s0081",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "edge",
+    "font_px": 16,
+    "keep_page": true,
+    "lang": "en",
+    "page": "video_page",
+    "theme": "dark",
+    "video": {
+     "episode": false,
+     "number": 4,
+     "season": 2,
+     "span_s": 840,
+     "title_id": "v2"
+    },
+    "video_k": 2
+   },
+   "t0_ms": 3191287,
+   "t1_ms": 3293419,
+   "tags": [
+    "edge",
+    "res_4k",
+    "side_monitor_change",
+    "text_en",
+    "theme_dark"
+   ],
+   "windows": [
+    "edge-v2@primary",
+    "chrome@primary",
+    "vscode@right",
+    "chrome@right",
+    "chrome-v1@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0082",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 3226536,
+   "t1_ms": 3228536,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0083",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 3240821,
+   "t1_ms": 3242821,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0084",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 3288571,
+   "t1_ms": 3290571,
+   "tags": [
+    "res_4k",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0085",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "terminal",
+    "lang": "en"
+   },
+   "t0_ms": 3293419,
+   "t1_ms": 3593419,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "text_en"
+   ],
+   "windows": [
+    "terminal@left",
+    "chrome@primary",
+    "edge-v2@primary",
+    "vscode@right",
+    "chrome@right",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9,
+    11,
+    12
+   ],
+   "id": "s0086",
+   "kind": "call",
+   "monitor": "left",
+   "params": {
+    "cast": [
+     "call_fr1",
+     "call_en1"
+    ],
+    "t0_ms": 3326000,
+    "t1_ms": 3386000,
+    "utterances": [
+     {
+      "clip": "call_en1-025",
+      "dur_ms": 7115,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 3326500
+     },
+     {
+      "clip": "call_fr1-036",
+      "dur_ms": 10060,
+      "speaker": "call_fr1",
+      "stream": "call",
+      "t_ms": 3336215
+     },
+     {
+      "clip": "user_en1-027",
+      "dur_ms": 4265,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 3347175
+     },
+     {
+      "clip": "call_en1-026",
+      "dur_ms": 4480,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 3352340
+     },
+     {
+      "clip": "call_en1-027",
+      "dur_ms": 3735,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 3359420
+     },
+     {
+      "clip": "user_en1-028",
+      "dur_ms": 11355,
+      "speaker": "user_en1",
+      "stream": "own",
+      "t_ms": 3364055
+     },
+     {
+      "clip": "call_en1-028",
+      "dur_ms": 4735,
+      "speaker": "call_en1",
+      "stream": "call",
+      "t_ms": 3375810
+     }
+    ]
+   },
+   "t0_ms": 3326000,
+   "t1_ms": 3386000,
+   "tags": [
+    "discord",
+    "mic_and_system",
+    "overlap_speakers",
+    "returning_speaker",
+    "video_during_call"
+   ],
+   "windows": [
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    7
+   ],
+   "id": "s0087",
+   "kind": "music",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 3326000,
+   "t1_ms": 3386000,
+   "tags": [
+    "music"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4,
+    6
+   ],
+   "id": "s0088",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "edge",
+    "font_px": 16,
+    "keep_page": true,
+    "lang": "en",
+    "page": "video_page",
+    "theme": "dark",
+    "video": {
+     "episode": false,
+     "number": 4,
+     "season": 2,
+     "span_s": 840,
+     "title_id": "v2"
+    },
+    "video_k": 2
+   },
+   "t0_ms": 3593419,
+   "t1_ms": 3617066,
+   "tags": [
+    "edge",
+    "res_4k",
+    "side_monitor_change",
+    "text_en",
+    "theme_dark"
+   ],
+   "windows": [
+    "edge-v2@primary",
+    "chrome@primary",
+    "vscode@right",
+    "chrome@right",
+    "discord@left",
+    "terminal@left"
+   ]
+  },
+  {
+   "dims": [],
+   "id": "s0089",
+   "kind": "pip",
+   "monitor": "primary",
+   "params": {
+    "app": "edge"
+   },
+   "t0_ms": 3596419,
+   "t1_ms": 3647066,
+   "tags": [
+    "edge",
+    "pip"
+   ],
+   "windows": [
+    "edge-v2@primary"
+   ]
+  },
+  {
+   "dims": [
+    7,
+    8,
+    9
+   ],
+   "id": "s0090",
+   "kind": "silence",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 3617000,
+   "t1_ms": 3900000,
+   "tags": [
+    "silence"
+   ],
+   "windows": []
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0091",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 3617066,
+   "t1_ms": 3619066,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "chrome@primary",
+    "edge-v2@primary",
+    "vscode@right",
+    "chrome@right",
+    "terminal@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0092",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "explorer"
+   },
+   "t0_ms": 3619066,
+   "t1_ms": 3659914,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "explorer@right",
+    "chrome@primary",
+    "edge-v2@primary",
+    "chrome@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0093",
+   "kind": "focus",
+   "monitor": "left",
+   "params": {
+    "app": "discord"
+   },
+   "t0_ms": 3659914,
+   "t1_ms": 3711185,
+   "tags": [
+    "discord",
+    "res_1440p",
+    "side_monitor_change"
+   ],
+   "windows": [
+    "discord@left",
+    "chrome@primary",
+    "edge-v2@primary",
+    "chrome@right",
+    "explorer@right",
+    "terminal@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0094",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "assistant",
+    "lang": "en"
+   },
+   "t0_ms": 3711185,
+   "t1_ms": 3747389,
+   "tags": [
+    "pwa",
+    "res_4k",
+    "side_monitor_change",
+    "text_en"
+   ],
+   "windows": [
+    "assistant@primary",
+    "edge-v2@primary",
+    "chrome@right",
+    "explorer@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0095",
+   "kind": "title_change",
+   "monitor": "right",
+   "params": {},
+   "t0_ms": 3723946,
+   "t1_ms": 3725946,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "title_churn"
+   ],
+   "windows": [
+    "chrome@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0096",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 3733294,
+   "t1_ms": 3735294,
+   "tags": [
+    "res_4k",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0097",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 3736911,
+   "t1_ms": 3738911,
+   "tags": [
+    "res_4k",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0098",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "notepad",
+    "lang": "mixed"
+   },
+   "t0_ms": 3747389,
+   "t1_ms": 3777389,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "text_mixed"
+   ],
+   "windows": [
+    "notepad@right",
+    "edge-v2@primary",
+    "assistant@primary",
+    "explorer@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0099",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "vscode",
+    "lang": "en"
+   },
+   "t0_ms": 3777389,
+   "t1_ms": 3807165,
+   "tags": [
+    "code_project",
+    "res_4k",
+    "text_en"
+   ],
+   "windows": [
+    "vscode@primary",
+    "assistant@primary",
+    "explorer@right",
+    "notepad@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0100",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "calculator"
+   },
+   "t0_ms": 3807165,
+   "t1_ms": 3838364,
+   "tags": [
+    "res_1440p",
+    "side_monitor_change",
+    "uwp"
+   ],
+   "windows": [
+    "calculator@right",
+    "assistant@primary",
+    "vscode@primary",
+    "notepad@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0101",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "assistant",
+    "lang": "mixed"
+   },
+   "t0_ms": 3838364,
+   "t1_ms": 3857009,
+   "tags": [
+    "pwa",
+    "res_4k",
+    "text_mixed"
+   ],
+   "windows": [
+    "assistant@primary",
+    "vscode@primary",
+    "notepad@right",
+    "calculator@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    4
+   ],
+   "id": "s0102",
+   "kind": "title_change",
+   "monitor": "primary",
+   "params": {},
+   "t0_ms": 3840272,
+   "t1_ms": 3842272,
+   "tags": [
+    "res_4k",
+    "title_churn"
+   ],
+   "windows": [
+    "assistant@primary"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12
+   ],
+   "id": "s0103",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "steam"
+   },
+   "t0_ms": 3857009,
+   "t1_ms": 3870493,
+   "tags": [
+    "launcher",
+    "res_4k"
+   ],
+   "windows": [
+    "steam@primary",
+    "assistant@primary",
+    "notepad@right",
+    "calculator@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3
+   ],
+   "id": "s0104",
+   "kind": "focus",
+   "monitor": "primary",
+   "params": {
+    "app": "vscode",
+    "lang": "fr"
+   },
+   "t0_ms": 3870493,
+   "t1_ms": 3877169,
+   "tags": [
+    "code_project",
+    "res_4k",
+    "text_fr"
+   ],
+   "windows": [
+    "vscode@primary",
+    "steam@primary",
+    "notepad@right",
+    "calculator@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  },
+  {
+   "dims": [
+    10,
+    2
+   ],
+   "id": "s0105",
+   "kind": "excluded_pages",
+   "monitor": "right",
+   "params": {
+    "private": "vault"
+   },
+   "t0_ms": 3877169,
+   "t1_ms": 3900000,
+   "tags": [
+    "edge",
+    "excluded_pages"
+   ],
+   "windows": [
+    "edge@right"
+   ]
+  },
+  {
+   "dims": [
+    1,
+    2,
+    5,
+    11,
+    12,
+    3,
+    4
+   ],
+   "id": "s0106",
+   "kind": "focus",
+   "monitor": "right",
+   "params": {
+    "app": "edge",
+    "font_px": 18,
+    "lang": "fr",
+    "page": "docs_code",
+    "popups": false,
+    "private": "vault",
+    "theme": "light"
+   },
+   "t0_ms": 3877169,
+   "t1_ms": 3900000,
+   "tags": [
+    "edge",
+    "res_1440p",
+    "scrolling",
+    "text_fr",
+    "theme_light"
+   ],
+   "windows": [
+    "edge@right",
+    "steam@primary",
+    "vscode@primary",
+    "calculator@right",
+    "terminal@left",
+    "discord@left"
+   ]
+  }
+ ],
+ "version": 1,
+ "windows": [
+  {
+   "app": "assistant",
+   "id": "assistant@primary",
+   "look": {
+    "font_px": 11,
+    "lang": "mixed",
+    "theme": "dark"
+   },
+   "monitor": "primary"
+  },
+  {
+   "app": "assistant",
+   "id": "assistant@right",
+   "look": {
+    "font_px": 13,
+    "lang": "fr",
+    "theme": "dark"
+   },
+   "monitor": "right"
+  },
+  {
+   "app": "calculator",
+   "id": "calculator@right",
+   "monitor": "right"
+  },
+  {
+   "app": "chrome",
+   "id": "chrome-v1@left",
+   "monitor": "left"
+  },
+  {
+   "app": "chrome",
+   "id": "chrome@left",
+   "look": {
+    "font_px": 16,
+    "lang": "fr",
+    "theme": "dark"
+   },
+   "monitor": "left"
+  },
+  {
+   "app": "chrome",
+   "id": "chrome@primary",
+   "look": {
+    "font_px": 14,
+    "lang": "en",
+    "theme": "light"
+   },
+   "monitor": "primary"
+  },
+  {
+   "app": "chrome",
+   "id": "chrome@right",
+   "look": {
+    "font_px": 9,
+    "lang": "fr",
+    "theme": "light"
+   },
+   "monitor": "right"
+  },
+  {
+   "app": "discord",
+   "id": "discord@left",
+   "monitor": "left"
+  },
+  {
+   "app": "edge",
+   "id": "edge-v2@primary",
+   "monitor": "primary"
+  },
+  {
+   "app": "edge",
+   "id": "edge@primary",
+   "look": {
+    "font_px": 14,
+    "lang": "fr",
+    "theme": "light"
+   },
+   "monitor": "primary"
+  },
+  {
+   "app": "edge",
+   "id": "edge@right",
+   "look": {
+    "font_px": 18,
+    "lang": "fr",
+    "theme": "light"
+   },
+   "monitor": "right"
+  },
+  {
+   "app": "explorer",
+   "id": "explorer@right",
+   "monitor": "right"
+  },
+  {
+   "app": "game",
+   "id": "game@primary",
+   "monitor": "primary"
+  },
+  {
+   "app": "hung",
+   "id": "hung#1",
+   "monitor": "right"
+  },
+  {
+   "app": "hung",
+   "id": "hung#2",
+   "monitor": "right"
+  },
+  {
+   "app": "notepad",
+   "id": "notepad@right",
+   "monitor": "right"
+  },
+  {
+   "app": "outer_wilds",
+   "id": "outer_wilds@primary",
+   "monitor": "primary"
+  },
+  {
+   "app": "steam",
+   "id": "steam@primary",
+   "monitor": "primary"
+  },
+  {
+   "app": "steam",
+   "id": "steam@right",
+   "monitor": "right"
+  },
+  {
+   "app": "terminal",
+   "id": "terminal@left",
+   "monitor": "left"
+  },
+  {
+   "app": "vscode",
+   "id": "vscode@primary",
+   "monitor": "primary"
+  },
+  {
+   "app": "vscode",
+   "id": "vscode@right",
+   "monitor": "right"
+  },
+  {
+   "app": "zen",
+   "id": "zen@left",
+   "look": {
+    "font_px": 20,
+    "lang": "en",
+    "theme": "light"
+   },
+   "monitor": "left"
+  },
+  {
+   "app": "zen",
+   "id": "zen@primary",
+   "look": {
+    "font_px": 18,
+    "lang": "fr",
+    "theme": "dark"
+   },
+   "monitor": "primary"
+  }
+ ]
+}

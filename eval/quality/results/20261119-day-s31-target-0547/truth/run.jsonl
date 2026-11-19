@@ -1,0 +1,5 @@
+{"mono_ns":58090354701300,"state":"window","type":"outer_wilds","wall_ms":1795063769422}
+{"mono_ns":58153373037300,"states":[{"capture":"starting","t":1795063829439,"worker":"starting"},{"capture":"ready","t":1795063830439,"worker":"ready"},{"capture":"gaming","t":1795063831440,"worker":"ready"},{"capture":"gaming","t":1795063832440,"worker":"ready"}],"type":"warmup","wall_ms":1795063832440}
+{"mono_ns":89804071988800,"timed_out":false,"type":"drain","wall_ms":1795095479957}
+{"mono_ns":89804072220300,"restarts":{"capture":0,"worker":1},"sup_states":{"capture":"stopped","worker":"ready"},"timed_out":false,"type":"drain_result","wall_ms":1795095479957}
+{"killed":0,"mono_ns":89810694704000,"type":"cleanup","wall_ms":1795095486579}

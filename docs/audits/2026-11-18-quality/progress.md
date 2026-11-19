@@ -7,8 +7,9 @@ its assets, truth logs, scorer output and baselines at the end of each session.
 ## Phase
 
 - Phase 0, scope: done 2026-11-18 (`scope.md`)
-- Phase 1, harness `eval/quality/`: built 2026-11-18; smoke run twice on `target` (baseline
-  `docs/baselines/2026-11-18-quality.md`); standard and day pending (overnight)
+- Phase 1, harness `eval/quality/`: built 2026-11-18; smoke run twice on `target`, standard once and
+  day once on 2026-11-19 (baseline `docs/baselines/2026-11-18-quality.md`); second standard run
+  (same-seed 5 % check) pending
 - Phase 2, audit: done 2026-11-18 (`audit.md`: #187-#219), plus architecture, creep and workspace
   dimensions 2026-11-19 (#220-#240); 0 refuted; all queued in TODO.md `## Audit 2026-11-18`,
   which is not committed: the user's commit rule
@@ -135,6 +136,65 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   foreground despite WS_EX_NOACTIVATE + SW_SHOWNOACTIVATE. Do not open spike windows while the
   user is at the PC.
 
+- 2026-11-19 night, standard and day runs (user away). Harness fixes found on the way; first
+  real use of the paths smoke never exercised:
+  - warm-up refused Akashic's `gaming` state (Outer Wilds is foreground at warm-up): accepted;
+  - Zen: `descendants` dropped the launcher once it exited, so no Zen window was ever matched;
+    a fresh profile opened Zen's welcome screen (`zen.welcome-screen.seen`, seeded in `user.js`);
+    Zen's first window is a startup window replaced ~0.3 s later in the same process, so every
+    focus relaunched a new instance (20 in standard 1, never closed): the driver now follows the
+    window by pid;
+  - Steam's windows belong to `steamwebhelper.exe`; Steam restores its friends chat window, now
+    minimized at each layout;
+  - Chrome and Edge offered to translate French pages: pages carry `translate="no"` and the
+    `notranslate` meta, Chrome/Edge start with `--disable-features=Translate`;
+  - `termfeed.py` crashed at start (str path): the terminal case never ran and its window was
+    relaunched 14 times;
+  - hung windows: the focus check compared against the hung window while Windows had put its
+    "(Not Responding)" ghost in front: the ghost now counts as focus;
+  - cleanup: Explorer folder windows, Discord, Steam and Calculator were left open; Edge and Zen
+    kept 259 processes after their windows closed. The run records which apps ran before and
+    closes the rest, then kills every process whose command line names the run's folders
+    (Notepad and Explorer excepted);
+  - the scorer crashed with exit 139 in the run's own process (native threads still alive);
+    rescoring alone succeeded (55 min for standard), so scoring now runs in a fresh process.
+  - Notepad: Windows 11 opens a second file as a tab of the running window, so the day run's
+    `notepad@primary` and `notepad@right` never matched a new window; every step showing them
+    (75 of 297 focus steps) retried the launch and waited 25 s, delaying the drive (lateness p90
+    about 10 s, max 78 s at 1 h). Fixed after the day run started (the user asked not to restart):
+    the driver takes the Notepad window showing the file.
+  - Not fixed: Notepad restores the user's tabs and keeps the harness files as tabs afterwards.
+- 2026-11-19 03:15 standard 1 (seed 21, `20261119-standard-s21-target-0315`): drive and drain
+  complete, no Akashic restart; ran with the broken terminal feed and the Zen relaunches above,
+  so its terminal, Zen and timing-sensitive cells are not comparable with later runs. 32 of 391
+  required cells missing (pip, chat_growing, hung_ghost, uwp for dims 8-9, silence for dim 6).
+
+- 2026-11-19 05:47 day run (seed 31, `20261119-day-s31-target-0547`): drive 05:52-12:57 complete;
+  drain ended 14:38 without timing out; cleanup left no run process; scored 14:38-17:35; 0 of 391
+  required cells missing. Headline numbers and new leads in the baseline.
+  **Akashic finding, transcription stops for good:** the worker swapped Whisper and the
+  llama-server (embeddings) about every 30 s: 134 Whisper load/unload cycles and 174 llama-server
+  starts between 06:22 and 08:16. At 08:16:41 a Whisper load raised `ValueError` and every
+  retry (each 10 min) failed the same way; 1,737 transcribe jobs were still pending 45 min into
+  the drain, the last one done at 08:16. The same model loads in a fresh process at that moment,
+  so the failure is in the worker's state; VRAM sat at 9.9 GB with no job running (2.2 GB before
+  the night's runs): a leak across load cycles is the leading guess, unverified. The log keeps
+  only the exception type. Phase 4/5 item.
+  Why it swaps: `JobQueue.claim` takes the oldest job of any kind (`ORDER BY data_ms, id`), so
+  transcribe and embed jobs alternate; `JobRunner._run` force-releases the other GPU model before
+  each one (transcribe stops llama-server, embed unloads Whisper), treating the 0.64 GB
+  embedding model like the 12B chat model; Whisper large-v3 is 3.1 GB. Candidates to measure:
+  drain one kind before switching, keep the embedder resident beside Whisper (evict only for
+  chat), restart the worker after repeated load failures.
+  13:49: the worker was killed by hand (user's request to restart transcription); the supervisor
+  restarted it, Whisper loaded at once and the backlog drained at about 38 jobs/min, still
+  swapping. Day scores therefore include transcripts made after one manual worker restart.
+  VRAM in use fell from 9.9 GB to 4.7 GB when the old worker died (same models, no game):
+  supports the leak guess. No load failure in the first 27 reloads after the restart.
+  Harness, during the day run: a game window shown beside another window between two game
+  sessions waited 25 s for a game that was not running (fixed after); a popup `select` click and
+  a hung-window focus missed (hung: old check, fixed for later runs).
+
 ## Harness commands
 
 ```powershell
@@ -162,7 +222,7 @@ stay in `eval\quality\local\` (gitignored).
 
 - `scope.md`: Phase 0 scope and metric definitions.
 - `audit.md`: Phase 2 findings #187-#219.
-- `docs/baselines/2026-11-18-quality.md`: smoke baseline (standard and day pending).
+- `docs/baselines/2026-11-18-quality.md`: smoke, standard 1 and day baseline.
 - `docs/research/conversational-speech-datasets-fr-en.md`: written by an agent during the Phase 1
   planning; public conversational corpora (SUMM-RE FR, AMI EN) as a later replacement for the
   read-speech bank. Input for Phase 3.
@@ -186,8 +246,12 @@ stay in `eval\quality\local\` (gitignored).
 - Phase 4 (`/frogg:invent` full, one per problem picked, `eval/quality/` named as the harness in
   Context). Phase 3 measured candidates for #190, #196 and #208. #187 needs only a pid check. #188,
   #110 and the overlap WER are open method problems.
-- Overnight: `run.py standard` twice (same seed, 5 % check) and `run.py day`; add them to the baseline.
+- Second `run.py standard` (seed 21) with the fixed harness, then `run.py compare` against
+  standard 1 (expect differences where standard 1's harness was broken: terminal, Zen, hung,
+  timing). Needs the desktop for about 2 h; scoring afterwards needs no screen.
+- New Phase 4/5 items from the day run (baseline section "Standard and day"): transcription stops
+  after repeated model swaps, capture VRAM growth, a canary in stored frames, game-row
+  fragmentation, video-episode F1; harness: scorer speed, Notepad tabs left in the user's session.
 - Untested until standard: exclusive-fullscreen re-entry, the Outer Wilds launch (confirm the Steam
   launch arguments once by hand), real-app launches beyond smoke's.
 - Attended run with the user present (lock, sleep, default-output change, UAC).
-- Add `docs/baselines/2026-11-18-quality.md` to "Report paths" once standard and day are in.

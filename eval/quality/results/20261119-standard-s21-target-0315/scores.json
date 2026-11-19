@@ -1,0 +1,1011 @@
+{
+ "G1": {
+  "capture:conhost.exe": {
+   "n": 4087,
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "capture:python.exe": {
+   "n": 8174,
+   "p50": 0.0,
+   "p95": 34.3
+  },
+  "worker:conhost.exe": {
+   "n": 8014,
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "worker:llama-server.exe": {
+   "n": 3242,
+   "p50": 0.0,
+   "p95": 1.6
+  },
+  "worker:python.exe": {
+   "n": 9550,
+   "p50": 0.0,
+   "p95": 96.8
+  }
+ },
+ "G2": {
+  "capture:conhost.exe": {
+   "max_mib": 0.0,
+   "n": 410,
+   "p95_mib": 0.0
+  },
+  "capture:python.exe": {
+   "max_mib": 1254.29296875,
+   "n": 820,
+   "p95_mib": 1022.1335937499999
+  },
+  "worker:conhost.exe": {
+   "max_mib": 0.0,
+   "n": 936,
+   "p95_mib": 0.0
+  },
+  "worker:llama-server.exe": {
+   "max_mib": 4685.171875,
+   "n": 458,
+   "p95_mib": 4685.171875
+  },
+  "worker:python.exe": {
+   "max_mib": 5666.8515625,
+   "n": 956,
+   "p95_mib": 4634.84765625
+  }
+ },
+ "G3": {
+  "game_tree_3d_share_pct": {
+   "outer_wilds/borderless": {
+    "n": 51,
+    "p50": 75.8,
+    "p95": 98.25
+   },
+   "outer_wilds/windowed": {
+    "n": 433,
+    "p50": 0.0,
+    "p95": 0.0
+   },
+   "reference": {
+    "n": 19,
+    "p50": 33.0,
+    "p95": 68.92
+   },
+   "run": {
+    "n": 994,
+    "p50": 0.0,
+    "p95": 75.4
+   }
+  },
+  "with_akashic": {
+   "borderless": {
+    "fps": 6088.73392233941,
+    "max": 73.9878,
+    "p50": 0.1351,
+    "p99": 1.1287919999999982
+   },
+   "exclusive": {
+    "fps": 6707.845048770842,
+    "max": 37.7103,
+    "p50": 0.1291,
+    "p99": 1.01605
+   },
+   "windowed": {
+    "fps": 47034.28741941896,
+    "max": 25.3491,
+    "p50": 0.0181,
+    "p99": 0.08325699999999997
+   }
+  },
+  "without_akashic": {
+   "borderless": {
+    "fps": 3548.4013846980383,
+    "max": 33.3143,
+    "p50": 0.2547,
+    "p99": 0.611676
+   },
+   "windowed": {
+    "fps": 6011.549133793551,
+    "max": 7.1782,
+    "p50": 0.1296,
+    "p99": 1.0193359999999996
+   }
+  }
+ },
+ "G4": {
+  "bytes_written_per_hour": {
+   "capture:conhost.exe": 0.0,
+   "capture:python.exe": 356902644.9332561,
+   "worker:conhost.exe": 0.0,
+   "worker:llama-server.exe": 6374975.748644792,
+   "worker:python.exe": 98338417.24310695
+  },
+  "store_growth_per_day_bytes": 4195636067.7156367
+ },
+ "M1.1": {
+  "changes_lasting_dwell": 765,
+  "changes_logged": 3262,
+  "n": 765,
+  "splits": {
+   "focused": {
+    "n": 120,
+    "value": 0.7166666666666667
+   },
+   "focused/borderless": {
+    "n": 66,
+    "value": 0.06060606060606061
+   },
+   "focused/exclusive": {
+    "n": 57,
+    "value": 0.10526315789473684
+   },
+   "focused/windowed": {
+    "n": 1,
+    "value": 0.0
+   },
+   "unfocused": {
+    "n": 508,
+    "value": 0.7047244094488189
+   },
+   "unfocused/borderless": {
+    "n": 2,
+    "value": 0.0
+   },
+   "unfocused/windowed": {
+    "n": 11,
+    "value": 0.0
+   }
+  },
+  "value": 0.5934640522875817
+ },
+ "M1.2": {
+  "left": {
+   "frames_per_hour": 169.94984246136914,
+   "n": 186,
+   "useful": 167,
+   "useless_ratio": 0.0972972972972973
+  },
+  "primary": {
+   "frames_per_hour": 331.6763054488011,
+   "n": 363,
+   "useful": 280,
+   "useless_ratio": 0.22651933701657456
+  },
+  "right": {
+   "frames_per_hour": 157.15791883524457,
+   "n": 172,
+   "useful": 140,
+   "useless_ratio": 0.18128654970760238
+  }
+ },
+ "M1.3": {
+  "left": {
+   "max": 15.616,
+   "n": 122,
+   "p50": 6.805,
+   "p90": 13.7852
+  },
+  "primary": {
+   "max": 14.954,
+   "n": 190,
+   "p50": 3.2664999999999997,
+   "p90": 5.4593
+  },
+  "right": {
+   "max": 15.528,
+   "n": 142,
+   "p50": 5.0169999999999995,
+   "p90": 12.8498
+  }
+ },
+ "M10.1": {
+  "canaries": 103,
+  "frames_scanned": 720,
+  "hits": 1,
+  "locations": [
+   {
+    "frames": 4,
+    "in_window_rect": 4,
+    "where": "frames"
+   }
+  ],
+  "not_scanned": [
+   {
+    "location": "export",
+    "reason": "app shell out of scope for this harness"
+   }
+  ],
+  "temp_files_unreadable": 0
+ },
+ "M10.2": {
+  "hits": 0,
+  "locations": []
+ },
+ "M10.3": {
+  "connections": 0,
+  "locations": []
+ },
+ "M11.1": {
+  "browsing": {
+   "f1": 0.6666666666666666,
+   "n_episodes": 2,
+   "n_truth": 1,
+   "precision": 0.5,
+   "recall": 1.0
+  },
+  "conversation": {
+   "f1": 1.0,
+   "n_episodes": 3,
+   "n_truth": 3,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  "game": {
+   "f1": 0.3333333333333333,
+   "n_episodes": 3,
+   "n_truth": 3,
+   "precision": 0.3333333333333333,
+   "recall": 0.3333333333333333
+  },
+  "video": {
+   "f1": 1.0,
+   "n_episodes": 2,
+   "n_truth": 2,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  "work": {
+   "f1": 0.6666666666666666,
+   "n_episodes": 2,
+   "n_truth": 1,
+   "precision": 0.5,
+   "recall": 1.0
+  }
+ },
+ "M11.2": {
+  "n": 8,
+  "value": 0.75
+ },
+ "M11.3": {
+  "distinct_people": 14,
+  "n": 10,
+  "truth_speakers": 4
+ },
+ "M11.4": {
+  "n": 12,
+  "value": 0.3333333333333333
+ },
+ "M12.1": {
+  "delay_s_by_job": {
+   "embed": {
+    "max": 1815.693,
+    "n": 107,
+    "p50": 208.818,
+    "p90": 1588.8922
+   },
+   "ocr_window": {
+    "max": 1326.264,
+    "n": 213,
+    "p50": 804.398,
+    "p90": 1220.8056
+   },
+   "speakers": {
+    "max": 1329.843,
+    "n": 305,
+    "p50": 16.667,
+    "p90": 1088.3972000000003
+   },
+   "transcribe": {
+    "max": 1329.662,
+    "n": 305,
+    "p50": 16.266,
+    "p90": 1077.1942000000001
+   }
+  },
+  "embeddings": {
+   "episode": 12
+  },
+  "segments_done": 305,
+  "segments_in_fts": 305,
+  "text_rows": 2006,
+  "text_rows_in_fts": 2168
+ },
+ "M13.1": {
+  "busy_disk": {
+   "events": 1,
+   "lost_seconds": 0.0,
+   "truth_seconds": 60.0
+  },
+  "pause": {
+   "events": 1,
+   "lost_seconds": 0.0,
+   "truth_seconds": 60.0
+  }
+ },
+ "M2.1": {
+  "focused_row": {
+   "n": 384,
+   "value": 1.0
+  },
+  "label_accuracy": {
+   "n": 1312,
+   "value": 0.989329268292683
+  }
+ },
+ "M2.2": {
+  "ghost": {
+   "n": 1,
+   "value": 0.0
+  },
+  "launcher": {
+   "n": 1,
+   "value": 0.0
+  },
+  "pwa": {
+   "n": 23,
+   "value": 0.0
+  },
+  "uwp": {
+   "n": 5,
+   "value": 0.0
+  }
+ },
+ "M3.1": {
+  "all": {
+   "cer_accent_folded": 0.14721542392442083,
+   "cer_exact": 0.14737860169292244,
+   "n": 788,
+   "wer": 0.14303146910287895
+  },
+  "font=<=11": {
+   "cer_accent_folded": 0.26925143208384344,
+   "cer_exact": 0.2696587651055399,
+   "n": 235,
+   "wer": 0.30016775395273937
+  },
+  "font=>=16": {
+   "cer_accent_folded": 0.09535563745522675,
+   "cer_exact": 0.09541506027888065,
+   "n": 553,
+   "wer": 0.07625565185203413
+  },
+  "lang=en": {
+   "cer_accent_folded": 0.017208870979473934,
+   "cer_exact": 0.017208870979473934,
+   "n": 305,
+   "wer": 0.022018371548254104
+  },
+  "lang=fr": {
+   "cer_accent_folded": 0.19701823247533543,
+   "cer_exact": 0.1973287913494392,
+   "n": 402,
+   "wer": 0.19488457814481655
+  },
+  "lang=mixed": {
+   "cer_accent_folded": 0.3895767771434472,
+   "cer_exact": 0.3896229427507255,
+   "n": 81,
+   "wer": 0.3413530113164799
+  },
+  "resolution=2560x1440": {
+   "cer_accent_folded": 0.32547229940857686,
+   "cer_exact": 0.3257368235672859,
+   "n": 324,
+   "wer": 0.3016869032948492
+  },
+  "resolution=3840x2160": {
+   "cer_accent_folded": 0.022742950526001525,
+   "cer_exact": 0.02283536055651347,
+   "n": 464,
+   "wer": 0.0322462090205549
+  },
+  "source=ocr": {
+   "cer_accent_folded": 0.15547157540363774,
+   "cer_exact": 0.15564445350960357,
+   "n": 599,
+   "wer": 0.15985544013653535
+  },
+  "source=ocr_deferred": {
+   "cer_accent_folded": 0.2840097817053406,
+   "cer_exact": 0.28427685836989847,
+   "n": 78,
+   "wer": 0.20479941174031674
+  },
+  "source=uia": {
+   "cer_accent_folded": 0.006536192906739164,
+   "cer_exact": 0.006574013774038306,
+   "n": 111,
+   "wer": 0.008838152212065256
+  },
+  "theme=dark": {
+   "cer_accent_folded": 0.08197342745313103,
+   "cer_exact": 0.08206824064089008,
+   "n": 701,
+   "wer": 0.07340696548312972
+  },
+  "theme=light": {
+   "cer_accent_folded": 0.6729009357218247,
+   "cer_exact": 0.6736149591351601,
+   "n": 87,
+   "wer": 0.7040289063148815
+  }
+ },
+ "M3.2": {
+  "n": 4208665,
+  "per_hour_chars": 3845494.3748531085,
+  "value": 0.9635243004610726
+ },
+ "M3.3": {
+  "n": 712,
+  "value": 0.7176966292134831
+ },
+ "M4.1": {
+  "game_name": {
+   "missing": 0,
+   "n": 3,
+   "value": 1.0,
+   "wrong": 0
+  },
+  "series_season_episode": {
+   "missing": 0,
+   "n": 1,
+   "value": 1.0,
+   "wrong": 0
+  },
+  "tab_title": {
+   "missing": 2,
+   "n": 13,
+   "value": 0.6923076923076923,
+   "wrong": 2
+  },
+  "url": {
+   "missing": 2,
+   "n": 13,
+   "value": 0.6923076923076923,
+   "wrong": 2
+  },
+  "video_title": {
+   "missing": 0,
+   "n": 2,
+   "value": 1.0,
+   "wrong": 0
+  }
+ },
+ "M5.1": {
+  "n": 94,
+  "seconds": 582.072,
+  "truth_seconds": 3334.795
+ },
+ "M5.2": {
+  "n": 55,
+  "seconds": 0.352
+ },
+ "M5.3": {
+  "n": 94,
+  "per_app": {
+   "?": 1.0,
+   "ApplicationFrameHost.exe": 1.0,
+   "Code.exe": 0.03811714716181157,
+   "Discord.exe": 0.4819897177562247,
+   "Notepad.exe": 0.8057938924255005,
+   "OuterWilds.exe": 0.1079037739436285,
+   "QualityGame.exe": 0.8003148811515653,
+   "QualityVault.exe": 1.0,
+   "chrome.exe": 0.061047129509605225,
+   "explorer.exe": 0.33383345836459116,
+   "msedge.exe": 0.5225553820982435,
+   "python.exe": 0.14275659308029004,
+   "steamwebhelper.exe": 1.0,
+   "zen.exe": 0.044575033899867035
+  },
+  "total_abs_error_ratio": 0.3474582395619521
+ },
+ "M5.4": {
+  "pause": {
+   "n": 1,
+   "value": 0.9786185402623758
+  }
+ },
+ "M6.1": {
+  "game": {
+   "end_error_s": {
+    "max": 185.257,
+    "n": 2,
+    "p50": 93.73700000000001,
+    "p90": 166.953
+   },
+   "start_error_s": {
+    "max": 187.222,
+    "n": 2,
+    "p50": 96.9055,
+    "p90": 169.1587
+   },
+   "stored_rows": 9,
+   "truth_sessions": 2
+  },
+  "media": {
+   "end_error_s": {
+    "max": 58.002,
+    "n": 2,
+    "p50": 29.779500000000002,
+    "p90": 52.3575
+   },
+   "n": 2,
+   "split_rows": 1,
+   "start_error_s": {
+    "max": 1.977,
+    "n": 2,
+    "p50": 1.6375000000000002,
+    "p90": 1.9091
+   }
+  },
+  "outer_wilds": {
+   "end_error_s": {
+    "max": 3090.0,
+    "n": 1,
+    "p50": 3090.0,
+    "p90": 3090.0
+   },
+   "start_error_s": {
+    "max": 0.199,
+    "n": 1,
+    "p50": 0.199,
+    "p90": 0.199
+   },
+   "stored_rows": 7,
+   "truth_sessions": 1,
+   "window_modes": [
+    {
+     "mode": "borderless",
+     "monitor": "primary"
+    },
+    {
+     "mode": "windowed",
+     "monitor": null
+    },
+    {
+     "mode": "borderless",
+     "monitor": "primary"
+    },
+    {
+     "mode": "windowed",
+     "monitor": null
+    },
+    {
+     "mode": "borderless",
+     "monitor": "primary"
+    },
+    {
+     "mode": "windowed",
+     "monitor": null
+    },
+    {
+     "mode": "borderless",
+     "monitor": "primary"
+    },
+    {
+     "mode": "windowed",
+     "monitor": null
+    },
+    {
+     "mode": "borderless",
+     "monitor": "primary"
+    },
+    {
+     "mode": "windowed",
+     "monitor": null
+    },
+    {
+     "mode": "borderless",
+     "monitor": "primary"
+    },
+    {
+     "mode": "windowed",
+     "monitor": null
+    }
+   ]
+  }
+ },
+ "M7.1": {
+  "akashic_session_audible": true,
+  "leak_seconds": 1997.76,
+  "leak_seconds_other_than_self": 0.0,
+  "n": 258,
+  "segments_listing_akashic_itself": 257,
+  "stored_seconds": 1998.56
+ },
+ "M7.2": {
+  "n": 258,
+  "sources_exact": 0.0,
+  "tag_accuracy": 0.9922480620155039
+ },
+ "M8.1": {
+  "mic": {
+   "by_condition": {
+    "clean": {
+     "recall": 1.0,
+     "truth_seconds": 158.176
+    },
+    "game": {
+     "recall": 1.0,
+     "truth_seconds": 184.064
+    },
+    "music": {
+     "recall": 0.8521224773834377,
+     "truth_seconds": 91.968
+    }
+   },
+   "false_alarm_s_per_hour": 69.79273530413559,
+   "n": 247,
+   "recall": 0.9686786056452207,
+   "truth_seconds": 434.208
+  },
+  "system": {
+   "by_condition": {
+    "clean": {
+     "recall": 0.9644972945663157,
+     "truth_seconds": 981.728
+    },
+    "game": {
+     "recall": 0.9925612141865455,
+     "truth_seconds": 253.536
+    },
+    "music": {
+     "recall": 0.8410551409618574,
+     "truth_seconds": 192.96
+    },
+    "overlap": {
+     "recall": 0.8493543403073085,
+     "truth_seconds": 564.384
+    }
+   },
+   "false_alarm_s_per_hour": 266.0875444735083,
+   "n": 1106,
+   "recall": 0.928074530371268,
+   "truth_seconds": 1835.386
+  }
+ },
+ "M8.2": {
+  "confusion": 0.07442904713839651,
+  "der": 0.22451347552520118,
+  "false_alarm": 0.0,
+  "miss": 0.15008442838680464,
+  "n": 2120
+ },
+ "M8.3": {
+  "correct": 170,
+  "fragmentation": {
+   "call_en1": 4,
+   "call_en2": 3,
+   "call_fr1": 2,
+   "call_fr2": 1,
+   "spare_en2": 2,
+   "spare_fr2": 2,
+   "tts_microsoftdaviddesktop": 6,
+   "tts_microsoftziradesktop": 3,
+   "video_en1": 9,
+   "video_en2": 4,
+   "video_fr1": 6,
+   "video_fr2": 3
+  },
+  "purity_mean": 0.9173146500934409,
+  "unknown": 50,
+  "wrong": 3
+ },
+ "M9.1": {
+  "all": {
+   "cer": 0.17827354716213467,
+   "ref_words": 8321,
+   "wer": 0.20898930417017186
+  },
+  "en": {
+   "cer": 0.08645325653522375,
+   "ref_words": 3347,
+   "wer": 0.11233940842545563
+  },
+  "fr": {
+   "cer": 0.07743761255466941,
+   "ref_words": 2947,
+   "wer": 0.11197828299966067
+  },
+  "mixed": {
+   "cer": 0.15140186915887852,
+   "ref_words": 215,
+   "wer": 0.16744186046511628
+  },
+  "multi": {
+   "cer": 0.518448834535382,
+   "ref_words": 1812,
+   "wer": 0.5502207505518764
+  },
+  "no_overlap": {
+   "cer": 0.06453727429831357,
+   "ref_words": 6281,
+   "wer": 0.09377487661200445
+  },
+  "overlap": {
+   "cer": 0.5357243187564379,
+   "ref_words": 2040,
+   "wer": 0.5637254901960784
+  }
+ },
+ "M9.2": {
+  "hallucinated_words_per_hour": 0.0,
+  "n": 305
+ },
+ "M9.3": {
+  "n": 48,
+  "value": 0.5833333333333334
+ },
+ "drain_timed_out": false,
+ "drive_seconds": 3939.986,
+ "driver": {
+  "focus_misses": 5,
+  "late_actions_over_1s": 21,
+  "launch_failures": 20,
+  "refused_plays": 0
+ },
+ "length": "standard",
+ "null_trees": {},
+ "profile_fidelity": {
+  "failed": [
+   "gaming.switches_per_hour",
+   "gaming.run_median_s",
+   "gaming.run_p90_s",
+   "gaming.background.game_sound",
+   "gaming.background.both",
+   "desk.focus.browser",
+   "desk.focus.editor",
+   "desk.focus.terminal",
+   "desk.focus.assistant",
+   "desk.focus.video",
+   "desk.monitor.primary",
+   "desk.monitor.right",
+   "desk.switches_per_hour",
+   "desk.run_median_s",
+   "desk.run_p90_s"
+  ],
+  "rows": [
+   {
+    "measured": 0.900703780265391,
+    "name": "gaming.focus.game",
+    "ok": true,
+    "profile": 0.875,
+    "tol": 5
+   },
+   {
+    "measured": 0.07152923789218436,
+    "name": "gaming.focus.voice_chat",
+    "ok": true,
+    "profile": 0.085,
+    "tol": 5
+   },
+   {
+    "measured": 0.008523831402479273,
+    "name": "gaming.focus.browser",
+    "ok": true,
+    "profile": 0.02,
+    "tol": 5
+   },
+   {
+    "measured": 0.019243150439945633,
+    "name": "gaming.focus.other",
+    "ok": true,
+    "profile": 0.02,
+    "tol": 5
+   },
+   {
+    "measured": 0.9027724207813932,
+    "name": "gaming.monitor.primary",
+    "ok": true,
+    "profile": 0.89,
+    "tol": 5
+   },
+   {
+    "measured": 0.07753530147946515,
+    "name": "gaming.monitor.left",
+    "ok": true,
+    "profile": 0.09,
+    "tol": 5
+   },
+   {
+    "measured": 0.01969227773914185,
+    "name": "gaming.monitor.right",
+    "ok": true,
+    "profile": 0.02,
+    "tol": 5
+   },
+   {
+    "measured": 123.95604395604396,
+    "name": "gaming.switches_per_hour",
+    "ok": false,
+    "profile": 54,
+    "tol": 0.15
+   },
+   {
+    "measured": 0.708,
+    "name": "gaming.run_median_s",
+    "ok": false,
+    "profile": 6,
+    "tol": 0.25
+   },
+   {
+    "measured": 28.051399999999976,
+    "name": "gaming.run_p90_s",
+    "ok": false,
+    "profile": 160.0,
+    "tol": 0.25
+   },
+   {
+    "measured": 23.736263736263737,
+    "name": "gaming.title_changes_per_hour",
+    "ok": true,
+    "profile": 24,
+    "tol": 0.2
+   },
+   {
+    "measured": 0.8677538461538462,
+    "name": "gaming.background.call_audible",
+    "ok": true,
+    "profile": 0.87,
+    "tol": 5
+   },
+   {
+    "measured": 0.22679413919413918,
+    "name": "gaming.background.game_sound",
+    "ok": false,
+    "profile": 0.93,
+    "tol": 5
+   },
+   {
+    "measured": 0.20057655677655678,
+    "name": "gaming.background.both",
+    "ok": false,
+    "profile": 0.87,
+    "tol": 5
+   },
+   {
+    "measured": 0.17837371051311782,
+    "name": "desk.focus.browser",
+    "ok": false,
+    "profile": 0.4,
+    "tol": 5
+   },
+   {
+    "measured": 0.3483964967562259,
+    "name": "desk.focus.editor",
+    "ok": false,
+    "profile": 0.2,
+    "tol": 5
+   },
+   {
+    "measured": 0.0,
+    "name": "desk.focus.terminal",
+    "ok": false,
+    "profile": 0.1,
+    "tol": 5
+   },
+   {
+    "measured": 0.18035158221673217,
+    "name": "desk.focus.assistant",
+    "ok": false,
+    "profile": 0.1,
+    "tol": 5
+   },
+   {
+    "measured": 0.18502655169800244,
+    "name": "desk.focus.video",
+    "ok": false,
+    "profile": 0.1,
+    "tol": 5
+   },
+   {
+    "measured": 0.06980282562315455,
+    "name": "desk.focus.voice_chat",
+    "ok": true,
+    "profile": 0.05,
+    "tol": 5
+   },
+   {
+    "measured": 0.016473663586035404,
+    "name": "desk.focus.other",
+    "ok": true,
+    "profile": 0.05,
+    "tol": 5
+   },
+   {
+    "measured": 0.35262477201662284,
+    "name": "desk.monitor.primary",
+    "ok": false,
+    "profile": 0.5,
+    "tol": 5
+   },
+   {
+    "measured": 0.4873820977212144,
+    "name": "desk.monitor.right",
+    "ok": false,
+    "profile": 0.3,
+    "tol": 5
+   },
+   {
+    "measured": 0.15999313026216275,
+    "name": "desk.monitor.left",
+    "ok": true,
+    "profile": 0.2,
+    "tol": 5
+   },
+   {
+    "measured": 75.26627218934911,
+    "name": "desk.switches_per_hour",
+    "ok": false,
+    "profile": 40,
+    "tol": 0.15
+   },
+   {
+    "measured": 0.409,
+    "name": "desk.run_median_s",
+    "ok": false,
+    "profile": 30,
+    "tol": 0.25
+   },
+   {
+    "measured": 30.615600000000004,
+    "name": "desk.run_p90_s",
+    "ok": false,
+    "profile": 300.0,
+    "tol": 0.25
+   },
+   {
+    "measured": 39.76331360946745,
+    "name": "desk.title_changes_per_hour",
+    "ok": true,
+    "profile": 40,
+    "tol": 0.2
+   },
+   {
+    "measured": 0.14708126232741617,
+    "name": "desk.background.call_audible",
+    "ok": true,
+    "profile": 0.15,
+    "tol": 5
+   },
+   {
+    "measured": 0.0,
+    "name": "desk.background.game_sound",
+    "ok": true,
+    "profile": 0.0,
+    "tol": 5
+   },
+   {
+    "measured": 0.0,
+    "name": "desk.background.both",
+    "ok": true,
+    "profile": 0.0,
+    "tol": 5
+   },
+   {
+    "measured": 0.4832170019142275,
+    "name": "language.fr",
+    "ok": true,
+    "profile": 0.5,
+    "tol": 5
+   },
+   {
+    "measured": 0.41656958062265664,
+    "name": "language.en",
+    "ok": true,
+    "profile": 0.4,
+    "tol": 5
+   },
+   {
+    "measured": 0.10021341746311589,
+    "name": "language.mixed",
+    "ok": true,
+    "profile": 0.1,
+    "tol": 5
+   }
+  ],
+  "source": "OS and player logs"
+ },
+ "run_id": "20261119-standard-s21-target-0315",
+ "seed": 21
+}
