@@ -44,7 +44,18 @@ MAX_TEXT_ROWS = 3000
 MAX_CHANGES = 6000  # changes evaluated by M1.1; more are sampled evenly up front
 LOSS_WINDOW_MS = 60_000
 DEVICE_SETTLE_MS = 3000  # a default-output change is a non-recording period of this length from its notification
-CANARY_PIXELS = 400
+CANARY_SQUARE_PX = 100  # side of a fully marker-coloured square, in monitor pixels, that counts as a canary (they draw 300)
+
+
+def solid_squares(mask, side: int):
+    """Top-left corners of side x side squares whose every pixel is set (summed-area table)."""
+    h, w = mask.shape
+    if h < side or w < side:
+        return np.zeros((0, 0), dtype=bool)
+    sat = np.zeros((h + 1, w + 1), dtype=np.int64)
+    sat[1:, 1:] = mask.astype(np.int64).cumsum(0).cumsum(1)
+    total = sat[side:, side:] - sat[:-side, side:] - sat[side:, :-side] + sat[:-side, :-side]
+    return total == side * side
 EPISODE_GAP_MS = 5 * 60_000  # what episodes.py chains over, and the shortest browsing and work runs it keeps
 MIN_EPISODE_MS = {"browsing": 3 * 60_000, "work": 5 * 60_000}
 FONT_BUCKETS = ((0, 11, "<=11"), (12, 15, "12-15"), (16, 99, ">=16"))
@@ -289,9 +300,12 @@ class FrameScan:
                 "WHERE f.id = ? AND lm.layout_id = (SELECT id FROM monitor_layouts WHERE start_ms <= f.ts_ms ORDER BY start_ms DESC LIMIT 1)", (fid,)).fetchone()
             to_px = lambda v, origin: max(0, round((v - origin) * arr.shape[1] / mon_w))
             mask = np.all(np.abs(arr.astype(np.int16) - np.array(CANARY_RGB)) < 24, axis=2)
-            anywhere = mask.sum() >= CANARY_PIXELS
+            # the canaries draw a solid 300 px square; scattered pixels of that colour (Steam's game art did) are not one
+            side = max(4, round(CANARY_SQUARE_PX * arr.shape[1] / mon_w))
+            square = solid_squares(mask, side)
+            anywhere = bool(square.any())
             in_window = anywhere and any(
-                mask[to_px(y0, oy):to_px(y1, oy), to_px(x0, ox):to_px(x1, ox)].sum() >= CANARY_PIXELS
+                square[to_px(y0, oy):to_px(y1, oy), to_px(x0, ox):to_px(x1, ox)].any()
                 for x0, y0, x1, y1 in self.conn.execute("SELECT x0, y0, x1, y1 FROM frame_windows WHERE frame_id = ?", (fid,)))
             self.cache[fid] = (frozenset(tags.decode(arr)), bool(anywhere), bool(in_window))
         return self.cache[fid]
