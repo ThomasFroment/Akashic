@@ -14,7 +14,12 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   dimensions 2026-11-19 (#220-#240); 0 refuted; all queued in TODO.md `## Audit 2026-11-18`,
   which is not committed: the user's commit rule
 - Phase 3, research: done 2026-11-19 (8 reports in `docs/research/`, listed under Report paths)
-- Phase 4, invent: not started
+- Phase 4, invent: started 2026-11-19. User's picks: invent the Phase 3 candidates (#208 small
+  screen changes, #196 app time, #190 small-text OCR), games and episodes (#188, #192, game-row
+  fragmentation, video episodes) and overlapping speech (overlap WER, #110). Worker GPU
+  scheduling is not an invent item. Before any invent, diagnose the day-run bugs with read-only
+  spikes on the saved stores: the canary in stored frames first, then capture VRAM growth and
+  the Whisper load failure.
 - Phase 5, synthesis and refuters: not started
 - Phase 6, `quality.md`: not started
 
@@ -201,6 +206,29 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   window, which cannot take focus (driver fixed after the run), and one exclusive-game focus
   missed. Speech metrics repeat standard 1 within about 5-10 %; screen metrics differ because
   standard 1's harness was broken; the canary hit repeats. Comparison in the baseline.
+
+- 2026-11-19 evening, Phase 4 bug diagnosis (read-only on the saved stores, plus two GPU spikes
+  approved by the user; production code unchanged):
+  - **Canary hits are a scorer false positive.** Every marker frame in both standard runs holds
+    about 880 pixels of the marker colour inside a `steamwebhelper.exe` window (Steam's library
+    art), 6-50 s before the vault page opened; none is the vault page or the vault window. The
+    scorer now requires a solid square (100 monitor px; the canaries draw 300) instead of 400
+    scattered pixels: the four standard-2 Steam frames no longer count, a half-size swatch still
+    does. Day run: all 74 old-rule frames are the same Steam art (some also inside a harness Chrome
+    page behind it), and 0 pass the solid-square rule. Privacy held in all three runs; the
+    stored scores still say 1 hit until rescored.
+  - **Whisper reloads leak about 8 MiB of VRAM each** (`spikes/whisper_reload_cycles.py`): 160
+    load/transcribe/unload cycles in one process, as `pipeline/whisper.py` does them, never failed,
+    but VRAM after each unload rose linearly from 237 to 1,543 MiB. The day worker's 134 reloads
+    alone leak about 1.1 GB; the `ValueError` itself did not reproduce (it likely needs the
+    other models and processes resident too). The swap thrash is the multiplier.
+  - **Capture VRAM: each WGC capture start/stop leaks one frame-sized buffer**
+    (`spikes/wgc_reopen_vram.py`, `WgcCaptures` on the desktop window, 8960x2160): 81.8 MiB per
+    cycle once a frame has arrived, 0 when stopped before any frame; the same with frames never
+    copied to a SoftwareBitmap, with the session closed before the pool, and with gc.collect();
+    `WgcCaptures.close()` (device closed) frees only 85 of 829 MiB. In the day run, growth was
+    10 times faster within 30 s of the 100 game-mode switches (2.4 GB in 45 min) than elsewhere
+    (2.0 GB in 381 min), when per-window captures are stopped and restarted.
 
 ## Harness commands
 

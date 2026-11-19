@@ -1,0 +1,53 @@
+{
+ "window": "Progman (all monitors)",
+ "variants": [
+  {
+   "mode": "grab",
+   "cycles": 10,
+   "frame": [
+    8960,
+    2160
+   ],
+   "base_mib": 11,
+   "after_cycles_mib": 829,
+   "after_close_mib": 744,
+   "per_cycle_mib": 81.8
+  },
+  {
+   "mode": "nowait",
+   "cycles": 10,
+   "frame": null,
+   "base_mib": 11,
+   "after_cycles_mib": 11,
+   "after_close_mib": 0,
+   "per_cycle_mib": 0.0
+  },
+  {
+   "mode": "nobitmap",
+   "cycles": 10,
+   "frame": null,
+   "base_mib": 11,
+   "after_cycles_mib": 829,
+   "after_close_mib": 744,
+   "per_cycle_mib": 81.8
+  },
+  {
+   "mode": "session_first",
+   "cycles": 10,
+   "frame": null,
+   "base_mib": 11,
+   "after_cycles_mib": 829,
+   "after_close_mib": 744,
+   "per_cycle_mib": 81.8
+  },
+  {
+   "mode": "gc",
+   "cycles": 10,
+   "frame": null,
+   "base_mib": 11,
+   "after_cycles_mib": 829,
+   "after_close_mib": 744,
+   "per_cycle_mib": 81.8
+  }
+ ]
+}
