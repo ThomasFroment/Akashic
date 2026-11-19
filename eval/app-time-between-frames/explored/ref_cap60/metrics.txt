@@ -1,0 +1,1 @@
+holes_pct_smoke=0.18/0 holes_pct_std=4.4/2.78 holes_pct_day=5.6 overlap_max_s=55.6 err_smoke=0.318/0.321 err_std=0.416/0.188 err_day=0.492 past_end_s=0 syn_away_counted_s=113.9 syn_present_missed_s=3548.6 ms_per_day=16.49 uses_sim=no

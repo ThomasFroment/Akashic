@@ -1,0 +1,602 @@
+{
+ "candidate": "eval/app-time-between-frames/C3/c3_poll.py",
+ "runs": {
+  "20261118-smoke-s11-target-2220": {
+   "truth_s": 300.0,
+   "data_s": 300.0,
+   "rec_end_minus_t1_s": 0.001,
+   "sim_fg": {
+    "events": 26,
+    "excluded": 2,
+    "unknown": 3,
+    "in_gap_dropped": 1,
+    "gap_repeats": 1,
+    "named_as_store": 1,
+    "in_gap_dropped_before_t1": 1,
+    "app_rows_whose_process_is_in_store": 0.905,
+    "rows_per_hour": 312.0
+   },
+   "baseline": {
+    "M5.1_hole_s": 115.8,
+    "M5.1_pct": 38.6,
+    "M5.2_overlap_s": 0.3,
+    "M5.3_error": 0.587,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.3,
+    "n_bands": 9,
+    "top_app_errors": [
+     {
+      "exe": "QualityGame.exe",
+      "abs_err_s": 71.3,
+      "ratio": 1.0
+     },
+     {
+      "exe": "python.exe",
+      "abs_err_s": 47.7,
+      "ratio": 0.758
+     },
+     {
+      "exe": "chrome.exe",
+      "abs_err_s": 36.7,
+      "ratio": 0.509
+     },
+     {
+      "exe": "Code.exe",
+      "abs_err_s": 18.5,
+      "ratio": 0.37
+     },
+     {
+      "exe": "Discord.exe",
+      "abs_err_s": 1.3,
+      "ratio": 0.03
+     }
+    ],
+    "ms": 0.023,
+    "ms_per_day": 6.74
+   },
+   "cand": {
+    "M5.1_hole_s": 0.4,
+    "M5.1_pct": 0.14,
+    "M5.2_overlap_s": 0.0,
+    "M5.3_error": 0.215,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.0,
+    "n_bands": 17,
+    "top_app_errors": [
+     {
+      "exe": "python.exe",
+      "abs_err_s": 42.5,
+      "ratio": 0.675
+     },
+     {
+      "exe": "chrome.exe",
+      "abs_err_s": 18.7,
+      "ratio": 0.259
+     },
+     {
+      "exe": "Code.exe",
+      "abs_err_s": 1.9,
+      "ratio": 0.039
+     },
+     {
+      "exe": "QualityVault.exe",
+      "abs_err_s": 0.7,
+      "ratio": 1.0
+     },
+     {
+      "exe": "QualityGame.exe",
+      "abs_err_s": 0.5,
+      "ratio": 0.007
+     }
+    ],
+    "ms": 0.115,
+    "ms_per_day": 33.18
+   }
+  },
+  "20261118-smoke-s11-target-2241": {
+   "truth_s": 300.001,
+   "data_s": 300.001,
+   "rec_end_minus_t1_s": 0.0,
+   "sim_fg": {
+    "events": 25,
+    "excluded": 2,
+    "unknown": 4,
+    "in_gap_dropped": 1,
+    "gap_repeats": 1,
+    "named_as_store": 0,
+    "in_gap_dropped_before_t1": 1,
+    "app_rows_whose_process_is_in_store": 0.895,
+    "rows_per_hour": 300.0
+   },
+   "baseline": {
+    "M5.1_hole_s": 109.7,
+    "M5.1_pct": 36.57,
+    "M5.2_overlap_s": 0.1,
+    "M5.3_error": 0.57,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.1,
+    "n_bands": 9,
+    "top_app_errors": [
+     {
+      "exe": "python.exe",
+      "abs_err_s": 47.7,
+      "ratio": 0.758
+     },
+     {
+      "exe": "QualityGame.exe",
+      "abs_err_s": 44.6,
+      "ratio": 1.0
+     },
+     {
+      "exe": "chrome.exe",
+      "abs_err_s": 30.8,
+      "ratio": 0.426
+     },
+     {
+      "exe": "Discord.exe",
+      "abs_err_s": 27.5,
+      "ratio": 0.397
+     },
+     {
+      "exe": "Code.exe",
+      "abs_err_s": 19.7,
+      "ratio": 0.391
+     }
+    ],
+    "ms": 0.014,
+    "ms_per_day": 3.89
+   },
+   "cand": {
+    "M5.1_hole_s": 0.2,
+    "M5.1_pct": 0.07,
+    "M5.2_overlap_s": 0.0,
+    "M5.3_error": 0.298,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.0,
+    "n_bands": 14,
+    "top_app_errors": [
+     {
+      "exe": "python.exe",
+      "abs_err_s": 41.6,
+      "ratio": 0.661
+     },
+     {
+      "exe": "Discord.exe",
+      "abs_err_s": 27.0,
+      "ratio": 0.391
+     },
+     {
+      "exe": "chrome.exe",
+      "abs_err_s": 18.4,
+      "ratio": 0.255
+     },
+     {
+      "exe": "Code.exe",
+      "abs_err_s": 1.5,
+      "ratio": 0.03
+     },
+     {
+      "exe": "QualityVault.exe",
+      "abs_err_s": 0.7,
+      "ratio": 1.0
+     }
+    ],
+    "ms": 0.105,
+    "ms_per_day": 30.12
+   }
+  },
+  "20261119-standard-s21-target-0315": {
+   "truth_s": 3334.795,
+   "data_s": 3939.986,
+   "rec_end_minus_t1_s": 0.001,
+   "sim_fg": {
+    "events": 135,
+    "excluded": 3,
+    "unknown": 22,
+    "in_gap_dropped": 6,
+    "gap_repeats": 1,
+    "named_as_store": 21,
+    "in_gap_dropped_before_t1": 6,
+    "app_rows_whose_process_is_in_store": 1.0,
+    "rows_per_hour": 118.8
+   },
+   "baseline": {
+    "M5.1_hole_s": 582.1,
+    "M5.1_pct": 17.45,
+    "M5.2_overlap_s": 0.4,
+    "M5.3_error": 0.347,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.4,
+    "n_bands": 55,
+    "top_app_errors": [
+     {
+      "exe": "QualityGame.exe",
+      "abs_err_s": 729.5,
+      "ratio": 0.8
+     },
+     {
+      "exe": "msedge.exe",
+      "abs_err_s": 181.1,
+      "ratio": 0.523
+     },
+     {
+      "exe": "Discord.exe",
+      "abs_err_s": 88.4,
+      "ratio": 0.482
+     },
+     {
+      "exe": "OuterWilds.exe",
+      "abs_err_s": 36.3,
+      "ratio": 0.108
+     },
+     {
+      "exe": "zen.exe",
+      "abs_err_s": 27.1,
+      "ratio": 0.045
+     }
+    ],
+    "ms": 0.053,
+    "ms_per_day": 1.16
+   },
+   "cand": {
+    "M5.1_hole_s": 8.6,
+    "M5.1_pct": 0.26,
+    "M5.2_overlap_s": 0.0,
+    "M5.3_error": 0.064,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.0,
+    "n_bands": 104,
+    "top_app_errors": [
+     {
+      "exe": "msedge.exe",
+      "abs_err_s": 108.9,
+      "ratio": 0.314
+     },
+     {
+      "exe": "steamwebhelper.exe",
+      "abs_err_s": 34.4,
+      "ratio": 12.117
+     },
+     {
+      "exe": "Discord.exe",
+      "abs_err_s": 25.3,
+      "ratio": 0.138
+     },
+     {
+      "exe": "zen.exe",
+      "abs_err_s": 14.7,
+      "ratio": 0.024
+     },
+     {
+      "exe": "QualityVault.exe",
+      "abs_err_s": 10.9,
+      "ratio": 1.0
+     }
+    ],
+    "ms": 0.477,
+    "ms_per_day": 10.46
+   }
+  },
+  "20261119-standard-s21-target-1818": {
+   "truth_s": 3866.364,
+   "data_s": 3900.0,
+   "rec_end_minus_t1_s": 0.001,
+   "sim_fg": {
+    "events": 104,
+    "excluded": 3,
+    "unknown": 5,
+    "in_gap_dropped": 4,
+    "gap_repeats": 1,
+    "named_as_store": 6,
+    "in_gap_dropped_before_t1": 4,
+    "app_rows_whose_process_is_in_store": 1.0,
+    "rows_per_hour": 93.2
+   },
+   "baseline": {
+    "M5.1_hole_s": 571.0,
+    "M5.1_pct": 14.77,
+    "M5.2_overlap_s": 0.2,
+    "M5.3_error": 0.176,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.2,
+    "n_bands": 55,
+    "top_app_errors": [
+     {
+      "exe": "QualityGame.exe",
+      "abs_err_s": 187.2,
+      "ratio": 0.257
+     },
+     {
+      "exe": "msedge.exe",
+      "abs_err_s": 178.2,
+      "ratio": 0.433
+     },
+     {
+      "exe": "Discord.exe",
+      "abs_err_s": 71.5,
+      "ratio": 0.181
+     },
+     {
+      "exe": "zen.exe",
+      "abs_err_s": 59.9,
+      "ratio": 0.093
+     },
+     {
+      "exe": "python.exe",
+      "abs_err_s": 39.4,
+      "ratio": 0.281
+     }
+    ],
+    "ms": 0.051,
+    "ms_per_day": 1.13
+   },
+   "cand": {
+    "M5.1_hole_s": 1.2,
+    "M5.1_pct": 0.03,
+    "M5.2_overlap_s": 0.0,
+    "M5.3_error": 0.124,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.0,
+    "n_bands": 81,
+    "top_app_errors": [
+     {
+      "exe": "Discord.exe",
+      "abs_err_s": 239.6,
+      "ratio": 0.606
+     },
+     {
+      "exe": "msedge.exe",
+      "abs_err_s": 151.8,
+      "ratio": 0.369
+     },
+     {
+      "exe": "zen.exe",
+      "abs_err_s": 47.1,
+      "ratio": 0.074
+     },
+     {
+      "exe": "steamwebhelper.exe",
+      "abs_err_s": 19.3,
+      "ratio": 1.136
+     },
+     {
+      "exe": "QualityVault.exe",
+      "abs_err_s": 10.4,
+      "ratio": 1.0
+     }
+    ],
+    "ms": 0.329,
+    "ms_per_day": 7.29
+   }
+  },
+  "20261119-day-s31-target-0547": {
+   "truth_s": 24712.022,
+   "data_s": 24716.818,
+   "rec_end_minus_t1_s": 0.001,
+   "sim_fg": {
+    "events": 953,
+    "excluded": 4,
+    "unknown": 32,
+    "in_gap_dropped": 140,
+    "gap_repeats": 1,
+    "named_as_store": 72,
+    "in_gap_dropped_before_t1": 7,
+    "app_rows_whose_process_is_in_store": 1.0,
+    "rows_per_hour": 118.6
+   },
+   "baseline": {
+    "M5.1_hole_s": 5236.2,
+    "M5.1_pct": 21.19,
+    "M5.2_overlap_s": 55.5,
+    "M5.3_error": 0.481,
+    "past_end_s": 0.0,
+    "into_gap_s": 55.5,
+    "n_bands": 332,
+    "top_app_errors": [
+     {
+      "exe": "Notepad.exe",
+      "abs_err_s": 3884.4,
+      "ratio": 1.988
+     },
+     {
+      "exe": "QualityGame.exe",
+      "abs_err_s": 1802.0,
+      "ratio": 0.316
+     },
+     {
+      "exe": "chrome.exe",
+      "abs_err_s": 1687.4,
+      "ratio": 0.512
+     },
+     {
+      "exe": "msedge.exe",
+      "abs_err_s": 1145.1,
+      "ratio": 0.314
+     },
+     {
+      "exe": "zen.exe",
+      "abs_err_s": 944.5,
+      "ratio": 0.462
+     }
+    ],
+    "ms": 0.282,
+    "ms_per_day": 0.99
+   },
+   "cand": {
+    "M5.1_hole_s": 9.4,
+    "M5.1_pct": 0.04,
+    "M5.2_overlap_s": 0.0,
+    "M5.3_error": 0.157,
+    "past_end_s": 0.0,
+    "into_gap_s": 0.0,
+    "n_bands": 629,
+    "top_app_errors": [
+     {
+      "exe": "msedge.exe",
+      "abs_err_s": 1357.2,
+      "ratio": 0.373
+     },
+     {
+      "exe": "chrome.exe",
+      "abs_err_s": 1130.7,
+      "ratio": 0.343
+     },
+     {
+      "exe": "zen.exe",
+      "abs_err_s": 845.9,
+      "ratio": 0.413
+     },
+     {
+      "exe": "Notepad.exe",
+      "abs_err_s": 128.1,
+      "ratio": 0.066
+     },
+     {
+      "exe": "OuterWilds.exe",
+      "abs_err_s": 113.5,
+      "ratio": 0.117
+     }
+    ],
+    "ms": 3.064,
+    "ms_per_day": 10.71
+   }
+  }
+ },
+ "synthetic": {
+  "static_read": {
+   "present_s": 4200.0,
+   "must_not_s": 0.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 3609.0,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 0.4,
+    "wrong_app_s": 0.3
+   }
+  },
+  "lock": {
+   "present_s": 600.0,
+   "must_not_s": 600.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 25.7,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 0.5,
+    "wrong_app_s": 0.0
+   }
+  },
+  "sleep": {
+   "present_s": 600.0,
+   "must_not_s": 1200.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 9.7,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 2.1,
+    "wrong_app_s": 0.0
+   }
+  },
+  "pause": {
+   "present_s": 600.0,
+   "must_not_s": 600.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 14.7,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.5,
+    "present_missed_s": 0.6,
+    "wrong_app_s": 0.0
+   }
+  },
+  "end_of_recording": {
+   "present_s": 600.0,
+   "must_not_s": 600.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 2.0,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 0.1,
+    "wrong_app_s": 0.0
+   }
+  },
+  "away_static": {
+   "present_s": 600.0,
+   "must_not_s": 1200.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 17.7,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 0.1,
+    "wrong_app_s": 0.0
+   }
+  },
+  "video_noinput": {
+   "present_s": 2100.0,
+   "must_not_s": 0.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 10.0,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 1800.1,
+    "wrong_app_s": 0.0
+   }
+  },
+  "controller_game": {
+   "present_s": 2100.0,
+   "must_not_s": 0.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 72.3,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 1800.3,
+    "wrong_app_s": 0.0
+   }
+  },
+  "voice_call_away": {
+   "present_s": 600.0,
+   "must_not_s": 1200.0,
+   "baseline": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 16.7,
+    "wrong_app_s": 0.0
+   },
+   "cand": {
+    "away_counted_s": 0.0,
+    "present_missed_s": 0.1,
+    "wrong_app_s": 0.0
+   }
+  }
+ },
+ "uses_sim": {
+  "baseline": "no",
+  "cand": "fg+idle"
+ },
+ "runtime_s": 1.4,
+ "metrics": {
+  "baseline": "holes_pct_smoke=38.6/36.57 holes_pct_std=17.45/14.77 holes_pct_day=21.19 overlap_max_s=55.5 err_smoke=0.587/0.57 err_std=0.347/0.176 err_day=0.481 past_end_s=0 syn_away_counted_s=0 syn_present_missed_s=3777.8 ms_per_day=0.99 uses_sim=no",
+  "cand": "holes_pct_smoke=0.14/0.07 holes_pct_std=0.26/0.03 holes_pct_day=0.04 overlap_max_s=0 err_smoke=0.215/0.298 err_std=0.064/0.124 err_day=0.157 past_end_s=0 syn_away_counted_s=0.5 syn_present_missed_s=3604.3 ms_per_day=10.71 uses_sim=fg+idle"
+ }
+}

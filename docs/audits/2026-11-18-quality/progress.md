@@ -240,6 +240,18 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   spinners and block carets at every check. Not done: quality-harness M1.1/M1.2 with C5
   (needs a production change). Harness and candidates in `eval/small-screen-change-detection/`.
 
+- 2026-11-19 Phase 4 invent 2 of 5, app time between frames (#196): done.
+  `docs/solutions/2026-11-19 - App Time Between Frames/report.md`, artifact
+  https://claude.ai/artifact/VmnFAvrpPTpcx7N1ShTkh4, harness `eval/app-time-between-frames/`.
+  Best fit C4: today's sessions held to the next start, the next frame on their own monitor, the
+  next gap, game end and end of recording, cut by away (keyboard/mouse idle 180 s back-dated, unless
+  the band's own process is audible with a changing picture, paired speech, or an open game
+  session). Holes 15-39 % -> 0.3-4.0 %, overlap 55.5 s -> 0, M5.3 below today on every run,
+  synthetic away counted 0.5 s / present missed 9.9 s, 7.5 ms/day. C5 (display-request bit always
+  set on this PC) and C6 refuted. Findings: one monitor "shown" run lasts hours (the earlier
+  confirmation bound is useless); the scorer's M5.3 uses the longest unclipped band; the harness
+  driver gives no input between focus steps, so idle cannot be replayed on the runs.
+
 ## Harness commands
 
 ```powershell
