@@ -174,7 +174,7 @@
     "reason": "app shell out of scope for this harness"
    }
   ],
-  "temp_files_unreadable": 0
+  "temp_files_unreadable": 3
  },
  "M10.2": {
   "hits": 0,
@@ -445,10 +445,10 @@
    "n": 1,
    "split_rows": 0,
    "start_error_s": {
-    "max": 16.107,
+    "max": 0.087,
     "n": 1,
-    "p50": 16.107,
-    "p90": 16.107
+    "p50": 0.087,
+    "p90": 0.087
    }
   }
  },

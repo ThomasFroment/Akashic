@@ -625,8 +625,16 @@ def m6(tr: Truth, conn) -> dict:
                 plays[vid].append(e)
     errs_s, errs_e, splits, n = [], [], 0, 0
     built = {e["video"]: e["title"] for e in tr.pages if e.get("type") == "video_built"}
+    gaps = merge(truth_gaps(tr))
+    def recording_at(t: int) -> int:
+        """A truth time inside a no-recording gap (Pause, UI open, lock) moves to the gap's end:
+        Akashic records nothing then, by design."""
+        return next((b for a, b in gaps if a <= t < b), t)
     for vid, evs in plays.items():
-        truth = (min(e["wall_ms"] for e in evs if e["ev"] == "play"), max(e["wall_ms"] for e in evs))
+        starts = [e["wall_ms"] for e in evs if e["ev"] == "play"]
+        if not starts:
+            continue
+        truth = (recording_at(min(starts)), max(e["wall_ms"] for e in evs))
         rows = conn.execute("SELECT start_ms, end_ms FROM media_sessions WHERE title = ? ORDER BY start_ms", (built.get(vid, ""),)).fetchall()
         n += 1
         splits += max(0, len(rows) - 1)
