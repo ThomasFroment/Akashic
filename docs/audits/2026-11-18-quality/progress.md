@@ -238,7 +238,7 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   misses all), bar carets never fire, +0.03 ms. Real desktop 10 min (GDI grab, counts only):
   +5 primary / +9 right stores over today, unlabelled. C1, C4, C6 refuted; C2, C3 work but store
   spinners and block carets at every check. Not done: quality-harness M1.1/M1.2 with C5
-  (needs a production change). Harness in `_dev/invent/screen-change-small-text/` (local).
+  (needs a production change). Harness and candidates in `eval/small-screen-change-detection/`.
 
 ## Harness commands
 

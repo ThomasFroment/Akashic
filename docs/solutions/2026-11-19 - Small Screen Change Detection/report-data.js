@@ -130,7 +130,7 @@ window.REPORT = {
     ],
     cost: "Mask and count 0.43 ms against today's 1.40 ms int16 path; flatnonzero 0.026 ms; clusters ≤ 0.5 ms; rules ≤ 0.25 ms. Measured worst extra +0.03 ms.",
     failsWhen: "Drafts that never hold still → late or partial stores; 2 px underscore caret → fires in 1/4 of 4K placements; block caret → up to 8 frames per episode; faint tints (> 6 levels) → unmeasured.",
-    reproduce: "uv run python _dev/invent/screen-change-small-text/harness/run.py _dev/invent/screen-change-small-text/C5/c5.py <out>"
+    reproduce: "uv run python eval/small-screen-change-detection/harness/run.py eval/small-screen-change-detection/C5/c5.py <out>"
   },
 
   findings: [

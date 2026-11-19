@@ -1,0 +1,197 @@
+{
+ "plan": {
+  "monitors": [
+   {
+    "name": "left",
+    "rect": [
+     -2560,
+     0,
+     2560,
+     1440
+    ],
+    "scale": 1.0,
+    "label": "1440p"
+   },
+   {
+    "name": "primary",
+    "rect": [
+     0,
+     0,
+     3840,
+     2160
+    ],
+    "scale": 1.25,
+    "label": "4k"
+   },
+   {
+    "name": "right",
+    "rect": [
+     3840,
+     0,
+     2560,
+     1440
+    ],
+    "scale": 1.0,
+    "label": "1440p"
+   }
+  ],
+  "virtual": [
+   -2560,
+   0,
+   8960,
+   2160
+  ],
+  "candidates": [
+   "baseline",
+   "c2",
+   "c3_taskbar",
+   "c5"
+  ],
+  "seconds": 600.0,
+  "interval": 5.0
+ },
+ "counts": {
+  "grabs": 120,
+  "no_frame": 0,
+  "size_mismatch": 0,
+  "frame_size": [
+   8960,
+   2160
+  ],
+  "source": "gdi"
+ },
+ "rows": [
+  {
+   "monitor": "left",
+   "label": "1440p",
+   "candidate": "baseline",
+   "checks": 119,
+   "fires": 49,
+   "baseline_fires": 49,
+   "extra_fires": 0,
+   "changed_checks": 51,
+   "decide_ms_mean": 0.337
+  },
+  {
+   "monitor": "left",
+   "label": "1440p",
+   "candidate": "c2",
+   "checks": 119,
+   "fires": 50,
+   "baseline_fires": 49,
+   "extra_fires": 1,
+   "changed_checks": 51,
+   "decide_ms_mean": 0.086
+  },
+  {
+   "monitor": "left",
+   "label": "1440p",
+   "candidate": "c3_taskbar",
+   "checks": 119,
+   "fires": 50,
+   "baseline_fires": 49,
+   "extra_fires": 1,
+   "changed_checks": 51,
+   "decide_ms_mean": 0.219
+  },
+  {
+   "monitor": "left",
+   "label": "1440p",
+   "candidate": "c5",
+   "checks": 119,
+   "fires": 50,
+   "baseline_fires": 49,
+   "extra_fires": 1,
+   "changed_checks": 51,
+   "decide_ms_mean": 0.128
+  },
+  {
+   "monitor": "primary",
+   "label": "4k",
+   "candidate": "baseline",
+   "checks": 119,
+   "fires": 105,
+   "baseline_fires": 105,
+   "extra_fires": 0,
+   "changed_checks": 114,
+   "decide_ms_mean": 1.476
+  },
+  {
+   "monitor": "primary",
+   "label": "4k",
+   "candidate": "c2",
+   "checks": 119,
+   "fires": 113,
+   "baseline_fires": 105,
+   "extra_fires": 8,
+   "changed_checks": 114,
+   "decide_ms_mean": 0.376
+  },
+  {
+   "monitor": "primary",
+   "label": "4k",
+   "candidate": "c3_taskbar",
+   "checks": 119,
+   "fires": 114,
+   "baseline_fires": 105,
+   "extra_fires": 9,
+   "changed_checks": 114,
+   "decide_ms_mean": 0.881
+  },
+  {
+   "monitor": "primary",
+   "label": "4k",
+   "candidate": "c5",
+   "checks": 119,
+   "fires": 110,
+   "baseline_fires": 105,
+   "extra_fires": 5,
+   "changed_checks": 114,
+   "decide_ms_mean": 0.467
+  },
+  {
+   "monitor": "right",
+   "label": "1440p",
+   "candidate": "baseline",
+   "checks": 119,
+   "fires": 48,
+   "baseline_fires": 48,
+   "extra_fires": 0,
+   "changed_checks": 84,
+   "decide_ms_mean": 0.473
+  },
+  {
+   "monitor": "right",
+   "label": "1440p",
+   "candidate": "c2",
+   "checks": 119,
+   "fires": 67,
+   "baseline_fires": 48,
+   "extra_fires": 19,
+   "changed_checks": 84,
+   "decide_ms_mean": 0.168
+  },
+  {
+   "monitor": "right",
+   "label": "1440p",
+   "candidate": "c3_taskbar",
+   "checks": 119,
+   "fires": 82,
+   "baseline_fires": 48,
+   "extra_fires": 34,
+   "changed_checks": 84,
+   "decide_ms_mean": 0.301
+  },
+  {
+   "monitor": "right",
+   "label": "1440p",
+   "candidate": "c5",
+   "checks": 119,
+   "fires": 57,
+   "baseline_fires": 48,
+   "extra_fires": 9,
+   "changed_checks": 84,
+   "decide_ms_mean": 0.246
+  }
+ ]
+}
