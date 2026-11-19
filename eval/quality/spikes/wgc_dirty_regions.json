@@ -1,0 +1,330 @@
+{
+ "window": [
+  904,
+  460
+ ],
+ "stole_focus": true,
+ "foreground_restored": false,
+ "rows": [
+  {
+   "step": "idle",
+   "frames": 0,
+   "rect_count": 0,
+   "union": null,
+   "area_px": 0,
+   "area_share": 0.0,
+   "modes": [],
+   "rects": []
+  },
+  {
+   "step": "word",
+   "frames": 1,
+   "rect_count": 1,
+   "union": [
+    20,
+    330,
+    502,
+    32
+   ],
+   "area_px": 16064,
+   "area_share": 0.03863,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     20,
+     330,
+     502,
+     32
+    ]
+   ]
+  },
+  {
+   "step": "clear",
+   "frames": 1,
+   "rect_count": 1,
+   "union": [
+    20,
+    330,
+    502,
+    32
+   ],
+   "area_px": 16064,
+   "area_share": 0.03863,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     20,
+     330,
+     502,
+     32
+    ]
+   ]
+  },
+  {
+   "step": "line",
+   "frames": 1,
+   "rect_count": 1,
+   "union": [
+    20,
+    330,
+    502,
+    32
+   ],
+   "area_px": 16064,
+   "area_share": 0.03863,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     20,
+     330,
+     502,
+     32
+    ]
+   ]
+  },
+  {
+   "step": "clear",
+   "frames": 1,
+   "rect_count": 1,
+   "union": [
+    20,
+    330,
+    502,
+    32
+   ],
+   "area_px": 16064,
+   "area_share": 0.03863,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     20,
+     330,
+     502,
+     32
+    ]
+   ]
+  },
+  {
+   "step": "badge",
+   "frames": 1,
+   "rect_count": 1,
+   "union": [
+    601,
+    336,
+    20,
+    20
+   ],
+   "area_px": 400,
+   "area_share": 0.00096,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     601,
+     336,
+     20,
+     20
+    ]
+   ]
+  },
+  {
+   "step": "clear",
+   "frames": 1,
+   "rect_count": 4,
+   "union": [
+    20,
+    330,
+    601,
+    32
+   ],
+   "area_px": 16464,
+   "area_share": 0.03959,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     20,
+     330,
+     502,
+     6
+    ],
+    [
+     20,
+     336,
+     502,
+     20
+    ],
+    [
+     601,
+     336,
+     20,
+     20
+    ],
+    [
+     20,
+     356,
+     502,
+     6
+    ]
+   ]
+  },
+  {
+   "step": "caret_on",
+   "frames": 1,
+   "rect_count": 1,
+   "union": [
+    20,
+    380,
+    4,
+    24
+   ],
+   "area_px": 96,
+   "area_share": 0.00023,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     20,
+     380,
+     4,
+     24
+    ]
+   ]
+  },
+  {
+   "step": "caret_off",
+   "frames": 1,
+   "rect_count": 1,
+   "union": [
+    20,
+    380,
+    4,
+    24
+   ],
+   "area_px": 96,
+   "area_share": 0.00023,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     20,
+     380,
+     4,
+     24
+    ]
+   ]
+  },
+  {
+   "step": "caret_on",
+   "frames": 1,
+   "rect_count": 1,
+   "union": [
+    20,
+    380,
+    4,
+    24
+   ],
+   "area_px": 96,
+   "area_share": 0.00023,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     20,
+     380,
+     4,
+     24
+    ]
+   ]
+  },
+  {
+   "step": "caret_off",
+   "frames": 34,
+   "rect_count": 100,
+   "union": [
+    0,
+    0,
+    904,
+    404
+   ],
+   "area_px": 924954,
+   "area_share": 2.2243,
+   "modes": [
+    0
+   ],
+   "rects": [
+    [
+     0,
+     0,
+     904,
+     31
+    ],
+    [
+     0,
+     31,
+     1,
+     1
+    ],
+    [
+     903,
+     31,
+     1,
+     1
+    ],
+    [
+     20,
+     380,
+     4,
+     24
+    ],
+    [
+     0,
+     0,
+     904,
+     31
+    ],
+    [
+     0,
+     31,
+     1,
+     1
+    ],
+    [
+     903,
+     31,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     904,
+     31
+    ]
+   ]
+  },
+  {
+   "step": "idle",
+   "frames": 0,
+   "rect_count": 0,
+   "union": null,
+   "area_px": 0,
+   "area_share": 0.0,
+   "modes": [],
+   "rects": []
+  }
+ ]
+}
