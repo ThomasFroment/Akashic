@@ -1,0 +1,76 @@
+{
+ "20261118-smoke-s11-target-2220": {
+  "current": {
+   "M5.1_hole_s": 115.801,
+   "M5.2_overlap_s": 0.292,
+   "M5.3_error": 0.587
+  },
+  "hold_next_cap5": {
+   "M5.1_hole_s": 82.961,
+   "M5.2_overlap_s": 0.292,
+   "M5.3_error": 0.501
+  },
+  "hold_next_cap15": {
+   "M5.1_hole_s": 45.315,
+   "M5.2_overlap_s": 0.292,
+   "M5.3_error": 0.377
+  },
+  "hold_next_cap60": {
+   "M5.1_hole_s": 0.55,
+   "M5.2_overlap_s": 0.292,
+   "M5.3_error": 0.318
+  },
+  "hold_next_cap120": {
+   "M5.1_hole_s": 0.55,
+   "M5.2_overlap_s": 0.292,
+   "M5.3_error": 0.318
+  },
+  "hold_next_cap300": {
+   "M5.1_hole_s": 0.55,
+   "M5.2_overlap_s": 0.292,
+   "M5.3_error": 0.318
+  },
+  "hold_confirmed": {
+   "M5.1_hole_s": 1.565,
+   "M5.2_overlap_s": 0.292,
+   "M5.3_error": 0.231
+  }
+ },
+ "20261118-smoke-s11-target-2241": {
+  "current": {
+   "M5.1_hole_s": 109.715,
+   "M5.2_overlap_s": 0.077,
+   "M5.3_error": 0.57
+  },
+  "hold_next_cap5": {
+   "M5.1_hole_s": 76.771,
+   "M5.2_overlap_s": 0.077,
+   "M5.3_error": 0.485
+  },
+  "hold_next_cap15": {
+   "M5.1_hole_s": 44.952,
+   "M5.2_overlap_s": 0.077,
+   "M5.3_error": 0.381
+  },
+  "hold_next_cap60": {
+   "M5.1_hole_s": 0.0,
+   "M5.2_overlap_s": 0.077,
+   "M5.3_error": 0.321
+  },
+  "hold_next_cap120": {
+   "M5.1_hole_s": 0.0,
+   "M5.2_overlap_s": 0.077,
+   "M5.3_error": 0.321
+  },
+  "hold_next_cap300": {
+   "M5.1_hole_s": 0.0,
+   "M5.2_overlap_s": 0.077,
+   "M5.3_error": 0.321
+  },
+  "hold_confirmed": {
+   "M5.1_hole_s": 0.276,
+   "M5.2_overlap_s": 0.077,
+   "M5.3_error": 0.32
+  }
+ }
+}
