@@ -239,7 +239,9 @@ class Driver:
         elif app in SINGLE_INSTANCE_EXES:
             self._spawn(["calc.exe"] if app == "calculator" else [self.steam_exe()], "real")
             is_app = lambda x: re.search(TITLE_RE[app], x["title"]) is not None and w.image_name(x["pid"]).lower() in SINGLE_INSTANCE_EXES[app]
-            self._register(wid, self._find(set(), is_app, allow_iconic=True), None, "real")
+            # Calculator's own CalculatorApp.exe window cannot take focus: its ApplicationFrameHost frame can
+            framed = lambda x: is_app(x) and w.image_name(x["pid"]).lower() != "calculatorapp.exe"
+            self._register(wid, self._find(set(), framed if app == "calculator" else is_app, allow_iconic=True), None, "real")
         elif app == "outer_wilds":
             self._register(wid, w.outer_wilds_window(), None, "real")
         elif app == "hung":
