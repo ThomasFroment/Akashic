@@ -143,7 +143,7 @@ class Site:
                       f"<h3>{html.escape(video['media']['title'])}</h3><p>{html.escape(video['media']['artist'])}</p>"
                       f"<p>Description: {html.escape(self.lines(w, s + 'd', lang, 1)[0]['text'])}</p><div class='post'>Comment: {html.escape(self.lines(w, s + 'c', lang, 1)[0]['text'])}</div>")
         cls = "chat" if kind == "chat_growing" else ""
-        return (f"<!doctype html><meta charset='utf-8'><link rel='stylesheet' href='/static/page.css'><title>{html.escape(title)}</title>"
+        return (f"<!doctype html><html lang='{lang}' translate='no'><meta charset='utf-8'><meta name='google' content='notranslate'><link rel='stylesheet' href='/static/page.css'><title>{html.escape(title)}</title>"
                 f"<header><h1>{html.escape(theme_title)}</h1></header><div class='wrap'><main class='{cls}'>{body}{extra}<div id='lines'></div></main>"
                 f"<aside><b>Related</b><ul>{side}</ul></aside></div><canvas id='tag'></canvas>"
                 f"<script id='cfg' type='application/json'>{json.dumps(cfg)}</script><script src='/static/tags.js'></script>"
@@ -240,7 +240,7 @@ class Site:
 
             def do_GET(self):  # noqa: N802
                 swatch = "#%02x%02x%02x" % CANARY_RGB
-                page = (f"<!doctype html><title>{CANARY_TEXT} vault</title><body style='font-size:28px'>"
+                page = (f"<!doctype html><html translate='no'><meta name='google' content='notranslate'><title>{CANARY_TEXT} vault</title><body style='font-size:28px'>"
                         f"<p>{CANARY_TEXT}</p><div style='width:300px;height:300px;background:{swatch}'></div></body>").encode()
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")

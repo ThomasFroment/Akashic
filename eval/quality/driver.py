@@ -8,6 +8,7 @@ private modes).
 
 from __future__ import annotations
 
+import ctypes
 import json
 import os
 import queue
@@ -38,6 +39,15 @@ BROWSERS = {
     "edge": (r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe", "--inprivate"),
     "zen": (r"C:\Program Files\Zen Browser\zen.exe", "-private-window"),
 }
+# pref names read from Zen's omni.ja (ZenStartup.mjs, firefox.js) on 2026-11-19
+ZEN_USER_JS = "".join(f'user_pref("{k}", {v});\n' for k, v in {
+    "zen.welcome-screen.seen": "true",
+    "browser.translations.automaticallyPopup": "false",
+    "browser.aboutwelcome.enabled": "false",
+    "browser.shell.checkDefaultBrowser": "false",
+    "datareporting.policy.dataSubmissionEnabled": "false",
+    "toolkit.telemetry.reportingpolicy.firstRun": "false",
+}.items())
 VSCODE_SETTINGS = {
     "workbench.startupEditor": "none", "workbench.welcomePage.walkthroughs.openOnInstall": False,
     "workbench.tips.enabled": False, "update.showReleaseNotes": False, "update.mode": "none",
@@ -48,7 +58,8 @@ VSCODE_SETTINGS = {
 PRIVATE_APP = {"chrome_incognito": "chrome", "edge_inprivate": "edge", "zen_private": "zen"}
 TITLE_RE = {"calculator": r"Calculator|Calculatrice", "steam": r"^Steam", "notepad": r"Notepad|Bloc-notes", "explorer": r"quality-folder"}
 # one window per user: an already open or minimized one is taken, so `before` cannot exclude it
-SINGLE_INSTANCE_EXES = {"calculator": ("applicationframehost.exe", "calculatorapp.exe"), "steam": ("steam.exe",)}
+SINGLE_INSTANCE_EXES = {"calculator": ("applicationframehost.exe", "calculatorapp.exe"), "steam": ("steam.exe", "steamwebhelper.exe")}  # Steam's windows belong to its web helper
+STRAY_EXES = ("steam.exe", "steamwebhelper.exe")
 LEFT_OPEN = ("discord", "outer_wilds")  # run.py closes Outer Wilds; Discord was the user's
 STEP_ACTIONS = ("focus", "video", "pip", "title_change", "excluded_pages", "pause", "busy_disk", "canary", "lock", "sleep", "device_change")
 
@@ -184,6 +195,15 @@ class Driver:
         if wid in self.windows and w.user32.IsWindowVisible(self.windows[wid]["hwnd"]):
             return
         app = self.window_app[wid]
+        if wid in self.windows and (app in BROWSERS or app == "assistant"):
+            # Zen shows a startup window, then replaces it in the same process: follow it instead of relaunching
+            pid = self.windows[wid]["pid"]
+            alt = next((x for x in w.top_windows() if x["pid"] == pid), None)
+            if alt:
+                self.obs.reg.add_window(alt["hwnd"], "harness")
+                self.windows[wid]["hwnd"] = alt["hwnd"]
+                self.act("rebind", wid)
+                return
         mon = self.window_mon[wid]
         before = {x["hwnd"] for x in w.top_windows()}
         if app in BROWSERS or app == "assistant":
@@ -211,7 +231,11 @@ class Driver:
             target = self.run_dir / ("quality-folder" if app == "explorer" else f"quality-{nonce(self.scn['seed'], wid)}.txt")
             target.mkdir(exist_ok=True) if app == "explorer" else target.write_text("quality harness text\n" * 20, encoding="utf-8")
             self._spawn([f"{app}.exe", str(target)], "real")
-            self._register(wid, self._find(before, lambda x: re.search(TITLE_RE[app], x["title"]) is not None or target.stem in x["title"]), None, "real")
+            if app == "notepad":
+                # Windows 11 Notepad opens the file as a tab of its running window: take the window showing it
+                self._register(wid, self._find(set(), lambda x: target.stem in x["title"] and w.image_name(x["pid"]).lower() == "notepad.exe"), None, "real")
+            else:
+                self._register(wid, self._find(before, lambda x: re.search(TITLE_RE[app], x["title"]) is not None or target.stem in x["title"]), None, "real")
         elif app in SINGLE_INSTANCE_EXES:
             self._spawn(["calc.exe"] if app == "calculator" else [self.steam_exe()], "real")
             is_app = lambda x: re.search(TITLE_RE[app], x["title"]) is not None and w.image_name(x["pid"]).lower() in SINGLE_INSTANCE_EXES[app]
@@ -222,6 +246,9 @@ class Driver:
             self._launch_hung(wid, mon, before)
         elif app == "game":
             # the window may exist already: match on the session's process only
+            if self.game_proc is None or self.game_proc.poll() is not None:
+                self.act("game_not_running", wid)  # shown beside another window between two sessions: nothing to wait for
+                return
             self._register(wid, self._find(set(), lambda v: v["pid"] in w.descendants({self.game_proc.pid})), None, "game")
         elif app == "elevated":
             self.prompt.show("Approve the UAC prompt")
@@ -244,9 +271,12 @@ class Driver:
         url = url or self.site.url(wid, {**step, "params": {**step["params"], "app": app}})
         profile = self.run_dir / "profiles" / f"{re.sub(r'[^A-Za-z0-9]+', '-', wid)}-{len(self.procs)}"
         if browser == "zen":
+            profile.mkdir(parents=True, exist_ok=True)
+            (profile / "user.js").write_text(ZEN_USER_JS, encoding="utf-8")  # a fresh profile opens a welcome screen otherwise
             args = [exe, "-profile", str(profile)] + ([private_flag] if private else []) + [url]
         else:
-            args = [exe, f"--user-data-dir={profile}", "--no-first-run", "--no-default-browser-check", f"--window-position={x},{y}", f"--window-size={wd // 2},{ht}"]
+            args = [exe, f"--user-data-dir={profile}", "--no-first-run", "--no-default-browser-check", "--disable-features=Translate",
+                    f"--window-position={x},{y}", f"--window-size={wd // 2},{ht}"]
             if browser == "edge" and not private:
                 args.append("--guest")  # a fresh Edge profile signs in with the PC's Microsoft account and syncs; a guest window does not
             args += [f"--app={url}"] if app == "assistant" else ([private_flag] if private else []) + [url]
@@ -254,7 +284,10 @@ class Driver:
         proc = self._spawn(args, "harness")
         self.page_step[wid] = step["id"]
         self.act("page_load", wid, step=step["id"], url=url)
-        self._register(wid, self._find(before, lambda v: v["pid"] in w.descendants({proc.pid})), proc, "harness")
+        win = self._find(before, lambda v: v["pid"] in w.descendants({proc.pid}, keep_exited=True))
+        if win:
+            self.obs.reg.add_root("harness", win["pid"])  # the launcher may have exited: track the browser itself
+        self._register(wid, win, proc, "harness")
 
     def fallback_step(self, wid: str) -> dict:
         """A page for a window the scenario only shows beside the focused one."""
@@ -279,6 +312,11 @@ class Driver:
         for wid, win in self.windows.items():
             if wid not in keep and not wid.startswith("hung#"):
                 w.minimize(win["hwnd"])
+        # windows a launched app restores on its own (Steam's friends chat) are not in the scenario
+        ours = {win["hwnd"] for win in self.windows.values()}
+        for x in w.top_windows():
+            if x["hwnd"] not in ours and not x["iconic"] and w.image_name(x["pid"]).lower() in STRAY_EXES:
+                w.minimize(x["hwnd"])
         for mon, wids in by_mon.items():
             for i, wid in enumerate(wids):
                 self.ensure(wid, step if wid == step["windows"][0] else self.fallback_step(wid))
@@ -302,6 +340,10 @@ class Driver:
             self.site.command(wid, cmd="goto", url=url)
             self.act("page_load", wid, step=step["id"], url=url)
         ok = w.focus(win["hwnd"])
+        if not ok and app == "hung":  # Windows puts the "(Not Responding)" ghost in front of a hung window
+            name = ctypes.create_unicode_buffer(64)
+            w.user32.GetClassNameW(w.foreground(), name, 64)
+            ok = name.value == "Ghost"
         self.misses += not ok
         self.act("focus" if ok else "focus_miss", wid, lateness, step=step["id"], tags=step["tags"])
         if step["params"].get("popups"):

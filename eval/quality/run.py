@@ -261,6 +261,51 @@ def restore_windows() -> None:
     f.unlink()
 
 
+LEFTOVER_APPS = {"discord": ("discord.exe",), "steam": ("steam.exe",), "calculator": ("calculatorapp.exe",)}
+
+
+def save_running_apps() -> None:
+    """Which apps the run may open were already running, so the cleanup closes only the run's own."""
+    names = {exe.lower() for _ppid, exe in w.process_table().values()}
+    running = {app: any(n in names for n in exes) for app, exes in LEFTOVER_APPS.items()}
+    write_json(LOCAL / "apps-before.json", running)
+
+
+def kill_run_processes(dirs: list[Path]) -> int:
+    """Kills, with their trees, the processes whose command line names one of the run's folders: browsers keep
+    background processes after their last window closes (Edge), Zen's launcher exits before its browser does."""
+    if not dirs:
+        return 0
+    like = " -or ".join(f"$_.CommandLine -like '*{d}*'" for d in dirs)
+    # Notepad and Explorer were handed a run file but hold the user's own tabs and folders
+    keep = "$_.Name -notin @('notepad.exe', 'explorer.exe', 'powershell.exe')"
+    ps = f"Get-CimInstance Win32_Process | Where-Object {{ ({like}) -and {keep} }} | ForEach-Object {{ $_.ProcessId }}"
+    out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=120).stdout
+    pids = {int(x) for x in out.split() if x.isdigit()} - {os.getpid()}
+    for pid in pids:
+        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+    return len(pids)
+
+
+def close_leftovers() -> None:
+    """Closes the harness's Explorer folder windows and the apps the run started (Discord, Steam, Calculator)."""
+    for x in w.top_windows():
+        if "quality-folder" in x["title"] and w.image_name(x["pid"]).lower() == "explorer.exe":
+            w.close_window(x["hwnd"])
+    f = LOCAL / "apps-before.json"
+    if not f.is_file():
+        return
+    before = json.loads(f.read_text(encoding="utf-8"))
+    now = {exe.lower() for _ppid, exe in w.process_table().values()}
+    if not before.get("steam") and "steam.exe" in now:  # -shutdown on a stopped Steam would start it
+        subprocess.run([drv.Driver.steam_exe(), "-shutdown"], capture_output=True, timeout=60)
+    for app in ("discord", "calculator"):
+        if not before.get(app):
+            for exe in LEFTOVER_APPS[app]:
+                subprocess.run(["taskkill", "/IM", exe, "/F"], capture_output=True)
+    f.unlink()
+
+
 def dim_monitors() -> None:
     saved = w.brightness_read_all()
     write_json(LOCAL / "brightness.json", saved)
@@ -411,7 +456,7 @@ def warm_up(host: Host, conn, n_monitors: int) -> list[dict]:
         states = host.states()
         seen.append({"t": now_ms(), **states})
         frames_ok = conn.execute("SELECT count(DISTINCT monitor_id) FROM frames").fetchone()[0] >= n_monitors
-        if states["capture"] in ("ready", "degraded") and frames_ok:
+        if states["capture"] in ("ready", "gaming", "degraded") and frames_ok:  # gaming: Outer Wilds runs from before warm-up
             return seen
         time.sleep(1)
     raise Refused(f"warm-up failed within {WARMUP_S} s: {seen[-1] if seen else 'no state'}")
@@ -476,6 +521,7 @@ def run(length: str, seed: int | None, machine_arg: str | None) -> int:
     drive = None
     run_log = JsonlWriter(truth / "run.jsonl")
     w.keep_awake(True)
+    save_running_apps()
     try:
         save_and_minimize()
         if length == "day":
@@ -504,6 +550,9 @@ def run(length: str, seed: int | None, machine_arg: str | None) -> int:
         if drive:
             drive.close_all()
         close_outer_wilds(run_log)
+        close_leftovers()
+        time.sleep(5)  # windows just asked to close get to exit on their own first
+        run_log.write(type="cleanup", killed=kill_run_processes([local, truth]))
         site.stop()
         listener.close()
         w.keep_awake(False)
@@ -511,13 +560,16 @@ def run(length: str, seed: int | None, machine_arg: str | None) -> int:
         ow_restore()
         restore_windows()
         run_log.close()
-    scoring.score(rid)
-    print(f"run {rid} written to {results}")
-    return 0
+    # in a fresh process: the run's native threads (COM, WGC, audio) once crashed the scorer with exit 139
+    rc = subprocess.run([sys.executable, "-X", "faulthandler", str(Path(__file__)), "score", rid]).returncode
+    print(f"run {rid} written to {results} (score exit {rc})")
+    return rc
 
 
 def restore() -> int:
     close_outer_wilds()
+    close_leftovers()
+    print(f"killed {kill_run_processes([LOCAL / 'runs', RESULTS])} leftover run processes")
     restore_windows()
     restore_brightness()
     ow_restore()

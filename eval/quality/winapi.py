@@ -268,10 +268,12 @@ def process_table() -> dict[int, tuple[int, str]]:
     return out
 
 
-def descendants(roots: set[int], table: dict[int, tuple[int, str]] | None = None) -> set[int]:
-    """The roots that still exist plus their whole descendant tree, re-resolved from `table`."""
+def descendants(roots: set[int], table: dict[int, tuple[int, str]] | None = None, keep_exited: bool = False) -> set[int]:
+    """The roots that still exist plus their whole descendant tree, re-resolved from `table`.
+    keep_exited: an exited root still parents its children (Zen's launcher starts the browser and
+    exits); only for a short search right after the launch, since an exited pid can be reused."""
     table = table or process_table()
-    tree = {p for p in roots if p in table}
+    tree = set(roots) if keep_exited else {p for p in roots if p in table}
     grew = True
     while grew:
         grew = False
@@ -279,7 +281,7 @@ def descendants(roots: set[int], table: dict[int, tuple[int, str]] | None = None
             if ppid in tree and pid not in tree:
                 tree.add(pid)
                 grew = True
-    return tree
+    return {p for p in tree if p in table}
 
 
 def _open(pid: int):

@@ -9,6 +9,7 @@ import json
 import random
 import sys
 import time
+from pathlib import Path
 
 from common import ASSETS, JsonlWriter
 
@@ -16,7 +17,7 @@ PERIOD_S = 4
 
 
 def main() -> None:
-    log, seed = JsonlWriter(sys.argv[1]), sys.argv[2]
+    log, seed = JsonlWriter(Path(sys.argv[1])), sys.argv[2]
     sentences = json.loads((ASSETS / "sentences.json").read_text(encoding="utf-8"))
     rng = random.Random(f"{seed}/terminal")
     sys.stdout.write("\x1b]0;quality termfeed\x07")
