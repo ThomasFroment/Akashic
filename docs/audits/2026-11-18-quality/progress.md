@@ -7,9 +7,9 @@ its assets, truth logs, scorer output and baselines at the end of each session.
 ## Phase
 
 - Phase 0, scope: done 2026-11-18 (`scope.md`)
-- Phase 1, harness `eval/quality/`: built 2026-11-18; smoke run twice on `target`, standard once and
-  day once on 2026-11-19 (baseline `docs/baselines/2026-11-18-quality.md`); second standard run
-  (same-seed 5 % check) pending
+- Phase 1, harness `eval/quality/`: built 2026-11-18; smoke run twice on `target`, standard twice and
+  day once on 2026-11-19 (baseline `docs/baselines/2026-11-18-quality.md`); the standard pair ran
+  on different harness versions, so a clean same-seed 5 % check still needs two runs
 - Phase 2, audit: done 2026-11-18 (`audit.md`: #187-#219), plus architecture, creep and workspace
   dimensions 2026-11-19 (#220-#240); 0 refuted; all queued in TODO.md `## Audit 2026-11-18`,
   which is not committed: the user's commit rule
@@ -195,6 +195,13 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   sessions waited 25 s for a game that was not running (fixed after); a popup `select` click and
   a hung-window focus missed (hung: old check, fixed for later runs).
 
+- 2026-11-19 18:18 standard 2 (seed 21, `20261119-standard-s21-target-1818`): drive, drain (no
+  worker restart, no Whisper load failure), cleanup (1 run process killed) and scoring complete;
+  19 of 391 required cells missing: Calculator was matched to its inner `CalculatorApp.exe`
+  window, which cannot take focus (driver fixed after the run), and one exclusive-game focus
+  missed. Speech metrics repeat standard 1 within about 5-10 %; screen metrics differ because
+  standard 1's harness was broken; the canary hit repeats. Comparison in the baseline.
+
 ## Harness commands
 
 ```powershell
@@ -246,9 +253,9 @@ stay in `eval\quality\local\` (gitignored).
 - Phase 4 (`/frogg:invent` full, one per problem picked, `eval/quality/` named as the harness in
   Context). Phase 3 measured candidates for #190, #196 and #208. #187 needs only a pid check. #188,
   #110 and the overlap WER are open method problems.
-- Second `run.py standard` (seed 21) with the fixed harness, then `run.py compare` against
-  standard 1 (expect differences where standard 1's harness was broken: terminal, Zen, hung,
-  timing). Needs the desktop for about 2 h; scoring afterwards needs no screen.
+- Optional: a clean standard pair (two `run.py standard` on the current harness, then
+  `run.py compare`) for the 5 % rule; each needs the desktop about 1 h 25 min, then about 1 h of
+  scoring.
 - New Phase 4/5 items from the day run (baseline section "Standard and day"): transcription stops
   after repeated model swaps, capture VRAM growth, a canary in stored frames, game-row
   fragmentation, video-episode F1; harness: scorer speed, Notepad tabs left in the user's session.
