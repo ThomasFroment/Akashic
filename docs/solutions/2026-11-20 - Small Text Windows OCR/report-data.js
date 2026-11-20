@@ -1,6 +1,7 @@
 window.REPORT = {
   title: "Small Text Windows OCR",
   date: "2026-11-20",
+  revised: "2026-11-20",
   depth: "full",
   context: "Python 3.14, Pillow 13, numpy, winrt Windows.Media.Ocr, Windows 11 26200, Ryzen 7 7800X3D",
   problem: "Akashic reads small UI text and 1440p-monitor text badly with Windows OCR (audit #190).",
@@ -14,7 +15,7 @@ window.REPORT = {
   nonGoals: ["Language detection", "UI Automation text", "Layout and reading order", "Search ranking", "Retention", "Change detection", "Game-HUD text"],
 
   answer: {
-    text: "**C2** on the live path (raw window pixels): one OCR call on a mosaic of line strips, enlarging only strips under 16 device px and rebuilding ClearType strips from their red, green and blue subpixels instead of interpolating. Raw ClearType Edge text at ≤ 11 px, 1440p: 0.602 → 0.006 (3x Lanczos 0.072), at 1.55x CPU and +20 ms p95 [1]. Not shown on the runs: stored frames are 4:2:0 WebP, which erases the subpixel phases, so the replays fall back to luma (≤ 11 px 0.40-0.49) [1]. The suspected codec cause is not real; the scorer's single-line matching misreads wrapped lines [1][2]. No prior art found for the subpixel rebuild.",
+    text: "**C2** on the live path (raw window pixels): one OCR call on a mosaic of line strips, enlarging only strips under 16 device px and rebuilding ClearType strips from their red, green and blue subpixels instead of interpolating. Raw ClearType Edge text at ≤ 11 px, 1440p: 0.602 → 0.006 (3x Lanczos 0.072), at 1.55x CPU and +20 ms p95 [1]. Live WGC captures of real Edge, Chrome and Zen windows confirm it: ≤ 11 px at scale 1.0 0.53 → 0.005-0.007, at 1.44x CPU and +50 ms p95 (at the limit; +17 to +91 ms by browser and monitor) [9]. The stored WebP frames still cannot show it (replays ≤ 11 px 0.40-0.49) [1]. The suspected codec cause is not real; the scorer's single-line matching misreads wrapped lines [1][2]. No prior art found for the subpixel rebuild.",
     relaxed: "If the per-call limit relaxed to about +250-700 ms on dense small-text windows, C1 forced to 3x meets the ≤ 11 px must on both replays (0.040 / 0.045) [1]."
   },
   bestFit: "C2",
@@ -32,6 +33,7 @@ window.REPORT = {
   captureColumns: ["Corpus CER by bucket; other renderers; replay", "Timing and budget"],
   figures: [
     { src: "baseline.png", title: "Today's OCR on the same harness", caption: "≤ 11 px at 1440p 0.60 on Edge ClearType text." },
+    { src: "fig-live.png", title: "Live WGC captures (real browser windows)", caption: "≤ 11 px at scale 1.0: today 0.53, C2 0.005-0.007; C2 1.44x CPU, +50 ms p95." },
     { src: "up3x.png", title: "Uniform 3x Lanczos (earlier research)", caption: "Accurate but 4.5x CPU and +330 ms p95." }
   ],
 
@@ -149,7 +151,7 @@ window.REPORT = {
   ],
   caveats: [
     "The run-level musts were scored on stored WebP replays, where C2's core cannot show; C2's ≤ 11 px results come from headless Edge renders with one page layout.",
-    "Whether real WGC captures carry ClearType fringes was not measured on raw captures.",
+    "Live captures covered browsers on synthetic pages only; C2's p95 sits at the +50 ms limit overall and reaches +91 ms on some browser and monitor sets.",
     "M3.1 was scored wrap-tolerant because of a scorer artefact; score.py needs the same fix before rescoring. M3.3 and UIA were not measured.",
     "Cost models were fitted on the corpus; real dense windows cost more per pixel.",
     "The refuter could run no OCR experiments."
@@ -162,6 +164,7 @@ window.REPORT = {
     { n: 5, title: "Displaced Filtering for Patterned Displays", url: "https://www.microsoft.com/en-us/research/publication/displaced-filtering-for-patterned-displays/", tier: 1, version: "MSR" },
     { n: 6, title: "screenpipe", url: "https://github.com/screenpipe/screenpipe", tier: 1, version: "2026-11-19" },
     { n: 7, title: "Refuter analysis", url: "eval/small-text-ocr/candidates.md", tier: 1, version: "2026-11-20" },
+    { n: 9, title: "Live WGC validation", url: "eval/small-text-ocr/live/", tier: 1, version: "2026-11-20" },
     { n: 8, title: "Akashic OCR path", url: "src/akashic/capture/screen_writer.py", tier: 1, version: "2026-11-19" }
   ]
 };
