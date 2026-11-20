@@ -200,21 +200,15 @@
  "M10.1": {
   "canaries": 103,
   "frames_scanned": 720,
-  "hits": 1,
-  "locations": [
-   {
-    "frames": 4,
-    "in_window_rect": 4,
-    "where": "frames"
-   }
-  ],
+  "hits": 0,
+  "locations": [],
   "not_scanned": [
    {
     "location": "export",
     "reason": "app shell out of scope for this harness"
    }
   ],
-  "temp_files_unreadable": 0
+  "temp_files_unreadable": 4
  },
  "M10.2": {
   "hits": 0,
@@ -240,11 +234,11 @@
    "recall": 1.0
   },
   "game": {
-   "f1": 0.3333333333333333,
+   "f1": 0.28571428571428575,
    "n_episodes": 3,
-   "n_truth": 3,
+   "n_truth": 4,
    "precision": 0.3333333333333333,
-   "recall": 0.3333333333333333
+   "recall": 0.25
   },
   "video": {
    "f1": 1.0,
@@ -262,12 +256,12 @@
   }
  },
  "M11.2": {
-  "n": 8,
-  "value": 0.75
+  "n": 9,
+  "value": 0.6666666666666666
  },
  "M11.3": {
   "distinct_people": 14,
-  "n": 10,
+  "n": 11,
   "truth_speakers": 4
  },
  "M11.4": {
@@ -351,82 +345,82 @@
  },
  "M3.1": {
   "all": {
-   "cer_accent_folded": 0.14721542392442083,
-   "cer_exact": 0.14737860169292244,
+   "cer_accent_folded": 0.07541742013998133,
+   "cer_exact": 0.07583801213355681,
    "n": 788,
-   "wer": 0.14303146910287895
+   "wer": 0.0963798253695884
   },
   "font=<=11": {
-   "cer_accent_folded": 0.26925143208384344,
-   "cer_exact": 0.2696587651055399,
+   "cer_accent_folded": 0.23328423229103462,
+   "cer_exact": 0.23457241896615003,
    "n": 235,
-   "wer": 0.30016775395273937
+   "wer": 0.27787571294914937
   },
   "font=>=16": {
-   "cer_accent_folded": 0.09535563745522675,
-   "cer_exact": 0.09541506027888065,
+   "cer_accent_folded": 0.00833116181177604,
+   "cer_exact": 0.00838306528787976,
    "n": 553,
-   "wer": 0.07625565185203413
+   "wer": 0.019252278206483838
   },
   "lang=en": {
-   "cer_accent_folded": 0.017208870979473934,
-   "cer_exact": 0.017208870979473934,
+   "cer_accent_folded": 0.004758703885875636,
+   "cer_exact": 0.004758703885875636,
    "n": 305,
-   "wer": 0.022018371548254104
+   "wer": 0.01723857672338592
   },
   "lang=fr": {
-   "cer_accent_folded": 0.19701823247533543,
-   "cer_exact": 0.1973287913494392,
+   "cer_accent_folded": 0.1409670144016622,
+   "cer_exact": 0.1417819535918976,
    "n": 402,
-   "wer": 0.19488457814481655
+   "wer": 0.17039431266698676
   },
   "lang=mixed": {
-   "cer_accent_folded": 0.3895767771434472,
-   "cer_exact": 0.3896229427507255,
+   "cer_accent_folded": 0.016157809822777987,
+   "cer_exact": 0.016204981877874846,
    "n": 81,
-   "wer": 0.3413530113164799
+   "wer": 0.02704966417869478
   },
   "resolution=2560x1440": {
-   "cer_accent_folded": 0.32547229940857686,
-   "cer_exact": 0.3257368235672859,
+   "cer_accent_folded": 0.1687052543221088,
+   "cer_exact": 0.16953761864128303,
    "n": 324,
-   "wer": 0.3016869032948492
+   "wer": 0.1982483408859676
   },
   "resolution=3840x2160": {
-   "cer_accent_folded": 0.022742950526001525,
-   "cer_exact": 0.02283536055651347,
+   "cer_accent_folded": 0.010276777305909552,
+   "cer_exact": 0.010409838623851425,
    "n": 464,
-   "wer": 0.0322462090205549
+   "wer": 0.025247499879702918
   },
   "source=ocr": {
-   "cer_accent_folded": 0.15547157540363774,
-   "cer_exact": 0.15564445350960357,
+   "cer_accent_folded": 0.08346538306750434,
+   "cer_exact": 0.08396774354079446,
    "n": 599,
-   "wer": 0.15985544013653535
+   "wer": 0.10781315396978604
   },
   "source=ocr_deferred": {
-   "cer_accent_folded": 0.2840097817053406,
-   "cer_exact": 0.28427685836989847,
+   "cer_accent_folded": 0.11174124569515256,
+   "cer_exact": 0.11207606273545147,
    "n": 78,
-   "wer": 0.20479941174031674
+   "wer": 0.13315625984352028
   },
   "source=uia": {
-   "cer_accent_folded": 0.006536192906739164,
-   "cer_exact": 0.006574013774038306,
+   "cer_accent_folded": 0.006462571609444066,
+   "cer_exact": 0.006502182765240282,
    "n": 111,
    "wer": 0.008838152212065256
   },
   "theme=dark": {
-   "cer_accent_folded": 0.08197342745313103,
-   "cer_exact": 0.08206824064089008,
+   "cer_accent_folded": 0.012484465745647471,
+   "cer_exact": 0.012600254679729247,
    "n": 701,
-   "wer": 0.07340696548312972
+   "wer": 0.027118334415158613
   },
   "theme=light": {
-   "cer_accent_folded": 0.6729009357218247,
-   "cer_exact": 0.6736149591351601,
+   "cer_accent_folded": 0.5824978917540967,
+   "cer_exact": 0.5853744256408341,
    "n": 87,
-   "wer": 0.7040289063148815
+   "wer": 0.6544522984621778
   }
  },
  "M3.2": {
@@ -508,18 +502,28 @@
  "M6.1": {
   "game": {
    "end_error_s": {
-    "max": 185.257,
+    "max": 516.44,
     "n": 2,
-    "p50": 93.73700000000001,
-    "p90": 166.953
+    "p50": 316.72900000000004,
+    "p90": 476.49780000000004
    },
+   "missed_pieces": 0,
+   "rows_not_on_truth": 0,
+   "rows_per_truth": [
+    1,
+    1
+   ],
+   "rows_per_truth_max": 1,
+   "rows_per_truth_mean": 1,
+   "split_rows": 0,
    "start_error_s": {
     "max": 187.222,
     "n": 2,
     "p50": 96.9055,
     "p90": 169.1587
    },
-   "stored_rows": 9,
+   "stored_rows": 2,
+   "truth_pieces": 2,
    "truth_sessions": 2
   },
   "media": {
@@ -529,22 +533,36 @@
     "p50": 29.779500000000002,
     "p90": 52.3575
    },
+   "missed_pieces": 0,
    "n": 2,
-   "split_rows": 1,
+   "rows_not_on_truth": 1,
+   "rows_per_truth_max": 1,
+   "split_rows": 0,
    "start_error_s": {
     "max": 1.977,
     "n": 2,
-    "p50": 1.6375000000000002,
-    "p90": 1.9091
-   }
+    "p50": 1.623,
+    "p90": 1.9062000000000001
+   },
+   "truth_pieces": 2,
+   "truth_sessions": 2
   },
   "outer_wilds": {
    "end_error_s": {
-    "max": 3090.0,
+    "max": 561.174,
     "n": 1,
-    "p50": 3090.0,
-    "p90": 3090.0
+    "p50": 561.174,
+    "p90": 561.174
    },
+   "missed_pieces": 1,
+   "rows_not_on_truth": 1,
+   "rows_per_truth": [
+    6,
+    0
+   ],
+   "rows_per_truth_max": 6,
+   "rows_per_truth_mean": 3,
+   "split_rows": 5,
    "start_error_s": {
     "max": 0.199,
     "n": 1,
@@ -552,6 +570,7 @@
     "p90": 0.199
    },
    "stored_rows": 7,
+   "truth_pieces": 2,
    "truth_sessions": 1,
    "window_modes": [
     {
@@ -630,14 +649,14 @@
      "truth_seconds": 184.064
     },
     "music": {
-     "recall": 0.8521224773834377,
-     "truth_seconds": 91.968
+     "recall": 0.8924927113702624,
+     "truth_seconds": 87.808
     }
    },
    "false_alarm_s_per_hour": 69.79273530413559,
-   "n": 247,
-   "recall": 0.9686786056452207,
-   "truth_seconds": 434.208
+   "n": 246,
+   "recall": 0.9780489619763375,
+   "truth_seconds": 430.048
   },
   "system": {
    "by_condition": {
@@ -654,22 +673,22 @@
      "truth_seconds": 192.96
     },
     "overlap": {
-     "recall": 0.8493543403073085,
-     "truth_seconds": 564.384
+     "recall": 0.9095362780813601,
+     "truth_seconds": 527.04
     }
    },
    "false_alarm_s_per_hour": 266.0875444735083,
-   "n": 1106,
-   "recall": 0.928074530371268,
-   "truth_seconds": 1835.386
+   "n": 1097,
+   "recall": 0.9418123491247994,
+   "truth_seconds": 1808.614
   }
  },
  "M8.2": {
-  "confusion": 0.07442904713839651,
-  "der": 0.22451347552520118,
+  "confusion": 0.07531967905606972,
+  "der": 0.2152338585345597,
   "false_alarm": 0.0,
-  "miss": 0.15008442838680464,
-  "n": 2120
+  "miss": 0.13991417947848997,
+  "n": 2095
  },
  "M8.3": {
   "correct": 170,
@@ -693,14 +712,14 @@
  },
  "M9.1": {
   "all": {
-   "cer": 0.17827354716213467,
-   "ref_words": 8321,
-   "wer": 0.20898930417017186
+   "cer": 0.16358365543898398,
+   "ref_words": 8167,
+   "wer": 0.19407371127709072
   },
   "en": {
-   "cer": 0.08645325653522375,
-   "ref_words": 3347,
-   "wer": 0.11233940842545563
+   "cer": 0.08254074197675065,
+   "ref_words": 3334,
+   "wer": 0.10887822435512898
   },
   "fr": {
    "cer": 0.07743761255466941,
@@ -713,19 +732,19 @@
    "wer": 0.16744186046511628
   },
   "multi": {
-   "cer": 0.518448834535382,
-   "ref_words": 1812,
-   "wer": 0.5502207505518764
+   "cer": 0.4804330664260742,
+   "ref_words": 1671,
+   "wer": 0.5122681029323758
   },
   "no_overlap": {
-   "cer": 0.06453727429831357,
-   "ref_words": 6281,
-   "wer": 0.09377487661200445
+   "cer": 0.06238614304912647,
+   "ref_words": 6268,
+   "wer": 0.09189534141671984
   },
   "overlap": {
-   "cer": 0.5357243187564379,
-   "ref_words": 2040,
-   "wer": 0.5637254901960784
+   "cer": 0.5031566289207335,
+   "ref_words": 1899,
+   "wer": 0.531332280147446
   }
  },
  "M9.2": {
@@ -733,8 +752,8 @@
   "n": 305
  },
  "M9.3": {
-  "n": 48,
-  "value": 0.5833333333333334
+  "n": 47,
+  "value": 0.5957446808510638
  },
  "drain_timed_out": false,
  "drive_seconds": 3939.986,
@@ -1007,5 +1026,9 @@
   "source": "OS and player logs"
  },
  "run_id": "20261119-standard-s21-target-0315",
- "seed": 21
+ "seed": 21,
+ "speech_paused": {
+  "utterances": 7,
+  "words": 154
+ }
 }

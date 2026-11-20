@@ -15,7 +15,7 @@ Length standard, seed 21, drive 3940 s.
 | M10.2 | see scores.json |
 | M10.3 | see scores.json |
 | M11.1 | see scores.json |
-| M11.2 | 0.75 |
+| M11.2 | 0.6666666666666666 |
 | M11.3 | see scores.json |
 | M11.4 | 0.3333333333333333 |
 | M12.1 | see scores.json |
@@ -38,7 +38,7 @@ Length standard, seed 21, drive 3940 s.
 | M8.3 | see scores.json |
 | M9.1 | see scores.json |
 | M9.2 | see scores.json |
-| M9.3 | 0.5833333333333334 |
+| M9.3 | 0.5957446808510638 |
 
 Coverage: 32 required cells missing of 391.
 Profile fidelity out of tolerance: gaming.switches_per_hour, gaming.run_median_s, gaming.run_p90_s, gaming.background.game_sound, gaming.background.both, desk.focus.browser, desk.focus.editor, desk.focus.terminal, desk.focus.assistant, desk.focus.video, desk.monitor.primary, desk.monitor.right, desk.switches_per_hour, desk.run_median_s, desk.run_p90_s.

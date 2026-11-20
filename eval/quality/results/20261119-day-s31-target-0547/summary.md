@@ -15,9 +15,9 @@ Length day, seed 31, drive 24717 s.
 | M10.2 | see scores.json |
 | M10.3 | see scores.json |
 | M11.1 | see scores.json |
-| M11.2 | 0.5263157894736842 |
+| M11.2 | 0.5238095238095238 |
 | M11.3 | see scores.json |
-| M11.4 | 0.3870967741935484 |
+| M11.4 | 0.3709677419354839 |
 | M12.1 | see scores.json |
 | M13.1 | see scores.json |
 | M2.1 | see scores.json |

@@ -15,7 +15,7 @@ Length smoke, seed 11, drive 300 s.
 | M10.2 | see scores.json |
 | M10.3 | see scores.json |
 | M11.1 | see scores.json |
-| M11.2 | 0.25 |
+| M11.2 | 0.3333333333333333 |
 | M11.3 | see scores.json |
 | M11.4 | 0.5 |
 | M12.1 | see scores.json |

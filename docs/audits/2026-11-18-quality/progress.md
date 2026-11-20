@@ -23,7 +23,8 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   2026-11-20 the user added a sixth study: duplicated and noisy screen text (M3.2, UI chrome,
   OCR garbage on menus and HUDs; extends #101 beyond exact duplicates). Studies run in parallel
   at the user's request.
-- Phase 5, synthesis and refuters: not started
+- Phase 5, synthesis and refuters: started 2026-11-20 (`synthesis.md`), after the scorer fixes
+  and the rescore of all five runs
 - Phase 6, `quality.md`: not started
 
 ## User answers (2026-11-18, binding for this audit)
@@ -347,6 +348,20 @@ its assets, truth logs, scorer output and baselines at the end of each session.
     - A real Discord call with a video playing cannot be recorded now; the Communications-category
       check stays open (see Next).
 
+- 2026-11-20 scorer fixes and rescore (user's request: M3.1, M6, game rows per truth, M9.1,
+  M8.3, then speed). `eval/quality/score.py` and `tags.py` only; all five runs rescored from their
+  stores, before/after table in the baseline's last section.
+  - M3.1 wrap-tolerant: CER all 0.15-0.24 -> 0.07-0.13; <= 11 px 0.24-0.52; 1440p 0.15-0.23.
+  - M6/M11 truth clipped to the recorded span and split at Pauses, each row assigned to one piece,
+    game rows by their own process: synthetic game 1 row per piece on standard, 3.67 on day;
+    game end error 516-703 s (rows close while the game runs, #197); Outer Wilds missed after the
+    Pause on both standard runs.
+  - M9.1 Pause speech left out (3-14 utterances), per-app overlap groups: overlap WER standard
+    0.53-0.58, day 0.50 unchanged. M8.3 unchanged.
+  - M10.1 0 on every run (solid-square rule now in the stored scores).
+  - Speed, exact (scores identical to the slow version on smoke and standard): standard 55 min ->
+    75 s, day about 3 h -> 412 s.
+
 ## Harness commands
 
 ```powershell
@@ -403,7 +418,7 @@ stay in `eval\quality\local\` (gitignored).
   scoring.
 - New Phase 4/5 items from the day run (baseline section "Standard and day"): transcription stops
   after repeated model swaps, capture VRAM growth, a canary in stored frames, game-row
-  fragmentation, video-episode F1; harness: scorer speed, Notepad tabs left in the user's session.
+  fragmentation, video-episode F1; harness: Notepad tabs left in the user's session.
 - Untested until standard: exclusive-fullscreen re-entry, the Outer Wilds launch (confirm the Steam
   launch arguments once by hand), real-app launches beyond smoke's.
 - Attended run with the user present (lock, sleep, default-output change, UAC).
