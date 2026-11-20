@@ -1,0 +1,590 @@
+{
+ "candidate": "baseline.py",
+ "runs": {
+  "std": {
+   "M7.1": {
+    "leak_seconds": 2008.064,
+    "leak_seconds_other_than_self": 11.68,
+    "stored_seconds": 1997.344,
+    "segments_listing_akashic_itself": 253,
+    "akashic_session_audible": true,
+    "n": 254
+   },
+   "M8.2": {
+    "der": 0.24909777788206583,
+    "miss": 0.1529342750545557,
+    "false_alarm": 0.0,
+    "confusion": 0.09616350282751014,
+    "n": 2130
+   },
+   "M8.3": {
+    "correct": 169,
+    "wrong": 6,
+    "unknown": 43,
+    "purity_mean": 0.8721353675110082,
+    "fragmentation": {
+     "call_en1": 4,
+     "call_en2": 1,
+     "call_fr1": 2,
+     "call_fr2": 3,
+     "spare_en2": 3,
+     "spare_fr2": 4,
+     "tts_microsoftdaviddesktop": 6,
+     "tts_microsoftziradesktop": 3,
+     "video_en1": 7,
+     "video_en2": 5,
+     "video_fr1": 5,
+     "video_fr2": 3
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.11316329522134272,
+     "cer": 0.08825448613376835,
+     "ref_words": 3411
+    },
+    "all": {
+     "wer": 0.22184833553659417,
+     "cer": 0.19023508137432188,
+     "ref_words": 8321
+    },
+    "no_overlap": {
+     "wer": 0.0968296111197876,
+     "cer": 0.06797596365235234,
+     "ref_words": 6403
+    },
+    "mixed": {
+     "wer": 0.16585365853658537,
+     "cer": 0.15618860510805502,
+     "ref_words": 205
+    },
+    "fr": {
+     "wer": 0.11749432002596559,
+     "cer": 0.08090914705700698,
+     "ref_words": 3081
+    },
+    "overlap": {
+     "wer": 0.6392075078206465,
+     "cer": 0.6021728395061728,
+     "ref_words": 1918
+    },
+    "multi": {
+     "wer": 0.6551724137931034,
+     "cer": 0.6161323920842495,
+     "ref_words": 1624
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 301
+   },
+   "excluded_s": 0.0,
+   "overlap_local_wer": 0.6178310740354536,
+   "overlap_error_types": {
+    "D:overlap_quieter": 348,
+    "D:uncovered": 279,
+    "D:clean": 271,
+    "D:overlap_louder": 171,
+    "S:overlap_louder": 58,
+    "S:overlap_quieter": 37,
+    "S:clean": 25,
+    "D:boundary": 12,
+    "S:boundary": 8,
+    "S:uncovered": 1,
+    "I": 16
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 9,
+     "ref_words": 1232,
+     "errors": 887,
+     "wer": 0.7199675324675324,
+     "S": 85,
+     "D": 798,
+     "I": 4,
+     "local_errors": 871
+    },
+    "chrome+msedge": {
+     "groups": 3,
+     "ref_words": 295,
+     "errors": 182,
+     "wer": 0.6169491525423729,
+     "S": 36,
+     "D": 135,
+     "I": 11,
+     "local_errors": 160
+    },
+    "discord+discord": {
+     "groups": 5,
+     "ref_words": 296,
+     "errors": 176,
+     "wer": 0.5945945945945946,
+     "S": 3,
+     "D": 173,
+     "I": 0,
+     "local_errors": 176
+    },
+    "discord+msedge": {
+     "groups": 3,
+     "ref_words": 212,
+     "errors": 98,
+     "wer": 0.46226415094339623,
+     "S": 5,
+     "D": 92,
+     "I": 1,
+     "local_errors": 95
+    }
+   },
+   "n_out": 301,
+   "gpu_s": 535.4515859000094,
+   "wall_s": 660.1598109999904,
+   "cpu_speakers_s": 305.40625,
+   "cpu_capture_s": 0.0,
+   "audio_s_transcribed": 2494.8299999999977,
+   "recorded_h": 1.0833333333333333
+  },
+  "day": {
+   "M7.1": {
+    "leak_seconds": 16156.192,
+    "leak_seconds_other_than_self": 25.568,
+    "stored_seconds": 16146.72,
+    "segments_listing_akashic_itself": 2074,
+    "akashic_session_audible": true,
+    "n": 2090
+   },
+   "M8.2": {
+    "der": 0.16108048158206809,
+    "miss": 0.09670041659787873,
+    "false_alarm": 0.0,
+    "confusion": 0.06438006498418936,
+    "n": 16536
+   },
+   "M8.3": {
+    "correct": 1472,
+    "wrong": 46,
+    "unknown": 293,
+    "purity_mean": 0.9083201598063446,
+    "fragmentation": {
+     "call_en1": 11,
+     "call_en2": 4,
+     "call_fr1": 11,
+     "call_fr2": 3,
+     "spare_en2": 2,
+     "spare_fr2": 2,
+     "tts_microsoftdaviddesktop": 4,
+     "tts_microsoftziradesktop": 4,
+     "video_en1": 13,
+     "video_en2": 7,
+     "video_fr1": 9,
+     "video_fr2": 12
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.05929173405975994,
+     "cer": 0.03741287412874129,
+     "ref_words": 23494
+    },
+    "all": {
+     "wer": 0.13281393064642327,
+     "cer": 0.0998845933714686,
+     "ref_words": 60069
+    },
+    "no_overlap": {
+     "wer": 0.08372066659108944,
+     "cer": 0.05328917071097099,
+     "ref_words": 52926
+    },
+    "mixed": {
+     "wer": 0.1510022271714922,
+     "cer": 0.13974932855863922,
+     "ref_words": 2245
+    },
+    "fr": {
+     "wer": 0.0835455547531263,
+     "cer": 0.047574720380368626,
+     "ref_words": 26309
+    },
+    "overlap": {
+     "wer": 0.496570068598628,
+     "cer": 0.45112019012523696,
+     "ref_words": 7143
+    },
+    "multi": {
+     "wer": 0.5046752275277396,
+     "cer": 0.45113693064366667,
+     "ref_words": 8021
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 2418
+   },
+   "excluded_s": 0.0,
+   "overlap_local_wer": 0.4731905361892762,
+   "overlap_error_types": {
+    "D:overlap_quieter": 1516,
+    "D:clean": 852,
+    "D:overlap_louder": 518,
+    "S:clean": 170,
+    "S:overlap_louder": 164,
+    "S:overlap_quieter": 153,
+    "D:boundary": 74,
+    "D:uncovered": 45,
+    "S:boundary": 15,
+    "S:uncovered": 5,
+    "I": 35
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 25,
+     "ref_words": 2902,
+     "errors": 1656,
+     "wer": 0.5706409372846313,
+     "S": 216,
+     "D": 1427,
+     "I": 13,
+     "local_errors": 1586
+    },
+    "chrome+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 173,
+     "wer": 0.6360294117647058,
+     "S": 2,
+     "D": 171,
+     "I": 0,
+     "local_errors": 172
+    },
+    "discord+discord": {
+     "groups": 36,
+     "ref_words": 2122,
+     "errors": 625,
+     "wer": 0.2945334590009425,
+     "S": 160,
+     "D": 449,
+     "I": 16,
+     "local_errors": 595
+    },
+    "discord+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 173,
+     "wer": 0.6360294117647058,
+     "S": 2,
+     "D": 171,
+     "I": 0,
+     "local_errors": 172
+    },
+    "discord+msedge": {
+     "groups": 19,
+     "ref_words": 2659,
+     "errors": 1657,
+     "wer": 0.6231666039864611,
+     "S": 219,
+     "D": 1431,
+     "I": 7,
+     "local_errors": 1577
+    }
+   },
+   "n_out": 2418,
+   "gpu_s": 8399.811647400697,
+   "wall_s": 8761.172300799983,
+   "cpu_speakers_s": 2181.046875,
+   "cpu_capture_s": 0.0,
+   "audio_s_transcribed": 19386.13350000003,
+   "recorded_h": 6.865782777777778
+  }
+ },
+ "runs_nopause": {
+  "std": {
+   "M7.1": {
+    "leak_seconds": 2008.064,
+    "leak_seconds_other_than_self": 11.68,
+    "stored_seconds": 1997.344,
+    "segments_listing_akashic_itself": 253,
+    "akashic_session_audible": true,
+    "n": 254
+   },
+   "M8.2": {
+    "der": 0.23178928770332816,
+    "miss": 0.133409191296499,
+    "false_alarm": 0.0,
+    "confusion": 0.09838009640682914,
+    "n": 2082
+   },
+   "M8.3": {
+    "correct": 169,
+    "wrong": 6,
+    "unknown": 43,
+    "purity_mean": 0.8721353675110082,
+    "fragmentation": {
+     "call_en1": 4,
+     "call_en2": 1,
+     "call_fr1": 2,
+     "call_fr2": 3,
+     "spare_en2": 3,
+     "spare_fr2": 4,
+     "tts_microsoftdaviddesktop": 6,
+     "tts_microsoftziradesktop": 3,
+     "video_en1": 7,
+     "video_en2": 5,
+     "video_fr1": 5,
+     "video_fr2": 3
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.11133960047003526,
+     "cer": 0.0859183339693616,
+     "ref_words": 3404
+    },
+    "all": {
+     "wer": 0.1933474523483244,
+     "cer": 0.16006658694989567,
+     "ref_words": 8027
+    },
+    "no_overlap": {
+     "wer": 0.09158027018535972,
+     "cer": 0.06206489675516224,
+     "ref_words": 6366
+    },
+    "mixed": {
+     "wer": 0.16585365853658537,
+     "cer": 0.15618860510805502,
+     "ref_words": 205
+    },
+    "fr": {
+     "wer": 0.10881678138315307,
+     "cer": 0.07127254571553392,
+     "ref_words": 3051
+    },
+    "overlap": {
+     "wer": 0.5833835039133053,
+     "cer": 0.5397097474574334,
+     "ref_words": 1661
+    },
+    "multi": {
+     "wer": 0.590343818580834,
+     "cer": 0.5435530480253199,
+     "ref_words": 1367
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 301
+   },
+   "excluded_s": 0.0,
+   "overlap_local_wer": 0.5586995785671283,
+   "overlap_error_types": {
+    "D:overlap_quieter": 348,
+    "D:clean": 271,
+    "D:overlap_louder": 171,
+    "S:overlap_louder": 58,
+    "S:overlap_quieter": 37,
+    "S:clean": 25,
+    "D:uncovered": 22,
+    "D:boundary": 12,
+    "S:boundary": 8,
+    "S:uncovered": 1,
+    "I": 16
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 7,
+     "ref_words": 975,
+     "errors": 630,
+     "wer": 0.6461538461538462,
+     "S": 85,
+     "D": 541,
+     "I": 4,
+     "local_errors": 614
+    },
+    "chrome+msedge": {
+     "groups": 3,
+     "ref_words": 295,
+     "errors": 182,
+     "wer": 0.6169491525423729,
+     "S": 36,
+     "D": 135,
+     "I": 11,
+     "local_errors": 160
+    },
+    "discord+discord": {
+     "groups": 4,
+     "ref_words": 179,
+     "errors": 59,
+     "wer": 0.329608938547486,
+     "S": 3,
+     "D": 56,
+     "I": 0,
+     "local_errors": 59
+    },
+    "discord+msedge": {
+     "groups": 3,
+     "ref_words": 212,
+     "errors": 98,
+     "wer": 0.46226415094339623,
+     "S": 5,
+     "D": 92,
+     "I": 1,
+     "local_errors": 95
+    }
+   },
+   "n_out": 301,
+   "paused_words_removed": 294
+  },
+  "day": {
+   "M7.1": {
+    "leak_seconds": 16156.192,
+    "leak_seconds_other_than_self": 25.568,
+    "stored_seconds": 16146.72,
+    "segments_listing_akashic_itself": 2074,
+    "akashic_session_audible": true,
+    "n": 2090
+   },
+   "M8.2": {
+    "der": 0.1582548683864031,
+    "miss": 0.09365796119367847,
+    "false_alarm": 0.0,
+    "confusion": 0.06459690719272464,
+    "n": 16480
+   },
+   "M8.3": {
+    "correct": 1472,
+    "wrong": 46,
+    "unknown": 293,
+    "purity_mean": 0.9083201598063446,
+    "fragmentation": {
+     "call_en1": 11,
+     "call_en2": 4,
+     "call_fr1": 11,
+     "call_fr2": 3,
+     "spare_en2": 2,
+     "spare_fr2": 2,
+     "tts_microsoftdaviddesktop": 4,
+     "tts_microsoftziradesktop": 4,
+     "video_en1": 13,
+     "video_en2": 7,
+     "video_fr1": 9,
+     "video_fr2": 12
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.05494740443000085,
+     "cer": 0.03299062163361004,
+     "ref_words": 23386
+    },
+    "all": {
+     "wer": 0.1305414608091868,
+     "cer": 0.09751646284101599,
+     "ref_words": 59912
+    },
+    "no_overlap": {
+     "wer": 0.08099452329966457,
+     "cer": 0.050467043997001255,
+     "ref_words": 52769
+    },
+    "mixed": {
+     "wer": 0.1510022271714922,
+     "cer": 0.13974932855863922,
+     "ref_words": 2245
+    },
+    "fr": {
+     "wer": 0.08183549124143183,
+     "cer": 0.04580508626564798,
+     "ref_words": 26260
+    },
+    "overlap": {
+     "wer": 0.496570068598628,
+     "cer": 0.45112019012523696,
+     "ref_words": 7143
+    },
+    "multi": {
+     "wer": 0.5046752275277396,
+     "cer": 0.45113693064366667,
+     "ref_words": 8021
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 2418
+   },
+   "excluded_s": 0.0,
+   "overlap_local_wer": 0.4731905361892762,
+   "overlap_error_types": {
+    "D:overlap_quieter": 1516,
+    "D:clean": 852,
+    "D:overlap_louder": 518,
+    "S:clean": 170,
+    "S:overlap_louder": 164,
+    "S:overlap_quieter": 153,
+    "D:boundary": 74,
+    "D:uncovered": 45,
+    "S:boundary": 15,
+    "S:uncovered": 5,
+    "I": 35
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 25,
+     "ref_words": 2902,
+     "errors": 1656,
+     "wer": 0.5706409372846313,
+     "S": 216,
+     "D": 1427,
+     "I": 13,
+     "local_errors": 1586
+    },
+    "chrome+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 173,
+     "wer": 0.6360294117647058,
+     "S": 2,
+     "D": 171,
+     "I": 0,
+     "local_errors": 172
+    },
+    "discord+discord": {
+     "groups": 36,
+     "ref_words": 2122,
+     "errors": 625,
+     "wer": 0.2945334590009425,
+     "S": 160,
+     "D": 449,
+     "I": 16,
+     "local_errors": 595
+    },
+    "discord+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 173,
+     "wer": 0.6360294117647058,
+     "S": 2,
+     "D": 171,
+     "I": 0,
+     "local_errors": 172
+    },
+    "discord+msedge": {
+     "groups": 19,
+     "ref_words": 2659,
+     "errors": 1657,
+     "wer": 0.6231666039864611,
+     "S": 219,
+     "D": 1431,
+     "I": 7,
+     "local_errors": 1577
+    }
+   },
+   "n_out": 2418,
+   "paused_words_removed": 157
+  }
+ },
+ "uses_sim": false,
+ "p1": {
+  "std": null,
+  "day": null
+ }
+}

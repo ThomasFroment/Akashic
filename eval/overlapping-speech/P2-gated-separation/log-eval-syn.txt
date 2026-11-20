@@ -1,0 +1,1 @@
+synthetic: wer 0.188 cpwer 0.329 der 0.127 quiet50 0.334 solo 0.074

@@ -1,0 +1,3312 @@
+{
+ "candidate": "candidate.py",
+ "runs": {
+  "std": {
+   "M7.1": {
+    "leak_seconds": 0.0,
+    "leak_seconds_other_than_self": 0.0,
+    "stored_seconds": 2246.912,
+    "segments_listing_akashic_itself": 0,
+    "akashic_session_audible": true,
+    "n": 320
+   },
+   "M8.2": {
+    "der": 0.14084989558157543,
+    "miss": 0.11789192106436398,
+    "false_alarm": 0.0,
+    "confusion": 0.022957974517211443,
+    "n": 2130
+   },
+   "M8.3": {
+    "correct": 214,
+    "wrong": 18,
+    "unknown": 54,
+    "purity_mean": 0.954214029113656,
+    "fragmentation": {
+     "call_en1": 2,
+     "call_en2": 2,
+     "call_fr1": 1,
+     "call_fr2": 2,
+     "spare_en2": 2,
+     "spare_fr2": 3,
+     "tts_microsoftdaviddesktop": 6,
+     "tts_microsoftziradesktop": 2,
+     "video_en1": 1,
+     "video_en2": 2,
+     "video_fr1": 3,
+     "video_fr2": 1
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.07761462391369493,
+     "cer": 0.05608306957632295,
+     "ref_words": 3337
+    },
+    "all": {
+     "wer": 0.11753395024636462,
+     "cer": 0.09246242513278337,
+     "ref_words": 8321
+    },
+    "no_overlap": {
+     "wer": 0.08312460864120226,
+     "cer": 0.057249441898719305,
+     "ref_words": 6388
+    },
+    "mixed": {
+     "wer": 0.16097560975609757,
+     "cer": 0.15225933202357564,
+     "ref_words": 205
+    },
+    "fr": {
+     "wer": 0.0822742474916388,
+     "cer": 0.05375865793988689,
+     "ref_words": 2990
+    },
+    "overlap": {
+     "wer": 0.23124676668391103,
+     "cer": 0.20997941378296245,
+     "ref_words": 1933
+    },
+    "multi": {
+     "wer": 0.24594745667970933,
+     "cer": 0.21938614070245754,
+     "ref_words": 1789
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 367
+   },
+   "excluded_s": 15.286,
+   "overlap_local_wer": 0.18986032074495604,
+   "overlap_error_types": {
+    "D:uncovered": 249,
+    "D:overlap_quieter": 41,
+    "D:clean": 25,
+    "S:overlap_louder": 22,
+    "D:overlap_louder": 14,
+    "S:clean": 13,
+    "D:boundary": 7,
+    "S:overlap_quieter": 7,
+    "S:boundary": 6,
+    "I": 63
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 9,
+     "ref_words": 1232,
+     "errors": 352,
+     "wer": 0.2857142857142857,
+     "S": 27,
+     "D": 287,
+     "I": 38,
+     "local_errors": 296
+    },
+    "chrome+msedge": {
+     "groups": 3,
+     "ref_words": 295,
+     "errors": 66,
+     "wer": 0.22372881355932203,
+     "S": 13,
+     "D": 29,
+     "I": 24,
+     "local_errors": 43
+    },
+    "discord+discord": {
+     "groups": 5,
+     "ref_words": 296,
+     "errors": 136,
+     "wer": 0.4594594594594595,
+     "S": 5,
+     "D": 129,
+     "I": 2,
+     "local_errors": 132
+    },
+    "discord+msedge": {
+     "groups": 3,
+     "ref_words": 227,
+     "errors": 5,
+     "wer": 0.022026431718061675,
+     "S": 5,
+     "D": 0,
+     "I": 0,
+     "local_errors": 5
+    }
+   },
+   "n_out": 367,
+   "gpu_s": 834.6602820001426,
+   "wall_s": 905.5338265000028,
+   "cpu_speakers_s": 328.59375,
+   "cpu_capture_s": 28.53125,
+   "audio_s_transcribed": 2744.351999999999,
+   "recorded_h": 1.0833333333333333
+  },
+  "day": {
+   "M7.1": {
+    "leak_seconds": 0.0,
+    "leak_seconds_other_than_self": 0.0,
+    "stored_seconds": 17030.336,
+    "segments_listing_akashic_itself": 0,
+    "akashic_session_audible": true,
+    "n": 2160
+   },
+   "M8.2": {
+    "der": 0.0887137593407969,
+    "miss": 0.0745044396187062,
+    "false_alarm": 0.0,
+    "confusion": 0.014209319722090694,
+    "n": 16536
+   },
+   "M8.3": {
+    "correct": 1604,
+    "wrong": 70,
+    "unknown": 253,
+    "purity_mean": 0.9790834633512646,
+    "fragmentation": {
+     "call_en1": 6,
+     "call_en2": 3,
+     "call_fr1": 6,
+     "call_fr2": 5,
+     "spare_en2": 2,
+     "spare_fr2": 3,
+     "tts_microsoftdaviddesktop": 2,
+     "tts_microsoftziradesktop": 4,
+     "video_en1": 6,
+     "video_en2": 3,
+     "video_fr1": 6,
+     "video_fr2": 6
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.046114170819127547,
+     "cer": 0.025797373358348967,
+     "ref_words": 22878
+    },
+    "all": {
+     "wer": 0.08714977775558108,
+     "cer": 0.05912593185570621,
+     "ref_words": 60069
+    },
+    "no_overlap": {
+     "wer": 0.07295068043260791,
+     "cer": 0.0456955868046343,
+     "ref_words": 52981
+    },
+    "mixed": {
+     "wer": 0.2021709633649932,
+     "cer": 0.18565592374035406,
+     "ref_words": 2211
+    },
+    "fr": {
+     "wer": 0.06035882609212246,
+     "cer": 0.03154392952777343,
+     "ref_words": 25249
+    },
+    "overlap": {
+     "wer": 0.19328442437923252,
+     "cer": 0.1614085190074629,
+     "ref_words": 7088
+    },
+    "multi": {
+     "wer": 0.22700647415476313,
+     "cer": 0.1849806087671877,
+     "ref_words": 9731
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 2488
+   },
+   "excluded_s": 17.959,
+   "overlap_local_wer": 0.11526523702031603,
+   "overlap_error_types": {
+    "D:overlap_louder": 230,
+    "D:clean": 227,
+    "D:overlap_quieter": 200,
+    "S:overlap_louder": 140,
+    "S:clean": 100,
+    "S:overlap_quieter": 94,
+    "D:boundary": 48,
+    "S:boundary": 38,
+    "D:uncovered": 4,
+    "S:uncovered": 1,
+    "I": 288
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 24,
+     "ref_words": 2882,
+     "errors": 460,
+     "wer": 0.1596113809854268,
+     "S": 96,
+     "D": 243,
+     "I": 121,
+     "local_errors": 269
+    },
+    "chrome+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 111,
+     "wer": 0.40808823529411764,
+     "S": 5,
+     "D": 102,
+     "I": 4,
+     "local_errors": 100
+    },
+    "discord+discord": {
+     "groups": 36,
+     "ref_words": 2113,
+     "errors": 449,
+     "wer": 0.21249408424041646,
+     "S": 125,
+     "D": 292,
+     "I": 32,
+     "local_errors": 354
+    },
+    "discord+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 111,
+     "wer": 0.40808823529411764,
+     "S": 5,
+     "D": 102,
+     "I": 4,
+     "local_errors": 100
+    },
+    "discord+msedge": {
+     "groups": 21,
+     "ref_words": 2624,
+     "errors": 629,
+     "wer": 0.23971036585365854,
+     "S": 212,
+     "D": 268,
+     "I": 149,
+     "local_errors": 289
+    }
+   },
+   "n_out": 2488,
+   "gpu_s": 5324.825449800235,
+   "wall_s": 5761.593450699991,
+   "cpu_speakers_s": 2270.59375,
+   "cpu_capture_s": 222.890625,
+   "audio_s_transcribed": 20269.506000000016,
+   "recorded_h": 6.865782777777778
+  }
+ },
+ "runs_nopause": {
+  "std": {
+   "M7.1": {
+    "leak_seconds": 0.0,
+    "leak_seconds_other_than_self": 0.0,
+    "stored_seconds": 2246.912,
+    "segments_listing_akashic_itself": 0,
+    "akashic_session_audible": true,
+    "n": 320
+   },
+   "M8.2": {
+    "der": 0.12104626375525725,
+    "miss": 0.0975591019953525,
+    "false_alarm": 0.0,
+    "confusion": 0.023487161759904746,
+    "n": 2082
+   },
+   "M8.3": {
+    "correct": 214,
+    "wrong": 18,
+    "unknown": 54,
+    "purity_mean": 0.954214029113656,
+    "fragmentation": {
+     "call_en1": 2,
+     "call_en2": 2,
+     "call_fr1": 1,
+     "call_fr2": 2,
+     "spare_en2": 2,
+     "spare_fr2": 3,
+     "tts_microsoftdaviddesktop": 6,
+     "tts_microsoftziradesktop": 2,
+     "video_en1": 1,
+     "video_en2": 2,
+     "video_fr1": 3,
+     "video_fr2": 1
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.07417417417417417,
+     "cer": 0.05160895223249081,
+     "ref_words": 3330
+    },
+    "all": {
+     "wer": 0.08521240812258628,
+     "cer": 0.05884283570892723,
+     "ref_words": 8027
+    },
+    "no_overlap": {
+     "wer": 0.07699574870099198,
+     "cer": 0.05019362085784386,
+     "ref_words": 6351
+    },
+    "mixed": {
+     "wer": 0.16097560975609757,
+     "cer": 0.15225933202357564,
+     "ref_words": 205
+    },
+    "fr": {
+     "wer": 0.07297297297297298,
+     "cer": 0.043548076305478835,
+     "ref_words": 2960
+    },
+    "overlap": {
+     "wer": 0.11634844868735084,
+     "cer": 0.09199048374306107,
+     "ref_words": 1676
+    },
+    "multi": {
+     "wer": 0.1227154046997389,
+     "cer": 0.09251264339459726,
+     "ref_words": 1532
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 367
+   },
+   "excluded_s": 15.286,
+   "overlap_local_wer": 0.07040572792362769,
+   "overlap_error_types": {
+    "D:overlap_quieter": 41,
+    "D:clean": 25,
+    "S:overlap_louder": 22,
+    "D:overlap_louder": 14,
+    "S:clean": 11,
+    "D:boundary": 7,
+    "S:overlap_quieter": 7,
+    "S:boundary": 6,
+    "I": 62
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 7,
+     "ref_words": 975,
+     "errors": 100,
+     "wer": 0.10256410256410256,
+     "S": 25,
+     "D": 38,
+     "I": 37,
+     "local_errors": 47
+    },
+    "chrome+msedge": {
+     "groups": 3,
+     "ref_words": 295,
+     "errors": 66,
+     "wer": 0.22372881355932203,
+     "S": 13,
+     "D": 29,
+     "I": 24,
+     "local_errors": 43
+    },
+    "discord+discord": {
+     "groups": 4,
+     "ref_words": 179,
+     "errors": 24,
+     "wer": 0.1340782122905028,
+     "S": 3,
+     "D": 20,
+     "I": 1,
+     "local_errors": 23
+    },
+    "discord+msedge": {
+     "groups": 3,
+     "ref_words": 227,
+     "errors": 5,
+     "wer": 0.022026431718061675,
+     "S": 5,
+     "D": 0,
+     "I": 0,
+     "local_errors": 5
+    }
+   },
+   "n_out": 367,
+   "paused_words_removed": 294
+  },
+  "day": {
+   "M7.1": {
+    "leak_seconds": 0.0,
+    "leak_seconds_other_than_self": 0.0,
+    "stored_seconds": 17030.336,
+    "segments_listing_akashic_itself": 0,
+    "akashic_session_audible": true,
+    "n": 2160
+   },
+   "M8.2": {
+    "der": 0.08612496222882114,
+    "miss": 0.07162750397128298,
+    "false_alarm": 0.0002402793064908178,
+    "confusion": 0.014257178951047339,
+    "n": 16480
+   },
+   "M8.3": {
+    "correct": 1604,
+    "wrong": 70,
+    "unknown": 253,
+    "purity_mean": 0.9790825963154719,
+    "fragmentation": {
+     "call_en1": 6,
+     "call_en2": 3,
+     "call_fr1": 6,
+     "call_fr2": 5,
+     "spare_en2": 2,
+     "spare_fr2": 3,
+     "tts_microsoftdaviddesktop": 2,
+     "tts_microsoftziradesktop": 4,
+     "video_en1": 6,
+     "video_en2": 3,
+     "video_fr1": 6,
+     "video_fr2": 6
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.04158981115502854,
+     "cer": 0.02120640904806786,
+     "ref_words": 22770
+    },
+    "all": {
+     "wer": 0.08502470289758313,
+     "cer": 0.05689866532059582,
+     "ref_words": 59912
+    },
+    "no_overlap": {
+     "wer": 0.07049825836740875,
+     "cer": 0.04313501468939383,
+     "ref_words": 52824
+    },
+    "mixed": {
+     "wer": 0.2021709633649932,
+     "cer": 0.18565592374035406,
+     "ref_words": 2211
+    },
+    "fr": {
+     "wer": 0.059166666666666666,
+     "cer": 0.030259775200286977,
+     "ref_words": 25200
+    },
+    "overlap": {
+     "wer": 0.19328442437923252,
+     "cer": 0.1614085190074629,
+     "ref_words": 7088
+    },
+    "multi": {
+     "wer": 0.22700647415476313,
+     "cer": 0.1849806087671877,
+     "ref_words": 9731
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 2.4760468762605283,
+    "n": 2488
+   },
+   "excluded_s": 17.959,
+   "overlap_local_wer": 0.11526523702031603,
+   "overlap_error_types": {
+    "D:overlap_louder": 230,
+    "D:clean": 227,
+    "D:overlap_quieter": 200,
+    "S:overlap_louder": 140,
+    "S:clean": 100,
+    "S:overlap_quieter": 94,
+    "D:boundary": 48,
+    "S:boundary": 38,
+    "D:uncovered": 4,
+    "S:uncovered": 1,
+    "I": 288
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 24,
+     "ref_words": 2882,
+     "errors": 460,
+     "wer": 0.1596113809854268,
+     "S": 96,
+     "D": 243,
+     "I": 121,
+     "local_errors": 269
+    },
+    "chrome+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 111,
+     "wer": 0.40808823529411764,
+     "S": 5,
+     "D": 102,
+     "I": 4,
+     "local_errors": 100
+    },
+    "discord+discord": {
+     "groups": 36,
+     "ref_words": 2113,
+     "errors": 449,
+     "wer": 0.21249408424041646,
+     "S": 125,
+     "D": 292,
+     "I": 32,
+     "local_errors": 354
+    },
+    "discord+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 111,
+     "wer": 0.40808823529411764,
+     "S": 5,
+     "D": 102,
+     "I": 4,
+     "local_errors": 100
+    },
+    "discord+msedge": {
+     "groups": 21,
+     "ref_words": 2624,
+     "errors": 629,
+     "wer": 0.23971036585365854,
+     "S": 212,
+     "D": 268,
+     "I": 149,
+     "local_errors": 289
+    }
+   },
+   "n_out": 2488,
+   "paused_words_removed": 157
+  }
+ },
+ "uses_sim": true,
+ "p1": {
+  "std": {
+   "n_decode": 367,
+   "decode_audio_s": {
+    "residual": 800.7040000000001,
+    "mic": 497.44000000000005,
+    "stem": 1446.2079999999994
+   },
+   "rows": {
+    "residual": 101,
+    "mic": 47,
+    "stem": 219
+   },
+   "dropped": {},
+   "fallback_blocks": 0,
+   "valid_blocks": 3202,
+   "fir_fits": 52,
+   "cpu_fir_s": 11.65625,
+   "cpu_residual_seg_s": 9.859375,
+   "cpu_stem_seg_s": 6.59375,
+   "stem_count_s": {
+    "0": 1590,
+    "1": 1480,
+    "2": 464,
+    "3": 77
+   },
+   "unstemmed_audible_s": 0,
+   "leak_source": "dt770-16k-fir128",
+   "leak_db_rms_model": -57.25662394937544
+  },
+  "day": {
+   "n_decode": 2488,
+   "decode_audio_s": {
+    "residual": 5186.7519999999995,
+    "mic": 3239.169999999999,
+    "stem": 11843.583999999999
+   },
+   "rows": {
+    "residual": 631,
+    "mic": 328,
+    "stem": 1529
+   },
+   "dropped": {},
+   "fallback_blocks": 0,
+   "valid_blocks": 28300,
+   "fir_fits": 365,
+   "cpu_fir_s": 91.140625,
+   "cpu_residual_seg_s": 75.9375,
+   "cpu_stem_seg_s": 50.9375,
+   "stem_count_s": {
+    "0": 7680,
+    "1": 14120,
+    "2": 2781,
+    "3": 0
+   },
+   "unstemmed_audible_s": 0,
+   "leak_source": "dt770-16k-fir128",
+   "leak_db_rms_model": -57.25662394937544
+  },
+  "synthetic": {
+   "n_decode": 127,
+   "decode_audio_s": {
+    "residual": 862.5919999999999,
+    "stem": 220.25600000000003
+   },
+   "rows": {
+    "residual": 90,
+    "stem": 37
+   },
+   "dropped": {},
+   "fallback_blocks": 0,
+   "valid_blocks": 378,
+   "fir_fits": 56,
+   "cpu_fir_s": 14.359375,
+   "cpu_residual_seg_s": 8.078125,
+   "cpu_stem_seg_s": 1.78125,
+   "stem_count_s": {
+    "0": 602,
+    "1": 616,
+    "2": 141,
+    "3": 0
+   },
+   "unstemmed_audible_s": 0,
+   "leak_source": "dt770-16k-fir128",
+   "leak_db_rms_model": -57.25662394937544
+  }
+ },
+ "runs_strict_excl": {
+  "std": {
+   "M7.1": {
+    "leak_seconds": 0.0,
+    "leak_seconds_other_than_self": 0.0,
+    "stored_seconds": 2228.288,
+    "segments_listing_akashic_itself": 0,
+    "akashic_session_audible": true,
+    "n": 315
+   },
+   "M8.2": {
+    "der": 0.14714315883332943,
+    "miss": 0.12597789614473098,
+    "false_alarm": 0.0,
+    "confusion": 0.021165262688598446,
+    "n": 2130
+   },
+   "M8.3": {
+    "correct": 212,
+    "wrong": 18,
+    "unknown": 54,
+    "purity_mean": 0.9503105294733648,
+    "fragmentation": {
+     "call_en1": 2,
+     "call_en2": 2,
+     "call_fr1": 1,
+     "call_fr2": 2,
+     "spare_en2": 2,
+     "spare_fr2": 3,
+     "tts_microsoftdaviddesktop": 6,
+     "tts_microsoftziradesktop": 2,
+     "video_en1": 1,
+     "video_en2": 2,
+     "video_fr1": 2,
+     "video_fr2": 1
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.08330836080311657,
+     "cer": 0.06174690432561497,
+     "ref_words": 3337
+    },
+    "all": {
+     "wer": 0.12294195409205624,
+     "cer": 0.09793196971409199,
+     "ref_words": 8321
+    },
+    "no_overlap": {
+     "wer": 0.09016906700062617,
+     "cer": 0.06435788978968394,
+     "ref_words": 6388
+    },
+    "mixed": {
+     "wer": 0.16097560975609757,
+     "cer": 0.15225933202357564,
+     "ref_words": 205
+    },
+    "fr": {
+     "wer": 0.09096989966555184,
+     "cer": 0.06265488975027006,
+     "ref_words": 2990
+    },
+    "overlap": {
+     "wer": 0.23124676668391103,
+     "cer": 0.20997941378296245,
+     "ref_words": 1933
+    },
+    "multi": {
+     "wer": 0.24594745667970933,
+     "cer": 0.21938614070245754,
+     "ref_words": 1789
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 362
+   },
+   "excluded_s": 0.0,
+   "overlap_local_wer": 0.18986032074495604,
+   "overlap_error_types": {
+    "D:uncovered": 249,
+    "D:overlap_quieter": 41,
+    "D:clean": 25,
+    "S:overlap_louder": 22,
+    "D:overlap_louder": 14,
+    "S:clean": 13,
+    "D:boundary": 7,
+    "S:overlap_quieter": 7,
+    "S:boundary": 6,
+    "I": 63
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 9,
+     "ref_words": 1232,
+     "errors": 352,
+     "wer": 0.2857142857142857,
+     "S": 27,
+     "D": 287,
+     "I": 38,
+     "local_errors": 296
+    },
+    "chrome+msedge": {
+     "groups": 3,
+     "ref_words": 295,
+     "errors": 66,
+     "wer": 0.22372881355932203,
+     "S": 13,
+     "D": 29,
+     "I": 24,
+     "local_errors": 43
+    },
+    "discord+discord": {
+     "groups": 5,
+     "ref_words": 296,
+     "errors": 136,
+     "wer": 0.4594594594594595,
+     "S": 5,
+     "D": 129,
+     "I": 2,
+     "local_errors": 132
+    },
+    "discord+msedge": {
+     "groups": 3,
+     "ref_words": 227,
+     "errors": 5,
+     "wer": 0.022026431718061675,
+     "S": 5,
+     "D": 0,
+     "I": 0,
+     "local_errors": 5
+    }
+   },
+   "n_out": 362,
+   "excl_overlap_s_by_kind": {
+    "stem": 15.286
+   },
+   "rows_dropped": 5
+  },
+  "day": {
+   "M7.1": {
+    "leak_seconds": 0.0,
+    "leak_seconds_other_than_self": 0.0,
+    "stored_seconds": 17011.36,
+    "segments_listing_akashic_itself": 0,
+    "akashic_session_audible": true,
+    "n": 2158
+   },
+   "M8.2": {
+    "der": 0.08983553182598557,
+    "miss": 0.07562621210389488,
+    "false_alarm": 0.0,
+    "confusion": 0.014209319722090694,
+    "n": 16536
+   },
+   "M8.3": {
+    "correct": 1602,
+    "wrong": 70,
+    "unknown": 253,
+    "purity_mean": 0.9790750299326423,
+    "fragmentation": {
+     "call_en1": 6,
+     "call_en2": 3,
+     "call_fr1": 6,
+     "call_fr2": 5,
+     "spare_en2": 2,
+     "spare_fr2": 3,
+     "tts_microsoftdaviddesktop": 2,
+     "tts_microsoftziradesktop": 4,
+     "video_en1": 6,
+     "video_en2": 3,
+     "video_fr1": 6,
+     "video_fr2": 6
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.048561937232275545,
+     "cer": 0.028174936921783012,
+     "ref_words": 22878
+    },
+    "all": {
+     "wer": 0.08808203898849656,
+     "cer": 0.06004527943163056,
+     "ref_words": 60069
+    },
+    "no_overlap": {
+     "wer": 0.07400766312451633,
+     "cer": 0.0467356504820023,
+     "ref_words": 52981
+    },
+    "mixed": {
+     "wer": 0.2021709633649932,
+     "cer": 0.18565592374035406,
+     "ref_words": 2211
+    },
+    "fr": {
+     "wer": 0.06035882609212246,
+     "cer": 0.03154392952777343,
+     "ref_words": 25249
+    },
+    "overlap": {
+     "wer": 0.19328442437923252,
+     "cer": 0.1614085190074629,
+     "ref_words": 7088
+    },
+    "multi": {
+     "wer": 0.22700647415476313,
+     "cer": 0.1849806087671877,
+     "ref_words": 9731
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 2486
+   },
+   "excluded_s": 0.0,
+   "overlap_local_wer": 0.11526523702031603,
+   "overlap_error_types": {
+    "D:overlap_louder": 230,
+    "D:clean": 227,
+    "D:overlap_quieter": 200,
+    "S:overlap_louder": 140,
+    "S:clean": 100,
+    "S:overlap_quieter": 94,
+    "D:boundary": 48,
+    "S:boundary": 38,
+    "D:uncovered": 4,
+    "S:uncovered": 1,
+    "I": 288
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 24,
+     "ref_words": 2882,
+     "errors": 460,
+     "wer": 0.1596113809854268,
+     "S": 96,
+     "D": 243,
+     "I": 121,
+     "local_errors": 269
+    },
+    "chrome+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 111,
+     "wer": 0.40808823529411764,
+     "S": 5,
+     "D": 102,
+     "I": 4,
+     "local_errors": 100
+    },
+    "discord+discord": {
+     "groups": 36,
+     "ref_words": 2113,
+     "errors": 449,
+     "wer": 0.21249408424041646,
+     "S": 125,
+     "D": 292,
+     "I": 32,
+     "local_errors": 354
+    },
+    "discord+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 111,
+     "wer": 0.40808823529411764,
+     "S": 5,
+     "D": 102,
+     "I": 4,
+     "local_errors": 100
+    },
+    "discord+msedge": {
+     "groups": 21,
+     "ref_words": 2624,
+     "errors": 629,
+     "wer": 0.23971036585365854,
+     "S": 212,
+     "D": 268,
+     "I": 149,
+     "local_errors": 289
+    }
+   },
+   "n_out": 2486,
+   "excl_overlap_s_by_kind": {
+    "stem": 17.959
+   },
+   "rows_dropped": 2
+  }
+ },
+ "runs_nopause_strict_excl": {
+  "std": {
+   "M7.1": {
+    "leak_seconds": 0.0,
+    "leak_seconds_other_than_self": 0.0,
+    "stored_seconds": 2228.288,
+    "segments_listing_akashic_itself": 0,
+    "akashic_session_audible": true,
+    "n": 315
+   },
+   "M8.2": {
+    "der": 0.1274845883505214,
+    "miss": 0.10583146088993874,
+    "false_alarm": 0.0,
+    "confusion": 0.021653127460582667,
+    "n": 2082
+   },
+   "M8.3": {
+    "correct": 212,
+    "wrong": 18,
+    "unknown": 54,
+    "purity_mean": 0.9503105294733648,
+    "fragmentation": {
+     "call_en1": 2,
+     "call_en2": 2,
+     "call_fr1": 1,
+     "call_fr2": 2,
+     "spare_en2": 2,
+     "spare_fr2": 3,
+     "tts_microsoftdaviddesktop": 6,
+     "tts_microsoftziradesktop": 2,
+     "video_en1": 1,
+     "video_en2": 2,
+     "video_fr1": 2,
+     "video_fr2": 1
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.07987987987987988,
+     "cer": 0.057287607170693686,
+     "ref_words": 3330
+    },
+    "all": {
+     "wer": 0.09081848760433536,
+     "cer": 0.06451612903225806,
+     "ref_words": 8027
+    },
+    "no_overlap": {
+     "wer": 0.08408124704770903,
+     "cer": 0.05734724644535753,
+     "ref_words": 6351
+    },
+    "mixed": {
+     "wer": 0.16097560975609757,
+     "cer": 0.15225933202357564,
+     "ref_words": 205
+    },
+    "fr": {
+     "wer": 0.08175675675675675,
+     "cer": 0.05254030445115293,
+     "ref_words": 2960
+    },
+    "overlap": {
+     "wer": 0.11634844868735084,
+     "cer": 0.09199048374306107,
+     "ref_words": 1676
+    },
+    "multi": {
+     "wer": 0.1227154046997389,
+     "cer": 0.09251264339459726,
+     "ref_words": 1532
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 0.0,
+    "n": 362
+   },
+   "excluded_s": 0.0,
+   "overlap_local_wer": 0.07040572792362769,
+   "overlap_error_types": {
+    "D:overlap_quieter": 41,
+    "D:clean": 25,
+    "S:overlap_louder": 22,
+    "D:overlap_louder": 14,
+    "S:clean": 11,
+    "D:boundary": 7,
+    "S:overlap_quieter": 7,
+    "S:boundary": 6,
+    "I": 62
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 7,
+     "ref_words": 975,
+     "errors": 100,
+     "wer": 0.10256410256410256,
+     "S": 25,
+     "D": 38,
+     "I": 37,
+     "local_errors": 47
+    },
+    "chrome+msedge": {
+     "groups": 3,
+     "ref_words": 295,
+     "errors": 66,
+     "wer": 0.22372881355932203,
+     "S": 13,
+     "D": 29,
+     "I": 24,
+     "local_errors": 43
+    },
+    "discord+discord": {
+     "groups": 4,
+     "ref_words": 179,
+     "errors": 24,
+     "wer": 0.1340782122905028,
+     "S": 3,
+     "D": 20,
+     "I": 1,
+     "local_errors": 23
+    },
+    "discord+msedge": {
+     "groups": 3,
+     "ref_words": 227,
+     "errors": 5,
+     "wer": 0.022026431718061675,
+     "S": 5,
+     "D": 0,
+     "I": 0,
+     "local_errors": 5
+    }
+   },
+   "n_out": 362,
+   "paused_words_removed": 294
+  },
+  "day": {
+   "M7.1": {
+    "leak_seconds": 0.0,
+    "leak_seconds_other_than_self": 0.0,
+    "stored_seconds": 17011.36,
+    "segments_listing_akashic_itself": 0,
+    "akashic_session_audible": true,
+    "n": 2158
+   },
+   "M8.2": {
+    "der": 0.08725051302058999,
+    "miss": 0.07275305476305184,
+    "false_alarm": 0.0002402793064908178,
+    "confusion": 0.014257178951047339,
+    "n": 16480
+   },
+   "M8.3": {
+    "correct": 1602,
+    "wrong": 70,
+    "unknown": 253,
+    "purity_mean": 0.9790741628968499,
+    "fragmentation": {
+     "call_en1": 6,
+     "call_en2": 3,
+     "call_fr1": 6,
+     "call_fr2": 5,
+     "spare_en2": 2,
+     "spare_fr2": 3,
+     "tts_microsoftdaviddesktop": 2,
+     "tts_microsoftziradesktop": 4,
+     "video_en1": 6,
+     "video_en2": 3,
+     "video_fr1": 6,
+     "video_fr2": 6
+    }
+   },
+   "M9.1": {
+    "en": {
+     "wer": 0.044049187527448394,
+     "cer": 0.02359517696382723,
+     "ref_words": 22770
+    },
+    "all": {
+     "wer": 0.08595940713045801,
+     "cer": 0.05782043122340909,
+     "ref_words": 59912
+    },
+    "no_overlap": {
+     "wer": 0.07155838255338483,
+     "cer": 0.044178174541222553,
+     "ref_words": 52824
+    },
+    "mixed": {
+     "wer": 0.2021709633649932,
+     "cer": 0.18565592374035406,
+     "ref_words": 2211
+    },
+    "fr": {
+     "wer": 0.059166666666666666,
+     "cer": 0.030259775200286977,
+     "ref_words": 25200
+    },
+    "overlap": {
+     "wer": 0.19328442437923252,
+     "cer": 0.1614085190074629,
+     "ref_words": 7088
+    },
+    "multi": {
+     "wer": 0.22700647415476313,
+     "cer": 0.1849806087671877,
+     "ref_words": 9731
+    }
+   },
+   "M9.2": {
+    "hallucinated_words_per_hour": 2.4760468762605283,
+    "n": 2486
+   },
+   "excluded_s": 0.0,
+   "overlap_local_wer": 0.11526523702031603,
+   "overlap_error_types": {
+    "D:overlap_louder": 230,
+    "D:clean": 227,
+    "D:overlap_quieter": 200,
+    "S:overlap_louder": 140,
+    "S:clean": 100,
+    "S:overlap_quieter": 94,
+    "D:boundary": 48,
+    "S:boundary": 38,
+    "D:uncovered": 4,
+    "S:uncovered": 1,
+    "I": 288
+   },
+   "overlap_by_pair": {
+    "chrome+discord": {
+     "groups": 24,
+     "ref_words": 2882,
+     "errors": 460,
+     "wer": 0.1596113809854268,
+     "S": 96,
+     "D": 243,
+     "I": 121,
+     "local_errors": 269
+    },
+    "chrome+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 111,
+     "wer": 0.40808823529411764,
+     "S": 5,
+     "D": 102,
+     "I": 4,
+     "local_errors": 100
+    },
+    "discord+discord": {
+     "groups": 36,
+     "ref_words": 2113,
+     "errors": 449,
+     "wer": 0.21249408424041646,
+     "S": 125,
+     "D": 292,
+     "I": 32,
+     "local_errors": 354
+    },
+    "discord+elsewhere": {
+     "groups": 2,
+     "ref_words": 272,
+     "errors": 111,
+     "wer": 0.40808823529411764,
+     "S": 5,
+     "D": 102,
+     "I": 4,
+     "local_errors": 100
+    },
+    "discord+msedge": {
+     "groups": 21,
+     "ref_words": 2624,
+     "errors": 629,
+     "wer": 0.23971036585365854,
+     "S": 212,
+     "D": 268,
+     "I": 149,
+     "local_errors": 289
+    }
+   },
+   "n_out": 2486,
+   "paused_words_removed": 157
+  }
+ },
+ "synthetic": {
+  "rows": [
+   {
+    "i": 0,
+    "overlap": 0.0,
+    "sir": -6,
+    "lang": "en",
+    "bed": "none",
+    "procs": "two",
+    "ref": 60,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 22,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     },
+     {
+      "ref": 38,
+      "cp_err": 2.0,
+      "any_err": 2,
+      "role": "loud"
+     }
+    ],
+    "der_err": 8,
+    "der_ref": 1314,
+    "n_out": 2
+   },
+   {
+    "i": 1,
+    "overlap": 0.0,
+    "sir": -6,
+    "lang": "fr",
+    "bed": "music",
+    "procs": "one",
+    "ref": 50,
+    "wer_err": 3,
+    "cp_err": 11.0,
+    "talker": [
+     {
+      "ref": 27,
+      "cp_err": 4.0,
+      "any_err": 0,
+      "role": "quiet"
+     },
+     {
+      "ref": 23,
+      "cp_err": 7.0,
+      "any_err": 3,
+      "role": "loud"
+     }
+    ],
+    "der_err": 80,
+    "der_ref": 752,
+    "n_out": 3
+   },
+   {
+    "i": 2,
+    "overlap": 0.0,
+    "sir": -6,
+    "lang": "fr-en",
+    "bed": "game",
+    "procs": "two",
+    "ref": 43,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 28,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "quiet"
+     },
+     {
+      "ref": 15,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "loud"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 948,
+    "n_out": 3
+   },
+   {
+    "i": 3,
+    "overlap": 0.0,
+    "sir": -6,
+    "lang": "mixed",
+    "bed": "none",
+    "procs": "one",
+    "ref": 63,
+    "wer_err": 1,
+    "cp_err": 36.0,
+    "talker": [
+     {
+      "ref": 45,
+      "cp_err": 18.0,
+      "any_err": 0,
+      "role": "quiet"
+     },
+     {
+      "ref": 18,
+      "cp_err": 18.0,
+      "any_err": 1,
+      "role": "loud"
+     }
+    ],
+    "der_err": 42,
+    "der_ref": 1155,
+    "n_out": 1
+   },
+   {
+    "i": 4,
+    "overlap": 0.0,
+    "sir": 0,
+    "lang": "en",
+    "bed": "music",
+    "procs": "two",
+    "ref": 26,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 11,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "equal"
+     },
+     {
+      "ref": 15,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "equal"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 618,
+    "n_out": 2
+   },
+   {
+    "i": 5,
+    "overlap": 0.0,
+    "sir": 0,
+    "lang": "fr",
+    "bed": "game",
+    "procs": "one",
+    "ref": 66,
+    "wer_err": 3,
+    "cp_err": 31.0,
+    "talker": [
+     {
+      "ref": 23,
+      "cp_err": 16.0,
+      "any_err": 3,
+      "role": "equal"
+     },
+     {
+      "ref": 43,
+      "cp_err": 15.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 1270,
+    "n_out": 2
+   },
+   {
+    "i": 6,
+    "overlap": 0.0,
+    "sir": 0,
+    "lang": "fr-en",
+    "bed": "none",
+    "procs": "two",
+    "ref": 55,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 37,
+      "cp_err": 2.0,
+      "any_err": 2,
+      "role": "equal"
+     },
+     {
+      "ref": 18,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 1213,
+    "n_out": 2
+   },
+   {
+    "i": 7,
+    "overlap": 0.0,
+    "sir": 0,
+    "lang": "mixed",
+    "bed": "music",
+    "procs": "one",
+    "ref": 75,
+    "wer_err": 3,
+    "cp_err": 51.0,
+    "talker": [
+     {
+      "ref": 50,
+      "cp_err": 26.0,
+      "any_err": 1,
+      "role": "equal"
+     },
+     {
+      "ref": 25,
+      "cp_err": 25.0,
+      "any_err": 2,
+      "role": "equal"
+     }
+    ],
+    "der_err": 49,
+    "der_ref": 1509,
+    "n_out": 2
+   },
+   {
+    "i": 8,
+    "overlap": 0.0,
+    "sir": 6,
+    "lang": "en",
+    "bed": "game",
+    "procs": "two",
+    "ref": 39,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 15,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     },
+     {
+      "ref": 24,
+      "cp_err": 2.0,
+      "any_err": 2,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 698,
+    "n_out": 2
+   },
+   {
+    "i": 9,
+    "overlap": 0.0,
+    "sir": 6,
+    "lang": "fr",
+    "bed": "none",
+    "procs": "one",
+    "ref": 53,
+    "wer_err": 3,
+    "cp_err": 31.0,
+    "talker": [
+     {
+      "ref": 23,
+      "cp_err": 16.0,
+      "any_err": 3,
+      "role": "loud"
+     },
+     {
+      "ref": 30,
+      "cp_err": 15.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 25,
+    "der_ref": 1315,
+    "n_out": 2
+   },
+   {
+    "i": 10,
+    "overlap": 0.0,
+    "sir": 6,
+    "lang": "fr-en",
+    "bed": "music",
+    "procs": "two",
+    "ref": 49,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 23,
+      "cp_err": 2.0,
+      "any_err": 2,
+      "role": "loud"
+     },
+     {
+      "ref": 26,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 1,
+    "der_ref": 876,
+    "n_out": 3
+   },
+   {
+    "i": 11,
+    "overlap": 0.0,
+    "sir": 6,
+    "lang": "mixed",
+    "bed": "game",
+    "procs": "one",
+    "ref": 57,
+    "wer_err": 1,
+    "cp_err": 23.0,
+    "talker": [
+     {
+      "ref": 46,
+      "cp_err": 12.0,
+      "any_err": 1,
+      "role": "loud"
+     },
+     {
+      "ref": 11,
+      "cp_err": 11.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 63,
+    "der_ref": 925,
+    "n_out": 1
+   },
+   {
+    "i": 12,
+    "overlap": 0.25,
+    "sir": -6,
+    "lang": "en",
+    "bed": "music",
+    "procs": "one",
+    "ref": 44,
+    "wer_err": 2,
+    "cp_err": 33.0,
+    "talker": [
+     {
+      "ref": 28,
+      "cp_err": 17.0,
+      "any_err": 2,
+      "role": "quiet"
+     },
+     {
+      "ref": 16,
+      "cp_err": 16.0,
+      "any_err": 0,
+      "role": "loud"
+     }
+    ],
+    "der_err": 5,
+    "der_ref": 718,
+    "n_out": 1
+   },
+   {
+    "i": 13,
+    "overlap": 0.25,
+    "sir": -6,
+    "lang": "fr",
+    "bed": "game",
+    "procs": "two",
+    "ref": 65,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 36,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     },
+     {
+      "ref": 29,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     }
+    ],
+    "der_err": 120,
+    "der_ref": 1100,
+    "n_out": 3
+   },
+   {
+    "i": 14,
+    "overlap": 0.25,
+    "sir": -6,
+    "lang": "fr-en",
+    "bed": "none",
+    "procs": "one",
+    "ref": 54,
+    "wer_err": 33,
+    "cp_err": 33.0,
+    "talker": [
+     {
+      "ref": 29,
+      "cp_err": 8.0,
+      "any_err": 8,
+      "role": "quiet"
+     },
+     {
+      "ref": 25,
+      "cp_err": 25.0,
+      "any_err": 25,
+      "role": "loud"
+     }
+    ],
+    "der_err": 210,
+    "der_ref": 866,
+    "n_out": 1
+   },
+   {
+    "i": 15,
+    "overlap": 0.25,
+    "sir": -6,
+    "lang": "mixed",
+    "bed": "music",
+    "procs": "two",
+    "ref": 68,
+    "wer_err": 7,
+    "cp_err": 29.0,
+    "talker": [
+     {
+      "ref": 44,
+      "cp_err": 12.0,
+      "any_err": 1,
+      "role": "quiet"
+     },
+     {
+      "ref": 24,
+      "cp_err": 6.0,
+      "any_err": 3,
+      "role": "loud"
+     }
+    ],
+    "der_err": 51,
+    "der_ref": 1049,
+    "n_out": 4
+   },
+   {
+    "i": 16,
+    "overlap": 0.25,
+    "sir": 0,
+    "lang": "en",
+    "bed": "game",
+    "procs": "one",
+    "ref": 26,
+    "wer_err": 10,
+    "cp_err": 10.0,
+    "talker": [
+     {
+      "ref": 10,
+      "cp_err": 10.0,
+      "any_err": 10,
+      "role": "equal"
+     },
+     {
+      "ref": 16,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 52,
+    "der_ref": 439,
+    "n_out": 1
+   },
+   {
+    "i": 17,
+    "overlap": 0.25,
+    "sir": 0,
+    "lang": "fr",
+    "bed": "none",
+    "procs": "two",
+    "ref": 66,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 37,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     },
+     {
+      "ref": 29,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 160,
+    "der_ref": 917,
+    "n_out": 2
+   },
+   {
+    "i": 18,
+    "overlap": 0.25,
+    "sir": 0,
+    "lang": "fr-en",
+    "bed": "music",
+    "procs": "one",
+    "ref": 53,
+    "wer_err": 13,
+    "cp_err": 13.0,
+    "talker": [
+     {
+      "ref": 43,
+      "cp_err": 3.0,
+      "any_err": 3,
+      "role": "equal"
+     },
+     {
+      "ref": 10,
+      "cp_err": 10.0,
+      "any_err": 10,
+      "role": "equal"
+     }
+    ],
+    "der_err": 52,
+    "der_ref": 841,
+    "n_out": 1
+   },
+   {
+    "i": 19,
+    "overlap": 0.25,
+    "sir": 0,
+    "lang": "mixed",
+    "bed": "game",
+    "procs": "two",
+    "ref": 55,
+    "wer_err": 0,
+    "cp_err": 30.0,
+    "talker": [
+     {
+      "ref": 34,
+      "cp_err": 15.0,
+      "any_err": 0,
+      "role": "equal"
+     },
+     {
+      "ref": 21,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 59,
+    "der_ref": 929,
+    "n_out": 6
+   },
+   {
+    "i": 20,
+    "overlap": 0.25,
+    "sir": 6,
+    "lang": "en",
+    "bed": "none",
+    "procs": "one",
+    "ref": 35,
+    "wer_err": 22,
+    "cp_err": 22.0,
+    "talker": [
+     {
+      "ref": 22,
+      "cp_err": 22.0,
+      "any_err": 21,
+      "role": "loud"
+     },
+     {
+      "ref": 13,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 82,
+    "der_ref": 532,
+    "n_out": 1
+   },
+   {
+    "i": 21,
+    "overlap": 0.25,
+    "sir": 6,
+    "lang": "fr",
+    "bed": "music",
+    "procs": "two",
+    "ref": 65,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 33,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     },
+     {
+      "ref": 32,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 2,
+    "der_ref": 1179,
+    "n_out": 3
+   },
+   {
+    "i": 22,
+    "overlap": 0.25,
+    "sir": 6,
+    "lang": "fr-en",
+    "bed": "game",
+    "procs": "one",
+    "ref": 41,
+    "wer_err": 14,
+    "cp_err": 14.0,
+    "talker": [
+     {
+      "ref": 27,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     },
+     {
+      "ref": 14,
+      "cp_err": 14.0,
+      "any_err": 14,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 51,
+    "der_ref": 614,
+    "n_out": 1
+   },
+   {
+    "i": 23,
+    "overlap": 0.25,
+    "sir": 6,
+    "lang": "mixed",
+    "bed": "none",
+    "procs": "two",
+    "ref": 52,
+    "wer_err": 10,
+    "cp_err": 10.0,
+    "talker": [
+     {
+      "ref": 38,
+      "cp_err": 10.0,
+      "any_err": 10,
+      "role": "loud"
+     },
+     {
+      "ref": 14,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 35,
+    "der_ref": 854,
+    "n_out": 4
+   },
+   {
+    "i": 24,
+    "overlap": 0.5,
+    "sir": -6,
+    "lang": "en",
+    "bed": "game",
+    "procs": "two",
+    "ref": 58,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 29,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     },
+     {
+      "ref": 29,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 699,
+    "n_out": 2
+   },
+   {
+    "i": 25,
+    "overlap": 0.5,
+    "sir": -6,
+    "lang": "fr",
+    "bed": "none",
+    "procs": "one",
+    "ref": 67,
+    "wer_err": 14,
+    "cp_err": 48.0,
+    "talker": [
+     {
+      "ref": 31,
+      "cp_err": 31.0,
+      "any_err": 13,
+      "role": "quiet"
+     },
+     {
+      "ref": 36,
+      "cp_err": 17.0,
+      "any_err": 0,
+      "role": "loud"
+     }
+    ],
+    "der_err": 287,
+    "der_ref": 1067,
+    "n_out": 1
+   },
+   {
+    "i": 26,
+    "overlap": 0.5,
+    "sir": -6,
+    "lang": "fr-en",
+    "bed": "music",
+    "procs": "two",
+    "ref": 46,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 37,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "quiet"
+     },
+     {
+      "ref": 9,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "loud"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 832,
+    "n_out": 2
+   },
+   {
+    "i": 27,
+    "overlap": 0.5,
+    "sir": -6,
+    "lang": "mixed",
+    "bed": "game",
+    "procs": "one",
+    "ref": 56,
+    "wer_err": 12,
+    "cp_err": 39.0,
+    "talker": [
+     {
+      "ref": 37,
+      "cp_err": 20.0,
+      "any_err": 11,
+      "role": "quiet"
+     },
+     {
+      "ref": 19,
+      "cp_err": 19.0,
+      "any_err": 1,
+      "role": "loud"
+     }
+    ],
+    "der_err": 497,
+    "der_ref": 1055,
+    "n_out": 1
+   },
+   {
+    "i": 28,
+    "overlap": 0.5,
+    "sir": 0,
+    "lang": "en",
+    "bed": "none",
+    "procs": "two",
+    "ref": 23,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 11,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     },
+     {
+      "ref": 12,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 401,
+    "n_out": 2
+   },
+   {
+    "i": 29,
+    "overlap": 0.5,
+    "sir": 0,
+    "lang": "fr",
+    "bed": "music",
+    "procs": "one",
+    "ref": 57,
+    "wer_err": 36,
+    "cp_err": 36.0,
+    "talker": [
+     {
+      "ref": 27,
+      "cp_err": 6.0,
+      "any_err": 6,
+      "role": "equal"
+     },
+     {
+      "ref": 30,
+      "cp_err": 30.0,
+      "any_err": 29,
+      "role": "equal"
+     }
+    ],
+    "der_err": 46,
+    "der_ref": 694,
+    "n_out": 1
+   },
+   {
+    "i": 30,
+    "overlap": 0.5,
+    "sir": 0,
+    "lang": "fr-en",
+    "bed": "game",
+    "procs": "two",
+    "ref": 46,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 28,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "equal"
+     },
+     {
+      "ref": 18,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 853,
+    "n_out": 3
+   },
+   {
+    "i": 31,
+    "overlap": 0.5,
+    "sir": 0,
+    "lang": "mixed",
+    "bed": "none",
+    "procs": "one",
+    "ref": 53,
+    "wer_err": 21,
+    "cp_err": 21.0,
+    "talker": [
+     {
+      "ref": 46,
+      "cp_err": 14.0,
+      "any_err": 14,
+      "role": "equal"
+     },
+     {
+      "ref": 7,
+      "cp_err": 7.0,
+      "any_err": 7,
+      "role": "equal"
+     }
+    ],
+    "der_err": 546,
+    "der_ref": 929,
+    "n_out": 1
+   },
+   {
+    "i": 32,
+    "overlap": 0.5,
+    "sir": 6,
+    "lang": "en",
+    "bed": "music",
+    "procs": "two",
+    "ref": 40,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 17,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "loud"
+     },
+     {
+      "ref": 23,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 662,
+    "n_out": 2
+   },
+   {
+    "i": 33,
+    "overlap": 0.5,
+    "sir": 6,
+    "lang": "fr",
+    "bed": "game",
+    "procs": "one",
+    "ref": 53,
+    "wer_err": 14,
+    "cp_err": 50.0,
+    "talker": [
+     {
+      "ref": 25,
+      "cp_err": 22.0,
+      "any_err": 4,
+      "role": "loud"
+     },
+     {
+      "ref": 28,
+      "cp_err": 28.0,
+      "any_err": 10,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 125,
+    "der_ref": 740,
+    "n_out": 1
+   },
+   {
+    "i": 34,
+    "overlap": 0.5,
+    "sir": 6,
+    "lang": "fr-en",
+    "bed": "none",
+    "procs": "two",
+    "ref": 64,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 37,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     },
+     {
+      "ref": 27,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 8,
+    "der_ref": 861,
+    "n_out": 2
+   },
+   {
+    "i": 35,
+    "overlap": 0.5,
+    "sir": 6,
+    "lang": "mixed",
+    "bed": "music",
+    "procs": "one",
+    "ref": 76,
+    "wer_err": 26,
+    "cp_err": 58.0,
+    "talker": [
+     {
+      "ref": 46,
+      "cp_err": 28.0,
+      "any_err": 12,
+      "role": "loud"
+     },
+     {
+      "ref": 30,
+      "cp_err": 30.0,
+      "any_err": 13,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 492,
+    "der_ref": 1251,
+    "n_out": 1
+   },
+   {
+    "i": 36,
+    "overlap": 0.75,
+    "sir": -6,
+    "lang": "en",
+    "bed": "none",
+    "procs": "one",
+    "ref": 27,
+    "wer_err": 6,
+    "cp_err": 22.0,
+    "talker": [
+     {
+      "ref": 16,
+      "cp_err": 11.0,
+      "any_err": 5,
+      "role": "quiet"
+     },
+     {
+      "ref": 11,
+      "cp_err": 11.0,
+      "any_err": 1,
+      "role": "loud"
+     }
+    ],
+    "der_err": 242,
+    "der_ref": 385,
+    "n_out": 1
+   },
+   {
+    "i": 37,
+    "overlap": 0.75,
+    "sir": -6,
+    "lang": "fr",
+    "bed": "music",
+    "procs": "two",
+    "ref": 59,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 30,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "quiet"
+     },
+     {
+      "ref": 29,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     }
+    ],
+    "der_err": 99,
+    "der_ref": 735,
+    "n_out": 2
+   },
+   {
+    "i": 38,
+    "overlap": 0.75,
+    "sir": -6,
+    "lang": "fr-en",
+    "bed": "game",
+    "procs": "one",
+    "ref": 48,
+    "wer_err": 9,
+    "cp_err": 36.0,
+    "talker": [
+     {
+      "ref": 30,
+      "cp_err": 18.0,
+      "any_err": 9,
+      "role": "quiet"
+     },
+     {
+      "ref": 18,
+      "cp_err": 18.0,
+      "any_err": 0,
+      "role": "loud"
+     }
+    ],
+    "der_err": 221,
+    "der_ref": 613,
+    "n_out": 1
+   },
+   {
+    "i": 39,
+    "overlap": 0.75,
+    "sir": -6,
+    "lang": "mixed",
+    "bed": "none",
+    "procs": "two",
+    "ref": 55,
+    "wer_err": 5,
+    "cp_err": 5.0,
+    "talker": [
+     {
+      "ref": 38,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     },
+     {
+      "ref": 17,
+      "cp_err": 5.0,
+      "any_err": 5,
+      "role": "loud"
+     }
+    ],
+    "der_err": 37,
+    "der_ref": 921,
+    "n_out": 3
+   },
+   {
+    "i": 40,
+    "overlap": 0.75,
+    "sir": 0,
+    "lang": "en",
+    "bed": "music",
+    "procs": "one",
+    "ref": 43,
+    "wer_err": 17,
+    "cp_err": 17.0,
+    "talker": [
+     {
+      "ref": 29,
+      "cp_err": 3.0,
+      "any_err": 3,
+      "role": "equal"
+     },
+     {
+      "ref": 14,
+      "cp_err": 14.0,
+      "any_err": 14,
+      "role": "equal"
+     }
+    ],
+    "der_err": 164,
+    "der_ref": 419,
+    "n_out": 1
+   },
+   {
+    "i": 41,
+    "overlap": 0.75,
+    "sir": 0,
+    "lang": "fr",
+    "bed": "game",
+    "procs": "two",
+    "ref": 62,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 29,
+      "cp_err": 1.0,
+      "any_err": 0,
+      "role": "equal"
+     },
+     {
+      "ref": 33,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "equal"
+     }
+    ],
+    "der_err": 22,
+    "der_ref": 749,
+    "n_out": 3
+   },
+   {
+    "i": 42,
+    "overlap": 0.75,
+    "sir": 0,
+    "lang": "fr-en",
+    "bed": "none",
+    "procs": "one",
+    "ref": 67,
+    "wer_err": 39,
+    "cp_err": 39.0,
+    "talker": [
+     {
+      "ref": 31,
+      "cp_err": 3.0,
+      "any_err": 3,
+      "role": "equal"
+     },
+     {
+      "ref": 36,
+      "cp_err": 36.0,
+      "any_err": 36,
+      "role": "equal"
+     }
+    ],
+    "der_err": 624,
+    "der_ref": 951,
+    "n_out": 1
+   },
+   {
+    "i": 43,
+    "overlap": 0.75,
+    "sir": 0,
+    "lang": "mixed",
+    "bed": "music",
+    "procs": "two",
+    "ref": 59,
+    "wer_err": 0,
+    "cp_err": 20.0,
+    "talker": [
+     {
+      "ref": 45,
+      "cp_err": 10.0,
+      "any_err": 0,
+      "role": "equal"
+     },
+     {
+      "ref": 14,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 48,
+    "der_ref": 929,
+    "n_out": 3
+   },
+   {
+    "i": 44,
+    "overlap": 0.75,
+    "sir": 6,
+    "lang": "en",
+    "bed": "game",
+    "procs": "one",
+    "ref": 36,
+    "wer_err": 24,
+    "cp_err": 24.0,
+    "talker": [
+     {
+      "ref": 12,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     },
+     {
+      "ref": 24,
+      "cp_err": 24.0,
+      "any_err": 21,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 97,
+    "der_ref": 398,
+    "n_out": 1
+   },
+   {
+    "i": 45,
+    "overlap": 0.75,
+    "sir": 6,
+    "lang": "fr",
+    "bed": "none",
+    "procs": "two",
+    "ref": 50,
+    "wer_err": 3,
+    "cp_err": 3.0,
+    "talker": [
+     {
+      "ref": 25,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "loud"
+     },
+     {
+      "ref": 25,
+      "cp_err": 2.0,
+      "any_err": 2,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 18,
+    "der_ref": 967,
+    "n_out": 2
+   },
+   {
+    "i": 46,
+    "overlap": 0.75,
+    "sir": 6,
+    "lang": "fr-en",
+    "bed": "music",
+    "procs": "one",
+    "ref": 54,
+    "wer_err": 26,
+    "cp_err": 26.0,
+    "talker": [
+     {
+      "ref": 30,
+      "cp_err": 2.0,
+      "any_err": 2,
+      "role": "loud"
+     },
+     {
+      "ref": 24,
+      "cp_err": 24.0,
+      "any_err": 24,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 250,
+    "der_ref": 707,
+    "n_out": 1
+   },
+   {
+    "i": 47,
+    "overlap": 0.75,
+    "sir": 6,
+    "lang": "mixed",
+    "bed": "game",
+    "procs": "two",
+    "ref": 46,
+    "wer_err": 11,
+    "cp_err": 11.0,
+    "talker": [
+     {
+      "ref": 37,
+      "cp_err": 11.0,
+      "any_err": 10,
+      "role": "loud"
+     },
+     {
+      "ref": 9,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 806,
+    "n_out": 2
+   },
+   {
+    "i": 48,
+    "overlap": 1.0,
+    "sir": -6,
+    "lang": "en",
+    "bed": "music",
+    "procs": "two",
+    "ref": 38,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 20,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     },
+     {
+      "ref": 18,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 642,
+    "n_out": 2
+   },
+   {
+    "i": 49,
+    "overlap": 1.0,
+    "sir": -6,
+    "lang": "fr",
+    "bed": "game",
+    "procs": "one",
+    "ref": 69,
+    "wer_err": 39,
+    "cp_err": 39.0,
+    "talker": [
+     {
+      "ref": 37,
+      "cp_err": 37.0,
+      "any_err": 33,
+      "role": "quiet"
+     },
+     {
+      "ref": 32,
+      "cp_err": 2.0,
+      "any_err": 2,
+      "role": "loud"
+     }
+    ],
+    "der_err": 593,
+    "der_ref": 940,
+    "n_out": 1
+   },
+   {
+    "i": 50,
+    "overlap": 1.0,
+    "sir": -6,
+    "lang": "fr-en",
+    "bed": "none",
+    "procs": "two",
+    "ref": 50,
+    "wer_err": 2,
+    "cp_err": 2.0,
+    "talker": [
+     {
+      "ref": 34,
+      "cp_err": 2.0,
+      "any_err": 2,
+      "role": "quiet"
+     },
+     {
+      "ref": 16,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     }
+    ],
+    "der_err": 7,
+    "der_ref": 841,
+    "n_out": 2
+   },
+   {
+    "i": 51,
+    "overlap": 1.0,
+    "sir": -6,
+    "lang": "mixed",
+    "bed": "music",
+    "procs": "one",
+    "ref": 62,
+    "wer_err": 26,
+    "cp_err": 26.0,
+    "talker": [
+     {
+      "ref": 46,
+      "cp_err": 10.0,
+      "any_err": 10,
+      "role": "quiet"
+     },
+     {
+      "ref": 16,
+      "cp_err": 16.0,
+      "any_err": 16,
+      "role": "loud"
+     }
+    ],
+    "der_err": 331,
+    "der_ref": 941,
+    "n_out": 1
+   },
+   {
+    "i": 52,
+    "overlap": 1.0,
+    "sir": 0,
+    "lang": "en",
+    "bed": "game",
+    "procs": "two",
+    "ref": 38,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 15,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     },
+     {
+      "ref": 23,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 766,
+    "n_out": 2
+   },
+   {
+    "i": 53,
+    "overlap": 1.0,
+    "sir": 0,
+    "lang": "fr",
+    "bed": "none",
+    "procs": "one",
+    "ref": 57,
+    "wer_err": 34,
+    "cp_err": 34.0,
+    "talker": [
+     {
+      "ref": 29,
+      "cp_err": 6.0,
+      "any_err": 6,
+      "role": "equal"
+     },
+     {
+      "ref": 28,
+      "cp_err": 28.0,
+      "any_err": 27,
+      "role": "equal"
+     }
+    ],
+    "der_err": 455,
+    "der_ref": 752,
+    "n_out": 1
+   },
+   {
+    "i": 54,
+    "overlap": 1.0,
+    "sir": 0,
+    "lang": "fr-en",
+    "bed": "music",
+    "procs": "two",
+    "ref": 51,
+    "wer_err": 3,
+    "cp_err": 3.0,
+    "talker": [
+     {
+      "ref": 38,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "equal"
+     },
+     {
+      "ref": 13,
+      "cp_err": 3.0,
+      "any_err": 3,
+      "role": "equal"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 807,
+    "n_out": 2
+   },
+   {
+    "i": 55,
+    "overlap": 1.0,
+    "sir": 0,
+    "lang": "mixed",
+    "bed": "game",
+    "procs": "one",
+    "ref": 63,
+    "wer_err": 28,
+    "cp_err": 48.0,
+    "talker": [
+     {
+      "ref": 38,
+      "cp_err": 38.0,
+      "any_err": 28,
+      "role": "equal"
+     },
+     {
+      "ref": 25,
+      "cp_err": 10.0,
+      "any_err": 0,
+      "role": "equal"
+     }
+    ],
+    "der_err": 539,
+    "der_ref": 919,
+    "n_out": 1
+   },
+   {
+    "i": 56,
+    "overlap": 1.0,
+    "sir": 6,
+    "lang": "en",
+    "bed": "none",
+    "procs": "two",
+    "ref": 39,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 18,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "loud"
+     },
+     {
+      "ref": 21,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 2,
+    "der_ref": 440,
+    "n_out": 2
+   },
+   {
+    "i": 57,
+    "overlap": 1.0,
+    "sir": 6,
+    "lang": "fr",
+    "bed": "music",
+    "procs": "one",
+    "ref": 50,
+    "wer_err": 23,
+    "cp_err": 23.0,
+    "talker": [
+     {
+      "ref": 28,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "loud"
+     },
+     {
+      "ref": 22,
+      "cp_err": 22.0,
+      "any_err": 20,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 354,
+    "der_ref": 579,
+    "n_out": 1
+   },
+   {
+    "i": 58,
+    "overlap": 1.0,
+    "sir": 6,
+    "lang": "fr-en",
+    "bed": "game",
+    "procs": "two",
+    "ref": 60,
+    "wer_err": 0,
+    "cp_err": 10.0,
+    "talker": [
+     {
+      "ref": 35,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "loud"
+     },
+     {
+      "ref": 25,
+      "cp_err": 5.0,
+      "any_err": 0,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 94,
+    "der_ref": 707,
+    "n_out": 3
+   },
+   {
+    "i": 59,
+    "overlap": 1.0,
+    "sir": 6,
+    "lang": "mixed",
+    "bed": "none",
+    "procs": "one",
+    "ref": 82,
+    "wer_err": 47,
+    "cp_err": 47.0,
+    "talker": [
+     {
+      "ref": 45,
+      "cp_err": 10.0,
+      "any_err": 10,
+      "role": "loud"
+     },
+     {
+      "ref": 37,
+      "cp_err": 37.0,
+      "any_err": 34,
+      "role": "quiet"
+     }
+    ],
+    "der_err": 575,
+    "der_ref": 801,
+    "n_out": 1
+   },
+   {
+    "i": 60,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "en",
+    "bed": "none",
+    "procs": "two",
+    "ref": 25,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 25,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "solo"
+     }
+    ],
+    "der_err": 5,
+    "der_ref": 480,
+    "n_out": 1
+   },
+   {
+    "i": 61,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "en",
+    "bed": "music",
+    "procs": "two",
+    "ref": 28,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 28,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "solo"
+     }
+    ],
+    "der_err": 2,
+    "der_ref": 472,
+    "n_out": 1
+   },
+   {
+    "i": 62,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "en",
+    "bed": "game",
+    "procs": "two",
+    "ref": 18,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 18,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "solo"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 417,
+    "n_out": 1
+   },
+   {
+    "i": 63,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "fr",
+    "bed": "none",
+    "procs": "two",
+    "ref": 33,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 33,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "solo"
+     }
+    ],
+    "der_err": 2,
+    "der_ref": 667,
+    "n_out": 1
+   },
+   {
+    "i": 64,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "fr",
+    "bed": "music",
+    "procs": "two",
+    "ref": 30,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 30,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "solo"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 610,
+    "n_out": 1
+   },
+   {
+    "i": 65,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "fr",
+    "bed": "game",
+    "procs": "two",
+    "ref": 26,
+    "wer_err": 0,
+    "cp_err": 0.0,
+    "talker": [
+     {
+      "ref": 26,
+      "cp_err": 0.0,
+      "any_err": 0,
+      "role": "solo"
+     }
+    ],
+    "der_err": 45,
+    "der_ref": 584,
+    "n_out": 1
+   },
+   {
+    "i": 66,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "fr-en",
+    "bed": "none",
+    "procs": "two",
+    "ref": 43,
+    "wer_err": 3,
+    "cp_err": 3.0,
+    "talker": [
+     {
+      "ref": 43,
+      "cp_err": 3.0,
+      "any_err": 3,
+      "role": "solo"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 715,
+    "n_out": 1
+   },
+   {
+    "i": 67,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "fr-en",
+    "bed": "music",
+    "procs": "two",
+    "ref": 50,
+    "wer_err": 4,
+    "cp_err": 4.0,
+    "talker": [
+     {
+      "ref": 50,
+      "cp_err": 4.0,
+      "any_err": 4,
+      "role": "solo"
+     }
+    ],
+    "der_err": 0,
+    "der_ref": 765,
+    "n_out": 1
+   },
+   {
+    "i": 68,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "fr-en",
+    "bed": "game",
+    "procs": "two",
+    "ref": 25,
+    "wer_err": 1,
+    "cp_err": 1.0,
+    "talker": [
+     {
+      "ref": 25,
+      "cp_err": 1.0,
+      "any_err": 1,
+      "role": "solo"
+     }
+    ],
+    "der_err": 17,
+    "der_ref": 331,
+    "n_out": 1
+   },
+   {
+    "i": 69,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "mixed",
+    "bed": "none",
+    "procs": "two",
+    "ref": 38,
+    "wer_err": 10,
+    "cp_err": 10.0,
+    "talker": [
+     {
+      "ref": 38,
+      "cp_err": 10.0,
+      "any_err": 10,
+      "role": "solo"
+     }
+    ],
+    "der_err": 32,
+    "der_ref": 774,
+    "n_out": 1
+   },
+   {
+    "i": 70,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "mixed",
+    "bed": "music",
+    "procs": "two",
+    "ref": 44,
+    "wer_err": 1,
+    "cp_err": 23.0,
+    "talker": [
+     {
+      "ref": 44,
+      "cp_err": 12.0,
+      "any_err": 1,
+      "role": "solo"
+     }
+    ],
+    "der_err": 19,
+    "der_ref": 827,
+    "n_out": 3
+   },
+   {
+    "i": 71,
+    "overlap": -1.0,
+    "sir": 0,
+    "lang": "mixed",
+    "bed": "game",
+    "procs": "two",
+    "ref": 45,
+    "wer_err": 0,
+    "cp_err": 20.0,
+    "talker": [
+     {
+      "ref": 45,
+      "cp_err": 10.0,
+      "any_err": 0,
+      "role": "solo"
+     }
+    ],
+    "der_err": 48,
+    "der_ref": 756,
+    "n_out": 2
+   }
+  ],
+  "summary": {
+   "wer": 0.1934260429835651,
+   "cpwer": 0.34323640960809104,
+   "der": 0.1571740424687438,
+   "wer_solo": 0.05432098765432099,
+   "wer_solo_by_lang": {
+    "en": 0.028169014084507043,
+    "fr": 0.011235955056179775,
+    "fr-en": 0.06779661016949153,
+    "mixed": 0.08661417322834646
+   },
+   "wer_solo_by_bed": {
+    "none": 0.09352517985611511,
+    "music": 0.046052631578947366,
+    "game": 0.017543859649122806
+   },
+   "der_solo": 0.02297918356312517,
+   "wer_by_overlap": {
+    "0.0": 0.040880503144654086,
+    "0.25": 0.1794871794871795,
+    "0.5": 0.20031298904538342,
+    "0.75": 0.23597359735973597,
+    "1.0": 0.30804248861911987
+   },
+   "cpwer_by_overlap": {
+    "0.0": 0.30660377358490565,
+    "0.25": 0.3125,
+    "0.5": 0.40219092331768386,
+    "0.75": 0.33993399339933994,
+    "1.0": 0.3535660091047041
+   },
+   "cpwer_by_sir": {
+    "-6": 0.33826247689463956,
+    "0": 0.345821325648415,
+    "6": 0.345821325648415
+   },
+   "cpwer_by_procs": {
+    "two": 0.09495743287491815,
+    "one": 0.5748320097739767
+   },
+   "cpwer_by_bed": {
+    "none": 0.33488805970149255,
+    "music": 0.3333333333333333,
+    "game": 0.3622200584225901
+   },
+   "wer_ov0_by_lang": {
+    "en": 0.048,
+    "fr": 0.05325443786982249,
+    "fr-en": 0.04081632653061224,
+    "mixed": 0.02564102564102564
+   },
+   "wer_ov0": 0.040880503144654086,
+   "talker_any_wer_quiet_ov50": 0.3088235294117647,
+   "talker_any_wer_loud_ov50": 0.11239669421487604,
+   "talker_any_wer_equal_ov50": 0.2875605815831987,
+   "talker_cp_wer_quiet_ov50": 0.4470588235294118,
+   "talker_cp_wer_loud_ov50": 0.2743801652892562,
+   "talker_any_wer_quiet_by_overlap": {
+    "0.0": 0.014084507042253521,
+    "0.25": 0.12380952380952381,
+    "0.5": 0.2024793388429752,
+    "0.75": 0.3163265306122449,
+    "1.0": 0.4090909090909091
+   },
+   "talker_any_wer_loud_by_overlap": {
+    "0.0": 0.06467661691542288,
+    "0.25": 0.2757009345794392,
+    "0.5": 0.0871559633027523,
+    "0.75": 0.10614525139664804,
+    "1.0": 0.14423076923076922
+   },
+   "audio_s": null
+  },
+  "gpu_s": 215.5843640998355,
+  "audio_s": 1181.669375
+ },
+ "cost": {
+  "window": [
+   1795111048477,
+   1795111408477
+  ],
+  "segments": 25,
+  "segment_audio_h": 0.0912088888888889,
+  "reps": 9,
+  "gpu_s_per_h": 575.5450089994702,
+  "gpu_s_per_segment_audio_h": 631.018550944746,
+  "gpu_s_runs": [
+   56.23794429999543,
+   57.92495750001399,
+   58.067999899969436,
+   58.09343819998321,
+   57.554500899947016,
+   55.34253329990315,
+   56.19710899994243,
+   58.15598319997662,
+   56.943180400005076
+  ],
+  "vram_peak_mib": 4370,
+  "capture_cpu_pct": 0.8984374999999999,
+  "speaker_cpu_s_per_h": 453.125
+ },
+ "cost_same_session": {
+  "gpu_x_cost_window": 1.7641599060671025,
+  "vram_delta_gb": 0.0361328125,
+  "gpu_idle_otherwise": true,
+  "gpu_x_daily_model": {
+   "std": 1.151,
+   "day": 1.038,
+   "model": "gpu = 0.422 s per decode call + 0.0672 s per audio s, fitted on the two same-session cost windows"
+  },
+  "capture_cpu_pct_core": {
+   "harness_window": 0.8984374999999999,
+   "process_clients_3_delta_spike": 1.094,
+   "total_est": 1.992
+  },
+  "speaker_cpu_s_per_h": {
+   "base": 217.8125,
+   "p1": 453.125
+  }
+ }
+}

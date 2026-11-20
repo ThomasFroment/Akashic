@@ -1,0 +1,38 @@
+﻿{
+ "available_providers": [
+  "TensorrtExecutionProvider",
+  "CUDAExecutionProvider",
+  "CPUExecutionProvider"
+ ],
+ "mix0": {
+  "len_s": 7.21,
+  "onnx_vs_torch_si_sdr_db": [
+   81.8,
+   79.2
+  ],
+  "max_abs_diff": 0.0080718994140625,
+  "sep_si_sdr_vs_truth_db": 14.3,
+  "mix_si_sdr_vs_truth_db": -0.0
+ },
+ "mix1": {
+  "len_s": 15.41,
+  "onnx_vs_torch_si_sdr_db": [
+   72.4,
+   69.4
+  ],
+  "max_abs_diff": 0.017937660217285156,
+  "sep_si_sdr_vs_truth_db": 24.2,
+  "mix_si_sdr_vs_truth_db": -0.0
+ },
+ "mix2": {
+  "len_s": 18.405,
+  "onnx_vs_torch_si_sdr_db": [
+   66.6,
+   65.5
+  ],
+  "max_abs_diff": 0.02085113525390625,
+  "sep_si_sdr_vs_truth_db": 15.7,
+  "mix_si_sdr_vs_truth_db": -5.0
+ },
+ "cpu_rtf_8s_median9": 1.9144289374999062
+}

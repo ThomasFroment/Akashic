@@ -1,0 +1,3 @@
+std: P3 ovl 0.223 (np 0.107 local 0.062) clean 0.084 mixed 0.16097560975609757 der 0.1477720158622146 excl 0.0 | shadow P1 ovl 0.23124676668391103 mixed 0.16097560975609757 | gate recall 0.0 prec None | gpu 335 s wall 431 s sep 0 s
+day: P3 ovl 0.156 (np 0.156 local 0.095) clean 0.061 mixed 0.09588421528720036 der 0.08894476585796243 excl 0.0 | shadow P1 ovl 0.19328442437923252 mixed 0.2021709633649932 | gate recall 0.0 prec None | gpu 2482 s wall 3332 s sep 0 s
+done

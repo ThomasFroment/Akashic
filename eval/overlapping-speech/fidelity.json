@@ -1,0 +1,120 @@
+{
+ "std": {
+  "asr": {
+   "discord.exe": {
+    "segments": 31,
+    "ref_words": 865,
+    "wer_stored": 0.05086705202312139,
+    "wer_simulated": 0.055491329479768786,
+    "stored_vs_simulated_wer": 0.016184971098265895
+   },
+   "chrome.exe": {
+    "segments": 31,
+    "ref_words": 581,
+    "wer_stored": 0.18588640275387264,
+    "wer_simulated": 0.17555938037865748,
+    "stored_vs_simulated_wer": 0.029259896729776247
+   },
+   "msedge.exe": {
+    "segments": 40,
+    "ref_words": 810,
+    "wer_stored": 0.1259259259259259,
+    "wer_simulated": 0.11851851851851852,
+    "stored_vs_simulated_wer": 0.019753086419753086
+   }
+  },
+  "gain": {
+   "call": 2.3941620112392665,
+   "game": 2.246327683772975,
+   "own": 0.9974326435734474,
+   "music": 2.4033236574032486,
+   "video:chrome.exe": 0.9924109463789057,
+   "video:msedge.exe": 0.9829835401141418
+  },
+  "lag_ms": {
+   "call": 44.25,
+   "own": 66.8125,
+   "music": 63.5,
+   "video:chrome.exe": 113.96875,
+   "video:msedge.exe": 117.25
+  },
+  "lag_mad_ms": {
+   "call": 1.0,
+   "own": 0.0,
+   "music": 0.875,
+   "video:chrome.exe": 0.75,
+   "video:msedge.exe": 0.375
+  },
+  "explained_band_energy_p10_p50_p90": {
+   "system": [
+    0.7940629530652502,
+    0.8866359096911898,
+    0.9218536030076813
+   ],
+   "mic": [
+    0.9457770364390272,
+    0.9578081553305645,
+    0.9654678815672567
+   ]
+  }
+ },
+ "day": {
+  "asr": {
+   "discord.exe": {
+    "segments": 40,
+    "ref_words": 909,
+    "wer_stored": 0.0924092409240924,
+    "wer_simulated": 0.0891089108910891,
+    "stored_vs_simulated_wer": 0.007700770077007701
+   },
+   "chrome.exe": {
+    "segments": 40,
+    "ref_words": 720,
+    "wer_stored": 0.26805555555555555,
+    "wer_simulated": 0.26666666666666666,
+    "stored_vs_simulated_wer": 0.016666666666666666
+   },
+   "msedge.exe": {
+    "segments": 40,
+    "ref_words": 837,
+    "wer_stored": 0.1875746714456392,
+    "wer_simulated": 0.12783751493428913,
+    "stored_vs_simulated_wer": 0.08124253285543608
+   }
+  },
+  "gain": {
+   "call": 2.3895458849925864,
+   "game": 2.227143786012633,
+   "own": 0.9962889486940594,
+   "video:chrome.exe": 0.9843602793195511,
+   "music": 2.401174954699173,
+   "video:msedge.exe": 0.9840781156248963
+  },
+  "lag_ms": {
+   "call": 43.3125,
+   "own": 112.1875,
+   "video:chrome.exe": 139.34375,
+   "music": 30.71875,
+   "video:msedge.exe": 99.3125
+  },
+  "lag_mad_ms": {
+   "call": 15.96875,
+   "own": 12.9375,
+   "video:chrome.exe": 43.90625,
+   "music": 24.09375,
+   "video:msedge.exe": 0.375
+  },
+  "explained_band_energy_p10_p50_p90": {
+   "system": [
+    0.7979329072382044,
+    0.8907579179807756,
+    0.923099290108889
+   ],
+   "mic": [
+    0.9470831840781762,
+    0.9575741936329661,
+    0.9665031511710563
+   ]
+  }
+ }
+}

@@ -20,6 +20,9 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   scheduling is not an invent item. Before any invent, diagnose the day-run bugs with read-only
   spikes on the saved stores: the canary in stored frames first, then capture VRAM growth and
   the Whisper load failure.
+  2026-11-20 the user added a sixth study: duplicated and noisy screen text (M3.2, UI chrome,
+  OCR garbage on menus and HUDs; extends #101 beyond exact duplicates). Studies run in parallel
+  at the user's request.
 - Phase 5, synthesis and refuters: not started
 - Phase 6, `quality.md`: not started
 
@@ -264,6 +267,79 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   only game-mode windows read WebP); `eval/quality/score.py` M3.1 misreads wrapped lines (1440p
   0.371 -> 0.201 wrap-tolerant): fix the scorer and rescore before Phase 6 numbers. On real windows
   OCR time follows words recognised (~0.29 ms/word), not pixels.
+- 2026-11-20 Phase 4 in parallel: games and episodes (harness and diagnosis running); overlapping
+  speech (scope confirmed, mechanism round 1 done, harness and diagnosis running); duplicated and
+  noisy screen text (scope confirmed: near-duplicate text stored once per window run, chrome and
+  garbage separated, every seen line findable; must M3.3 and M3.1 no worse, <= 1 % content lines
+  dropped, M3.2 <= 0.3, noise metric halved; budget <= 1 ms per stored frame, deferred <= 2 % of
+  a core; mechanisms and harness running). Live validations of #190 C2 and #208 C5 running.
+- 2026-11-20 user answers for the three parallel studies:
+  - Screen text: noise is the share of noise tokens in what search and Ask see. A content line
+    wrongly down-ranked counts against the 1 %. M3.2 is read over stored strings, M3.1 on rebuilt
+    frames, and M3.3 through the new index. Chrome keeps every visibility interval.
+  - Games: an episode spans the process lifetime, with time in front in its body. Pause splits
+    the row. An excluded fullscreen game keeps game mode and a content-free row, as TODO #188
+    says (an earlier answer of "nothing at all" was reconciled with #188). Store and Electron
+    games are rare, so the deny rule stays.
+  - Speech: MossFormer2_SS_16K is approved for measurement only (ONNX on CPU, pinned URL, no
+    package). Digital subtraction is allowed. The user also allows echo cancellation, which
+    lifts that AGENTS.md scope exclusion (recorded in AGENTS.md and DECISIONS.md, uncommitted). The
+    +30 % GPU is a daily average. Separation runs only while no game is in front.
+  - Local fact: Discord renders straight to the DT-770 endpoint, not through Wave Link.
+- 2026-11-20 Phase 4 invent 4 of 6, games and episodes: done.
+  `docs/solutions/2026-11-20 - Game Sessions And Episodes/report.md`, artifact
+  https://claude.ai/artifact/E7WvkQKvavtwv6nNnMRtVv, harness `eval/games-and-episodes/`.
+  - Best fit C1: one game row per process instance (held SYNCHRONIZE|QUERY_LIMITED handle, end
+    at exit) with an in-front ledger, a provenance verdict that checks exclusions first, and
+    video chains; a Pause splits rows, episodes and chains.
+  - On truth clipped to the recorded span and split at Pauses: rows/truth 1.25, M6.1 start and
+    end 0.0 s, detection 0/0/0, F1 video 1.00 and game 1.00, M11.2 0.86 (today 5.38, 4326 s,
+    4/0/1, 0.12/0.32, 0.53).
+  - Cost: +21.8 µs per check worst, 71.1 ms/day of changed derivation.
+  - Fallback when the handle is refused: C2, an IsWindow liveness end.
+  - Scorer fixes needed before Phase 6: `score.m6` must clamp the truth end to capture stop and
+    split truth at Pauses, and rows-per-truth must assign each row to one session.
+- 2026-11-20 Phase 4 invent 5 of 6, duplicated and noisy screen text: done.
+  `docs/solutions/2026-11-20 - Screen Text Duplication And Noise/report.md`, artifact
+  https://claude.ai/artifact/7PGhJezjoGUyc7cFD7xr7q, harness `eval/screen-text-duplication-noise/`.
+  - User rounds 2-3: noise is the count of provable misreads that search and Ask can return,
+    halved; the link check is per line for both sides.
+  - Best fit C1, a lossless line store (digit template + exact residual, run intervals, chrome
+    by context spread, junk column):
+    - M3.2 0.96 -> 0.06 (0 stored);
+    - M3.3 and M3.1 equal to today;
+    - content down <= 0.29 %;
+    - misreads 44,363 -> 3,121 (day);
+    - FTS 0.05x, top-5 crowding 0.78 -> 0.06;
+    - write path 0, deferred 0.03 % of a core.
+  - Dedupe raises the misread share (correct repeats collapse), so a share must is not reachable
+    without OCR correction.
+- 2026-11-20 live checks folded into their reports (Revised dates, artifacts republished):
+  - #190 C2: real Edge, Chrome and Zen, <= 11 px 0.53 -> 0.005-0.007; 1.44x CPU; +50 ms p95,
+    at the limit.
+  - #208 C5: real Edge, Chrome and Windows Terminal at 1440p, 1/356 replies missed at the first
+    check (today 131) and 0 nuisance stores; the busy phase gives 54 useless stores/h, 8/h with
+    the C5fix last-move refresh.
+  - WGC browser windows stop presenting while the display is off; Windows Terminal does not.
+- 2026-11-20 Phase 4 invent 6 of 6, overlapping speech: done.
+  `docs/solutions/2026-11-20 - Overlapping Speech/report.md`, artifact
+  https://claude.ai/artifact/7MNf9bE4cRRZf4rTXyLJtF, harness `eval/overlapping-speech/`.
+  - In limits nothing keeps every must; closest C1 (P1 strict) fails mixed day only.
+  - RELAXES non-goal #139: C6 + language split (P3) keeps every must both scorings (overlap
+    0.223 / 0.156, mixed day 0.096), GPU daily x1.13-1.23 (model), worst hour x1.26, VRAM +0.
+    Separation never fired on the real runs (in-stream overlap 0.18 / 0.35 s); its gain is
+    synthetic only.
+  - All on simulated per-process streams; a real Discord call (Communications category) is the
+    first check. Scorer change needed: group by (stream, source).
+  - Prototype notes:
+  - P1 per-app stems + FIR call residual (simulated streams): overlap WER std 0.639 -> 0.231,
+    day 0.497 -> 0.193; mixed day 0.151 -> 0.202 fails; excluded audio 0 only with the strict rule
+    (drop system rows overlapping excluded sound); GPU daily estimate x1.04-1.15, worst window
+    x1.76.
+  - P2 overlap-gated MossFormer2 on today's mix: overlap WER 0.597 / 0.458, fails; gate recall
+    0.23-0.33; CPU separation RTF 1.7.
+  - P3 = P1 + gated separation on every output stream (for same-app overlap, discord+discord
+    0.459 under P1).
 
 ## Harness commands
 

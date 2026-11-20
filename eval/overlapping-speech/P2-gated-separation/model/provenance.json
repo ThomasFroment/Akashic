@@ -1,0 +1,22 @@
+{
+ "model": "MossFormer2_SS_16K (ClearerVoice-Studio), 2-speaker 16 kHz speech separation, 55.7 M params",
+ "licence": "Apache-2.0 (model card README.md: 'license: apache-2.0'; training data 'open-sourced and private')",
+ "repo": "https://huggingface.co/alibabasglab/MossFormer2_SS_16K",
+ "pinned_commit": "407cb030cd66340918ebb6c8cc63b18f8592cdbe",
+ "files": {
+  "last_best_checkpoint.pt": {
+   "url": "https://huggingface.co/alibabasglab/MossFormer2_SS_16K/resolve/407cb030cd66340918ebb6c8cc63b18f8592cdbe/last_best_checkpoint.pt",
+   "size": 670353271,
+   "sha256": "00a3a48bda492db1e829b85dd443f8f43a43039a3e90f1a24962ea9caf14a11a",
+   "sha256_matches_hf_lfs_oid": true
+  },
+  "last_best_checkpoint": {"size": 24, "sha256": "315744c841441f8831cb2f896e06102b4d864776bf272febaa30c639c903e1c0", "git_oid": "98b04fb38c032a55f03f4a7583600e7e112b8e09"},
+  "README.md": {"size": 345, "sha256": "f43ca6b52db24028a287e44f38525929ec97bce7c0036af9ef9e836d9c9b90a1", "git_oid": "5e4cb37744faefd9d9a6ff4a48c5108c323ee107"}
+ },
+ "derived": {
+  "mossformer2_ss_16k.onnx": {"size": 17127995, "sha256": "b5e6e05f8e00111da49ca9adad7fedebac1d22b61f23d0f489294fab6a468047"},
+  "mossformer2_ss_16k.onnx.data": {"size": 222942208, "sha256": "a8d525eea57868687f7a7d17de41fb8c5c3eaab367221290cf5d1ba365e20188"},
+  "how": "export.py in the throwaway export-venv (torch 2.15.0, onnx 1.23.2, onnxscript 0.7.2, einops, rotary_embedding_torch 0.9.2), opset 18, dynamic length; fp32 weights; run with the project's onnxruntime (no new package in the project env)"
+ },
+ "verified": "2026-11-20, sha256 of the local checkpoint equals the HF LFS oid at the pinned commit (HF API tree listing)"
+}

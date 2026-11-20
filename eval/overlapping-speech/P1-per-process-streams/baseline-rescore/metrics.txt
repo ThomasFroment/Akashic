@@ -1,0 +1,1 @@
+ovl_std=0.639 clean_std=0.097 en_std=0.113 fr_std=0.117 mixed_std=0.166 ovl_local_std=0.618 der_std=0.249 wrong_std=6 unk_std=43 leak_std=11.7 ovl_day=0.497 clean_day=0.084 en_day=0.059 fr_day=0.084 mixed_day=0.151 ovl_local_day=0.473 der_day=0.161 wrong_day=46 unk_day=293 leak_day=25.6 excl_s=0.0 uses_sim=no

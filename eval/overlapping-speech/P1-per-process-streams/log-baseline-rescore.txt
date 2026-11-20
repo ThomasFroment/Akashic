@@ -1,0 +1,4 @@
+std: overlap WER 0.639 (no pause 0.583, local 0.559) no_overlap 0.097 DER 0.24909777788206583 gpu 535 s wall 660 s
+day: overlap WER 0.497 (no pause 0.497, local 0.473) no_overlap 0.084 DER 0.16108048158206809 gpu 8400 s wall 8761 s
+ovl_std=0.639 clean_std=0.097 en_std=0.113 fr_std=0.117 mixed_std=0.166 ovl_local_std=0.618 der_std=0.249 wrong_std=6 unk_std=43 leak_std=11.7 ovl_day=0.497 clean_day=0.084 en_day=0.059 fr_day=0.084 mixed_day=0.151 ovl_local_day=0.473 der_day=0.161 wrong_day=46 unk_day=293 leak_day=25.6 excl_s=0.0 uses_sim=no
+nopause: ovl_std=0.583 clean_std=0.092 en_std=0.111 fr_std=0.109 mixed_std=0.166 ovl_local_std=0.559 der_std=0.232 wrong_std=6 unk_std=43 leak_std=11.7 ovl_day=0.497 clean_day=0.081 en_day=0.055 fr_day=0.082 mixed_day=0.151 ovl_local_day=0.473 der_day=0.158 wrong_day=46 unk_day=293 leak_day=25.6 excl_s=0.0 uses_sim=no

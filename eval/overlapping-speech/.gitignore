@@ -1,0 +1,21 @@
+# Never committed: model weights and exports (rebuilt from model/provenance.json and export.py),
+# the throwaway export venv, the harness calibration cache, test audio, caches and logs.
+P2-gated-separation/export-venv/
+*.onnx
+*.onnx.data
+*.pt
+*.npz
+*.npy
+*.wav
+*.opus
+*.flac
+harness/cache/
+__pycache__/
+tmp*/
+*.log
+*.err
+gpu.lock
+# Keep the model's provenance record (the repo root ignores eval/**/model/).
+!P2-gated-separation/model/
+P2-gated-separation/model/*
+!P2-gated-separation/model/provenance.json

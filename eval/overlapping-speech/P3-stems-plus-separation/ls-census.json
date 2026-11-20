@@ -1,0 +1,16 @@
+{
+ "std": {
+  "system_rows": 315,
+  "splits": 5,
+  "detect_calls": 218,
+  "ls_gpu_s": 22.110694700066233,
+  "recorded_h": 1.0833333333333333
+ },
+ "day": {
+  "system_rows": 2156,
+  "splits": 73,
+  "detect_calls": 1825,
+  "ls_gpu_s": 183.10120939975604,
+  "recorded_h": 6.865782777777778
+ }
+}
