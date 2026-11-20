@@ -1,0 +1,26 @@
+{
+ "app": "term",
+ "plan": "idle:30,block:600,bar:300",
+ "seed": 6,
+ "port": 49825,
+ "monitor": [
+  3840,
+  0,
+  2560,
+  1440
+ ],
+ "window_req": [
+  4143,
+  80,
+  1600,
+  1200
+ ],
+ "launch_wall": 1795148095.7245216,
+ "focus_on_launch": true,
+ "interval_s": 5.0,
+ "frame_interval_ms": 1000,
+ "python": "3.14.10 (main, Oct 26 2026, 14:10:46) [MSC v.1944 64 bit (AMD64)]",
+ "window_closed": true,
+ "interrupted": true,
+ "note": "run_live.py was stopped at check 132 (bar phase never captured); term_child.py finished its plan and closed the tab"
+}

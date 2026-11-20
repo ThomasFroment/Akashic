@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Akashic live chat test</title>
+<style>
+  /* Synthetic chat app for the #208 live check. Everything is invented; nothing leaves 127.0.0.1. */
+  :root { --bg:#313338; --rail:#1e1f22; --side:#2b2d31; --fg:#dbdee1; --muted:#949ba4; --input:#383a40; --head:#313338; --line:#26272b; }
+  body.light { --bg:#ffffff; --rail:#e3e5e8; --side:#f2f3f5; --fg:#313338; --muted:#5c5e66; --input:#ebedef; --head:#ffffff; --line:#e1e2e4; }
+  html, body { margin:0; height:100%; overflow:hidden; }
+  body { background:var(--bg); color:var(--fg); font-family:"Segoe UI", sans-serif; font-size:14px; }
+  #rail { position:absolute; left:0; top:0; bottom:0; width:72px; background:var(--rail); }
+  .srv { position:absolute; left:12px; width:48px; height:48px; border-radius:50%; color:#fff; font-weight:600;
+         display:flex; align-items:center; justify-content:center; font-size:15px; }
+  #side { position:absolute; left:72px; top:0; bottom:0; width:240px; background:var(--side); }
+  .chan { position:absolute; left:16px; right:12px; height:24px; color:var(--muted); font-size:15px; }
+  .badge { position:absolute; width:16px; height:16px; border-radius:8px; background:#f23f43; color:#fff;
+           font-size:11px; font-weight:700; line-height:16px; text-align:center; }
+  #main { position:absolute; left:312px; right:0; top:0; bottom:0; }
+  #head { position:absolute; left:0; right:0; top:0; height:48px; border-bottom:1px solid var(--line); background:var(--head); }
+  #title { position:absolute; left:16px; top:12px; font-size:16px; font-weight:600; }
+  #clock { position:absolute; right:24px; top:15px; font-size:14px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  #spin { position:absolute; right:110px; top:15px; width:14px; height:14px; border-radius:50%;
+          border:2px solid var(--line); border-top-color:#5865f2; animation:rot 0.8s linear infinite; }
+  @keyframes rot { to { transform:rotate(360deg); } }
+  .msg { position:absolute; left:16px; right:16px; }
+  .who { font-weight:600; font-size:15px; }
+  .when { color:var(--muted); font-size:12px; margin-left:6px; }
+  .txt { font-size:15px; }
+  #slots { position:absolute; left:16px; top:250px; right:16px; bottom:110px; }
+  .reply { position:absolute; white-space:nowrap; color:var(--fg); }
+  #box { position:absolute; left:16px; right:16px; bottom:24px; height:44px; border-radius:8px; background:var(--input); }
+  #inp { position:absolute; left:16px; right:16px; top:10px; height:24px; border:0; outline:0; background:transparent;
+         color:var(--fg); font:16px "Segoe UI", sans-serif; caret-color:var(--fg); }
+  #inp::placeholder { color:var(--muted); }
+  /* editor-style caret (VS Code / Monaco draw their own 2 px caret and blink it forever) */
+  #ecaret { position:absolute; left:16px; top:11px; width:2px; height:22px; background:var(--fg); visibility:hidden; }
+  body.ecaret #ecaret { visibility:visible; animation:blink 1.06s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .hide { visibility:hidden !important; }
+</style>
+</head>
+<body>
+<div id="rail"></div>
+<div id="side"></div>
+<div id="main">
+  <div id="head"><div id="title"># general</div><div id="spin" class="hide"></div><div id="clock" class="hide">00:00:00</div></div>
+  <div id="static"></div>
+  <div id="slots"></div>
+  <div id="box"><input id="inp" placeholder="Message #general" autocomplete="off"><div id="ecaret"></div></div>
+</div>
+<script>
+"use strict";
+const Q = new URLSearchParams(location.search);
+const PLAN = (Q.get("plan") || "caret:60").split(",").map(s => { const [n, d] = s.split(":"); return [n, +d]; });
+let seed = +(Q.get("seed") || 1);
+function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+function pick(a) { return a[Math.floor(rnd() * a.length)]; }
+
+const WORDS = ["ok", "gg", "lol", "on", "no", "non", "ou", "oui", "mm"];
+const SIZES = [13, 14, 16];
+const COLORS = ["#5865f2", "#3ba55d", "#faa61a", "#eb459e", "#ed4245", "#7289da", "#43b581"];
+
+function log(ev) {
+  ev.t = Date.now();
+  ev.focus = document.hasFocus();
+  const x = new XMLHttpRequest();
+  x.open("POST", "/log", true);
+  x.setRequestHeader("Content-Type", "application/json");
+  x.send(JSON.stringify(ev));
+}
+
+// static furniture
+const rail = document.getElementById("rail"), side = document.getElementById("side");
+const badgeSpots = [];
+for (let i = 0; i < 9; i++) {
+  const d = document.createElement("div");
+  d.className = "srv"; d.style.top = (12 + i * 58) + "px"; d.style.background = COLORS[i % COLORS.length];
+  d.textContent = "ABCDEFGHJ"[i]; rail.appendChild(d);
+  badgeSpots.push([rail, 46, 12 + i * 58 + 34]);
+}
+const chans = ["general", "jeux", "minecraft-rust", "series", "music", "off-topic", "dev", "screens", "voice-chat", "memes", "help", "annonces"];
+chans.forEach((c, i) => {
+  const d = document.createElement("div");
+  d.className = "chan"; d.style.top = (60 + i * 34) + "px"; d.textContent = "# " + c; side.appendChild(d);
+  badgeSpots.push([side, 206, 60 + i * 34 + 4]);
+});
+const stat = document.getElementById("static");
+[["alice", "13:02", "salut, on lance une partie ce soir ?"], ["bob", "13:05", "yes, après le dîner. tu as fini le build du mod ?"],
+ ["alice", "13:06", "presque, il manque le loader des chunks"], ["carol", "13:09", "je regarde la série en attendant"]].forEach((m, i) => {
+  const d = document.createElement("div");
+  d.className = "msg"; d.style.top = (64 + i * 44) + "px";
+  d.innerHTML = `<span class="who">${m[0]}</span><span class="when">${m[1]}</span><div class="txt">${m[2]}</div>`;
+  stat.appendChild(d);
+});
+
+// nuisances
+const clock = document.getElementById("clock"), spin = document.getElementById("spin"), inp = document.getElementById("inp");
+function tick() { const n = new Date(); clock.textContent = n.toTimeString().slice(0, 8); setTimeout(tick, 1000 - n.getMilliseconds() + 5); }
+tick();
+let wantCaret = false;
+function setCaret(on) { wantCaret = on; if (on) inp.focus(); else inp.blur(); }
+window.addEventListener("focus", () => { if (wantCaret) inp.focus(); log({ kind: "win_focus" }); });
+window.addEventListener("blur", () => log({ kind: "win_blur" }));
+
+// replies and badges
+const slots = document.getElementById("slots");
+const ROW_H = 26, COL_W = 220;
+let slot = 0, shown = [];
+function rows() { return Math.floor(slots.clientHeight / ROW_H); }
+function cols() { return Math.floor(slots.clientWidth / COL_W); }
+function reply() {
+  if (slot >= rows() * cols()) { slots.innerHTML = ""; slot = 0; log({ kind: "reset" }); return; }
+  const r = slot % rows(), c = Math.floor(slot / rows());
+  const w = pick(WORDS), px = pick(SIZES), jx = Math.floor(rnd() * 4), jy = Math.floor(rnd() * 4);
+  const d = document.createElement("div");
+  d.className = "reply"; d.style.fontSize = px + "px"; d.textContent = w;
+  d.style.left = (c * COL_W + jx) + "px"; d.style.top = (r * ROW_H + jy) + "px";
+  slots.appendChild(d);
+  const b = d.getBoundingClientRect();
+  log({ kind: "reply", word: w, px, row: r, col: c, slot, rect: [b.left, b.top, b.width, b.height] });
+  slot++;
+}
+function badgeOn() {
+  const free = badgeSpots.map((s, i) => i).filter(i => !shown.some(x => x.i === i));
+  const i = pick(free), [parent, x, y] = badgeSpots[i];
+  const d = document.createElement("div");
+  d.className = "badge"; d.style.left = x + "px"; d.style.top = y + "px"; d.textContent = String(1 + Math.floor(rnd() * 9));
+  parent.appendChild(d); shown.push({ i, d });
+  const b = d.getBoundingClientRect();
+  log({ kind: "badge_on", spot: i, rect: [b.left, b.top, b.width, b.height] });
+}
+function badgeOff() {
+  const k = Math.floor(rnd() * shown.length), s = shown.splice(k, 1)[0];
+  const b = s.d.getBoundingClientRect(); s.d.remove();
+  log({ kind: "badge_off", spot: s.i, rect: [b.left, b.top, b.width, b.height] });
+}
+let eventsOn = false, evTimer = null;
+function nextEvent() {
+  if (!eventsOn) return;
+  const u = rnd();
+  if (shown.length && u < 0.12) badgeOff();
+  else if (shown.length < 4 && u < 0.30) badgeOn();
+  else reply();
+  evTimer = setTimeout(nextEvent, 5500 + rnd() * 8500);
+}
+
+// phases: name -> which nuisances are on, and whether replies/badges run
+const PH = {
+  idle:    { caret: false, ecaret: false, clock: false, spin: false, ev: false },
+  caret:   { caret: true,  ecaret: false, clock: false, spin: false, ev: false },
+  ecaret:  { caret: false, ecaret: true,  clock: false, spin: false, ev: false },
+  clock:   { caret: false, ecaret: false, clock: true,  spin: false, ev: false },
+  spinner: { caret: false, ecaret: false, clock: false, spin: true,  ev: false },
+  quiet:   { caret: false, ecaret: false, clock: false, spin: false, ev: true },
+  events:  { caret: true,  ecaret: false, clock: true,  spin: true,  ev: true },
+};
+function setTheme(light) { document.body.classList.toggle("light", light); log({ kind: "theme", light }); }
+function startPhase(i) {
+  if (i >= PLAN.length) { eventsOn = false; clearTimeout(evTimer); log({ kind: "done" }); return; }
+  const [name, dur] = PLAN[i], p = PH[name];
+  eventsOn = false; clearTimeout(evTimer);
+  slots.innerHTML = ""; slot = 0; shown.forEach(s => s.d.remove()); shown = [];
+  clock.classList.toggle("hide", !p.clock); spin.classList.toggle("hide", !p.spin);
+  document.body.classList.toggle("ecaret", p.ecaret);
+  setCaret(p.caret);
+  document.body.classList.remove("light");
+  log({ kind: "phase", name, dur });
+  if (p.ev) { eventsOn = true; evTimer = setTimeout(nextEvent, 6000 + rnd() * 4000); }
+  setTimeout(() => setTheme(true), dur * 500);
+  setTimeout(() => startPhase(i + 1), dur * 1000);
+}
+log({ kind: "load", w: innerWidth, h: innerHeight, ow: outerWidth, oh: outerHeight, dpr: devicePixelRatio });
+setTimeout(() => startPhase(0), (+(Q.get("delay") || 8)) * 1000);
+</script>
+</body>
+</html>

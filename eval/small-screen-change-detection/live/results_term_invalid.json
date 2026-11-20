@@ -1,0 +1,3119 @@
+{
+ "term": {
+  "checks": 204,
+  "clean_checks": 163,
+  "fg_ok_checks": 204,
+  "refocus_count": 0,
+  "monitor_off_checks": 0,
+  "glitch_checks": {
+   "idle": 0,
+   "bar": 16,
+   "block": 11
+  },
+  "candidates": {
+   "baseline": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 9,
+      "hours": 0.0125,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "bar": {
+      "clean_checks": 51,
+      "hours": 0.0708,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 62,
+      "hours": 0.0861,
+      "stores": 2,
+      "per_hour": 23.2,
+      "per_hour_dark": 23.2
+     }
+    },
+    "decide_ms": {
+     "mean": 0.3228,
+     "p50": 0.4307,
+     "p95": 0.7308,
+     "max": 1.8064,
+     "mean_changed": 0.4408,
+     "calls": 203
+    },
+    "stores_total": 38
+   },
+   "C2": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 9,
+      "hours": 0.0125,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "bar": {
+      "clean_checks": 51,
+      "hours": 0.0708,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 62,
+      "hours": 0.0861,
+      "stores": 27,
+      "per_hour": 313.5,
+      "per_hour_dark": 313.5
+     }
+    },
+    "decide_ms": {
+     "mean": 0.1297,
+     "p50": 0.1182,
+     "p95": 0.3821,
+     "max": 0.4973,
+     "mean_changed": 0.1902,
+     "calls": 203
+    },
+    "stores_total": 71
+   },
+   "C3": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 9,
+      "hours": 0.0125,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "bar": {
+      "clean_checks": 51,
+      "hours": 0.0708,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 62,
+      "hours": 0.0861,
+      "stores": 27,
+      "per_hour": 313.5,
+      "per_hour_dark": 313.5
+     }
+    },
+    "decide_ms": {
+     "mean": 0.329,
+     "p50": 0.3219,
+     "p95": 0.9312,
+     "max": 2.1114,
+     "mean_changed": 0.4555,
+     "calls": 203
+    },
+    "stores_total": 71
+   },
+   "C5": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 9,
+      "hours": 0.0125,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "bar": {
+      "clean_checks": 51,
+      "hours": 0.0708,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 62,
+      "hours": 0.0861,
+      "stores": 5,
+      "per_hour": 58.1,
+      "per_hour_dark": 58.1
+     }
+    },
+    "decide_ms": {
+     "mean": 0.2431,
+     "p50": 0.1719,
+     "p95": 0.7818,
+     "max": 1.5519,
+     "mean_changed": 0.3295,
+     "calls": 203
+    },
+    "stores_total": 46
+   },
+   "C5fix": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 9,
+      "hours": 0.0125,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "bar": {
+      "clean_checks": 51,
+      "hours": 0.0708,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 62,
+      "hours": 0.0861,
+      "stores": 8,
+      "per_hour": 92.9,
+      "per_hour_dark": 92.9
+     }
+    },
+    "decide_ms": {
+     "mean": 0.3813,
+     "p50": 0.1937,
+     "p95": 1.3365,
+     "max": 2.7187,
+     "mean_changed": 0.6468,
+     "calls": 203
+    },
+    "stores_total": 46
+   }
+  },
+  "events": {
+   "total": 0,
+   "valid": 0,
+   "valid_alone": 0,
+   "by_kind_valid": {
+    "reply": 0,
+    "badge_on": 0,
+    "badge_off": 0
+   },
+   "unseen": 0,
+   "valid_focused": 0
+  },
+  "nuisance_diag": {
+   "idle": {
+    "clean_checks": 9,
+    "changed_frac": 0.0,
+    "moved16_median_when_changed": 0,
+    "moved16_max": 0,
+    "moved6_max": 0
+   },
+   "bar": {
+    "clean_checks": 51,
+    "changed_frac": 0.373,
+    "moved16_median_when_changed": 5,
+    "moved16_max": 5,
+    "moved6_max": 5
+   },
+   "block": {
+    "clean_checks": 62,
+    "changed_frac": 0.435,
+    "moved16_median_when_changed": 15,
+    "moved16_max": 242,
+    "moved6_max": 352
+   }
+  },
+  "sig_ms_p50": 3.652,
+  "dirty": {
+   "idle": {
+    "checks": 9,
+    "frames_per_check_p50": 0.0,
+    "union_area_p50": 0,
+    "union_area_max": 0,
+    "rect_area_sum_p50": 0,
+    "most_common_union": null,
+    "checks_with_no_dirty": 9
+   },
+   "bar": {
+    "checks": 51,
+    "frames_per_check_p50": 6.0,
+    "union_area_p50": 1892098,
+    "union_area_max": 1892098,
+    "rect_area_sum_p50": 1982010,
+    "most_common_union": [
+     0,
+     0,
+     1586,
+     1193
+    ],
+    "checks_with_no_dirty": 0
+   },
+   "block": {
+    "checks": 62,
+    "frames_per_check_p50": 6.0,
+    "union_area_p50": 1892098,
+    "union_area_max": 1892098,
+    "rect_area_sum_p50": 1911927,
+    "most_common_union": [
+     0,
+     0,
+     1586,
+     1193
+    ],
+    "checks_with_no_dirty": 0
+   }
+  },
+  "info": {
+   "app": "term",
+   "plan": "idle:60,bar:480,block:480",
+   "seed": 5,
+   "window_req": [
+    4141,
+    80,
+    1600,
+    1200
+   ],
+   "frame_interval_ms": 1000,
+   "interval_s": 5.0,
+   "focus_on_launch": true,
+   "window_closed": true
+  }
+ },
+ "term2": {
+  "checks": 132,
+  "clean_checks": 99,
+  "fg_ok_checks": 118,
+  "refocus_count": 0,
+  "monitor_off_checks": 0,
+  "glitch_checks": {
+   "idle": 0,
+   "bar": 0,
+   "block": 29
+  },
+  "candidates": {
+   "baseline": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "bar": {
+      "clean_checks": 6,
+      "hours": 0.0083,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     }
+    },
+    "decide_ms": {
+     "mean": 0.4225,
+     "p50": 0.4514,
+     "p95": 1.0552,
+     "max": 1.727,
+     "mean_changed": 0.5291,
+     "calls": 131
+    },
+    "stores_total": 41
+   },
+   "C2": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "bar": {
+      "clean_checks": 6,
+      "hours": 0.0083,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 16,
+      "per_hour": 235.1,
+      "per_hour_dark": 235.1
+     }
+    },
+    "decide_ms": {
+     "mean": 0.1039,
+     "p50": 0.1193,
+     "p95": 0.2237,
+     "max": 0.3812,
+     "mean_changed": 0.1578,
+     "calls": 131
+    },
+    "stores_total": 73
+   },
+   "C3": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "bar": {
+      "clean_checks": 6,
+      "hours": 0.0083,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 16,
+      "per_hour": 235.1,
+      "per_hour_dark": 235.1
+     }
+    },
+    "decide_ms": {
+     "mean": 0.2123,
+     "p50": 0.3128,
+     "p95": 0.4312,
+     "max": 0.6455,
+     "mean_changed": 0.3272,
+     "calls": 131
+    },
+    "stores_total": 73
+   },
+   "C5": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "bar": {
+      "clean_checks": 6,
+      "hours": 0.0083,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 3,
+      "per_hour": 44.1,
+      "per_hour_dark": 44.1
+     }
+    },
+    "decide_ms": {
+     "mean": 0.154,
+     "p50": 0.1194,
+     "p95": 0.3443,
+     "max": 0.7624,
+     "mean_changed": 0.2175,
+     "calls": 131
+    },
+    "stores_total": 55
+   },
+   "C5fix": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "bar": {
+      "clean_checks": 6,
+      "hours": 0.0083,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0
+     },
+     "block": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 4,
+      "per_hour": 58.8,
+      "per_hour_dark": 58.8
+     }
+    },
+    "decide_ms": {
+     "mean": 0.5196,
+     "p50": 0.2785,
+     "p95": 1.8617,
+     "max": 3.0609,
+     "mean_changed": 0.813,
+     "calls": 131
+    },
+    "stores_total": 55
+   }
+  },
+  "events": {
+   "total": 0,
+   "valid": 0,
+   "valid_alone": 0,
+   "by_kind_valid": {
+    "reply": 0,
+    "badge_on": 0,
+    "badge_off": 0
+   },
+   "unseen": 0,
+   "valid_focused": 0
+  },
+  "nuisance_diag": {
+   "bar": {
+    "clean_checks": 6,
+    "changed_frac": 0.667,
+    "moved16_median_when_changed": 5,
+    "moved16_max": 5,
+    "moved6_max": 5
+   },
+   "block": {
+    "clean_checks": 49,
+    "changed_frac": 0.327,
+    "moved16_median_when_changed": 15,
+    "moved16_max": 15,
+    "moved6_max": 15
+   }
+  },
+  "sig_ms_p50": 3.642,
+  "dirty": {
+   "bar": {
+    "checks": 6,
+    "frames_per_check_p50": 0.0,
+    "union_area_p50": 0,
+    "union_area_max": 0,
+    "rect_area_sum_p50": 0,
+    "most_common_union": null,
+    "checks_with_no_dirty": 6
+   },
+   "block": {
+    "checks": 49,
+    "frames_per_check_p50": 0.0,
+    "union_area_p50": 0,
+    "union_area_max": 0,
+    "rect_area_sum_p50": 0,
+    "most_common_union": null,
+    "checks_with_no_dirty": 49
+   }
+  },
+  "info": {
+   "app": "term",
+   "plan": "idle:30,block:600,bar:300",
+   "seed": 6,
+   "window_req": [
+    4143,
+    80,
+    1600,
+    1200
+   ],
+   "frame_interval_ms": 1000,
+   "interval_s": 5.0,
+   "focus_on_launch": true,
+   "window_closed": true
+  }
+ }
+}

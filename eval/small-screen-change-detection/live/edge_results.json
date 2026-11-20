@@ -1,0 +1,2761 @@
+{
+ "edge": {
+  "checks": 786,
+  "clean_checks": 692,
+  "fg_ok_checks": 709,
+  "refocus_count": 14,
+  "candidates": {
+   "baseline": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 20,
+       "miss1": 11,
+       "miss2": 9,
+       "recall1": 0.45,
+       "recall2": 0.55
+      },
+      "badge_on": {
+       "n": 6,
+       "miss1": 3,
+       "miss2": 2,
+       "recall1": 0.5,
+       "recall2": 0.6667
+      },
+      "badge_off": {
+       "n": 2,
+       "miss1": 2,
+       "miss2": 1,
+       "recall1": 0.0,
+       "recall2": 0.5
+      },
+      "reply_13px": {
+       "n": 8,
+       "miss1": 5,
+       "miss2": 5,
+       "recall1": 0.375,
+       "recall2": 0.375
+      },
+      "reply_14px": {
+       "n": 4,
+       "miss1": 2,
+       "miss2": 1,
+       "recall1": 0.5,
+       "recall2": 0.75
+      },
+      "reply_16px": {
+       "n": 8,
+       "miss1": 4,
+       "miss2": 3,
+       "recall1": 0.5,
+       "recall2": 0.625
+      },
+      "reply_dark": {
+       "n": 11,
+       "miss1": 7,
+       "miss2": 7,
+       "recall1": 0.3636,
+       "recall2": 0.3636
+      },
+      "reply_light": {
+       "n": 9,
+       "miss1": 4,
+       "miss2": 2,
+       "recall1": 0.5556,
+       "recall2": 0.7778
+      },
+      "reply_adjacent_recent": {
+       "n": 9,
+       "miss1": 4,
+       "miss2": 3,
+       "recall1": 0.5556,
+       "recall2": 0.6667
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 129,
+       "miss1": 58,
+       "miss2": 40,
+       "recall1": 0.5504,
+       "recall2": 0.6899
+      },
+      "badge_on": {
+       "n": 24,
+       "miss1": 6,
+       "miss2": 5,
+       "recall1": 0.75,
+       "recall2": 0.7917
+      },
+      "badge_off": {
+       "n": 19,
+       "miss1": 5,
+       "miss2": 2,
+       "recall1": 0.7368,
+       "recall2": 0.8947
+      },
+      "reply_13px": {
+       "n": 40,
+       "miss1": 25,
+       "miss2": 15,
+       "recall1": 0.375,
+       "recall2": 0.625
+      },
+      "reply_14px": {
+       "n": 47,
+       "miss1": 20,
+       "miss2": 15,
+       "recall1": 0.5745,
+       "recall2": 0.6809
+      },
+      "reply_16px": {
+       "n": 42,
+       "miss1": 13,
+       "miss2": 10,
+       "recall1": 0.6905,
+       "recall2": 0.7619
+      },
+      "reply_dark": {
+       "n": 61,
+       "miss1": 32,
+       "miss2": 21,
+       "recall1": 0.4754,
+       "recall2": 0.6557
+      },
+      "reply_light": {
+       "n": 68,
+       "miss1": 26,
+       "miss2": 19,
+       "recall1": 0.6176,
+       "recall2": 0.7206
+      },
+      "reply_adjacent_recent": {
+       "n": 78,
+       "miss1": 35,
+       "miss2": 24,
+       "recall1": 0.5513,
+       "recall2": 0.6923
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 149,
+       "miss1": 69,
+       "miss2": 49,
+       "recall1": 0.5369,
+       "recall2": 0.6711
+      },
+      "badge_on": {
+       "n": 30,
+       "miss1": 9,
+       "miss2": 7,
+       "recall1": 0.7,
+       "recall2": 0.7667
+      },
+      "badge_off": {
+       "n": 21,
+       "miss1": 7,
+       "miss2": 3,
+       "recall1": 0.6667,
+       "recall2": 0.8571
+      },
+      "reply_13px": {
+       "n": 48,
+       "miss1": 30,
+       "miss2": 20,
+       "recall1": 0.375,
+       "recall2": 0.5833
+      },
+      "reply_14px": {
+       "n": 51,
+       "miss1": 22,
+       "miss2": 16,
+       "recall1": 0.5686,
+       "recall2": 0.6863
+      },
+      "reply_16px": {
+       "n": 50,
+       "miss1": 17,
+       "miss2": 13,
+       "recall1": 0.66,
+       "recall2": 0.74
+      },
+      "reply_dark": {
+       "n": 72,
+       "miss1": 39,
+       "miss2": 28,
+       "recall1": 0.4583,
+       "recall2": 0.6111
+      },
+      "reply_light": {
+       "n": 77,
+       "miss1": 30,
+       "miss2": 21,
+       "recall1": 0.6104,
+       "recall2": 0.7273
+      },
+      "reply_adjacent_recent": {
+       "n": 87,
+       "miss1": 39,
+       "miss2": 27,
+       "recall1": 0.5517,
+       "recall2": 0.6897
+      }
+     }
+    },
+    "misses1": [
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ok",
+      "phase": "quiet",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "on",
+      "phase": "quiet",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "no",
+      "phase": "quiet",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 1,
+      "delay": 5
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "lol",
+      "phase": "quiet",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "ok",
+      "phase": "quiet",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 4,
+      "delay": 2
+     },
+     {
+      "kind": "badge_off",
+      "px": null,
+      "word": null,
+      "phase": "quiet",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "ok",
+      "phase": "quiet",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 4
+     },
+     {
+      "kind": "badge_off",
+      "px": null,
+      "word": null,
+      "phase": "quiet",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "mm",
+      "phase": "quiet",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 3
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "quiet",
+      "light": true,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "ou",
+      "phase": "quiet",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 6,
+      "delay": 4
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "lol",
+      "phase": "quiet",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "on",
+      "phase": "quiet",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "on",
+      "phase": "quiet",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 3
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "quiet",
+      "light": true,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 1
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "quiet",
+      "light": true,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "gg",
+      "phase": "events",
+      "light": false,
+      "adjacent": false,
+      "gap_checks": null,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "oui",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 1
+     },
+     {
+      "kind": "badge_off",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 2
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 2
+     },
+     {
+      "kind": "badge_off",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "no",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ou",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "oui",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "mm",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "mm",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "lol",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "on",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "lol",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "lol",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "gg",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ok",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 1,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "ok",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 1
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "non",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "lol",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 4,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "no",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "oui",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "no",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "badge_off",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "ou",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 6,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "ou",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ou",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "non",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 1,
+      "delay": 3
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "lol",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 9,
+      "delay": 3
+     },
+     {
+      "kind": "badge_off",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "mm",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 4,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "lol",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 4
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "ok",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "ok",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "ok",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": false,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "on",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "oui",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ok",
+      "phase": "events",
+      "light": false,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "badge_off",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": true,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 2
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": true,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "oui",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "non",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 1,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "on",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "no",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 5,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "on",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "on",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "lol",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "oui",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "on",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 1,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ok",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "no",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ok",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 7,
+      "delay": 2
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "word": null,
+      "phase": "events",
+      "light": true,
+      "adjacent": null,
+      "gap_checks": null,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "on",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ou",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ou",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 4,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "no",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "no",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "ou",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "no",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "oui",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "no",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "oui",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "word": "non",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 1
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "ou",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 1,
+      "delay": 2
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "word": "on",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 2,
+      "delay": 3
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "word": "gg",
+      "phase": "events",
+      "light": true,
+      "adjacent": true,
+      "gap_checks": 3,
+      "delay": 2
+     }
+    ],
+    "useless": {
+     "idle": {
+      "clean_checks": 4,
+      "hours": 0.0056,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_light": 0.0
+     },
+     "caret": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "ecaret": {
+      "clean_checks": 69,
+      "hours": 0.0958,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "clock": {
+      "clean_checks": 81,
+      "hours": 0.1125,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "spinner": {
+      "clean_checks": 75,
+      "hours": 0.1042,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "quiet": {
+      "clean_checks": 66,
+      "hours": 0.0917,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "events": {
+      "clean_checks": 348,
+      "hours": 0.4833,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     }
+    },
+    "decide_ms": {
+     "mean": 0.431,
+     "p50": 0.4283,
+     "p95": 0.7171,
+     "max": 2.0127,
+     "mean_changed": 0.4737,
+     "calls": 785
+    },
+    "stores_total": 177
+   },
+   "C2": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 20,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 6,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 2,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 8,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 4,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 8,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 11,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 9,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 9,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 129,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 24,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 19,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 40,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 47,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 42,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 61,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 68,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 78,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 149,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 30,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 21,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 48,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 51,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 50,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 72,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 77,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 87,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 4,
+      "hours": 0.0056,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_light": 0.0
+     },
+     "caret": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "ecaret": {
+      "clean_checks": 69,
+      "hours": 0.0958,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "clock": {
+      "clean_checks": 81,
+      "hours": 0.1125,
+      "stores": 37,
+      "per_hour": 328.9,
+      "per_hour_dark": 333.7,
+      "per_hour_light": 324.0
+     },
+     "spinner": {
+      "clean_checks": 75,
+      "hours": 0.1042,
+      "stores": 73,
+      "per_hour": 700.8,
+      "per_hour_dark": 699.4,
+      "per_hour_light": 702.0
+     },
+     "quiet": {
+      "clean_checks": 66,
+      "hours": 0.0917,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "events": {
+      "clean_checks": 348,
+      "hours": 0.4833,
+      "stores": 168,
+      "per_hour": 347.6,
+      "per_hour_dark": 351.9,
+      "per_hour_light": 343.1
+     }
+    },
+    "decide_ms": {
+     "mean": 0.1433,
+     "p50": 0.1627,
+     "p95": 0.2115,
+     "max": 0.4174,
+     "mean_changed": 0.1566,
+     "calls": 785
+    },
+    "stores_total": 547
+   },
+   "C3": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 20,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 6,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 2,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 8,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 4,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 8,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 11,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 9,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 9,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 129,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 24,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 19,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 40,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 47,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 42,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 61,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 68,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 78,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 149,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 30,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 21,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 48,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 51,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 50,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 72,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 77,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 87,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 4,
+      "hours": 0.0056,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_light": 0.0
+     },
+     "caret": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "ecaret": {
+      "clean_checks": 69,
+      "hours": 0.0958,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "clock": {
+      "clean_checks": 81,
+      "hours": 0.1125,
+      "stores": 40,
+      "per_hour": 355.6,
+      "per_hour_dark": 351.2,
+      "per_hour_light": 360.0
+     },
+     "spinner": {
+      "clean_checks": 75,
+      "hours": 0.1042,
+      "stores": 73,
+      "per_hour": 700.8,
+      "per_hour_dark": 699.4,
+      "per_hour_light": 702.0
+     },
+     "quiet": {
+      "clean_checks": 66,
+      "hours": 0.0917,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "events": {
+      "clean_checks": 348,
+      "hours": 0.4833,
+      "stores": 168,
+      "per_hour": 347.6,
+      "per_hour_dark": 351.9,
+      "per_hour_light": 343.1
+     }
+    },
+    "decide_ms": {
+     "mean": 0.3072,
+     "p50": 0.334,
+     "p95": 0.4348,
+     "max": 1.9744,
+     "mean_changed": 0.3352,
+     "calls": 785
+    },
+    "stores_total": 550
+   },
+   "C5": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 20,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 6,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 2,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 8,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 4,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 8,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 11,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 9,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 9,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 129,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 24,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 19,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 40,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 47,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 42,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 61,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 68,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 78,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 149,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 30,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 21,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 48,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 51,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 50,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 72,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 77,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 87,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 4,
+      "hours": 0.0056,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_light": 0.0
+     },
+     "caret": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "ecaret": {
+      "clean_checks": 69,
+      "hours": 0.0958,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "clock": {
+      "clean_checks": 81,
+      "hours": 0.1125,
+      "stores": 1,
+      "per_hour": 8.9,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 18.0
+     },
+     "spinner": {
+      "clean_checks": 75,
+      "hours": 0.1042,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "quiet": {
+      "clean_checks": 66,
+      "hours": 0.0917,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "events": {
+      "clean_checks": 348,
+      "hours": 0.4833,
+      "stores": 15,
+      "per_hour": 31.0,
+      "per_hour_dark": 20.2,
+      "per_hour_light": 42.4
+     }
+    },
+    "decide_ms": {
+     "mean": 0.2953,
+     "p50": 0.3029,
+     "p95": 0.582,
+     "max": 1.2164,
+     "mean_changed": 0.3373,
+     "calls": 785
+    },
+    "stores_total": 276
+   },
+   "C5fix": {
+    "recall": {
+     "quiet": {
+      "reply": {
+       "n": 20,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 6,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 2,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 8,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 4,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 8,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 11,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 9,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 9,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     },
+     "events": {
+      "reply": {
+       "n": 129,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 24,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 19,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 40,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 47,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 42,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 61,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 68,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 78,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     },
+     "events_caret": {
+      "reply": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_on": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "badge_off": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_13px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_14px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_16px": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_dark": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_light": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      },
+      "reply_adjacent_recent": {
+       "n": 0,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": null,
+       "recall2": null
+      }
+     },
+     "all": {
+      "reply": {
+       "n": 149,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_on": {
+       "n": 30,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "badge_off": {
+       "n": 21,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_13px": {
+       "n": 48,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_14px": {
+       "n": 51,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_16px": {
+       "n": 50,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_dark": {
+       "n": 72,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_light": {
+       "n": 77,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      },
+      "reply_adjacent_recent": {
+       "n": 87,
+       "miss1": 0,
+       "miss2": 0,
+       "recall1": 1.0,
+       "recall2": 1.0
+      }
+     }
+    },
+    "misses1": [],
+    "useless": {
+     "idle": {
+      "clean_checks": 4,
+      "hours": 0.0056,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_light": 0.0
+     },
+     "caret": {
+      "clean_checks": 49,
+      "hours": 0.0681,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "ecaret": {
+      "clean_checks": 69,
+      "hours": 0.0958,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "clock": {
+      "clean_checks": 81,
+      "hours": 0.1125,
+      "stores": 1,
+      "per_hour": 8.9,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 18.0
+     },
+     "spinner": {
+      "clean_checks": 75,
+      "hours": 0.1042,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "quiet": {
+      "clean_checks": 66,
+      "hours": 0.0917,
+      "stores": 0,
+      "per_hour": 0.0,
+      "per_hour_dark": 0.0,
+      "per_hour_light": 0.0
+     },
+     "events": {
+      "clean_checks": 348,
+      "hours": 0.4833,
+      "stores": 3,
+      "per_hour": 6.2,
+      "per_hour_dark": 4.0,
+      "per_hour_light": 8.5
+     }
+    },
+    "decide_ms": {
+     "mean": 0.3275,
+     "p50": 0.3235,
+     "p95": 0.5492,
+     "max": 2.0061,
+     "mean_changed": 0.3715,
+     "calls": 785
+    },
+    "stores_total": 261
+   }
+  },
+  "events": {
+   "total": 220,
+   "valid": 200,
+   "valid_alone": 200,
+   "by_kind_valid": {
+    "reply": 149,
+    "badge_on": 30,
+    "badge_off": 21
+   },
+   "unseen": 0,
+   "valid_focused": 0
+  },
+  "nuisance_diag": {
+   "idle": {
+    "clean_checks": 4,
+    "changed_frac": 0.0,
+    "moved16_median_when_changed": 0,
+    "moved16_max": 0,
+    "moved6_max": 0
+   },
+   "caret": {
+    "clean_checks": 49,
+    "changed_frac": 0.449,
+    "moved16_median_when_changed": 6,
+    "moved16_max": 6,
+    "moved6_max": 6
+   },
+   "ecaret": {
+    "clean_checks": 69,
+    "changed_frac": 0.522,
+    "moved16_median_when_changed": 7,
+    "moved16_max": 7,
+    "moved6_max": 7
+   },
+   "clock": {
+    "clean_checks": 81,
+    "changed_frac": 1.0,
+    "moved16_median_when_changed": 4,
+    "moved16_max": 13,
+    "moved6_max": 17
+   },
+   "spinner": {
+    "clean_checks": 75,
+    "changed_frac": 1.0,
+    "moved16_median_when_changed": 6,
+    "moved16_max": 8,
+    "moved6_max": 13
+   },
+   "quiet": {
+    "clean_checks": 66,
+    "changed_frac": 0.485,
+    "moved16_median_when_changed": 12,
+    "moved16_max": 37,
+    "moved6_max": 37
+   },
+   "events": {
+    "clean_checks": 348,
+    "changed_frac": 1.0,
+    "moved16_median_when_changed": 16,
+    "moved16_max": 3001,
+    "moved6_max": 3485
+   }
+  },
+  "sig_ms_p50": 3.458,
+  "dirty": {
+   "idle": {
+    "checks": 4,
+    "frames_per_check_p50": 0.0,
+    "union_area_p50": 0,
+    "union_area_max": 0,
+    "rect_area_sum_p50": 0,
+    "most_common_union": null,
+    "checks_with_no_dirty": 4
+   },
+   "caret": {
+    "checks": 49,
+    "frames_per_check_p50": 9.0,
+    "union_area_p50": 69,
+    "union_area_max": 1804360,
+    "rect_area_sum_p50": 621,
+    "most_common_union": [
+     350,
+     1132,
+     3,
+     23
+    ],
+    "checks_with_no_dirty": 0
+   },
+   "ecaret": {
+    "checks": 69,
+    "frames_per_check_p50": 9.0,
+    "union_area_p50": 96,
+    "union_area_max": 96,
+    "rect_area_sum_p50": 864,
+    "most_common_union": [
+     348,
+     1130,
+     4,
+     24
+    ],
+    "checks_with_no_dirty": 0
+   },
+   "clock": {
+    "checks": 81,
+    "frames_per_check_p50": 5.0,
+    "union_area_p50": 1155,
+    "union_area_max": 1892098,
+    "rect_area_sum_p50": 5775,
+    "most_common_union": [
+     1504,
+     94,
+     55,
+     21
+    ],
+    "checks_with_no_dirty": 0
+   },
+   "spinner": {
+    "checks": 75,
+    "frames_per_check_p50": 600.0,
+    "union_area_p50": 784,
+    "union_area_max": 784,
+    "rect_area_sum_p50": 410900,
+    "most_common_union": [
+     1448,
+     90,
+     28,
+     28
+    ],
+    "checks_with_no_dirty": 0
+   },
+   "quiet_marks": {
+    "n": 28,
+    "union_area_p50": 399,
+    "union_area_max": 690,
+    "contains_mark": 28,
+    "union_over_mark_p50": 1.3,
+    "no_dirty": 0,
+    "by_kind": {
+     "reply": 20,
+     "badge_on": 6,
+     "badge_off": 2
+    },
+    "examples": [
+     {
+      "kind": "reply",
+      "px": 14,
+      "union": [
+       335,
+       356,
+       19,
+       21
+      ],
+      "area": 399,
+      "rects": 1,
+      "contains_mark": true,
+      "union_over_mark": 1.4
+     },
+     {
+      "kind": "badge_on",
+      "px": null,
+      "union": [
+       282,
+       347,
+       18,
+       18
+      ],
+      "area": 324,
+      "rects": 1,
+      "contains_mark": true,
+      "union_over_mark": 1.3
+     },
+     {
+      "kind": "reply",
+      "px": 16,
+      "union": [
+       335,
+       383,
+       21,
+       23
+      ],
+      "area": 483,
+      "rects": 1,
+      "contains_mark": true,
+      "union_over_mark": 1.2
+     },
+     {
+      "kind": "reply",
+      "px": 14,
+      "union": [
+       334,
+       408,
+       27,
+       21
+      ],
+      "area": 567,
+      "rects": 1,
+      "contains_mark": true,
+      "union_over_mark": 1.2
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "union": [
+       332,
+       433,
+       18,
+       19
+      ],
+      "area": 342,
+      "rects": 1,
+      "contains_mark": true,
+      "union_over_mark": 1.3
+     },
+     {
+      "kind": "reply",
+      "px": 13,
+      "union": [
+       332,
+       461,
+       16,
+       19
+      ],
+      "area": 304,
+      "rects": 1,
+      "contains_mark": true,
+      "union_over_mark": 1.3
+     }
+    ]
+   }
+  },
+  "info": {
+   "app": "edge",
+   "plan": "idle:60,caret:420,ecaret:420,clock:420,spinner:420,quiet:360,events:1800",
+   "seed": 11,
+   "window_req": [
+    4140,
+    80,
+    1600,
+    1200
+   ],
+   "frame_interval_ms": 1000,
+   "interval_s": 5.0,
+   "focus_on_launch": true,
+   "window_closed": true
+  }
+ }
+}

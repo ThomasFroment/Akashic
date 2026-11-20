@@ -1,0 +1,328 @@
+{"kind": "load", "w": 1584, "h": 1105, "ow": 1600, "oh": 1200, "dpr": 1, "t": 1795140993465, "focus": true, "srv": 1795140993.4846287}
+{"kind": "phase", "name": "idle", "dur": 60, "t": 1795141001475, "focus": true, "srv": 1795141001.4766655}
+{"kind": "theme", "light": true, "t": 1795141031483, "focus": true, "srv": 1795141031.4845827}
+{"kind": "phase", "name": "caret", "dur": 420, "t": 1795141061477, "focus": true, "srv": 1795141061.4789212}
+{"kind": "win_blur", "t": 1795141109993, "focus": false, "srv": 1795141109.9949782}
+{"kind": "win_focus", "t": 1795141111970, "focus": true, "srv": 1795141111.9713974}
+{"kind": "win_blur", "t": 1795141131908, "focus": false, "srv": 1795141131.909663}
+{"kind": "win_focus", "t": 1795141131973, "focus": true, "srv": 1795141131.9754868}
+{"kind": "win_blur", "t": 1795141132272, "focus": false, "srv": 1795141132.2735064}
+{"kind": "win_focus", "t": 1795141132659, "focus": true, "srv": 1795141132.660355}
+{"kind": "win_blur", "t": 1795141133348, "focus": false, "srv": 1795141133.3496203}
+{"kind": "win_focus", "t": 1795141136974, "focus": true, "srv": 1795141136.9760056}
+{"kind": "win_blur", "t": 1795141151937, "focus": false, "srv": 1795141151.9393103}
+{"kind": "win_focus", "t": 1795141151977, "focus": true, "srv": 1795141151.979293}
+{"kind": "win_blur", "t": 1795141154384, "focus": false, "srv": 1795141154.3861072}
+{"kind": "win_focus", "t": 1795141156985, "focus": true, "srv": 1795141157.003268}
+{"kind": "win_blur", "t": 1795141157030, "focus": false, "srv": 1795141157.0317676}
+{"kind": "win_focus", "t": 1795141157059, "focus": true, "srv": 1795141157.0608828}
+{"kind": "theme", "light": true, "t": 1795141271490, "focus": true, "srv": 1795141271.491903}
+{"kind": "phase", "name": "ecaret", "dur": 420, "t": 1795141481483, "focus": true, "srv": 1795141481.4853234}
+{"kind": "theme", "light": true, "t": 1795141691494, "focus": true, "srv": 1795141691.4963174}
+{"kind": "win_blur", "t": 1795141893581, "focus": false, "srv": 1795141893.5842402}
+{"kind": "phase", "name": "clock", "dur": 420, "t": 1795141901487, "focus": false, "srv": 1795141901.488926}
+{"kind": "theme", "light": true, "t": 1795142111492, "focus": false, "srv": 1795142111.4938798}
+{"kind": "phase", "name": "spinner", "dur": 420, "t": 1795142321502, "focus": false, "srv": 1795142321.5038013}
+{"kind": "theme", "light": true, "t": 1795142531506, "focus": false, "srv": 1795142531.5082479}
+{"kind": "phase", "name": "quiet", "dur": 360, "t": 1795142741503, "focus": false, "srv": 1795142741.50495}
+{"kind": "reply", "word": "gg", "px": 13, "row": 0, "col": 0, "slot": 0, "rect": [329, 253, 15.3125, 17], "t": 1795142750788, "focus": false, "srv": 1795142750.7899165}
+{"kind": "reply", "word": "lol", "px": 16, "row": 1, "col": 0, "slot": 1, "rect": [329, 276, 17.125, 21], "t": 1795142762588, "focus": false, "srv": 1795142762.5904863}
+{"kind": "badge_on", "spot": 3, "rect": [46, 220, 16, 16], "t": 1795142769095, "focus": false, "srv": 1795142769.0983214}
+{"kind": "badge_on", "spot": 10, "rect": [278, 98, 16, 16], "t": 1795142778044, "focus": false, "srv": 1795142778.0460217}
+{"kind": "reply", "word": "ou", "px": 16, "row": 2, "col": 0, "slot": 2, "rect": [328, 305, 18.4375, 21], "t": 1795142787016, "focus": false, "srv": 1795142787.0177963}
+{"kind": "reply", "word": "mm", "px": 13, "row": 3, "col": 0, "slot": 3, "rect": [330, 331, 22.40625, 17], "t": 1795142797545, "focus": false, "srv": 1795142797.5467892}
+{"kind": "reply", "word": "ou", "px": 16, "row": 4, "col": 0, "slot": 4, "rect": [329, 355, 18.4375, 21], "t": 1795142808111, "focus": false, "srv": 1795142808.1127324}
+{"kind": "reply", "word": "gg", "px": 16, "row": 5, "col": 0, "slot": 5, "rect": [331, 383, 18.84375, 21], "t": 1795142818899, "focus": false, "srv": 1795142818.9015322}
+{"kind": "reply", "word": "ou", "px": 13, "row": 6, "col": 0, "slot": 6, "rect": [331, 408, 14.984375, 17], "t": 1795142832413, "focus": false, "srv": 1795142832.4153304}
+{"kind": "win_focus", "t": 1795142834367, "focus": true, "srv": 1795142834.368835}
+{"kind": "win_blur", "t": 1795142837136, "focus": false, "srv": 1795142837.1381865}
+{"kind": "badge_off", "spot": 3, "rect": [46, 220, 16, 16], "t": 1795142844380, "focus": false, "srv": 1795142844.38241}
+{"kind": "badge_on", "spot": 17, "rect": [278, 336, 16, 16], "t": 1795142856899, "focus": false, "srv": 1795142856.901204}
+{"kind": "reply", "word": "oui", "px": 16, "row": 7, "col": 0, "slot": 7, "rect": [329, 432, 22.3125, 21], "t": 1795142862886, "focus": false, "srv": 1795142862.8878765}
+{"kind": "reply", "word": "non", "px": 14, "row": 8, "col": 0, "slot": 8, "rect": [331, 460, 24.0625, 19], "t": 1795142870886, "focus": false, "srv": 1795142870.888296}
+{"kind": "reply", "word": "non", "px": 13, "row": 9, "col": 0, "slot": 9, "rect": [331, 484, 22.34375, 17], "t": 1795142876892, "focus": false, "srv": 1795142876.8944447}
+{"kind": "reply", "word": "ok", "px": 13, "row": 10, "col": 0, "slot": 10, "rect": [330, 513, 14.09375, 17], "t": 1795142887890, "focus": false, "srv": 1795142887.8922577}
+{"kind": "badge_on", "spot": 12, "rect": [278, 166, 16, 16], "t": 1795142895890, "focus": false, "srv": 1795142895.8919818}
+{"kind": "reply", "word": "ok", "px": 14, "row": 11, "col": 0, "slot": 11, "rect": [331, 537, 15.171875, 19], "t": 1795142904893, "focus": false, "srv": 1795142904.895187}
+{"kind": "reply", "word": "gg", "px": 16, "row": 12, "col": 0, "slot": 12, "rect": [329, 563, 18.84375, 21], "t": 1795142955896, "focus": false, "srv": 1795142955.8982139}
+{"kind": "theme", "light": true, "t": 1795142955896, "focus": false, "srv": 1795142955.8986764}
+{"kind": "badge_on", "spot": 19, "rect": [278, 404, 16, 16], "t": 1795143015899, "focus": false, "srv": 1795143015.9013133}
+{"kind": "reply", "word": "ou", "px": 13, "row": 13, "col": 0, "slot": 13, "rect": [331, 590, 14.984375, 17], "t": 1795143075897, "focus": false, "srv": 1795143075.8986053}
+{"kind": "reply", "word": "no", "px": 14, "row": 14, "col": 0, "slot": 14, "rect": [329, 616, 16.140625, 19], "t": 1795143135888, "focus": false, "srv": 1795143135.890422}
+{"kind": "phase", "name": "events", "dur": 1800, "t": 1795143135889, "focus": false, "srv": 1795143135.890861}
+{"kind": "win_focus", "t": 1795143136975, "focus": true, "srv": 1795143136.9774437}
+{"kind": "badge_on", "spot": 14, "rect": [278, 234, 16, 16], "t": 1795143143846, "focus": true, "srv": 1795143143.8478868}
+{"kind": "reply", "word": "ok", "px": 14, "row": 0, "col": 0, "slot": 0, "rect": [328, 253, 15.171875, 19], "t": 1795143157692, "focus": true, "srv": 1795143157.694318}
+{"kind": "reply", "word": "oui", "px": 16, "row": 1, "col": 0, "slot": 1, "rect": [331, 276, 22.3125, 21], "t": 1795143165838, "focus": true, "srv": 1795143165.8409443}
+{"kind": "reply", "word": "on", "px": 13, "row": 2, "col": 0, "slot": 2, "rect": [331, 302, 14.984375, 17], "t": 1795143171893, "focus": true, "srv": 1795143171.8947196}
+{"kind": "win_blur", "t": 1795143176043, "focus": false, "srv": 1795143176.0448303}
+{"kind": "win_focus", "t": 1795143176981, "focus": true, "srv": 1795143176.9832308}
+{"kind": "reply", "word": "lol", "px": 14, "row": 3, "col": 0, "slot": 3, "rect": [329, 330, 14.984375, 19], "t": 1795143177439, "focus": true, "srv": 1795143177.441017}
+{"kind": "win_blur", "t": 1795143179052, "focus": false, "srv": 1795143179.0542362}
+{"kind": "win_focus", "t": 1795143181972, "focus": true, "srv": 1795143181.9745662}
+{"kind": "win_blur", "t": 1795143188343, "focus": false, "srv": 1795143188.3454745}
+{"kind": "reply", "word": "no", "px": 16, "row": 4, "col": 0, "slot": 4, "rect": [330, 355, 18.4375, 21], "t": 1795143190806, "focus": false, "srv": 1795143190.8078327}
+{"kind": "win_focus", "t": 1795143191974, "focus": true, "srv": 1795143191.9765372}
+{"kind": "reply", "word": "ou", "px": 16, "row": 5, "col": 0, "slot": 5, "rect": [328, 383, 18.4375, 21], "t": 1795143201544, "focus": true, "srv": 1795143201.5551932}
+{"kind": "reply", "word": "no", "px": 14, "row": 6, "col": 0, "slot": 6, "rect": [329, 406, 16.140625, 19], "t": 1795143209531, "focus": true, "srv": 1795143209.5331974}
+{"kind": "reply", "word": "lol", "px": 13, "row": 7, "col": 0, "slot": 7, "rect": [330, 432, 13.921875, 17], "t": 1795143216800, "focus": true, "srv": 1795143216.802314}
+{"kind": "badge_on", "spot": 6, "rect": [46, 394, 16, 16], "t": 1795143229104, "focus": true, "srv": 1795143229.1059928}
+{"kind": "reply", "word": "on", "px": 16, "row": 8, "col": 0, "slot": 8, "rect": [329, 460, 18.4375, 21], "t": 1795143242098, "focus": true, "srv": 1795143242.1005356}
+{"kind": "reply", "word": "oui", "px": 13, "row": 9, "col": 0, "slot": 9, "rect": [331, 486, 18.125, 17], "t": 1795143249982, "focus": true, "srv": 1795143249.9840734}
+{"kind": "badge_on", "spot": 5, "rect": [46, 336, 16, 16], "t": 1795143257757, "focus": true, "srv": 1795143257.7591152}
+{"kind": "win_blur", "t": 1795143266868, "focus": false, "srv": 1795143266.8699882}
+{"kind": "win_focus", "t": 1795143266975, "focus": true, "srv": 1795143266.9769478}
+{"kind": "win_blur", "t": 1795143269046, "focus": false, "srv": 1795143269.0476396}
+{"kind": "reply", "word": "gg", "px": 14, "row": 10, "col": 0, "slot": 10, "rect": [329, 512, 16.5, 19], "t": 1795143271166, "focus": false, "srv": 1795143271.1678705}
+{"kind": "win_focus", "t": 1795143271973, "focus": true, "srv": 1795143271.9746647}
+{"kind": "reply", "word": "oui", "px": 16, "row": 11, "col": 0, "slot": 11, "rect": [328, 537, 22.3125, 21], "t": 1795143282058, "focus": true, "srv": 1795143282.0597005}
+{"kind": "reply", "word": "ok", "px": 13, "row": 12, "col": 0, "slot": 12, "rect": [328, 565, 14.09375, 17], "t": 1795143292941, "focus": true, "srv": 1795143292.9434164}
+{"kind": "badge_off", "spot": 6, "rect": [46, 394, 16, 16], "t": 1795143302533, "focus": true, "srv": 1795143302.5350015}
+{"kind": "badge_on", "spot": 1, "rect": [46, 104, 16, 16], "t": 1795143308650, "focus": true, "srv": 1795143308.6520112}
+{"kind": "reply", "word": "mm", "px": 14, "row": 13, "col": 0, "slot": 13, "rect": [330, 589, 24.125, 19], "t": 1795143314359, "focus": true, "srv": 1795143314.3605883}
+{"kind": "win_blur", "t": 1795143319864, "focus": false, "srv": 1795143319.865693}
+{"kind": "win_focus", "t": 1795143321973, "focus": true, "srv": 1795143321.9961643}
+{"kind": "reply", "word": "mm", "px": 16, "row": 14, "col": 0, "slot": 14, "rect": [328, 614, 27.5625, 21], "t": 1795143323625, "focus": true, "srv": 1795143323.6280663}
+{"kind": "badge_on", "spot": 8, "rect": [46, 510, 16, 16], "t": 1795143337159, "focus": true, "srv": 1795143337.1614623}
+{"kind": "reply", "word": "oui", "px": 13, "row": 15, "col": 0, "slot": 15, "rect": [331, 640, 18.125, 17], "t": 1795143348393, "focus": true, "srv": 1795143348.3944566}
+{"kind": "reply", "word": "oui", "px": 16, "row": 16, "col": 0, "slot": 16, "rect": [330, 667, 22.3125, 21], "t": 1795143356776, "focus": true, "srv": 1795143356.778253}
+{"kind": "reply", "word": "mm", "px": 16, "row": 17, "col": 0, "slot": 17, "rect": [331, 694, 27.5625, 21], "t": 1795143364693, "focus": true, "srv": 1795143364.6950204}
+{"kind": "reply", "word": "non", "px": 16, "row": 18, "col": 0, "slot": 18, "rect": [329, 719, 27.484375, 21], "t": 1795143373377, "focus": true, "srv": 1795143373.3787613}
+{"kind": "reply", "word": "no", "px": 13, "row": 19, "col": 0, "slot": 19, "rect": [329, 746, 14.984375, 17], "t": 1795143380719, "focus": true, "srv": 1795143380.7208965}
+{"kind": "reply", "word": "ou", "px": 13, "row": 20, "col": 0, "slot": 20, "rect": [331, 772, 14.984375, 17], "t": 1795143388319, "focus": true, "srv": 1795143388.3208926}
+{"kind": "reply", "word": "lol", "px": 16, "row": 21, "col": 0, "slot": 21, "rect": [330, 796, 17.125, 21], "t": 1795143400477, "focus": true, "srv": 1795143400.479164}
+{"kind": "reply", "word": "ok", "px": 14, "row": 22, "col": 0, "slot": 22, "rect": [328, 824, 15.171875, 19], "t": 1795143406711, "focus": true, "srv": 1795143406.7139368}
+{"kind": "reply", "word": "gg", "px": 13, "row": 23, "col": 0, "slot": 23, "rect": [330, 850, 15.3125, 17], "t": 1795143412244, "focus": true, "srv": 1795143412.246241}
+{"kind": "reply", "word": "mm", "px": 13, "row": 24, "col": 0, "slot": 24, "rect": [329, 875, 22.40625, 17], "t": 1795143422178, "focus": true, "srv": 1795143422.1796558}
+{"kind": "reply", "word": "on", "px": 16, "row": 25, "col": 0, "slot": 25, "rect": [329, 901, 18.4375, 21], "t": 1795143434635, "focus": true, "srv": 1795143434.637836}
+{"kind": "win_blur", "t": 1795143436340, "focus": false, "srv": 1795143436.3423643}
+{"kind": "win_focus", "t": 1795143436972, "focus": true, "srv": 1795143436.9736001}
+{"kind": "reply", "word": "lol", "px": 13, "row": 26, "col": 0, "slot": 26, "rect": [331, 928, 13.921875, 17], "t": 1795143442111, "focus": true, "srv": 1795143442.11373}
+{"kind": "reply", "word": "on", "px": 14, "row": 27, "col": 0, "slot": 27, "rect": [329, 952, 16.140625, 19], "t": 1795143449945, "focus": true, "srv": 1795143449.9472787}
+{"kind": "reply", "word": "lol", "px": 13, "row": 0, "col": 1, "slot": 28, "rect": [549, 250, 13.921875, 17], "t": 1795143460504, "focus": true, "srv": 1795143460.5054643}
+{"kind": "reply", "word": "lol", "px": 16, "row": 1, "col": 1, "slot": 29, "rect": [551, 278, 17.125, 21], "t": 1795143467521, "focus": true, "srv": 1795143467.5227325}
+{"kind": "reply", "word": "ou", "px": 14, "row": 2, "col": 1, "slot": 30, "rect": [549, 305, 16.140625, 19], "t": 1795143476175, "focus": true, "srv": 1795143476.177277}
+{"kind": "reply", "word": "gg", "px": 13, "row": 3, "col": 1, "slot": 31, "rect": [549, 328, 15.3125, 17], "t": 1795143489054, "focus": true, "srv": 1795143489.0565805}
+{"kind": "reply", "word": "gg", "px": 16, "row": 4, "col": 1, "slot": 32, "rect": [548, 357, 18.84375, 21], "t": 1795143499921, "focus": true, "srv": 1795143499.9244606}
+{"kind": "reply", "word": "ok", "px": 16, "row": 5, "col": 1, "slot": 33, "rect": [550, 380, 17.328125, 21], "t": 1795143508947, "focus": true, "srv": 1795143508.9489894}
+{"kind": "reply", "word": "non", "px": 16, "row": 6, "col": 1, "slot": 34, "rect": [548, 408, 27.484375, 21], "t": 1795143518113, "focus": true, "srv": 1795143518.1156476}
+{"kind": "reply", "word": "lol", "px": 14, "row": 7, "col": 1, "slot": 35, "rect": [548, 433, 14.984375, 19], "t": 1795143528864, "focus": true, "srv": 1795143528.8661427}
+{"kind": "badge_off", "spot": 1, "rect": [46, 104, 16, 16], "t": 1795143539939, "focus": true, "srv": 1795143539.9406955}
+{"kind": "reply", "word": "mm", "px": 13, "row": 8, "col": 1, "slot": 36, "rect": [548, 460, 22.40625, 17], "t": 1795143547679, "focus": true, "srv": 1795143547.6810358}
+{"kind": "reply", "word": "gg", "px": 16, "row": 9, "col": 1, "slot": 37, "rect": [548, 487, 18.84375, 21], "t": 1795143557248, "focus": true, "srv": 1795143557.2495072}
+{"kind": "reply", "word": "mm", "px": 14, "row": 10, "col": 1, "slot": 38, "rect": [548, 511, 24.125, 19], "t": 1795143565573, "focus": true, "srv": 1795143565.5749958}
+{"kind": "reply", "word": "on", "px": 13, "row": 11, "col": 1, "slot": 39, "rect": [548, 537, 14.984375, 17], "t": 1795143578321, "focus": true, "srv": 1795143578.322446}
+{"kind": "reply", "word": "on", "px": 13, "row": 12, "col": 1, "slot": 40, "rect": [548, 562, 14.984375, 17], "t": 1795143592032, "focus": true, "srv": 1795143592.0337641}
+{"kind": "badge_off", "spot": 5, "rect": [46, 336, 16, 16], "t": 1795143600532, "focus": true, "srv": 1795143600.533783}
+{"kind": "reply", "word": "gg", "px": 14, "row": 13, "col": 1, "slot": 41, "rect": [548, 589, 16.5, 19], "t": 1795143613866, "focus": true, "srv": 1795143613.8675423}
+{"kind": "reply", "word": "ou", "px": 13, "row": 14, "col": 1, "slot": 42, "rect": [551, 616, 14.984375, 17], "t": 1795143623606, "focus": true, "srv": 1795143623.6076539}
+{"kind": "win_blur", "t": 1795143624055, "focus": false, "srv": 1795143624.0570683}
+{"kind": "win_focus", "t": 1795143626975, "focus": true, "srv": 1795143626.9769573}
+{"kind": "badge_off", "spot": 14, "rect": [278, 234, 16, 16], "t": 1795143631099, "focus": true, "srv": 1795143631.1009128}
+{"kind": "win_blur", "t": 1795143632355, "focus": false, "srv": 1795143632.357358}
+{"kind": "win_focus", "t": 1795143636973, "focus": true, "srv": 1795143636.974858}
+{"kind": "win_blur", "t": 1795143640822, "focus": false, "srv": 1795143640.8244147}
+{"kind": "win_focus", "t": 1795143641972, "focus": true, "srv": 1795143641.974046}
+{"kind": "win_blur", "t": 1795143643189, "focus": false, "srv": 1795143643.1905718}
+{"kind": "reply", "word": "gg", "px": 16, "row": 15, "col": 1, "slot": 43, "rect": [550, 641, 18.84375, 21], "t": 1795143645041, "focus": false, "srv": 1795143645.0433867}
+{"kind": "win_focus", "t": 1795143646972, "focus": true, "srv": 1795143646.9740183}
+{"kind": "win_blur", "t": 1795143649577, "focus": false, "srv": 1795143649.5787141}
+{"kind": "win_focus", "t": 1795143651970, "focus": true, "srv": 1795143651.9718723}
+{"kind": "win_blur", "t": 1795143654893, "focus": false, "srv": 1795143654.8949609}
+{"kind": "win_focus", "t": 1795143656973, "focus": true, "srv": 1795143656.9754503}
+{"kind": "reply", "word": "mm", "px": 13, "row": 16, "col": 1, "slot": 44, "rect": [551, 669, 22.40625, 17], "t": 1795143658392, "focus": true, "srv": 1795143658.3935897}
+{"kind": "win_blur", "t": 1795143661463, "focus": false, "srv": 1795143661.4651692}
+{"kind": "win_focus", "t": 1795143661976, "focus": true, "srv": 1795143661.9778996}
+{"kind": "win_blur", "t": 1795143662997, "focus": false, "srv": 1795143662.999049}
+{"kind": "win_focus", "t": 1795143666971, "focus": true, "srv": 1795143666.9729934}
+{"kind": "badge_on", "spot": 9, "rect": [278, 64, 16, 16], "t": 1795143667639, "focus": true, "srv": 1795143667.6405847}
+{"kind": "win_blur", "t": 1795143670110, "focus": false, "srv": 1795143670.111838}
+{"kind": "win_focus", "t": 1795143671971, "focus": true, "srv": 1795143671.972671}
+{"kind": "reply", "word": "lol", "px": 13, "row": 17, "col": 1, "slot": 45, "rect": [549, 694, 13.921875, 17], "t": 1795143679590, "focus": true, "srv": 1795143679.5917842}
+{"kind": "badge_on", "spot": 2, "rect": [46, 162, 16, 16], "t": 1795143689792, "focus": true, "srv": 1795143689.793447}
+{"kind": "win_blur", "t": 1795143692349, "focus": false, "srv": 1795143692.350589}
+{"kind": "win_focus", "t": 1795143696971, "focus": true, "srv": 1795143696.9732625}
+{"kind": "badge_off", "spot": 9, "rect": [278, 64, 16, 16], "t": 1795143697551, "focus": true, "srv": 1795143697.5523384}
+{"kind": "reply", "word": "oui", "px": 13, "row": 18, "col": 1, "slot": 46, "rect": [550, 720, 18.125, 17], "t": 1795143709376, "focus": true, "srv": 1795143709.377888}
+{"kind": "win_blur", "t": 1795143715722, "focus": false, "srv": 1795143715.7243009}
+{"kind": "win_focus", "t": 1795143716972, "focus": true, "srv": 1795143716.9744666}
+{"kind": "badge_off", "spot": 8, "rect": [46, 510, 16, 16], "t": 1795143718660, "focus": true, "srv": 1795143718.661508}
+{"kind": "win_blur", "t": 1795143721306, "focus": false, "srv": 1795143721.3083153}
+{"kind": "win_focus", "t": 1795143721976, "focus": true, "srv": 1795143721.9779465}
+{"kind": "win_blur", "t": 1795143722866, "focus": false, "srv": 1795143722.8680685}
+{"kind": "win_focus", "t": 1795143726972, "focus": true, "srv": 1795143726.973487}
+{"kind": "badge_off", "spot": 2, "rect": [46, 162, 16, 16], "t": 1795143727810, "focus": true, "srv": 1795143727.8114772}
+{"kind": "reply", "word": "oui", "px": 13, "row": 19, "col": 1, "slot": 47, "rect": [551, 746, 18.125, 17], "t": 1795143735343, "focus": true, "srv": 1795143735.3452523}
+{"kind": "reply", "word": "ok", "px": 13, "row": 20, "col": 1, "slot": 48, "rect": [550, 770, 14.09375, 17], "t": 1795143741143, "focus": true, "srv": 1795143741.144855}
+{"kind": "win_blur", "t": 1795143741567, "focus": false, "srv": 1795143741.5688305}
+{"kind": "win_focus", "t": 1795143741720, "focus": true, "srv": 1795143741.7215278}
+{"kind": "win_blur", "t": 1795143747267, "focus": false, "srv": 1795143747.2686906}
+{"kind": "reply", "word": "ok", "px": 16, "row": 21, "col": 1, "slot": 49, "rect": [550, 796, 17.328125, 21], "t": 1795143751119, "focus": false, "srv": 1795143751.1204708}
+{"kind": "win_focus", "t": 1795143751974, "focus": true, "srv": 1795143751.9760258}
+{"kind": "win_blur", "t": 1795143752122, "focus": false, "srv": 1795143752.1241884}
+{"kind": "win_focus", "t": 1795143752652, "focus": true, "srv": 1795143752.6532168}
+{"kind": "reply", "word": "ok", "px": 16, "row": 22, "col": 1, "slot": 50, "rect": [551, 822, 17.328125, 21], "t": 1795143762394, "focus": true, "srv": 1795143762.3960927}
+{"kind": "reply", "word": "ok", "px": 16, "row": 23, "col": 1, "slot": 51, "rect": [548, 848, 17.328125, 21], "t": 1795143771933, "focus": true, "srv": 1795143771.9346242}
+{"kind": "reply", "word": "no", "px": 13, "row": 24, "col": 1, "slot": 52, "rect": [550, 876, 14.984375, 17], "t": 1795143783486, "focus": true, "srv": 1795143783.4899666}
+{"kind": "win_blur", "t": 1795143790681, "focus": false, "srv": 1795143790.6829827}
+{"kind": "win_focus", "t": 1795143791975, "focus": true, "srv": 1795143791.9769578}
+{"kind": "win_blur", "t": 1795143792632, "focus": false, "srv": 1795143792.6338153}
+{"kind": "badge_on", "spot": 5, "rect": [46, 336, 16, 16], "t": 1795143792753, "focus": false, "srv": 1795143792.7549195}
+{"kind": "win_focus", "t": 1795143796980, "focus": true, "srv": 1795143796.9819734}
+{"kind": "win_blur", "t": 1795143797072, "focus": false, "srv": 1795143797.074036}
+{"kind": "win_focus", "t": 1795143797638, "focus": true, "srv": 1795143797.639331}
+{"kind": "win_blur", "t": 1795143797658, "focus": false, "srv": 1795143797.6592605}
+{"kind": "win_focus", "t": 1795143797698, "focus": true, "srv": 1795143797.6994102}
+{"kind": "win_blur", "t": 1795143799579, "focus": false, "srv": 1795143799.5809278}
+{"kind": "win_focus", "t": 1795143801970, "focus": true, "srv": 1795143801.9720387}
+{"kind": "win_blur", "t": 1795143804992, "focus": false, "srv": 1795143804.9942455}
+{"kind": "badge_off", "spot": 5, "rect": [46, 336, 16, 16], "t": 1795143805678, "focus": false, "srv": 1795143805.6801317}
+{"kind": "win_focus", "t": 1795143806970, "focus": true, "srv": 1795143806.9721265}
+{"kind": "win_blur", "t": 1795143807614, "focus": false, "srv": 1795143807.6160555}
+{"kind": "win_focus", "t": 1795143811970, "focus": true, "srv": 1795143811.9719713}
+{"kind": "reply", "word": "gg", "px": 14, "row": 25, "col": 1, "slot": 53, "rect": [548, 903, 16.5, 19], "t": 1795143814220, "focus": true, "srv": 1795143814.222163}
+{"kind": "win_blur", "t": 1795143814285, "focus": false, "srv": 1795143814.2861931}
+{"kind": "win_focus", "t": 1795143816972, "focus": true, "srv": 1795143816.9736547}
+{"kind": "win_blur", "t": 1795143818239, "focus": false, "srv": 1795143818.2409308}
+{"kind": "win_focus", "t": 1795143821976, "focus": true, "srv": 1795143821.9787667}
+{"kind": "win_blur", "t": 1795143823139, "focus": false, "srv": 1795143823.1410499}
+{"kind": "reply", "word": "oui", "px": 13, "row": 26, "col": 1, "slot": 54, "rect": [549, 926, 18.125, 17], "t": 1795143826879, "focus": false, "srv": 1795143826.8809752}
+{"kind": "win_focus", "t": 1795143826975, "focus": true, "srv": 1795143826.9777055}
+{"kind": "win_blur", "t": 1795143827858, "focus": false, "srv": 1795143827.859497}
+{"kind": "win_focus", "t": 1795143831972, "focus": true, "srv": 1795143831.9743803}
+{"kind": "win_blur", "t": 1795143832893, "focus": false, "srv": 1795143832.8946424}
+{"kind": "win_focus", "t": 1795143836973, "focus": true, "srv": 1795143836.9748201}
+{"kind": "win_blur", "t": 1795143837401, "focus": false, "srv": 1795143837.4024105}
+{"kind": "reply", "word": "lol", "px": 16, "row": 27, "col": 1, "slot": 55, "rect": [549, 952, 17.125, 21], "t": 1795143838443, "focus": false, "srv": 1795143838.4448814}
+{"kind": "win_focus", "t": 1795143841969, "focus": true, "srv": 1795143841.9714525}
+{"kind": "badge_on", "spot": 17, "rect": [278, 336, 16, 16], "t": 1795143850471, "focus": true, "srv": 1795143850.4728289}
+{"kind": "reply", "word": "ok", "px": 16, "row": 0, "col": 2, "slot": 56, "rect": [769, 251, 17.328125, 21], "t": 1795143862796, "focus": true, "srv": 1795143862.7980316}
+{"kind": "reply", "word": "no", "px": 13, "row": 1, "col": 2, "slot": 57, "rect": [769, 277, 14.984375, 17], "t": 1795143876222, "focus": true, "srv": 1795143876.2234635}
+{"kind": "reply", "word": "no", "px": 16, "row": 2, "col": 2, "slot": 58, "rect": [769, 304, 18.4375, 21], "t": 1795143885838, "focus": true, "srv": 1795143885.8395884}
+{"kind": "reply", "word": "mm", "px": 13, "row": 3, "col": 2, "slot": 59, "rect": [770, 328, 22.40625, 17], "t": 1795143898006, "focus": true, "srv": 1795143898.0074751}
+{"kind": "badge_off", "spot": 17, "rect": [278, 336, 16, 16], "t": 1795143904755, "focus": true, "srv": 1795143904.757438}
+{"kind": "reply", "word": "gg", "px": 13, "row": 4, "col": 2, "slot": 60, "rect": [771, 355, 15.3125, 17], "t": 1795143914773, "focus": true, "srv": 1795143914.7748752}
+{"kind": "reply", "word": "gg", "px": 14, "row": 5, "col": 2, "slot": 61, "rect": [769, 381, 16.5, 19], "t": 1795143920689, "focus": true, "srv": 1795143920.691607}
+{"kind": "reply", "word": "ok", "px": 16, "row": 6, "col": 2, "slot": 62, "rect": [770, 407, 17.328125, 21], "t": 1795143930906, "focus": true, "srv": 1795143930.9082375}
+{"kind": "reply", "word": "ok", "px": 16, "row": 7, "col": 2, "slot": 63, "rect": [770, 433, 17.328125, 21], "t": 1795143938998, "focus": true, "srv": 1795143939.0000405}
+{"kind": "win_blur", "t": 1795143951088, "focus": false, "srv": 1795143951.0904868}
+{"kind": "win_focus", "t": 1795143951973, "focus": true, "srv": 1795143951.9752293}
+{"kind": "reply", "word": "on", "px": 14, "row": 8, "col": 2, "slot": 64, "rect": [770, 461, 16.140625, 19], "t": 1795143952145, "focus": true, "srv": 1795143952.1480663}
+{"kind": "win_blur", "t": 1795143954180, "focus": false, "srv": 1795143954.1835625}
+{"kind": "win_focus", "t": 1795143956975, "focus": true, "srv": 1795143956.9779298}
+{"kind": "win_blur", "t": 1795143957845, "focus": false, "srv": 1795143957.8473713}
+{"kind": "reply", "word": "gg", "px": 14, "row": 9, "col": 2, "slot": 65, "rect": [771, 486, 16.5, 19], "t": 1795143961052, "focus": false, "srv": 1795143961.054373}
+{"kind": "win_focus", "t": 1795143961971, "focus": true, "srv": 1795143961.9724312}
+{"kind": "win_blur", "t": 1795143966565, "focus": false, "srv": 1795143966.567557}
+{"kind": "win_focus", "t": 1795143966972, "focus": true, "srv": 1795143966.9737687}
+{"kind": "win_blur", "t": 1795143968311, "focus": false, "srv": 1795143968.3134484}
+{"kind": "reply", "word": "ok", "px": 14, "row": 10, "col": 2, "slot": 66, "rect": [770, 513, 15.171875, 19], "t": 1795143971874, "focus": false, "srv": 1795143971.8764052}
+{"kind": "win_focus", "t": 1795143971992, "focus": true, "srv": 1795143971.9943411}
+{"kind": "win_blur", "t": 1795143972474, "focus": false, "srv": 1795143972.4766428}
+{"kind": "win_focus", "t": 1795143976971, "focus": true, "srv": 1795143976.973138}
+{"kind": "reply", "word": "ou", "px": 13, "row": 11, "col": 2, "slot": 67, "rect": [768, 536, 14.984375, 17], "t": 1795143985595, "focus": true, "srv": 1795143985.5973837}
+{"kind": "badge_on", "spot": 20, "rect": [278, 438, 16, 16], "t": 1795143998986, "focus": true, "srv": 1795143998.9883773}
+{"kind": "badge_on", "spot": 18, "rect": [278, 370, 16, 16], "t": 1795144006980, "focus": true, "srv": 1795144006.98261}
+{"kind": "reply", "word": "mm", "px": 16, "row": 12, "col": 2, "slot": 68, "rect": [768, 564, 27.5625, 21], "t": 1795144020775, "focus": true, "srv": 1795144020.7770452}
+{"kind": "badge_on", "spot": 5, "rect": [46, 336, 16, 16], "t": 1795144033101, "focus": true, "srv": 1795144033.1050122}
+{"kind": "theme", "light": true, "t": 1795144035890, "focus": true, "srv": 1795144035.8924503}
+{"kind": "reply", "word": "ou", "px": 14, "row": 13, "col": 2, "slot": 69, "rect": [769, 591, 16.140625, 19], "t": 1795144042384, "focus": true, "srv": 1795144042.3859518}
+{"kind": "reply", "word": "oui", "px": 13, "row": 14, "col": 2, "slot": 70, "rect": [768, 616, 18.125, 17], "t": 1795144055551, "focus": true, "srv": 1795144055.5525641}
+{"kind": "win_blur", "t": 1795144058109, "focus": false, "srv": 1795144058.111497}
+{"kind": "win_focus", "t": 1795144061976, "focus": true, "srv": 1795144061.9782317}
+{"kind": "win_blur", "t": 1795144062671, "focus": false, "srv": 1795144062.6726844}
+{"kind": "win_focus", "t": 1795144066979, "focus": true, "srv": 1795144066.982142}
+{"kind": "reply", "word": "ou", "px": 16, "row": 15, "col": 2, "slot": 71, "rect": [768, 642, 18.4375, 21], "t": 1795144069294, "focus": true, "srv": 1795144069.2972715}
+{"kind": "reply", "word": "mm", "px": 14, "row": 16, "col": 2, "slot": 72, "rect": [768, 669, 24.125, 19], "t": 1795144081368, "focus": true, "srv": 1795144081.3702404}
+{"kind": "reply", "word": "oui", "px": 16, "row": 17, "col": 2, "slot": 73, "rect": [770, 693, 22.3125, 21], "t": 1795144095186, "focus": true, "srv": 1795144095.188341}
+{"kind": "badge_on", "spot": 14, "rect": [278, 234, 16, 16], "t": 1795144102418, "focus": true, "srv": 1795144102.4202092}
+{"kind": "reply", "word": "lol", "px": 16, "row": 18, "col": 2, "slot": 74, "rect": [770, 718, 17.125, 21], "t": 1795144109543, "focus": true, "srv": 1795144109.545458}
+{"kind": "reply", "word": "ok", "px": 16, "row": 19, "col": 2, "slot": 75, "rect": [768, 745, 17.328125, 21], "t": 1795144120152, "focus": true, "srv": 1795144120.1540627}
+{"kind": "reply", "word": "mm", "px": 14, "row": 20, "col": 2, "slot": 76, "rect": [768, 770, 24.125, 19], "t": 1795144126008, "focus": true, "srv": 1795144126.0102334}
+{"kind": "reply", "word": "gg", "px": 13, "row": 21, "col": 2, "slot": 77, "rect": [769, 798, 15.3125, 17], "t": 1795144134500, "focus": true, "srv": 1795144134.5022867}
+{"kind": "reply", "word": "gg", "px": 16, "row": 22, "col": 2, "slot": 78, "rect": [770, 824, 18.84375, 21], "t": 1795144142152, "focus": true, "srv": 1795144142.1543264}
+{"kind": "reply", "word": "on", "px": 13, "row": 23, "col": 2, "slot": 79, "rect": [770, 850, 14.984375, 17], "t": 1795144151811, "focus": true, "srv": 1795144151.8130546}
+{"kind": "reply", "word": "no", "px": 13, "row": 24, "col": 2, "slot": 80, "rect": [768, 875, 14.984375, 17], "t": 1795144162678, "focus": true, "srv": 1795144162.6798623}
+{"kind": "win_blur", "t": 1795144164722, "focus": false, "srv": 1795144164.724409}
+{"kind": "win_focus", "t": 1795144166971, "focus": true, "srv": 1795144166.972656}
+{"kind": "reply", "word": "ok", "px": 13, "row": 25, "col": 2, "slot": 81, "rect": [770, 902, 14.09375, 17], "t": 1795144171904, "focus": true, "srv": 1795144171.9082327}
+{"kind": "reply", "word": "gg", "px": 14, "row": 26, "col": 2, "slot": 82, "rect": [768, 927, 16.5, 19], "t": 1795144183529, "focus": true, "srv": 1795144183.533288}
+{"kind": "reply", "word": "lol", "px": 13, "row": 27, "col": 2, "slot": 83, "rect": [771, 952, 13.921875, 17], "t": 1795144192545, "focus": true, "srv": 1795144192.5473673}
+{"kind": "reply", "word": "ok", "px": 14, "row": 0, "col": 3, "slot": 84, "rect": [988, 253, 15.171875, 19], "t": 1795144201278, "focus": true, "srv": 1795144201.2803907}
+{"kind": "reply", "word": "mm", "px": 13, "row": 1, "col": 3, "slot": 85, "rect": [988, 277, 22.40625, 17], "t": 1795144211840, "focus": true, "srv": 1795144211.841536}
+{"kind": "reply", "word": "lol", "px": 13, "row": 2, "col": 3, "slot": 86, "rect": [990, 304, 13.921875, 17], "t": 1795144218031, "focus": true, "srv": 1795144218.0332713}
+{"kind": "reply", "word": "no", "px": 14, "row": 3, "col": 3, "slot": 87, "rect": [988, 331, 16.140625, 19], "t": 1795144230305, "focus": true, "srv": 1795144230.3105583}
+{"kind": "reply", "word": "ou", "px": 16, "row": 4, "col": 3, "slot": 88, "rect": [988, 354, 18.4375, 21], "t": 1795144243830, "focus": true, "srv": 1795144243.8316724}
+{"kind": "reply", "word": "gg", "px": 14, "row": 5, "col": 3, "slot": 89, "rect": [990, 380, 16.5, 19], "t": 1795144250230, "focus": true, "srv": 1795144250.2317593}
+{"kind": "reply", "word": "oui", "px": 16, "row": 6, "col": 3, "slot": 90, "rect": [991, 408, 22.3125, 21], "t": 1795144263014, "focus": true, "srv": 1795144263.0154414}
+{"kind": "reply", "word": "ou", "px": 14, "row": 7, "col": 3, "slot": 91, "rect": [991, 435, 16.140625, 19], "t": 1795144271189, "focus": true, "srv": 1795144271.1909888}
+{"kind": "reply", "word": "lol", "px": 13, "row": 8, "col": 3, "slot": 92, "rect": [988, 459, 13.921875, 17], "t": 1795144283430, "focus": true, "srv": 1795144283.431987}
+{"kind": "badge_off", "spot": 20, "rect": [278, 438, 16, 16], "t": 1795144295305, "focus": true, "srv": 1795144295.3074377}
+{"kind": "reply", "word": "mm", "px": 14, "row": 9, "col": 3, "slot": 93, "rect": [989, 485, 24.125, 19], "t": 1795144303513, "focus": true, "srv": 1795144303.5155983}
+{"kind": "badge_on", "spot": 4, "rect": [46, 278, 16, 16], "t": 1795144312714, "focus": true, "srv": 1795144312.7162654}
+{"kind": "reply", "word": "lol", "px": 14, "row": 10, "col": 3, "slot": 94, "rect": [990, 513, 14.984375, 19], "t": 1795144325573, "focus": true, "srv": 1795144325.5748954}
+{"kind": "reply", "word": "mm", "px": 13, "row": 11, "col": 3, "slot": 95, "rect": [989, 536, 22.40625, 17], "t": 1795144333456, "focus": true, "srv": 1795144333.4577239}
+{"kind": "reply", "word": "non", "px": 13, "row": 12, "col": 3, "slot": 96, "rect": [989, 564, 22.34375, 17], "t": 1795144344223, "focus": true, "srv": 1795144344.2255971}
+{"kind": "reply", "word": "ok", "px": 13, "row": 13, "col": 3, "slot": 97, "rect": [989, 589, 14.09375, 17], "t": 1795144352473, "focus": true, "srv": 1795144352.4756982}
+{"kind": "reply", "word": "on", "px": 14, "row": 14, "col": 3, "slot": 98, "rect": [989, 617, 16.140625, 19], "t": 1795144358365, "focus": true, "srv": 1795144358.3672085}
+{"kind": "badge_off", "spot": 4, "rect": [46, 278, 16, 16], "t": 1795144365604, "focus": true, "srv": 1795144365.6062376}
+{"kind": "badge_on", "spot": 19, "rect": [278, 404, 16, 16], "t": 1795144378982, "focus": true, "srv": 1795144378.984433}
+{"kind": "reply", "word": "gg", "px": 14, "row": 15, "col": 3, "slot": 99, "rect": [990, 643, 16.5, 19], "t": 1795144390566, "focus": true, "srv": 1795144390.5681245}
+{"kind": "reply", "word": "non", "px": 16, "row": 16, "col": 3, "slot": 100, "rect": [988, 669, 27.484375, 21], "t": 1795144403716, "focus": true, "srv": 1795144403.7185123}
+{"kind": "reply", "word": "mm", "px": 16, "row": 17, "col": 3, "slot": 101, "rect": [991, 693, 27.5625, 21], "t": 1795144410482, "focus": true, "srv": 1795144410.4839003}
+{"kind": "reply", "word": "non", "px": 14, "row": 18, "col": 3, "slot": 102, "rect": [988, 718, 24.0625, 19], "t": 1795144416991, "focus": true, "srv": 1795144416.9936922}
+{"kind": "reply", "word": "no", "px": 16, "row": 19, "col": 3, "slot": 103, "rect": [990, 747, 18.4375, 21], "t": 1795144428609, "focus": true, "srv": 1795144428.6123166}
+{"kind": "badge_off", "spot": 18, "rect": [278, 370, 16, 16], "t": 1795144441884, "focus": true, "srv": 1795144441.886958}
+{"kind": "reply", "word": "on", "px": 16, "row": 20, "col": 3, "slot": 104, "rect": [988, 771, 18.4375, 21], "t": 1795144454467, "focus": true, "srv": 1795144454.4691844}
+{"kind": "reply", "word": "on", "px": 13, "row": 21, "col": 3, "slot": 105, "rect": [989, 799, 14.984375, 17], "t": 1795144468268, "focus": true, "srv": 1795144468.269713}
+{"kind": "reply", "word": "ok", "px": 14, "row": 22, "col": 3, "slot": 106, "rect": [989, 824, 15.171875, 19], "t": 1795144481409, "focus": true, "srv": 1795144481.4119284}
+{"kind": "reply", "word": "mm", "px": 14, "row": 23, "col": 3, "slot": 107, "rect": [989, 849, 24.125, 19], "t": 1795144492569, "focus": true, "srv": 1795144492.5717242}
+{"kind": "badge_on", "spot": 10, "rect": [278, 98, 16, 16], "t": 1795144498740, "focus": true, "srv": 1795144498.7727072}
+{"kind": "reply", "word": "no", "px": 16, "row": 24, "col": 3, "slot": 108, "rect": [990, 874, 18.4375, 21], "t": 1795144506502, "focus": true, "srv": 1795144506.5424066}
+{"kind": "badge_off", "spot": 19, "rect": [278, 404, 16, 16], "t": 1795144512010, "focus": true, "srv": 1795144512.030866}
+{"kind": "reply", "word": "mm", "px": 14, "row": 25, "col": 3, "slot": 109, "rect": [989, 900, 24.125, 19], "t": 1795144525200, "focus": true, "srv": 1795144525.2322059}
+{"kind": "reply", "word": "no", "px": 14, "row": 26, "col": 3, "slot": 110, "rect": [988, 926, 16.140625, 19], "t": 1795144532377, "focus": true, "srv": 1795144532.396349}
+{"kind": "reply", "word": "lol", "px": 14, "row": 27, "col": 3, "slot": 111, "rect": [990, 952, 14.984375, 19], "t": 1795144538036, "focus": true, "srv": 1795144538.073011}
+{"kind": "reply", "word": "non", "px": 14, "row": 0, "col": 4, "slot": 112, "rect": [1209, 252, 24.0625, 19], "t": 1795144550653, "focus": true, "srv": 1795144550.7052865}
+{"kind": "reply", "word": "non", "px": 13, "row": 1, "col": 4, "slot": 113, "rect": [1211, 278, 22.34375, 17], "t": 1795144556195, "focus": true, "srv": 1795144556.2251883}
+{"kind": "reply", "word": "oui", "px": 13, "row": 2, "col": 4, "slot": 114, "rect": [1211, 305, 18.125, 17], "t": 1795144565970, "focus": true, "srv": 1795144565.9901469}
+{"kind": "reply", "word": "ok", "px": 14, "row": 3, "col": 4, "slot": 115, "rect": [1209, 331, 15.171875, 19], "t": 1795144571653, "focus": true, "srv": 1795144571.6761355}
+{"kind": "reply", "word": "lol", "px": 16, "row": 4, "col": 4, "slot": 116, "rect": [1211, 356, 17.125, 21], "t": 1795144582778, "focus": true, "srv": 1795144582.8171628}
+{"kind": "reply", "word": "mm", "px": 13, "row": 5, "col": 4, "slot": 117, "rect": [1210, 382, 22.40625, 17], "t": 1795144589937, "focus": true, "srv": 1795144589.9743476}
+{"kind": "reply", "word": "non", "px": 13, "row": 6, "col": 4, "slot": 118, "rect": [1209, 409, 22.34375, 17], "t": 1795144599987, "focus": true, "srv": 1795144600.0336256}
+{"kind": "badge_off", "spot": 14, "rect": [278, 234, 16, 16], "t": 1795144608612, "focus": true, "srv": 1795144608.6757836}
+{"kind": "badge_on", "spot": 1, "rect": [46, 104, 16, 16], "t": 1795144617329, "focus": true, "srv": 1795144617.3483152}
+{"kind": "badge_on", "spot": 15, "rect": [278, 268, 16, 16], "t": 1795144625287, "focus": true, "srv": 1795144625.2950342}
+{"kind": "reply", "word": "non", "px": 14, "row": 7, "col": 4, "slot": 119, "rect": [1210, 434, 24.0625, 19], "t": 1795144638737, "focus": true, "srv": 1795144638.7773232}
+{"kind": "reply", "word": "oui", "px": 14, "row": 8, "col": 4, "slot": 120, "rect": [1208, 461, 19.53125, 19], "t": 1795144644413, "focus": true, "srv": 1795144644.4566934}
+{"kind": "reply", "word": "lol", "px": 14, "row": 9, "col": 4, "slot": 121, "rect": [1211, 484, 14.984375, 19], "t": 1795144653738, "focus": true, "srv": 1795144653.7790232}
+{"kind": "reply", "word": "oui", "px": 16, "row": 10, "col": 4, "slot": 122, "rect": [1208, 511, 22.3125, 21], "t": 1795144664956, "focus": true, "srv": 1795144665.002867}
+{"kind": "reply", "word": "ok", "px": 16, "row": 11, "col": 4, "slot": 123, "rect": [1211, 537, 17.328125, 21], "t": 1795144678802, "focus": true, "srv": 1795144678.833434}
+{"kind": "reply", "word": "non", "px": 14, "row": 12, "col": 4, "slot": 124, "rect": [1209, 564, 24.0625, 19], "t": 1795144686422, "focus": true, "srv": 1795144686.4241204}
+{"kind": "reply", "word": "gg", "px": 14, "row": 13, "col": 4, "slot": 125, "rect": [1210, 590, 16.5, 19], "t": 1795144692019, "focus": true, "srv": 1795144692.0560856}
+{"kind": "reply", "word": "no", "px": 13, "row": 14, "col": 4, "slot": 126, "rect": [1210, 617, 14.984375, 17], "t": 1795144705272, "focus": true, "srv": 1795144705.3086517}
+{"kind": "reply", "word": "mm", "px": 16, "row": 15, "col": 4, "slot": 127, "rect": [1209, 640, 27.5625, 21], "t": 1795144711767, "focus": true, "srv": 1795144711.8068984}
+{"kind": "reply", "word": "on", "px": 16, "row": 16, "col": 4, "slot": 128, "rect": [1209, 666, 18.4375, 21], "t": 1795144719306, "focus": true, "srv": 1795144719.3171334}
+{"kind": "reply", "word": "lol", "px": 14, "row": 17, "col": 4, "slot": 129, "rect": [1208, 694, 14.984375, 19], "t": 1795144732498, "focus": true, "srv": 1795144732.532061}
+{"kind": "reply", "word": "mm", "px": 13, "row": 18, "col": 4, "slot": 130, "rect": [1211, 720, 22.40625, 17], "t": 1795144738920, "focus": true, "srv": 1795144738.9530706}
+{"kind": "reply", "word": "oui", "px": 13, "row": 19, "col": 4, "slot": 131, "rect": [1208, 747, 18.125, 17], "t": 1795144749897, "focus": true, "srv": 1795144749.9188714}
+{"kind": "reply", "word": "ou", "px": 16, "row": 20, "col": 4, "slot": 132, "rect": [1210, 770, 18.4375, 21], "t": 1795144763074, "focus": true, "srv": 1795144763.1016524}
+{"kind": "reply", "word": "no", "px": 13, "row": 21, "col": 4, "slot": 133, "rect": [1209, 797, 14.984375, 17], "t": 1795144773116, "focus": true, "srv": 1795144773.1480095}
+{"kind": "reply", "word": "ou", "px": 16, "row": 22, "col": 4, "slot": 134, "rect": [1209, 824, 18.4375, 21], "t": 1795144782930, "focus": true, "srv": 1795144782.9662213}
+{"kind": "reply", "word": "ok", "px": 16, "row": 23, "col": 4, "slot": 135, "rect": [1209, 848, 17.328125, 21], "t": 1795144791033, "focus": true, "srv": 1795144791.0503895}
+{"kind": "reply", "word": "oui", "px": 13, "row": 24, "col": 4, "slot": 136, "rect": [1209, 874, 18.125, 17], "t": 1795144801891, "focus": true, "srv": 1795144801.930029}
+{"kind": "reply", "word": "lol", "px": 13, "row": 25, "col": 4, "slot": 137, "rect": [1209, 901, 13.921875, 17], "t": 1795144809075, "focus": true, "srv": 1795144809.1099212}
+{"kind": "badge_off", "spot": 15, "rect": [278, 268, 16, 16], "t": 1795144814966, "focus": true, "srv": 1795144814.998607}
+{"kind": "badge_off", "spot": 10, "rect": [278, 98, 16, 16], "t": 1795144823342, "focus": true, "srv": 1795144823.3822918}
+{"kind": "reply", "word": "ok", "px": 13, "row": 26, "col": 4, "slot": 138, "rect": [1209, 927, 14.09375, 17], "t": 1795144834283, "focus": true, "srv": 1795144834.3196833}
+{"kind": "reply", "word": "ou", "px": 13, "row": 27, "col": 4, "slot": 139, "rect": [1211, 954, 14.984375, 17], "t": 1795144840309, "focus": true, "srv": 1795144840.3190367}
+{"kind": "reset", "t": 1795144852009, "focus": true, "srv": 1795144852.0343788}
+{"kind": "reply", "word": "ou", "px": 16, "row": 0, "col": 0, "slot": 0, "rect": [329, 253, 18.4375, 21], "t": 1795144858551, "focus": true, "srv": 1795144858.552797}
+{"kind": "reply", "word": "non", "px": 16, "row": 1, "col": 0, "slot": 1, "rect": [329, 278, 27.484375, 21], "t": 1795144869992, "focus": true, "srv": 1795144870.0084536}
+{"kind": "reply", "word": "non", "px": 16, "row": 2, "col": 0, "slot": 2, "rect": [329, 305, 27.484375, 21], "t": 1795144877274, "focus": true, "srv": 1795144877.3098817}
+{"kind": "reply", "word": "mm", "px": 16, "row": 3, "col": 0, "slot": 3, "rect": [329, 329, 27.5625, 21], "t": 1795144882921, "focus": true, "srv": 1795144882.9443204}
+{"kind": "badge_off", "spot": 5, "rect": [46, 336, 16, 16], "t": 1795144892306, "focus": true, "srv": 1795144892.4101596}
+{"kind": "badge_on", "spot": 5, "rect": [46, 336, 16, 16], "t": 1795144900651, "focus": true, "srv": 1795144900.6797438}
+{"kind": "reply", "word": "non", "px": 13, "row": 4, "col": 0, "slot": 4, "rect": [328, 356, 22.34375, 17], "t": 1795144914543, "focus": true, "srv": 1795144914.5781894}
+{"kind": "reply", "word": "on", "px": 14, "row": 5, "col": 0, "slot": 5, "rect": [328, 383, 16.140625, 19], "t": 1795144920052, "focus": true, "srv": 1795144920.0550487}
+{"kind": "win_blur", "t": 1795144922415, "focus": false, "srv": 1795144922.4472897}

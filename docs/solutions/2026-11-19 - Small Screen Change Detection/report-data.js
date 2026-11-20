@@ -1,6 +1,7 @@
 window.REPORT = {
   title: "Small Screen Change Detection",
   date: "2026-11-19",
+  revised: "2026-11-20",
   depth: "full",
   context: "Python 3.14, numpy 2.5.4, Pillow 13.0.0, Windows 11 26200, Ryzen 7 7800X3D; Akashic `capture/imaging.py`",
   problem: "Decide when a captured screen frame changed enough to store, so a one-word chat reply, a notification badge or a short line of small text is kept while a blinking caret, a cursor and a seconds clock are not.",
@@ -24,7 +25,7 @@ window.REPORT = {
   answer: {
     text: "**C5**: today's test OR exact clusters of the few moved pixels (≥ 3 wide, ≥ 2 high), held back where the previous checks show a ticker and capped for exact A-B-A toggles. It misses 0 of 442,368 word placements and 0 badges, never fires on a 1-2 px bar caret, stores a seconds clock 7 times an hour, a spinner 0 and a block caret 8, and costs +0.03 ms (compare 0.65-0.79 ms against today's 1.23-1.32 ms) and 2.6 MB per 4K monitor [1]. On 10 minutes of the real desktop it added the fewest stores of the built candidates (+5 primary, +9 right, unlabelled) [2]. No prior art found; nearest: Stauffer-Grimson multi-modal models [3]."
   },
-  bestFit: "C5",
+  bestFit: "C5 Live on real Edge, Chrome and Windows Terminal windows: 1/356 replies missed at the first check (today 131), 0 caret, clock, spinner or cursor stores per hour, 54/h useless stores while replies arrive with a clock and spinner running (8/h with the C5fix map refresh), compare 0.35-0.38 ms vs today 0.52-0.63 ms [9].",
 
   metrics: [
     { key: "extra_ms", label: "Extra compare", unit: "ms", limit: 3, budget: true },
@@ -40,6 +41,7 @@ window.REPORT = {
   reference: { src: "ref.png", label: "Synthetic 4K pair: a one-word reply and a caret" },
   captureColumns: ["Misses per positive", "Fires per negative", "4K timing", "Sequences, stores per hour"],
   figures: [
+    { src: "fig-live.png", title: "Live real windows (2026-11-20)", caption: "Edge, Chrome and Windows Terminal through WGC on the 1440p monitor: C5 misses 1/356 replies at the first check, 0 nuisance stores; busy phase 54/h, 8/h with C5fix." },
     { src: "baseline.png", title: "Today's test on the same harness", caption: "Misses every one-word reply and badge in every placement; fires on nothing small." }
   ],
 
@@ -163,6 +165,7 @@ window.REPORT = {
     { name: "WGC dirty regions", reason: "Report the app's redraw, not the changed pixels (earlier spike)." }
   ],
   caveats: [
+    "The live check used one synthetic page and one terminal at 1440p, 5 s checks on a single window; real apps, ClearType, 4K and 15 s side-monitor checks were not tested; clean hours are short.",
     "Placement numbers come from Pillow grayscale Segoe UI text on a plain background: no ClearType, no hinting, never over existing text.",
     "The 10-minute real-desktop replay has no labels and checks every monitor at 5 s (Akashic checks side monitors at 15 s); its extra stores are an upper bound on added useless frames.",
     "The quality harness's M1.1 and M1.2 were not rerun with C5: production code stays unchanged during the audit.",
@@ -171,6 +174,7 @@ window.REPORT = {
     "The earlier four-grid sweep and sparse-path timings were WEAK and re-measured here; the Stauffer-Grimson text was read through pdftotext by one researcher only."
   ],
   sources: [
+    { n: 9, title: "Live real-window check", url: "eval/small-screen-change-detection/live/", tier: 1, version: "2026-11-20" },
     { n: 1, title: "Synthetic harness and candidates (local)", url: "_dev/invent/screen-change-small-text/", tier: 1, version: "2026-11-19" },
     { n: 2, title: "Real-desktop replay, counts only (local)", url: "_dev/invent/screen-change-small-text/harness/live_replay.py", tier: 1, version: "2026-11-19" },
     { n: 3, title: "Stauffer and Grimson, Adaptive background mixture models, CVPR 1999", url: "https://www.cse.buffalo.edu/courses/cse725/peter/Stauffer_1999.pdf", tier: 1, version: "1999" },
