@@ -340,6 +340,12 @@ its assets, truth logs, scorer output and baselines at the end of each session.
     0.23-0.33; CPU separation RTF 1.7.
   - P3 = P1 + gated separation on every output stream (for same-app overlap, discord+discord
     0.459 under P1).
+  - User answers (2026-11-20, after the report):
+    - The FR/EN language split counts as in scope for the speech fix (relaxes non-goal #139 for
+      this study), so C6 + language split (or C1 + language split) is the route to carry into
+      Phase 5.
+    - A real Discord call with a video playing cannot be recorded now; the Communications-category
+      check stays open (see Next).
 
 ## Harness commands
 
@@ -401,3 +407,5 @@ stay in `eval\quality\local\` (gitignored).
 - Untested until standard: exclusive-fullscreen re-entry, the Outer Wilds launch (confirm the Steam
   launch arguments once by hand), real-app launches beyond smoke's.
 - Attended run with the user present (lock, sleep, default-output change, UAC).
+- Attended: a short real Discord call with a video playing, to check that a Communications-category
+  call lands in the residual and no stem picks it up (overlapping-speech study's main caveat).
