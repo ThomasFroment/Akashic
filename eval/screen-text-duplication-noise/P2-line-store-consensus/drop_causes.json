@@ -1,0 +1,20 @@
+{
+ "smoke": {
+  "captured": 136,
+  "dropped": 0
+ },
+ "standard": {
+  "captured": 692,
+  "dropped": 2,
+  "why|canonical_garbage_cut|term": 2
+ },
+ "day": {
+  "captured": 3552,
+  "dropped": 9,
+  "why|minority_other_line_same_truth_text|page": 2,
+  "why|canonical_garbage_cut|term": 1,
+  "why|minority_other_line_diff_truth_text|term": 2,
+  "why|canonical_garbage_cut|page": 2,
+  "why|minority_other_line_diff_truth_text|page": 2
+ }
+}

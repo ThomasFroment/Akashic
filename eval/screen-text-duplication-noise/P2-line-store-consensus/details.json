@@ -1,0 +1,303 @@
+{
+ "candidate": "C:\\Users\\thoma\\Documents\\Akashic\\_dev\\invent\\ocr-text-duplication-noise\\P2-line-store-consensus\\cand.py",
+ "smoke": {
+  "run": "20261118-smoke-s11-target-2241",
+  "span_h": 0.08740888888888888,
+  "rows_in": 102,
+  "m32": 0.0018206053512793004,
+  "m33": 0.6802325581395349,
+  "m33_n": 172,
+  "m31": {
+   "all": {
+    "cer": 0.24355073234793004,
+    "n": 78
+   },
+   "source=ocr": {
+    "cer": 0.23524217030943848,
+    "n": 56
+   },
+   "source=ocr_deferred": {
+    "cer": 0.5293995987099988,
+    "n": 11
+   },
+   "source=uia": {
+    "cer": 0.0,
+    "n": 11
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 136,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0070891281995778994
+   },
+   "pages": {
+    "captured": 136,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0070891281995778994
+   },
+   "term": {
+    "captured": 0,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   }
+  },
+  "link": {
+   "lines": 633,
+   "exact": 0.8688783570300158,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 83,
+   "truth_valid": 0.9877300613496932,
+   "truth_n": 163
+  },
+  "noise": {
+   "tokens": 5156,
+   "unknown": 310,
+   "share": 0.06012412723041117,
+   "garbled_share": 0.02017067494181536
+  },
+  "fts_kb": 27.4970703125,
+  "text_kb": 31.03515625,
+  "docs": 11,
+  "lines": 727,
+  "crowding": {
+   "nonce": {
+    "queries": 172,
+    "found": 117,
+    "dup_same_window": 0.0,
+    "dup_same_sighting": 0.0,
+    "mean_hits": 1.0
+   },
+   "word": {
+    "queries": 200,
+    "found": 112,
+    "dup_same_window": 0.015037593984962405,
+    "dup_same_sighting": 0.015037593984962405,
+    "mean_hits": 1.1875
+   }
+  },
+  "timing": {
+   "defer_s": 0.09262999997008592,
+   "defer_pct": 0.029437001058272075,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "runtime_s": 2.154732900002273
+ },
+ "standard": {
+  "run": "20261119-standard-s21-target-1818",
+  "span_h": 1.1185619444444443,
+  "rows_in": 1513,
+  "m32": 0.011358473421172195,
+  "m33": 0.80248833592535,
+  "m33_n": 643,
+  "m31": {
+   "all": {
+    "cer": 0.18522009841103163,
+    "n": 862
+   },
+   "source=ocr": {
+    "cer": 0.23388474712001908,
+    "n": 587
+   },
+   "source=uia": {
+    "cer": 0.011487735808662497,
+    "n": 201
+   },
+   "source=ocr_deferred": {
+    "cer": 0.2710857212610394,
+    "n": 74
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 691,
+    "dropped": 2,
+    "rate": 0.002894356005788712,
+    "char_rate": 0.007960950080515297
+   },
+   "pages": {
+    "captured": 559,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.004806319596459503
+   },
+   "term": {
+    "captured": 132,
+    "dropped": 2,
+    "rate": 0.015151515151515152,
+    "char_rate": 0.025287506534239414
+   }
+  },
+  "link": {
+   "lines": 3277,
+   "exact": 0.8791577662496185,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 396,
+   "truth_valid": 0.9322222222222222,
+   "truth_n": 900
+  },
+  "noise": {
+   "tokens": 29325,
+   "unknown": 1008,
+   "share": 0.03437340153452685,
+   "garbled_share": 0.015515771526001705
+  },
+  "fts_kb": 107.8525390625,
+  "text_kb": 173.6982421875,
+  "docs": 33,
+  "lines": 3669,
+  "crowding": {
+   "nonce": {
+    "queries": 598,
+    "found": 488,
+    "dup_same_window": 0.0,
+    "dup_same_sighting": 0.0,
+    "mean_hits": 1.0
+   },
+   "word": {
+    "queries": 200,
+    "found": 142,
+    "dup_same_window": 0.02280130293159609,
+    "dup_same_sighting": 0.006514657980456026,
+    "mean_hits": 2.1619718309859155
+   }
+  },
+  "timing": {
+   "defer_s": 0.8278562999912538,
+   "defer_pct": 0.020558547023081318,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "runtime_s": 13.386172799975611
+ },
+ "day": {
+  "run": "20261119-day-s31-target-0547",
+  "span_h": 7.10516,
+  "rows_in": 8820,
+  "m32": 0.03664658590854626,
+  "m33": 0.8299572039942938,
+  "m33_n": 3505,
+  "m31": {
+   "all": {
+    "cer": 0.1958335201812375,
+    "n": 2379
+   },
+   "source=ocr": {
+    "cer": 0.2010949064686942,
+    "n": 1618
+   },
+   "source=uia": {
+    "cer": 0.009979223110681962,
+    "n": 515
+   },
+   "source=ocr_deferred": {
+    "cer": 0.5503133574911204,
+    "n": 246
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 3550,
+    "dropped": 9,
+    "rate": 0.0025352112676056337,
+    "char_rate": 0.005529208986181846
+   },
+   "pages": {
+    "captured": 2986,
+    "dropped": 6,
+    "rate": 0.0020093770931011385,
+    "char_rate": 0.004626974026206822
+   },
+   "term": {
+    "captured": 564,
+    "dropped": 3,
+    "rate": 0.005319148936170213,
+    "char_rate": 0.011524888696972855
+   }
+  },
+  "link": {
+   "lines": 19547,
+   "exact": 0.8635596255179823,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 2667,
+   "truth_valid": 0.8519035280047837,
+   "truth_n": 5017
+  },
+  "noise": {
+   "tokens": 201752,
+   "unknown": 6439,
+   "share": 0.03191542091280384,
+   "garbled_share": 0.016812720567825845
+  },
+  "fts_kb": 592.89453125,
+  "text_kb": 1159.9716796875,
+  "docs": 121,
+  "lines": 22310,
+  "crowding": {
+   "nonce": {
+    "queries": 3249,
+    "found": 2728,
+    "dup_same_window": 0.0021945866861741038,
+    "dup_same_sighting": 0.0,
+    "mean_hits": 1.002199413489736
+   },
+   "word": {
+    "queries": 200,
+    "found": 199,
+    "dup_same_window": 0.11578947368421053,
+    "dup_same_sighting": 0.005847953216374269,
+    "mean_hits": 4.296482412060302
+   }
+  },
+  "timing": {
+   "defer_s": 4.619067399966298,
+   "defer_pct": 0.01805834460826239,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "runtime_s": 70.67848469997989
+ },
+ "synthetic": {
+  "timing": {
+   "defer_s": 0.6688026999763679,
+   "defer_pct": 0.022458530966030864,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "m32": 0.005126138683190096,
+  "drop_content": 0.012030075187969926,
+  "n_content": 665,
+  "drop_content_by_scenario": {
+   "chat": 4,
+   "table": 3,
+   "hud": 1
+  },
+  "drop_vcontent": 0.02586206896551724,
+  "n_vcontent": 116,
+  "drop_vcontent_by_scenario": {
+   "table": 3
+  },
+  "dup_per_unit": 2.0639269406392695,
+  "link_valid": 1.0,
+  "chrome_chars": 8289,
+  "noise_share": 0.05994683827644096,
+  "tokens": 28592,
+  "kept_lines": 3112
+ },
+ "runtime_s": 94.76627690001624
+}

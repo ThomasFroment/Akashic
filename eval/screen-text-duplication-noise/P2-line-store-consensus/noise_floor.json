@@ -1,0 +1,47 @@
+{
+ "smoke": {
+  "counts": {
+   "tok": 5225,
+   "unk": 311,
+   "unk_ocr": 213,
+   "unk_ocr_garbled": 81,
+   "unk_uia": 98,
+   "unk_uia_garbled": 23
+  },
+  "share": 0.05952153110047847,
+  "x": 1.1481685616949298,
+  "oracle_no_garbled_x": 0.7797351753891477,
+  "oracle_no_ocr_unknown_x": 0.37717818843514395,
+  "baseline_share": 0.05184041184041184
+ },
+ "standard": {
+  "counts": {
+   "tok": 29680,
+   "unk": 1045,
+   "unk_ocr": 881,
+   "unk_ocr_garbled": 417,
+   "unk_uia": 164,
+   "unk_uia_garbled": 55
+  },
+  "share": 0.0352088948787062,
+  "x": 0.734450156308339,
+  "oracle_no_garbled_x": 0.4092255450194431,
+  "oracle_no_ocr_unknown_x": 0.11878904038347841,
+  "baseline_share": 0.04793912095503007
+ },
+ "day": {
+  "counts": {
+   "tok": 205664,
+   "unk": 6736,
+   "unk_ocr": 6421,
+   "unk_ocr_garbled": 3327,
+   "unk_uia": 315,
+   "unk_uia_garbled": 184
+  },
+  "share": 0.03275245059903532,
+  "x": 0.8422256288236097,
+  "oracle_no_garbled_x": 0.41023638901451814,
+  "oracle_no_ocr_unknown_x": 0.04065482856606417,
+  "baseline_share": 0.03888797666343015
+ }
+}

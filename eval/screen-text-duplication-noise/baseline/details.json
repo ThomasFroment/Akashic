@@ -1,0 +1,297 @@
+{
+ "candidate": "C:\\Users\\thoma\\Documents\\Akashic\\_dev\\invent\\ocr-text-duplication-noise\\baseline\\cand.py",
+ "smoke": {
+  "run": "20261118-smoke-s11-target-2241",
+  "span_h": 0.08740888888888888,
+  "rows_in": 102,
+  "m32": 0.8632496865422123,
+  "m33": 0.6802325581395349,
+  "m33_n": 172,
+  "m31": {
+   "all": {
+    "cer": 0.22885890286595,
+    "n": 78
+   },
+   "source=ocr": {
+    "cer": 0.2187319515022608,
+    "n": 56
+   },
+   "source=ocr_deferred": {
+    "cer": 0.5092731944924995,
+    "n": 11
+   },
+   "source=uia": {
+    "cer": 0.0,
+    "n": 11
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 136,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   },
+   "pages": {
+    "captured": 136,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   },
+   "term": {
+    "captured": 0,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   }
+  },
+  "link": {
+   "lines": 4882,
+   "exact": 1.0,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 0,
+   "truth_valid": 0.9846035411855273,
+   "truth_n": 1299
+  },
+  "noise": {
+   "tokens": 38850,
+   "unknown": 2014,
+   "share": 0.05184041184041184,
+   "garbled_share": 0.021776061776061777
+  },
+  "fts_kb": 127.0556640625,
+  "text_kb": 233.83203125,
+  "docs": 102,
+  "lines": 7523,
+  "crowding": {
+   "nonce": {
+    "queries": 172,
+    "found": 117,
+    "dup_same_window": 0.7334851936218679,
+    "dup_same_sighting": 0.6856492027334852,
+    "mean_hits": 3.752136752136752
+   },
+   "word": {
+    "queries": 200,
+    "found": 112,
+    "dup_same_window": 0.7370786516853932,
+    "dup_same_sighting": 0.6921348314606741,
+    "mean_hits": 3.9732142857142856
+   }
+  },
+  "timing": {
+   "defer_s": 0.002434699999867007,
+   "defer_pct": 0.0007737262927324348,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "runtime_s": 1.2622616000007838
+ },
+ "standard": {
+  "run": "20261119-standard-s21-target-1818",
+  "span_h": 1.1185619444444443,
+  "rows_in": 1513,
+  "m32": 0.9575840128574173,
+  "m33": 0.80248833592535,
+  "m33_n": 643,
+  "m31": {
+   "all": {
+    "cer": 0.18372971341167582,
+    "n": 862
+   },
+   "source=ocr": {
+    "cer": 0.23204144602774188,
+    "n": 587
+   },
+   "source=uia": {
+    "cer": 0.011937364814480007,
+    "n": 201
+   },
+   "source=ocr_deferred": {
+    "cer": 0.26712532182256177,
+    "n": 74
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 692,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   },
+   "pages": {
+    "captured": 560,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   },
+   "term": {
+    "captured": 132,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   }
+  },
+  "link": {
+   "lines": 90614,
+   "exact": 1.0,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 0,
+   "truth_valid": 0.9178938782908151,
+   "truth_n": 22069
+  },
+  "noise": {
+   "tokens": 703559,
+   "unknown": 33728,
+   "share": 0.04793912095503007,
+   "garbled_share": 0.018449056866588303
+  },
+  "fts_kb": 1991.546875,
+  "text_kb": 4213.1279296875,
+  "docs": 1513,
+  "lines": 137550,
+  "crowding": {
+   "nonce": {
+    "queries": 598,
+    "found": 488,
+    "dup_same_window": 0.7836879432624113,
+    "dup_same_sighting": 0.6928191489361702,
+    "mean_hits": 4.622950819672131
+   },
+   "word": {
+    "queries": 200,
+    "found": 142,
+    "dup_same_window": 0.7514285714285714,
+    "dup_same_sighting": 0.6328571428571429,
+    "mean_hits": 4.929577464788732
+   }
+  },
+  "timing": {
+   "defer_s": 0.07647580007323995,
+   "defer_pct": 0.0018991597115949708,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "runtime_s": 6.990105700009735
+ },
+ "day": {
+  "run": "20261119-day-s31-target-0547",
+  "span_h": 7.10516,
+  "rows_in": 8820,
+  "m32": 0.952246732741078,
+  "m33": 0.8299572039942938,
+  "m33_n": 3505,
+  "m31": {
+   "all": {
+    "cer": 0.2118924832271891,
+    "n": 2379
+   },
+   "source=ocr": {
+    "cer": 0.2247130307553757,
+    "n": 1618
+   },
+   "source=uia": {
+    "cer": 0.009979223110681962,
+    "n": 515
+   },
+   "source=ocr_deferred": {
+    "cer": 0.5502733086718852,
+    "n": 246
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 3552,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   },
+   "pages": {
+    "captured": 2988,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   },
+   "term": {
+    "captured": 564,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   }
+  },
+  "link": {
+   "lines": 503144,
+   "exact": 1.0,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 0,
+   "truth_valid": 0.8590927233917013,
+   "truth_n": 115246
+  },
+  "noise": {
+   "tokens": 4281349,
+   "unknown": 166493,
+   "share": 0.03888797666343015,
+   "garbled_share": 0.017788552159611375
+  },
+  "fts_kb": 12012.1455078125,
+  "text_kb": 24946.2041015625,
+  "docs": 8820,
+  "lines": 743204,
+  "crowding": {
+   "nonce": {
+    "queries": 3249,
+    "found": 2728,
+    "dup_same_window": 0.7766131673763511,
+    "dup_same_sighting": 0.7366524729773993,
+    "mean_hits": 4.476539589442815
+   },
+   "word": {
+    "queries": 200,
+    "found": 199,
+    "dup_same_window": 0.698170731707317,
+    "dup_same_sighting": 0.6504065040650406,
+    "mean_hits": 4.944723618090452
+   }
+  },
+  "timing": {
+   "defer_s": 0.6714290000090841,
+   "defer_pct": 0.0026249662999577616,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "runtime_s": 36.74577379997936
+ },
+ "synthetic": {
+  "timing": {
+   "defer_s": 0.007147799973608926,
+   "defer_pct": 0.00024002457982296265,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "m32": 0.8620294277701347,
+  "drop_content": 0.0,
+  "n_content": 665,
+  "drop_content_by_scenario": {},
+  "drop_vcontent": 0.0,
+  "n_vcontent": 116,
+  "drop_vcontent_by_scenario": {},
+  "dup_per_unit": 27.601503759398497,
+  "link_valid": 1.0,
+  "chrome_chars": 155458,
+  "noise_share": 0.05108771209200923,
+  "tokens": 253192,
+  "kept_lines": 22569
+ },
+ "runtime_s": 46.72619909999776
+}

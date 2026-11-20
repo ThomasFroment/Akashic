@@ -1,0 +1,812 @@
+{
+ "candidate": "C:\\Users\\thoma\\Documents\\Akashic\\_dev\\invent\\ocr-text-duplication-noise\\P1-line-store-lossless\\cand.py",
+ "params": {
+  "run_gap_ms": 300000,
+  "chrome_min_ctx": 3,
+  "chrome_ctx_frac": 0.5,
+  "chrome_run_frac": 0.8,
+  "chrome_min_runs": 3,
+  "chrome_max_len": 200,
+  "bad_need_unstable": true,
+  "weak_need_unstable": true,
+  "split_tokens": true,
+  "minority_unk": false,
+  "minority_line": false,
+  "line_frac": 0.34,
+  "line_need_unstable": false,
+  "garb_short": 2,
+  "use_lm": true,
+  "lm_pct": 0.02,
+  "lm_min_types": 2000,
+  "near_frac": 0.1,
+  "link": "mid"
+ },
+ "smoke": {
+  "run": "20261118-smoke-s11-target-2241",
+  "span_h": 0.08740888888888888,
+  "rows_in": 102,
+  "m32": 0.0019205531192983578,
+  "m33": 0.6802325581395349,
+  "m33_n": 172,
+  "m31": {
+   "all": {
+    "cer": 0.23718176718871703,
+    "n": 78
+   },
+   "source=ocr": {
+    "cer": 0.22681960971087115,
+    "n": 56
+   },
+   "source=ocr_deferred": {
+    "cer": 0.5271163360828315,
+    "n": 11
+   },
+   "source=uia": {
+    "cer": 0.0,
+    "n": 11
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 136,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0005952703068347854
+   },
+   "pages": {
+    "captured": 136,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0005952703068347854
+   },
+   "term": {
+    "captured": 0,
+    "dropped": 0,
+    "rate": 0.0,
+    "char_rate": 0.0
+   }
+  },
+  "link": {
+   "lines": 651,
+   "exact": 0.9447004608294931,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 36,
+   "truth_valid": 0.9832402234636871,
+   "truth_n": 179
+  },
+  "noise": {
+   "tokens": 5250,
+   "unknown": 334,
+   "share": 0.06361904761904762,
+   "garbled_share": 0.023428571428571427
+  },
+  "fts_kb": 27.896484375,
+  "text_kb": 31.4833984375,
+  "docs": 11,
+  "lines": 693,
+  "crowding": {
+   "nonce": {
+    "queries": 172,
+    "found": 117,
+    "dup_same_window": 0.0,
+    "dup_same_sighting": 0.0,
+    "mean_hits": 1.0
+   },
+   "word": {
+    "queries": 200,
+    "found": 112,
+    "dup_same_window": 0.015037593984962405,
+    "dup_same_sighting": 0.015037593984962405,
+    "mean_hits": 1.1875
+   }
+  },
+  "timing": {
+   "defer_s": 0.08649089999380521,
+   "defer_pct": 0.027486048963303127,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "p1": {
+   "rebuild_rows": 102,
+   "rebuild_mismatch": 0,
+   "m32P": 0.0,
+   "stored_chars": 28414,
+   "distinct_line_chars": 30810,
+   "today_chars": 237117,
+   "stored_x": 0.11983113821446796,
+   "intervals": 824,
+   "store_kb_est": 48.099609375,
+   "line_rows": {
+    "new": 584,
+    "digit": 11,
+    "edit": 43
+   },
+   "m31R": {
+    "all": {
+     "cer": 0.22885890286595,
+     "n": 78
+    },
+    "source=ocr": {
+     "cer": 0.2187319515022608,
+     "n": 56
+    },
+    "source=ocr_deferred": {
+     "cer": 0.5092731944924995,
+     "n": 11
+    },
+    "source=uia": {
+     "cer": 0.0,
+     "n": 11
+    }
+   },
+   "m32_by_app": {
+    "browser": {
+     "m32": 0.0013594652769910501,
+     "chars": 26481
+    },
+    "editor": {
+     "m32": 0.06557377049180328,
+     "chars": 366
+    },
+    "chat": {
+     "m32": 0.0,
+     "chars": 4374
+    },
+    "harness_win": {
+     "m32": 0.0,
+     "chars": 20
+    }
+   },
+   "m33J": 0.6802325581395349,
+   "noise_lines": 42,
+   "noise_lines_findable": 42,
+   "content_down": {
+    "captured": 136,
+    "by_app": {},
+    "by_window": {}
+   },
+   "noise_cand": {
+    "A": 0.031044763221569304,
+    "A_tokens": 185152,
+    "A_chrome": 0.031500597167718816,
+    "B": 0.08288973384030418,
+    "B_tokens": 2630,
+    "A_frame": 0.019128982840653952
+   },
+   "noise_today": {
+    "A": 0.02059541430994089,
+    "A_tokens": 408052,
+    "A_chrome": null,
+    "B": 0.09599703484062268,
+    "B_tokens": 24180
+   },
+   "tnoise": {
+    "occ": [
+     0.01695238095238095,
+     0.013848133848133848
+    ],
+    "doc": [
+     0.028897338403041824,
+     0.028910303928836176
+    ],
+    "ask": [
+     0.011915086769390385,
+     0.012373422995108466
+    ],
+    "ask_tokens": [
+     123373,
+     408052
+    ],
+    "occ_bad": [
+     89,
+     538
+    ],
+    "occ_x": 1.2241635687732342,
+    "doc_x": 0.9995515257872671,
+    "ask_x": 0.9629580087984324
+   },
+   "tlink_line": {
+    "lines": 202,
+    "missing": 0,
+    "today_mean": 0.9839836924868957,
+    "today_first": 0.9851485148514851,
+    "p1": 0.9851485148514851
+   },
+   "kinds": {
+    "content": 604,
+    "junk_tokens": 31,
+    "content_stripped": 21,
+    "noise_line": 21,
+    "chrome": 9,
+    "chrome_ref": 13
+   },
+   "unknown_left": {
+    "content|garbled=False|app=browser": 75,
+    "content|garbled=True|app=browser": 88,
+    "content|garbled=True|app=editor": 5,
+    "content|garbled=False|app=editor": 1,
+    "content|garbled=False|app=chat": 134,
+    "content|garbled=True|app=chat": 28,
+    "chrome|garbled=True|app=browser": 1,
+    "content|garbled=True|app=harness_win": 1,
+    "content|garbled=False|app=harness_win": 1
+   },
+   "unknown_composition": {
+    "harness_window=True|line=hchrome|garbled=False": 4,
+    "harness_window=True|line=none|garbled=True": 78,
+    "harness_window=True|line=none|garbled=False": 179,
+    "harness_window=True|line=hchrome|garbled=True": 11,
+    "harness_window=True|line=content|garbled=True": 33,
+    "harness_window=True|line=content|garbled=False": 27,
+    "harness_window=False|line=none|garbled=True": 1,
+    "harness_window=False|line=none|garbled=False": 1
+   },
+   "noise_oracle_garbled_removed": 0.04115467134776672
+  },
+  "runtime_s": 3.448213099996792
+ },
+ "standard": {
+  "run": "20261119-standard-s21-target-1818",
+  "span_h": 1.1185619444444443,
+  "rows_in": 1513,
+  "m32": 0.02841887412575646,
+  "m33": 0.80248833592535,
+  "m33_n": 643,
+  "m31": {
+   "all": {
+    "cer": 0.17981778284470273,
+    "n": 862
+   },
+   "source=ocr": {
+    "cer": 0.2265685641811002,
+    "n": 587
+   },
+   "source=uia": {
+    "cer": 0.011487735808662497,
+    "n": 201
+   },
+   "source=ocr_deferred": {
+    "cer": 0.2661911721660373,
+    "n": 74
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 691,
+    "dropped": 2,
+    "rate": 0.002894356005788712,
+    "char_rate": 0.002898550724637681
+   },
+   "pages": {
+    "captured": 559,
+    "dropped": 1,
+    "rate": 0.0017889087656529517,
+    "char_rate": 0.0016536594651184924
+   },
+   "term": {
+    "captured": 132,
+    "dropped": 1,
+    "rate": 0.007575757575757576,
+    "char_rate": 0.009736016727652902
+   }
+  },
+  "link": {
+   "lines": 3381,
+   "exact": 0.9340431824903874,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 223,
+   "truth_valid": 0.9363817097415507,
+   "truth_n": 1006
+  },
+  "noise": {
+   "tokens": 30351,
+   "unknown": 1078,
+   "share": 0.03551777536160258,
+   "garbled_share": 0.016408026094692104
+  },
+  "fts_kb": 110.6416015625,
+  "text_kb": 180.328125,
+  "docs": 36,
+  "lines": 3670,
+  "crowding": {
+   "nonce": {
+    "queries": 598,
+    "found": 488,
+    "dup_same_window": 0.04873294346978557,
+    "dup_same_sighting": 0.0,
+    "mean_hits": 1.0512295081967213
+   },
+   "word": {
+    "queries": 200,
+    "found": 142,
+    "dup_same_window": 0.050793650793650794,
+    "dup_same_sighting": 0.0031746031746031746,
+    "mean_hits": 2.2183098591549295
+   }
+  },
+  "timing": {
+   "defer_s": 1.1080834000313189,
+   "defer_pct": 0.027517559128655986,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "p1": {
+   "rebuild_rows": 1513,
+   "rebuild_mismatch": 0,
+   "m32P": 0.0,
+   "stored_chars": 152188,
+   "distinct_line_chars": 172140,
+   "today_chars": 4257549,
+   "stored_x": 0.03574544884862159,
+   "intervals": 8549,
+   "store_kb_est": 320.578125,
+   "line_rows": {
+    "new": 2796,
+    "digit": 171,
+    "edit": 308
+   },
+   "m31R": {
+    "all": {
+     "cer": 0.18372971341167582,
+     "n": 862
+    },
+    "source=ocr": {
+     "cer": 0.23204144602774188,
+     "n": 587
+    },
+    "source=uia": {
+     "cer": 0.011937364814480007,
+     "n": 201
+    },
+    "source=ocr_deferred": {
+     "cer": 0.26712532182256177,
+     "n": 74
+    }
+   },
+   "m32_by_app": {
+    "game": {
+     "m32": 0.0,
+     "chars": 213
+    },
+    "launcher": {
+     "m32": 0.0031765239751928606,
+     "chars": 6611
+    },
+    "chat": {
+     "m32": 0.0,
+     "chars": 5279
+    },
+    "calculator": {
+     "m32": 0.0,
+     "chars": 3
+    },
+    "files": {
+     "m32": 0.0,
+     "chars": 699
+    },
+    "editor": {
+     "m32": 0.0,
+     "chars": 1151
+    },
+    "browser": {
+     "m32": 0.03525771174930339,
+     "chars": 142834
+    },
+    "harness_win": {
+     "m32": 0.0,
+     "chars": 58
+    },
+    "terminal": {
+     "m32": 0.0004662222015012355,
+     "chars": 21449
+    }
+   },
+   "m33J": 0.80248833592535,
+   "noise_lines": 289,
+   "noise_lines_findable": 289,
+   "content_down": {
+    "captured": 691,
+    "chrome": 1,
+    "other": 1,
+    "by_app": {
+     "browser|chrome": 1,
+     "terminal|other": 1
+    },
+    "by_window": {
+     "3f9dc2ca7298|chrome": 1,
+     "1bfa9733085d|other": 1
+    }
+   },
+   "noise_cand": {
+    "A": 0.014565158151235946,
+    "A_tokens": 1772449,
+    "A_chrome": 0.014264209940050959,
+    "B": 0.06587207715403512,
+    "B_tokens": 10991,
+    "A_frame": 0.010288238466609024
+   },
+   "noise_today": {
+    "A": 0.01214947338235954,
+    "A_tokens": 1827322,
+    "A_chrome": null,
+    "B": 0.07931286549707603,
+    "B_tokens": 404431
+   },
+   "tnoise": {
+    "occ": [
+     0.014760633916510165,
+     0.0108789739026862
+    ],
+    "doc": [
+     0.030934400873441906,
+     0.03344298245614035
+    ],
+    "ask": [
+     0.009123984488027873,
+     0.009751975842243459
+    ],
+    "ask_tokens": [
+     584065,
+     1827322
+    ],
+    "occ_bad": [
+     448,
+     7654
+    ],
+    "occ_x": 1.3568038721800333,
+    "doc_x": 0.9249892982484924,
+    "ask_x": 0.9356036802823832
+   },
+   "tlink_line": {
+    "lines": 1297,
+    "missing": 0,
+    "today_mean": 0.9418005313942075,
+    "today_first": 0.9406322282189669,
+    "p1": 0.9483423284502699
+   },
+   "kinds": {
+    "content": 3055,
+    "noise_line": 160,
+    "junk_tokens": 155,
+    "content_stripped": 129,
+    "chrome": 100,
+    "chrome_ref": 16
+   },
+   "unknown_left": {
+    "content|garbled=False|app=game": 4,
+    "content|garbled=True|app=game": 1,
+    "chrome|garbled=False|app=launcher": 24,
+    "content|garbled=False|app=launcher": 119,
+    "content|garbled=True|app=launcher": 35,
+    "chrome|garbled=True|app=launcher": 4,
+    "content|garbled=False|app=chat": 141,
+    "content|garbled=True|app=chat": 42,
+    "content|garbled=True|app=files": 3,
+    "content|garbled=False|app=files": 9,
+    "chrome|garbled=True|app=editor": 5,
+    "chrome|garbled=False|app=editor": 6,
+    "content|garbled=True|app=editor": 15,
+    "content|garbled=False|app=editor": 2,
+    "content|garbled=True|app=browser": 380,
+    "content|garbled=False|app=browser": 235,
+    "chrome|garbled=False|app=browser": 1,
+    "content|garbled=False|app=harness_win": 1,
+    "content|garbled=True|app=harness_win": 1,
+    "content|garbled=False|app=terminal": 38,
+    "content|garbled=True|app=terminal": 12
+   },
+   "unknown_composition": {
+    "harness_window=True|line=none|garbled=False": 400,
+    "harness_window=True|line=none|garbled=True": 359,
+    "harness_window=True|line=content|garbled=True": 116,
+    "harness_window=True|line=content|garbled=False": 173,
+    "harness_window=True|line=hchrome|garbled=False": 6,
+    "harness_window=True|line=hchrome|garbled=True": 22,
+    "harness_window=False|line=none|garbled=False": 1,
+    "harness_window=False|line=none|garbled=True": 1
+   },
+   "noise_oracle_garbled_removed": 0.019428533145747495
+  },
+  "runtime_s": 26.170879799989052
+ },
+ "day": {
+  "run": "20261119-day-s31-target-0547",
+  "span_h": 7.10516,
+  "rows_in": 8820,
+  "m32": 0.05850454478300569,
+  "m33": 0.8299572039942938,
+  "m33_n": 3505,
+  "m31": {
+   "all": {
+    "cer": 0.19364805894766343,
+    "n": 2379
+   },
+   "source=ocr": {
+    "cer": 0.19926158114647272,
+    "n": 1618
+   },
+   "source=uia": {
+    "cer": 0.009979223110681962,
+    "n": 515
+   },
+   "source=ocr_deferred": {
+    "cer": 0.5412365611361677,
+    "n": 246
+   }
+  },
+  "drop": {
+   "all": {
+    "captured": 3549,
+    "dropped": 7,
+    "rate": 0.0019723865877712033,
+    "char_rate": 0.00237354722540514
+   },
+   "pages": {
+    "captured": 2985,
+    "dropped": 1,
+    "rate": 0.00033500837520938025,
+    "char_rate": 0.001004491061599069
+   },
+   "term": {
+    "captured": 564,
+    "dropped": 6,
+    "rate": 0.010638297872340425,
+    "char_rate": 0.011465328548668087
+   }
+  },
+  "link": {
+   "lines": 19839,
+   "exact": 0.9455617722667473,
+   "valid": 1.0,
+   "nolink": 0,
+   "near_sampled": 1080,
+   "truth_valid": 0.8527468706536857,
+   "truth_n": 5752
+  },
+  "noise": {
+   "tokens": 214786,
+   "unknown": 6743,
+   "share": 0.03139403871760729,
+   "garbled_share": 0.01636512621865485
+  },
+  "fts_kb": 619.171875,
+  "text_kb": 1248.6337890625,
+  "docs": 130,
+  "lines": 22058,
+  "crowding": {
+   "nonce": {
+    "queries": 3249,
+    "found": 2728,
+    "dup_same_window": 0.060929432013769366,
+    "dup_same_sighting": 0.03820998278829604,
+    "mean_hits": 1.0648826979472141
+   },
+   "word": {
+    "queries": 200,
+    "found": 199,
+    "dup_same_window": 0.15517241379310345,
+    "dup_same_sighting": 0.03218390804597701,
+    "mean_hits": 4.371859296482412
+   }
+  },
+  "timing": {
+   "defer_s": 6.919051699980628,
+   "defer_pct": 0.027050183325219617,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "p1": {
+   "rebuild_rows": 8820,
+   "rebuild_mismatch": 0,
+   "m32P": 0.0,
+   "stored_chars": 812364,
+   "distinct_line_chars": 1097900,
+   "today_chars": 25246445,
+   "stored_x": 0.03217736200086784,
+   "intervals": 47268,
+   "store_kb_est": 1743.4453125,
+   "line_rows": {
+    "new": 13850,
+    "digit": 2085,
+    "edit": 2118
+   },
+   "m31R": {
+    "all": {
+     "cer": 0.2118924832271891,
+     "n": 2379
+    },
+    "source=ocr": {
+     "cer": 0.2247130307553757,
+     "n": 1618
+    },
+    "source=uia": {
+     "cer": 0.009979223110681962,
+     "n": 515
+    },
+    "source=ocr_deferred": {
+     "cer": 0.5502733086718852,
+     "n": 246
+    }
+   },
+   "m32_by_app": {
+    "game": {
+     "m32": 0.0,
+     "chars": 347
+    },
+    "launcher": {
+     "m32": 0.0,
+     "chars": 5264
+    },
+    "browser": {
+     "m32": 0.08322401947550755,
+     "chars": 840851
+    },
+    "chat": {
+     "m32": 0.1847063169560399,
+     "chars": 8121
+    },
+    "editor": {
+     "m32": 0.01894521249359959,
+     "chars": 1953
+    },
+    "calculator": {
+     "m32": 0.0,
+     "chars": 504
+    },
+    "files": {
+     "m32": 0.0,
+     "chars": 1105
+    },
+    "terminal": {
+     "m32": 0.002504327330313409,
+     "chars": 380142
+    },
+    "harness_win": {
+     "m32": 0.0,
+     "chars": 386
+    }
+   },
+   "m33J": 0.8299572039942938,
+   "noise_lines": 2219,
+   "noise_lines_findable": 2219,
+   "content_down": {
+    "captured": 3549,
+    "other": 7,
+    "by_app": {
+     "terminal|other": 6,
+     "browser|other": 1
+    },
+    "by_window": {
+     "1bfa9733085d|other": 6,
+     "ab48c80f3cd0|other": 1
+    }
+   },
+   "noise_cand": {
+    "A": 0.021854750238109483,
+    "A_tokens": 10580217,
+    "A_chrome": 0.02178356483191273,
+    "B": 0.06143386897404203,
+    "B_tokens": 64720,
+    "A_frame": 0.010238592457815249
+   },
+   "noise_today": {
+    "A": 0.01132358948278611,
+    "A_tokens": 8592770,
+    "A_chrome": null,
+    "B": 0.0804493430701078,
+    "B_tokens": 2430948
+   },
+   "tnoise": {
+    "occ": [
+     0.014530742227147021,
+     0.01036192097397339
+    ],
+    "doc": [
+     0.03448702101359703,
+     0.036361712099907774
+    ],
+    "ask": [
+     0.008441500708125558,
+     0.008925294171728092
+    ],
+    "ask_tokens": [
+     2856838,
+     8592770
+    ],
+    "occ_bad": [
+     3121,
+     44363
+    ],
+    "occ_x": 1.4023212745633449,
+    "doc_x": 0.9484432668857885,
+    "ask_x": 0.9457952360679599
+   },
+   "tlink_line": {
+    "lines": 6587,
+    "missing": 0,
+    "today_mean": 0.8700036174884571,
+    "today_first": 0.8796113557006224,
+    "p1": 0.8746014877789585
+   },
+   "kinds": {
+    "chrome": 673,
+    "noise_line": 1521,
+    "content": 18028,
+    "junk_tokens": 843,
+    "content_stripped": 698,
+    "chrome_ref": 263
+   },
+   "unknown_left": {
+    "chrome|garbled=False|app=game": 3,
+    "content|garbled=False|app=game": 4,
+    "content|garbled=True|app=game": 4,
+    "chrome|garbled=False|app=launcher": 49,
+    "content|garbled=False|app=launcher": 84,
+    "content|garbled=True|app=launcher": 18,
+    "chrome|garbled=True|app=launcher": 9,
+    "content|garbled=True|app=browser": 3111,
+    "content|garbled=False|app=browser": 2287,
+    "content|garbled=True|app=editor": 45,
+    "chrome|garbled=True|app=editor": 3,
+    "chrome|garbled=False|app=editor": 4,
+    "content|garbled=False|app=editor": 14,
+    "content|garbled=False|app=calculator": 7,
+    "content|garbled=True|app=calculator": 9,
+    "content|garbled=False|app=files": 16,
+    "content|garbled=True|app=files": 7,
+    "content|garbled=False|app=chat": 209,
+    "content|garbled=True|app=chat": 53,
+    "content|garbled=False|app=terminal": 538,
+    "content|garbled=True|app=terminal": 250,
+    "content|garbled=True|app=harness_win": 4,
+    "chrome|garbled=False|app=terminal": 1,
+    "chrome|garbled=True|app=terminal": 2,
+    "content|garbled=False|app=harness_win": 12
+   },
+   "unknown_composition": {
+    "harness_window=True|line=none|garbled=False": 2066,
+    "harness_window=True|line=none|garbled=True": 2628,
+    "harness_window=True|line=hchrome|garbled=False": 105,
+    "harness_window=True|line=hchrome|garbled=True": 149,
+    "harness_window=True|line=content|garbled=False": 1044,
+    "harness_window=True|line=content|garbled=True": 735,
+    "harness_window=False|line=none|garbled=False": 13,
+    "harness_window=False|line=none|garbled=True": 3
+   },
+   "noise_oracle_garbled_removed": 0.015278954518130742
+  },
+  "runtime_s": 140.18266810002388
+ },
+ "synthetic": {
+  "timing": {
+   "defer_s": 0.9417283000075258,
+   "defer_pct": 0.03162342823683868,
+   "reps": 9,
+   "write_us_p50": 0.0,
+   "write_us_p99": 0.0,
+   "write_us_mean": 0.0
+  },
+  "m32": 0.006270562559041011,
+  "drop_content": 0.0,
+  "n_content": 665,
+  "drop_content_by_scenario": {},
+  "drop_vcontent": 0.0,
+  "n_vcontent": 116,
+  "drop_vcontent_by_scenario": {},
+  "dup_per_unit": 2.560902255639098,
+  "link_valid": 1.0,
+  "chrome_chars": 9580,
+  "noise_share": 0.06590101958987284,
+  "tokens": 34916,
+  "kept_lines": 2992
+ },
+ "runtime_s": 179.23552849999396
+}

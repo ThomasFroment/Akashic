@@ -1,0 +1,72 @@
+[smoke] rows=102 windows=9 span_h=0.09 chars=229696 m32_check=0.8632
+  all: a=0.332 b_exact=0.531 b_near=0.013 c=0.004 d=0.008 e=0.112 e_truth=0.0847
+  noise_share=0.0518 garbled_share=0.0218 a_prev_share=0.324
+  fts_share: a=0.316 b_exact=0.461 b_near=0.025 c=0.007 d=0.018 e=0.173 full_fts_kb=118 store_fts_kb=188
+  text_share: a=0.333 b_exact=0.530 b_near=0.012 c=0.004 d=0.008 e=0.112 text_kb=231
+  app=browser: chars=200111 a=0.287 b_exact=0.580 b_near=0.012 c=0.004 d=0.005 e=0.112
+  app=chat: chars=28711 a=0.642 b_exact=0.205 b_near=0.015 c=0.000 d=0.028 e=0.110
+  app=editor: chars=834 a=0.392 b_exact=0.167 b_near=0.067 c=0.000 d=0.011 e=0.363
+  app=harness_win: chars=40 a=0.500 b_exact=0.000 b_near=0.000 c=0.000 d=0.025 e=0.475
+  mon=left: chars=62667 a=0.294 b_exact=0.550 b_near=0.024 c=0.001 d=0.015 e=0.116
+  mon=primary: chars=123460 a=0.388 b_exact=0.484 b_near=0.010 c=0.005 d=0.001 e=0.111
+  mon=right: chars=43569 a=0.228 b_exact=0.637 b_near=0.004 c=0.002 d=0.018 e=0.112
+  src=ocr: chars=159152 a=0.265 b_exact=0.628 b_near=0.005 c=0.002 d=0.007 e=0.093
+  src=ocr_deferred: chars=21381 a=0.209 b_exact=0.525 b_near=0.065 c=0.004 d=0.014 e=0.183
+  src=uia: chars=49163 a=0.604 b_exact=0.219 b_near=0.015 c=0.009 d=0.008 e=0.146
+  type(all chars): chrome=0.030 garbage=0.041 content=0.930 | first-occurrence: chrome=0.0037 garbage=0.0081 content=0.1124
+  type x truth (share of type chars): chrome:content=0.000 chrome:hchrome=0.758 chrome:none=0.242 garbage:content=0.048 garbage:hchrome=0.024 garbage:none=0.928 content:content=0.783 content:hchrome=0.057 content:none=0.160
+  hazards: d_content_chars=42
+  crowd[nonce]: queries=172 found=117 mean_hits_top5=3.752 dup_slots_same_window=0.733 dup_slots_same_sighting=0.686 mean_distinct_windows_top5=1.000
+  crowd[word]: queries=200 found=112 mean_hits_top5=3.973 dup_slots_same_window=0.737 dup_slots_same_sighting=0.692 mean_distinct_windows_top5=1.045
+
+[standard] rows=1513 windows=25 span_h=1.12 chars=4121512 m32_check=0.9576
+  all: a=0.423 b_exact=0.535 b_near=0.006 c=0.001 d=0.001 e=0.034 e_truth=0.0292
+  noise_share=0.0479 garbled_share=0.0184 a_prev_share=0.409
+  fts_share: a=0.404 b_exact=0.521 b_near=0.014 c=0.003 d=0.004 e=0.055 full_fts_kb=1887 store_fts_kb=2024
+  text_share: a=0.424 b_exact=0.533 b_near=0.006 c=0.001 d=0.001 e=0.033 text_kb=4166
+  app=browser: chars=3268835 a=0.362 b_exact=0.596 b_near=0.005 c=0.002 d=0.001 e=0.034
+  app=calculator: chars=3 a=0.000 b_exact=0.000 b_near=0.000 c=0.000 d=0.000 e=1.000
+  app=chat: chars=543949 a=0.924 b_exact=0.066 b_near=0.002 c=0.000 d=0.002 e=0.006
+  app=editor: chars=24073 a=0.836 b_exact=0.117 b_near=0.011 c=0.002 d=0.013 e=0.022
+  app=files: chars=7251 a=0.679 b_exact=0.224 b_near=0.017 c=0.017 d=0.005 e=0.057
+  app=game: chars=1041 a=0.126 b_exact=0.669 b_near=0.058 c=0.000 d=0.038 e=0.110
+  app=harness_win: chars=178 a=0.674 b_exact=0.000 b_near=0.000 c=0.000 d=0.006 e=0.320
+  app=launcher: chars=36824 a=0.624 b_exact=0.197 b_near=0.034 c=0.000 d=0.023 e=0.122
+  app=terminal: chars=239358 a=0.040 b_exact=0.870 b_near=0.017 c=0.000 d=0.000 e=0.073
+  mon=left: chars=1455407 a=0.445 b_exact=0.507 b_near=0.009 c=0.001 d=0.001 e=0.037
+  mon=primary: chars=2051348 a=0.491 b_exact=0.478 b_near=0.004 c=0.002 d=0.001 e=0.025
+  mon=right: chars=614757 a=0.146 b_exact=0.789 b_near=0.006 c=0.001 d=0.003 e=0.055
+  src=ocr: chars=2930603 a=0.367 b_exact=0.597 b_near=0.006 c=0.001 d=0.001 e=0.027
+  src=ocr_deferred: chars=308847 a=0.274 b_exact=0.666 b_near=0.016 c=0.000 d=0.004 e=0.040
+  src=uia: chars=882062 a=0.661 b_exact=0.282 b_near=0.001 c=0.003 d=0.001 e=0.053
+  type(all chars): chrome=0.035 garbage=0.044 content=0.921 | first-occurrence: chrome=0.0014 garbage=0.0013 content=0.0336
+  type x truth (share of type chars): chrome:content=0.221 chrome:hchrome=0.665 chrome:none=0.114 garbage:content=0.014 garbage:hchrome=0.003 garbage:none=0.983 content:content=0.817 content:hchrome=0.015 content:none=0.169
+  hazards: b_near_new_content_chars=1984 b_near_new_content_line=17 c_content_chars=2299 d_content_chars=548
+  crowd[nonce]: queries=598 found=488 mean_hits_top5=4.623 dup_slots_same_window=0.784 dup_slots_same_sighting=0.693 mean_distinct_windows_top5=1.000
+  crowd[word]: queries=200 found=142 mean_hits_top5=4.930 dup_slots_same_window=0.751 dup_slots_same_sighting=0.633 mean_distinct_windows_top5=1.225
+
+[day] rows=8820 windows=52 span_h=7.11 chars=24512061 m32_check=0.9522
+  all: a=0.302 b_exact=0.650 b_near=0.012 c=0.004 d=0.001 e=0.030 e_truth=0.0235
+  noise_share=0.0389 garbled_share=0.0178 a_prev_share=0.288
+  fts_share: a=0.289 b_exact=0.638 b_near=0.019 c=0.006 d=0.004 e=0.044 full_fts_kb=11446 store_fts_kb=12217
+  text_share: a=0.304 b_exact=0.649 b_near=0.012 c=0.004 d=0.001 e=0.030 text_kb=24703
+  app=browser: chars=17100061 a=0.303 b_exact=0.652 b_near=0.009 c=0.000 d=0.002 e=0.035
+  app=calculator: chars=4329 a=0.739 b_exact=0.143 b_near=0.035 c=0.066 d=0.002 e=0.016
+  app=chat: chars=1599299 a=0.901 b_exact=0.095 b_near=0.001 c=0.001 d=0.000 e=0.002
+  app=editor: chars=201926 a=0.954 b_exact=0.035 b_near=0.003 c=0.004 d=0.002 e=0.002
+  app=files: chars=107081 a=0.957 b_exact=0.029 b_near=0.001 c=0.012 d=0.000 e=0.001
+  app=game: chars=2819 a=0.270 b_exact=0.607 b_near=0.061 c=0.000 d=0.018 e=0.044
+  app=harness_win: chars=1698 a=0.761 b_exact=0.011 b_near=0.011 c=0.078 d=0.002 e=0.136
+  app=launcher: chars=357148 a=0.958 b_exact=0.027 b_near=0.003 c=0.000 d=0.002 e=0.009
+  app=terminal: chars=5137700 a=0.030 b_exact=0.896 b_near=0.030 c=0.015 d=0.000 e=0.029
+  mon=left: chars=5918292 a=0.427 b_exact=0.532 b_near=0.012 c=0.006 d=0.002 e=0.021
+  mon=primary: chars=10197788 a=0.329 b_exact=0.634 b_near=0.007 c=0.001 d=0.001 e=0.029
+  mon=right: chars=8395981 a=0.182 b_exact=0.752 b_near=0.019 c=0.005 d=0.002 e=0.039
+  src=ocr: chars=17669532 a=0.210 b_exact=0.743 b_near=0.014 c=0.004 d=0.001 e=0.028
+  src=ocr_deferred: chars=2016214 a=0.246 b_exact=0.692 b_near=0.025 c=0.000 d=0.005 e=0.032
+  src=uia: chars=4826315 a=0.666 b_exact=0.291 b_near=0.002 c=0.001 d=0.000 e=0.040
+  type(all chars): chrome=0.111 garbage=0.031 content=0.858 | first-occurrence: chrome=0.0035 garbage=0.0012 content=0.0305
+  type x truth (share of type chars): chrome:content=0.207 chrome:hchrome=0.176 chrome:none=0.617 garbage:content=0.077 garbage:hchrome=0.008 garbage:none=0.915 content:content=0.730 content:hchrome=0.032 content:none=0.237
+  hazards: b_near_new_content_chars=22676 b_near_new_content_line=171 c_content_chars=34511 d_content_chars=3934
+  crowd[nonce]: queries=3249 found=2728 mean_hits_top5=4.477 dup_slots_same_window=0.777 dup_slots_same_sighting=0.737 mean_distinct_windows_top5=1.000
+  crowd[word]: queries=200 found=199 mean_hits_top5=4.945 dup_slots_same_window=0.698 dup_slots_same_sighting=0.650 mean_distinct_windows_top5=1.492

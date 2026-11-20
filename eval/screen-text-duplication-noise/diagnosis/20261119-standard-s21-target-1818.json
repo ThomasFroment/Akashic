@@ -1,0 +1,589 @@
+{
+ "run": "20261119-standard-s21-target-1818",
+ "rows": 1513,
+ "windows": 25,
+ "span_h": 1.1185619444444443,
+ "m32_check": 0.9575840128574173,
+ "a_identical_to_previous_share": 0.40947982196824856,
+ "classes": {
+  "all": {
+   "chars": 4121512,
+   "a": 0.423,
+   "b_exact": 0.5346,
+   "b_near": 0.006,
+   "c": 0.0014,
+   "d": 0.0013,
+   "e": 0.0336,
+   "e_truth": 0.0292
+  },
+  "app=browser": {
+   "chars": 3268835,
+   "a": 0.3619,
+   "b_exact": 0.5955,
+   "b_near": 0.0055,
+   "c": 0.0017,
+   "d": 0.001,
+   "e": 0.0343,
+   "e_truth": null
+  },
+  "app=calculator": {
+   "chars": 3,
+   "a": 0.0,
+   "b_exact": 0.0,
+   "b_near": 0.0,
+   "c": 0.0,
+   "d": 0.0,
+   "e": 1.0,
+   "e_truth": null
+  },
+  "app=chat": {
+   "chars": 543949,
+   "a": 0.924,
+   "b_exact": 0.0662,
+   "b_near": 0.002,
+   "c": 0.0,
+   "d": 0.0016,
+   "e": 0.0061,
+   "e_truth": null
+  },
+  "app=editor": {
+   "chars": 24073,
+   "a": 0.8355,
+   "b_exact": 0.1167,
+   "b_near": 0.0106,
+   "c": 0.0024,
+   "d": 0.013,
+   "e": 0.0219,
+   "e_truth": null
+  },
+  "app=files": {
+   "chars": 7251,
+   "a": 0.6794,
+   "b_exact": 0.2242,
+   "b_near": 0.0168,
+   "c": 0.0174,
+   "d": 0.0054,
+   "e": 0.0568,
+   "e_truth": null
+  },
+  "app=game": {
+   "chars": 1041,
+   "a": 0.1258,
+   "b_exact": 0.6686,
+   "b_near": 0.0576,
+   "c": 0.0,
+   "d": 0.0384,
+   "e": 0.1095,
+   "e_truth": null
+  },
+  "app=harness_win": {
+   "chars": 178,
+   "a": 0.6742,
+   "b_exact": 0.0,
+   "b_near": 0.0,
+   "c": 0.0,
+   "d": 0.0056,
+   "e": 0.3202,
+   "e_truth": null
+  },
+  "app=launcher": {
+   "chars": 36824,
+   "a": 0.6236,
+   "b_exact": 0.1968,
+   "b_near": 0.0342,
+   "c": 0.0,
+   "d": 0.0229,
+   "e": 0.1224,
+   "e_truth": null
+  },
+  "app=terminal": {
+   "chars": 239358,
+   "a": 0.0404,
+   "b_exact": 0.8698,
+   "b_near": 0.0169,
+   "c": 0.0,
+   "d": 0.0,
+   "e": 0.0728,
+   "e_truth": null
+  },
+  "mon=left": {
+   "chars": 1455407,
+   "a": 0.4449,
+   "b_exact": 0.5075,
+   "b_near": 0.0088,
+   "c": 0.0009,
+   "d": 0.0012,
+   "e": 0.0367,
+   "e_truth": null
+  },
+  "mon=primary": {
+   "chars": 2051348,
+   "a": 0.4906,
+   "b_exact": 0.4776,
+   "b_near": 0.0042,
+   "c": 0.0019,
+   "d": 0.0008,
+   "e": 0.0249,
+   "e_truth": null
+  },
+  "mon=right": {
+   "chars": 614757,
+   "a": 0.1458,
+   "b_exact": 0.7887,
+   "b_near": 0.0057,
+   "c": 0.0012,
+   "d": 0.0033,
+   "e": 0.0554,
+   "e_truth": null
+  },
+  "src=ocr": {
+   "chars": 2930603,
+   "a": 0.367,
+   "b_exact": 0.5968,
+   "b_near": 0.0064,
+   "c": 0.0012,
+   "d": 0.0013,
+   "e": 0.0272,
+   "e_truth": null
+  },
+  "src=ocr_deferred": {
+   "chars": 308847,
+   "a": 0.2736,
+   "b_exact": 0.6663,
+   "b_near": 0.0158,
+   "c": 0.0001,
+   "d": 0.0044,
+   "e": 0.0398,
+   "e_truth": null
+  },
+  "src=ocr_deferred|app=browser": {
+   "chars": 214458,
+   "a": 0.0032,
+   "b_exact": 0.9234,
+   "b_near": 0.0194,
+   "c": 0.0002,
+   "d": 0.0032,
+   "e": 0.0506,
+   "e_truth": null
+  },
+  "src=ocr_deferred|app=chat": {
+   "chars": 89676,
+   "a": 0.9298,
+   "b_exact": 0.062,
+   "b_near": 0.0068,
+   "c": 0.0,
+   "d": 0.0007,
+   "e": 0.0007,
+   "e_truth": null
+  },
+  "src=ocr_deferred|app=editor": {
+   "chars": 1143,
+   "a": 0.0,
+   "b_exact": 0.9738,
+   "b_near": 0.0262,
+   "c": 0.0,
+   "d": 0.0,
+   "e": 0.0,
+   "e_truth": null
+  },
+  "src=ocr_deferred|app=files": {
+   "chars": 580,
+   "a": 0.5,
+   "b_exact": 0.469,
+   "b_near": 0.019,
+   "c": 0.0,
+   "d": 0.0,
+   "e": 0.0121,
+   "e_truth": null
+  },
+  "src=ocr_deferred|app=game": {
+   "chars": 1041,
+   "a": 0.1258,
+   "b_exact": 0.6686,
+   "b_near": 0.0576,
+   "c": 0.0,
+   "d": 0.0384,
+   "e": 0.1095,
+   "e_truth": null
+  },
+  "src=ocr_deferred|app=launcher": {
+   "chars": 1949,
+   "a": 0.0,
+   "b_exact": 0.0636,
+   "b_near": 0.0051,
+   "c": 0.0,
+   "d": 0.2853,
+   "e": 0.646,
+   "e_truth": null
+  },
+  "src=ocr|app=browser": {
+   "chars": 2302434,
+   "a": 0.3069,
+   "b_exact": 0.6587,
+   "b_near": 0.0057,
+   "c": 0.0015,
+   "d": 0.0011,
+   "e": 0.0261,
+   "e_truth": null
+  },
+  "src=ocr|app=calculator": {
+   "chars": 3,
+   "a": 0.0,
+   "b_exact": 0.0,
+   "b_near": 0.0,
+   "c": 0.0,
+   "d": 0.0,
+   "e": 1.0,
+   "e_truth": null
+  },
+  "src=ocr|app=chat": {
+   "chars": 338101,
+   "a": 0.9426,
+   "b_exact": 0.0513,
+   "b_near": 0.0013,
+   "c": 0.0,
+   "d": 0.0014,
+   "e": 0.0035,
+   "e_truth": null
+  },
+  "src=ocr|app=editor": {
+   "chars": 19432,
+   "a": 0.8992,
+   "b_exact": 0.0644,
+   "b_near": 0.0097,
+   "c": 0.0013,
+   "d": 0.0157,
+   "e": 0.0097,
+   "e_truth": null
+  },
+  "src=ocr|app=files": {
+   "chars": 5843,
+   "a": 0.7539,
+   "b_exact": 0.1397,
+   "b_near": 0.019,
+   "c": 0.0144,
+   "d": 0.0067,
+   "e": 0.0664,
+   "e_truth": null
+  },
+  "src=ocr|app=harness_win": {
+   "chars": 178,
+   "a": 0.6742,
+   "b_exact": 0.0,
+   "b_near": 0.0,
+   "c": 0.0,
+   "d": 0.0056,
+   "e": 0.3202,
+   "e_truth": null
+  },
+  "src=ocr|app=launcher": {
+   "chars": 29634,
+   "a": 0.7749,
+   "b_exact": 0.1673,
+   "b_near": 0.0322,
+   "c": 0.0,
+   "d": 0.0081,
+   "e": 0.0175,
+   "e_truth": null
+  },
+  "src=ocr|app=terminal": {
+   "chars": 234978,
+   "a": 0.0229,
+   "b_exact": 0.886,
+   "b_near": 0.0172,
+   "c": 0.0,
+   "d": 0.0,
+   "e": 0.0738,
+   "e_truth": null
+  },
+  "src=uia": {
+   "chars": 882062,
+   "a": 0.6614,
+   "b_exact": 0.2816,
+   "b_near": 0.0013,
+   "c": 0.0025,
+   "d": 0.0005,
+   "e": 0.0527,
+   "e_truth": null
+  },
+  "src=uia|app=browser": {
+   "chars": 751943,
+   "a": 0.6326,
+   "b_exact": 0.3086,
+   "b_near": 0.0011,
+   "c": 0.0029,
+   "d": 0.0,
+   "e": 0.0548,
+   "e_truth": null
+  },
+  "src=uia|app=chat": {
+   "chars": 116172,
+   "a": 0.8656,
+   "b_exact": 0.1132,
+   "b_near": 0.0002,
+   "c": 0.0,
+   "d": 0.003,
+   "e": 0.018,
+   "e_truth": null
+  },
+  "src=uia|app=editor": {
+   "chars": 3498,
+   "a": 0.7544,
+   "b_exact": 0.1272,
+   "b_near": 0.0103,
+   "c": 0.0094,
+   "d": 0.0017,
+   "e": 0.0969,
+   "e_truth": null
+  },
+  "src=uia|app=files": {
+   "chars": 828,
+   "a": 0.279,
+   "b_exact": 0.6498,
+   "b_near": 0.0,
+   "c": 0.0507,
+   "d": 0.0,
+   "e": 0.0205,
+   "e_truth": null
+  },
+  "src=uia|app=launcher": {
+   "chars": 5241,
+   "a": 0.0,
+   "b_exact": 0.4133,
+   "b_near": 0.0569,
+   "c": 0.0,
+   "d": 0.0088,
+   "e": 0.5211,
+   "e_truth": null
+  },
+  "src=uia|app=terminal": {
+   "chars": 4380,
+   "a": 0.9833,
+   "b_exact": 0.0,
+   "b_near": 0.0,
+   "c": 0.0,
+   "d": 0.0,
+   "e": 0.0167,
+   "e_truth": null
+  }
+ },
+ "truth_crosstab_chars": {
+  "a": {
+   "none": 616802,
+   "hchrome": 57053,
+   "content": 1069623
+  },
+  "b_exact": {
+   "none": 190713,
+   "content": 1925859,
+   "hchrome": 86644
+  },
+  "b_near": {
+   "none": 6393,
+   "hchrome": 965,
+   "content": 17513
+  },
+  "c": {
+   "none": 503,
+   "hchrome": 3064,
+   "content": 2299
+  },
+  "d": {
+   "none": 4795,
+   "hchrome": 108,
+   "content": 548
+  },
+  "e": {
+   "none": 14373,
+   "hchrome": 3719,
+   "content": 120538
+  }
+ },
+ "hazards": {
+  "b_near_new_content_line": 17,
+  "b_near_new_content_chars": 1984,
+  "d_content_chars": 548,
+  "c_content_chars": 2299
+ },
+ "line_types_chars": {
+  "garbage|first": 5451,
+  "garbage|truth=none": 177387,
+  "content|first": 138630,
+  "content|truth=none": 639789,
+  "garbage|a": 132745,
+  "content|a": 1556125,
+  "garbage|b": 42206,
+  "content|b": 2102058,
+  "chrome|first": 5866,
+  "chrome|truth=none": 16403,
+  "chrome|a": 54608,
+  "content|truth=hchrome": 55116,
+  "content|truth=content": 3101908,
+  "chrome|truth=hchrome": 95971,
+  "chrome|b": 83823,
+  "garbage|truth=hchrome": 466,
+  "garbage|truth=content": 2549,
+  "chrome|truth=content": 31923
+ },
+ "tokens": {
+  "d": {
+   "tokens": 900,
+   "token_chars": 4759,
+   "unknown": 546,
+   "unknown_chars": 3702,
+   "garbled": 273,
+   "ident": 43,
+   "harness": 269,
+   "word": 42
+  },
+  "all": {
+   "tokens": 703559,
+   "token_chars": 3454232,
+   "unknown": 33728,
+   "unknown_chars": 224817,
+   "word": 37066,
+   "harness": 614652,
+   "ident": 18113,
+   "garbled": 12980
+  },
+  "e": {
+   "tokens": 23831,
+   "token_chars": 115401,
+   "word": 752,
+   "harness": 22202,
+   "unknown": 459,
+   "unknown_chars": 2601,
+   "ident": 418,
+   "garbled": 218
+  },
+  "a": {
+   "tokens": 293676,
+   "token_chars": 1467478,
+   "unknown": 22657,
+   "unknown_chars": 147142,
+   "word": 31094,
+   "harness": 227775,
+   "ident": 12150,
+   "garbled": 6965
+  },
+  "b_exact": {
+   "tokens": 379607,
+   "token_chars": 1841105,
+   "unknown": 9749,
+   "unknown_chars": 68550,
+   "word": 4985,
+   "harness": 359786,
+   "ident": 5087,
+   "garbled": 5343
+  },
+  "b_near": {
+   "tokens": 4471,
+   "token_chars": 20591,
+   "unknown": 313,
+   "unknown_chars": 2782,
+   "garbled": 179,
+   "ident": 404,
+   "word": 164,
+   "harness": 3590
+  },
+  "c": {
+   "tokens": 1074,
+   "token_chars": 4898,
+   "word": 29,
+   "harness": 1030,
+   "ident": 11,
+   "unknown": 4,
+   "unknown_chars": 40,
+   "garbled": 2
+  }
+ },
+ "tokens_by_source": {
+  "ocr_deferred": {
+   "tokens": 52711,
+   "token_chars": 262114,
+   "unknown": 4634,
+   "unknown_chars": 28604,
+   "word": 5351,
+   "harness": 40692,
+   "ident": 2034,
+   "garbled": 1509
+  },
+  "ocr": {
+   "tokens": 506191,
+   "token_chars": 2455858,
+   "word": 23431,
+   "harness": 446318,
+   "unknown": 24464,
+   "unknown_chars": 169029,
+   "garbled": 9926,
+   "ident": 11978
+  },
+  "uia": {
+   "tokens": 144657,
+   "token_chars": 736260,
+   "word": 8284,
+   "harness": 127642,
+   "unknown": 4630,
+   "unknown_chars": 27184,
+   "garbled": 1545,
+   "ident": 4101
+  }
+ },
+ "noise_share_all": 0.04793912095503007,
+ "garbled_share_all": 0.018449056866588303,
+ "sizes": {
+  "a": {
+   "text_bytes": 1810600,
+   "fts_bytes": 822959
+  },
+  "b_exact": {
+   "text_bytes": 2274387,
+   "fts_bytes": 1061779
+  },
+  "b_near": {
+   "text_bytes": 25481,
+   "fts_bytes": 27941
+  },
+  "c": {
+   "text_bytes": 6088,
+   "fts_bytes": 6144
+  },
+  "d": {
+   "text_bytes": 5893,
+   "fts_bytes": 7525
+  },
+  "e": {
+   "text_bytes": 142454,
+   "fts_bytes": 111796
+  },
+  "all": {
+   "text_bytes": 4265794,
+   "fts_bytes": 1931872
+  },
+  "store": {
+   "text_bytes": 4312730,
+   "fts_bytes": 2072456
+  }
+ },
+ "crowding": {
+  "nonce": {
+   "queries": 598,
+   "found": 488,
+   "mean_hits_top5": 4.622950819672131,
+   "dup_slots_same_window": 0.7836879432624113,
+   "dup_slots_same_sighting": 0.6928191489361702,
+   "mean_distinct_windows_top5": 1.0
+  },
+  "word": {
+   "queries": 200,
+   "found": 142,
+   "mean_hits_top5": 4.929577464788732,
+   "dup_slots_same_window": 0.7514285714285714,
+   "dup_slots_same_sighting": 0.6328571428571429,
+   "mean_distinct_windows_top5": 1.2253521126760563
+  }
+ },
+ "lexicon_words": 26121,
+ "harness_words": 5659,
+ "runtime_s": 6.318284000008134
+}

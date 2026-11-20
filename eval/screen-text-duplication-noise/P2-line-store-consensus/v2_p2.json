@@ -1,0 +1,45 @@
+{
+ "candidate": "C:\\Users\\thoma\\Documents\\Akashic\\_dev\\invent\\ocr-text-duplication-noise\\P2-line-store-consensus\\cand.py",
+ "smoke": {
+  "noise_occ": 0.0126066718386346,
+  "noise_occ_n": 65,
+  "tokens_occ": 5156,
+  "noise_doc": 0.021513638109873223,
+  "noise_doc_n": 56,
+  "tokens_doc": 2603,
+  "noise_guard": 0.017455391776570985,
+  "noise_guard_n": 90,
+  "tlink_line": 0.9857142857142858,
+  "tlink_lines": 140,
+  "tlink_lines_invalid": 2,
+  "runtime_s": 1.0749897000205237
+ },
+ "standard": {
+  "noise_occ": 0.014288150042625746,
+  "noise_occ_n": 419,
+  "tokens_occ": 29325,
+  "noise_doc": 0.02646011738670259,
+  "noise_doc_n": 275,
+  "tokens_doc": 10393,
+  "noise_guard": 0.016436487638533673,
+  "noise_guard_n": 482,
+  "tlink_line": 0.9438938254727728,
+  "tlink_lines": 627,
+  "tlink_lines_invalid": 28,
+  "runtime_s": 3.086103000008734
+ },
+ "day": {
+  "noise_occ": 0.013704944684563226,
+  "noise_occ_n": 2765,
+  "tokens_occ": 201752,
+  "noise_doc": 0.030111266766500812,
+  "noise_doc_n": 1870,
+  "tokens_doc": 62103,
+  "noise_guard": 0.020465720290257346,
+  "noise_guard_n": 4129,
+  "tlink_line": 0.8959379159878705,
+  "tlink_lines": 3303,
+  "tlink_lines_invalid": 188,
+  "runtime_s": 28.605201500002295
+ }
+}
