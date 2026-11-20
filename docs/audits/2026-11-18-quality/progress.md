@@ -25,7 +25,7 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   at the user's request.
 - Phase 5, synthesis and refuters: done 2026-11-20 (`synthesis.md`: R1-R11, verified by two
   refuters and two fact-checkers), after the scorer fixes and the rescore of all five runs
-- Phase 6, `quality.md`: not started
+- Phase 6, `quality.md`: done 2026-11-20 (final report, fact-checked: about 120 claims, 2 corrected)
 
 ## User answers (2026-11-18, binding for this audit)
 
@@ -351,7 +351,7 @@ its assets, truth logs, scorer output and baselines at the end of each session.
 - 2026-11-20 scorer fixes and rescore (user's request: M3.1, M6, game rows per truth, M9.1,
   M8.3, then speed). `eval/quality/score.py` and `tags.py` only; all five runs rescored from their
   stores, before/after table in the baseline's last section.
-  - M3.1 wrap-tolerant: CER all 0.15-0.24 -> 0.07-0.13; <= 11 px 0.24-0.52; 1440p 0.15-0.23.
+  - M3.1 wrap-tolerant: CER all 0.15-0.24 -> 0.07-0.13; <= 11 px 0.23-0.52; 1440p 0.15-0.23.
   - M6/M11 truth clipped to the recorded span and split at Pauses, each row assigned to one piece,
     game rows by their own process: synthetic game 1 row per piece on standard, 3.67 on day;
     game end error 516-703 s (rows close while the game runs, #197); Outer Wilds missed after the
@@ -419,7 +419,9 @@ stay in `eval\quality\local\` (gitignored).
 
 ## Next
 
-- Phase 6: write `quality.md` from `synthesis.md`.
+- The audit is complete. Next work is the fixes R1-R11 in `quality.md` (evidence in
+  `synthesis.md`), each followed by its harness rerun (standard, then day). R9 and R11 need a
+  study first.
 - Phase 4 (`/frogg:invent` full, one per problem picked, `eval/quality/` named as the harness in
   Context). Phase 3 measured candidates for #190, #196 and #208. #187 needs only a pid check. #188,
   #110 and the overlap WER are open method problems.

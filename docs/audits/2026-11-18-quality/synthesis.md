@@ -16,9 +16,9 @@ Verified by two refuters and two fact-checkers (last section).
 | "What solo game did I play" | Game rows per truth piece 1 (standard) to 3.67 (day), Outer Wilds 1.5-7; game end error max 516-703 s; Outer Wilds missed after a Pause; game episode F1 0.29-0.30 | Rows close on focus loss and reopen (#197); covering-window rule (#188, #192); NPC voices make a solo game a call (#200) | R3 |
 | "What video did I watch", "all the series" | Video episode F1 day 0.22; 15 media-row splits in the replays (11 from #189); title accuracy 0.52-0.67 | No viewing chains; title-change hold closes background video rows (#189) | R3 |
 | Speech in a call while a video or game plays | Overlap WER 0.53-0.58 standard, 0.50 day, 0.64 smoke (clean 0.05-0.12 on standard and day) | One endpoint loopback mixes every app (#110) | R6 |
-| Which app was on screen at a time | App-time holes 582 s (standard), 5,240 s (day); duration error 0.35-0.48 | Sessions end at their last stored frame (#196) | R5 |
+| Which app was on screen at a time | App-time holes 571-582 s (standard), 5,240 s (day); duration error 0.18-0.48 | Sessions end at their last stored frame (#196) | R5 |
 | "Who said it", the people of a conversation | Episode people 14 / 16 / 27 distinct against 4 truth speakers; authors wrong / unknown 46 / 293 of 1,811 (day); DER 0.16-0.25; useless episodes 25-37 % | Speaker profiles fragment; segmentation merges a short second voice; window tail and 30 s seam leave turns unidentified | R9 |
-| Names seen or heard ("the Minecraft Rust project", "Minlo") | Term hits in transcripts 0.50-0.75; screen CER ≤ 11 device px 0.24-0.52, 1440p 0.15-0.23; FTS recall of shown lines 0.68-0.83 | Unstudied vocabulary; native-size OCR of small and subpixel text (#190) | R8, R11 |
+| Names seen or heard ("the Minecraft Rust project", "Minlo") | Term hits in transcripts 0.50-0.75; screen CER ≤ 11 device px 0.23-0.52, 1440p 0.15-0.23; FTS recall of shown lines 0.68-0.83 | Unstudied vocabulary; native-size OCR of small and subpixel text (#190) | R8, R11 |
 | A one-word chat reply or badge | Every one-word reply missed on synthetic frames; 131 of 356 missed at the first check on real windows | Global changed-pixel threshold (#208) | R7 |
 | Search results for something seen often | 73-78 % of top-5 slots repeat one window | Text stored and indexed per frame (#101) | R10 |
 
@@ -231,9 +231,9 @@ the place to start.
 ## Measured, not yet studied
 
 - **Store growth** 4.2-4.9 GB per day kept forever by default (about 1.5-1.8 TB a year).
-- **URL identity** M4.1 0.69-0.77.
+- **URL identity** M4.1 0.69-0.92 (13 truth items per standard run).
 - **Game borderless change recall** M1.1 0.04-0.12 (game mode stores one frame per 60 s by design).
-- **Embedding delay** p90 about 405-412 s on smoke (#203).
+- **Embedding delay** p50 209-319 s on standard, p90 1,417-1,589 s (#203).
 
 ## Checks still open
 
