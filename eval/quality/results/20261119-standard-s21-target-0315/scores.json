@@ -208,7 +208,7 @@
     "reason": "app shell out of scope for this harness"
    }
   ],
-  "temp_files_unreadable": 4
+  "temp_files_unreadable": 5
  },
  "M10.2": {
   "hits": 0,
@@ -445,17 +445,18 @@
    "value": 1.0,
    "wrong": 0
   },
+  "steps_not_in_front": 7,
   "tab_title": {
-   "missing": 2,
-   "n": 13,
-   "value": 0.6923076923076923,
-   "wrong": 2
+   "missing": 1,
+   "n": 7,
+   "value": 0.7142857142857143,
+   "wrong": 1
   },
   "url": {
-   "missing": 2,
-   "n": 13,
-   "value": 0.6923076923076923,
-   "wrong": 2
+   "missing": 1,
+   "n": 7,
+   "value": 0.8571428571428571,
+   "wrong": 0
   },
   "video_title": {
    "missing": 0,

@@ -623,10 +623,17 @@ def m4(tr: Truth, conn) -> dict:
     tally = defaultdict(lambda: Counter())
     titles = {e["s"]: e["title"] for e in tr.pages if e.get("type") == "lines" and e.get("title") and "#private" not in e["w"]}
     urls = {d["step"]: d["url"] for d in tr.driver if d["action"] == "page_load" and "#private" not in d["window"]}
+    fg = tr.fg_runs()
     for step in tr.scn["steps"]:
         if step["kind"] != "focus" or step["params"]["app"] not in ("chrome", "edge", "zen", "assistant"):
             continue
         a, b = tr.span(step)
+        # truth only where the OS log shows the step's app in front for most of the step: a focus step
+        # that did not take leaves another app focused, which no stored row could get right
+        front = sum(max(0, min(b, r["t1"]) - max(a, r["t0"])) for r in fg if r["app"] == step["params"]["app"])
+        if front * 2 <= b - a:
+            tally["not_in_front"]["skipped"] += 1
+            continue
         rows = conn.execute("SELECT w.title, w.url FROM frames f JOIN frame_windows w ON w.frame_id = f.id AND w.focused = 1 WHERE f.ts_ms BETWEEN ? AND ?", (a, b)).fetchall()
         sid = step["id"]
         if sid in titles:
@@ -647,7 +654,9 @@ def m4(tr: Truth, conn) -> dict:
         tally["game_name"]["right" if any("qualitygame" in (p or "").lower() or "Quality Game" in (t or "") for p, t in games) else "missing"] += 1
     if tr.outer_wilds_span():
         tally["game_name"]["right" if any("outerwilds" in (p or "").lower() for p, _ in games) else "missing"] += 1
-    return {"M4.1": {k: {"value": c["right"] / sum(c.values()), "n": sum(c.values()), "wrong": c["wrong"], "missing": c["missing"]} for k, c in tally.items()} or nul("no identity items")}
+    skipped = tally.pop("not_in_front", Counter())["skipped"]
+    out = {k: {"value": c["right"] / sum(c.values()), "n": sum(c.values()), "wrong": c["wrong"], "missing": c["missing"]} for k, c in tally.items()}
+    return {"M4.1": {**out, "steps_not_in_front": skipped} if out else nul("no identity items")}
 
 
 def bare_url(url: str) -> str:

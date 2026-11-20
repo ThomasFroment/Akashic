@@ -231,7 +231,8 @@ the place to start.
 ## Measured, not yet studied
 
 - **Store growth** 4.2-4.9 GB per day kept forever by default (about 1.5-1.8 TB a year).
-- **URL identity** M4.1 0.69-0.92 (13 truth items per standard run).
+- **URL identity** M4.1 0.69-0.92 on the first scoring; 0.86-0.96 once steps the browser never held
+  are left out (2026-11-20, baseline last section): no wrong URL remains, only visits under 5 s.
 - **Game borderless change recall** M1.1 0.04-0.12 (game mode stores one frame per 60 s by design).
 - **Embedding delay** p50 209-319 s on standard, p90 1,417-1,589 s (#203).
 

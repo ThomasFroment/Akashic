@@ -55,7 +55,7 @@ as measured; "weak" works but limits answers; "broken" gives wrong or missing an
 | 1 | When the screen is captured | change recall (≥ 5 s), focused, game borderless; useless frames on the primary | 0.59 / 0.67 / 0.69; 0.72 / 0.77 / 0.87; 0.04-0.12; 0.10-0.23 | weak: one-word replies and badges are never stored (#208); game mode stores one frame per 60 s by design |
 | 2 | App tagging | label accuracy; focused row | 0.98-1.00; 1.00 | good |
 | 3 | Screen text | CER all; ≤ 11 device px; 1440p; 4K; UIA; FTS recall of shown lines; duplicate characters | 0.08 / 0.07 / 0.11; 0.23 / 0.27 / 0.52; 0.15-0.18; 0.01; 0.01; 0.72 / 0.80 / 0.83; 0.95-0.96 | weak: small text and 1440p (#190); everything stored per frame (#101) |
-| 4 | Browser and media identity | URL; video title; series and episode; game name | 0.69 / 0.92 / 0.77; 1.00; 1.00; 1.00 | good for titles; URL weak |
+| 4 | Browser and media identity | URL (steps the browser held); video title; series and episode; game name | 0.86 / 0.92 / 0.96; 1.00; 1.00; 1.00 | good; visits under 5 s keep no URL |
 | 5 | Timeline | untyped holes; duration error; Pause typed | 582 / 571 / 5,240 s; 0.35 / 0.18 / 0.48; 0.98-1.00 | broken: sessions end at their last frame (#196) |
 | 6 | Media and game sessions | media start error p50; media row splits (day); game rows per truth piece; game end error max; Outer Wilds after the Pause | 0.36-1.62 s; 12; 1 / 1 / 3.67; 516 / 518 / 703 s; missed on both standard runs | broken for games: rows close while the game runs (#197) |
 | 7 | Sound per application | segments listing Akashic itself; leak other than self; speech-tag accuracy | 257 / 253 / 2,074 (nearly all); 0 / 11.7 / 25.6 s; 0.99 | weak: Akashic's own session in every source list (#187) |

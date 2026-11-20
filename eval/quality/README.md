@@ -109,7 +109,8 @@ generated locally from the installed Windows voices; music and game sound are sy
   per truth piece and start/end errors. M9.1 leaves out speech during a Pause (reported as
   `speech_paused`) and, when every segment names one speech app (Discord or a browser), scores
   overlapping speech per app; M8.3 takes the truth speaker from the segment's own app when that
-  app spoke there.
+  app spoke there. M4.1 scores URL and tab title only for focus steps whose app the OS log shows
+  in front for more than half the step; the rest are counted as `steps_not_in_front`.
 - **Speed:** edit distances use a bit-parallel Levenshtein (exact) and the best-line search skips
   lines whose length gap already exceeds the best ratio; frames decode on a thread pool.
 - **Truth for coverage:** `coverage.json` counts a step only when the logs show it happened
