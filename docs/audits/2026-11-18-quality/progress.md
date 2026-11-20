@@ -23,8 +23,8 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   2026-11-20 the user added a sixth study: duplicated and noisy screen text (M3.2, UI chrome,
   OCR garbage on menus and HUDs; extends #101 beyond exact duplicates). Studies run in parallel
   at the user's request.
-- Phase 5, synthesis and refuters: started 2026-11-20 (`synthesis.md`), after the scorer fixes
-  and the rescore of all five runs
+- Phase 5, synthesis and refuters: done 2026-11-20 (`synthesis.md`: R1-R11, verified by two
+  refuters and two fact-checkers), after the scorer fixes and the rescore of all five runs
 - Phase 6, `quality.md`: not started
 
 ## User answers (2026-11-18, binding for this audit)
@@ -362,6 +362,15 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   - Speed, exact (scores identical to the slow version on smoke and standard): standard 55 min ->
     75 s, day about 3 h -> 412 s.
 
+- 2026-11-20 Phase 5 synthesis: `synthesis.md`. Ranked R1 transcription alive (embedder
+  `ctx-size` first, no eviction per job kind, worker restart), R2 capture VRAM (keep captures
+  across game-mode switches, capture child restart past a threshold), R3 games and video episodes
+  (C1 with #189, #200), R4 own audio session, R5 app time (C3 switch rows + C4 presence), R6
+  overlapping speech (C1 + language split; Discord call first), R7 small changes (C5fix), R8 OCR
+  (C2 live ClearType, C1 scale otherwise), R9 people and authorship (new study), R10 query-time
+  merge per window run, R11 term hits (new study). Fact-checkers 18/18 supported; refuters 0
+  refuted, 2 stand, 11 narrowed (folded in).
+
 ## Harness commands
 
 ```powershell
@@ -410,6 +419,7 @@ stay in `eval\quality\local\` (gitignored).
 
 ## Next
 
+- Phase 6: write `quality.md` from `synthesis.md`.
 - Phase 4 (`/frogg:invent` full, one per problem picked, `eval/quality/` named as the harness in
   Context). Phase 3 measured candidates for #190, #196 and #208. #187 needs only a pid check. #188,
   #110 and the overlap WER are open method problems.
