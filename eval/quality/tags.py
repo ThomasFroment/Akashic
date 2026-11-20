@@ -64,12 +64,17 @@ def luma(frame: np.ndarray) -> np.ndarray:
     return (frame[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32)).astype(np.uint8)
 
 
-def _runs(row_dark: np.ndarray, lo: int, hi: int):
-    """(start, length) of dark runs with lo <= length <= hi in one boolean row."""
-    d = np.diff(np.concatenate(([0], row_dark.view(np.int8), [0])))
-    starts, ends = np.flatnonzero(d == 1), np.flatnonzero(d == -1)
-    ok = (ends - starts >= lo) & (ends - starts <= hi)
-    return zip(starts[ok], (ends - starts)[ok], strict=True)
+def _runs(dark: np.ndarray, rows: np.ndarray, lo: int, hi: int):
+    """(y, x, length) of dark runs with lo <= length <= hi in the given rows, row by row then left to right."""
+    sub = dark[rows].view(np.int8)
+    pad = np.zeros((len(rows), 1), np.int8)
+    d = np.diff(np.concatenate((pad, sub, pad), axis=1), axis=1)
+    # starts and ends alternate along each row, so in row-major order the k-th start pairs with the k-th end
+    sy, sx = np.nonzero(d == 1)
+    _, ex = np.nonzero(d == -1)
+    length = ex - sx
+    ok = (length >= lo) & (length <= hi)
+    return zip(rows[sy[ok]], sx[ok], length[ok], strict=True)
 
 
 def decode(frame: np.ndarray, max_cell: int = 24) -> list[int]:
@@ -77,14 +82,13 @@ def decode(frame: np.ndarray, max_cell: int = 24) -> list[int]:
     dark = luma(frame) < DARK
     found: dict[int, tuple[int, int]] = {}
     lo, hi = GRID * (MIN_CELL - 1), GRID * (max_cell + 1)
-    for y in np.flatnonzero((dark.sum(axis=1) >= lo)):
-        for x, length in _runs(dark[y], lo, hi):
-            cell = round(length / GRID)
-            if abs(length - cell * GRID) > cell // 2 + 1 or cell < MIN_CELL:
-                continue
-            tag_id = _read(dark, int(x), int(y), cell)
-            if tag_id is not None:
-                found.setdefault(tag_id, (int(x), int(y)))
+    for y, x, length in _runs(dark, np.flatnonzero(dark.sum(axis=1) >= lo), lo, hi):
+        cell = round(length / GRID)
+        if abs(length - cell * GRID) > cell // 2 + 1 or cell < MIN_CELL:
+            continue
+        tag_id = _read(dark, int(x), int(y), cell)
+        if tag_id is not None:
+            found.setdefault(tag_id, (int(x), int(y)))
     return sorted(found)
 
 

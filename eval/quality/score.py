@@ -14,6 +14,7 @@ import bisect
 import io
 import itertools
 import json
+import math
 import re
 import statistics
 import sys
@@ -36,6 +37,12 @@ IOU = 0.5
 DWELL_MS = 5000
 SHARED_PLAYERS = ("call", "own", "music", "elsewhere")  # the players scheduled from the drive start
 COLLAR_MS = 250
+# the process a truth utterance plays from, per player and per browser app; matched against a stored
+# segment's sources (only these speech sources: music and game beds carry no truth speech)
+PLAYER_PROC = {"call": "discord.exe", "own": "mic", "elsewhere": "elsewhere"}
+APP_EXE = {"chrome": "chrome.exe", "edge": "msedge.exe", "zen": "zen.exe"}
+SPEECH_PROCS = {"discord.exe", *APP_EXE.values()}
+MIN_VIDEO_PIECE_MS, MIN_GAME_PIECE_MS = 60_000, 120_000  # shorter truth pieces (after clip and Pause split) are dropped
 CASES = ("calculator", "assistant", "steam", "elevated", "hung")
 CASE_LABEL = {"calculator": "uwp", "assistant": "pwa", "steam": "launcher", "elevated": "elevated", "hung": "ghost"}
 GAP_REASONS = {"lock": {"locked"}, "sleep": {"locked", "stopped", "stalled"}, "pause": {"paused"},
@@ -84,21 +91,71 @@ def fold(text: str, accents: bool = True) -> str:
     return " ".join(text.split())
 
 
-def lev(a, b) -> int:
-    prev = list(range(len(b) + 1))
-    for i, x in enumerate(a, 1):
-        cur = [i]
-        for j, y in enumerate(b, 1):
-            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (x != y)))
-        prev = cur
-    return prev[-1]
+def lev(a, b, limit: int | None = None) -> int | None:
+    """Edit distance between two sequences (strings or word lists), exact. Bit-parallel over `a`
+    (Myers 1999 / Hyyro 2001) with Python big ints: one pass over `b` instead of len(a) x len(b).
+    With `limit`, None as soon as the distance must exceed it: each further element of `b` moves
+    the last-row distance by at most 1."""
+    if not a:
+        return len(b)
+    if not b:
+        return len(a)
+    m = len(a)
+    full = (1 << m) - 1
+    top = 1 << (m - 1)
+    peq: dict = {}
+    for i, c in enumerate(a):
+        peq[c] = peq.get(c, 0) | (1 << i)
+    pv, mv, dist = full, 0, m
+    cap = float("inf") if limit is None else limit + len(b)
+    for j, c in enumerate(b):
+        if dist + j > cap:
+            return None
+        eq = peq.get(c, 0)
+        xv = eq | mv
+        xh = (((eq & pv) + pv) ^ pv) | eq
+        ph = (mv | ~(xh | pv)) & full
+        mh = pv & xh
+        if ph & top:
+            dist += 1
+        elif mh & top:
+            dist -= 1
+        ph = ((ph << 1) | 1) & full
+        mh = (mh << 1) & full
+        pv = (mh | ~(xv | ph)) & full
+        mv = ph & xv
+    return dist
+
+
+def joined(hyp: list[str], k: int = 3) -> list[str]:
+    """Wrap-tolerant hypothesis lines: each OCR line plus runs of 2..k consecutive lines joined.
+    The harness pages wrap long sentences, so a truth line can span two or three OCR lines."""
+    out = list(hyp)
+    for n in range(2, k + 1):
+        out += [" ".join(hyp[i : i + n]) for i in range(len(hyp) - n + 1)]
+    return out
+
+
+def best_ratio(r, hyp_lines) -> float:
+    """min(lev(r, h) / len(r)) over hyp_lines, 1.0 when there are none. Lines are tried closest
+    length first, and the search stops once the length gap alone reaches the best ratio (exact)."""
+    if not hyp_lines:
+        return 1.0
+    best, n = float("inf"), len(r)
+    for h in sorted(hyp_lines, key=lambda h: abs(len(h) - n)):
+        if abs(len(h) - n) / n >= best:
+            break
+        d = lev(r, h, None if best == float("inf") else math.ceil(best * n) - 1)
+        if d is not None:
+            best = min(best, d / n)
+    return best
 
 
 def best_line_cer(ref: str, hyp_lines: list[str]) -> float:
     r = fold(ref)
     if not r:
         return 0.0
-    return min((lev(r, h) / len(r) for h in hyp_lines), default=1.0)
+    return best_ratio(r, hyp_lines)
 
 
 # --- truth ---------------------------------------------------------------------------------
@@ -179,7 +236,8 @@ class Truth:
                     continue
                 clip = self.clips[u["clip"]]
                 start = e["start_wall_ms"]
-                stream = {"step": u["step"], "stream": "mic" if u["stream"] == "own" else "system", "source": u["stream"], "lang": clip["lang"], "kind": clip.get("kind", "speech")}
+                stream = {"step": u["step"], "stream": "mic" if u["stream"] == "own" else "system", "source": u["stream"], "proc": PLAYER_PROC.get(u["stream"]),
+                          "lang": clip["lang"], "kind": clip.get("kind", "speech")}
                 spans = [(start + round(a * 1000), start + round(b * 1000)) for a, b in clip["spans"]]
                 if "parts" in clip:  # a mixed turn is two voices: each half is its own utterance
                     cut = start + round(clip["split_s"] * 1000)
@@ -203,7 +261,7 @@ class Truth:
             stretches = []
             for e in events:
                 if e["ev"] == "play":
-                    playing = (e["wall_ms"], e["t"])
+                    playing = (e["wall_ms"], e["t"], e.get("w"))
                 elif e["ev"] == "tick":
                     last_tick = e
                 elif playing:
@@ -212,14 +270,15 @@ class Truth:
             if playing and last_tick and last_tick["wall_ms"] > playing[0]:
                 stretches.append((*playing, last_tick["wall_ms"]))
             narrators = {c["id"]: c["speaker"] for c in self.manifest["clips"]}
-            for a_wall, a_media, b_wall in stretches:
+            for a_wall, a_media, wid, b_wall in stretches:
+                proc = APP_EXE.get(self.windows.get(wid, {}).get("app"))
                 b_media = a_media + (b_wall - a_wall) / 1000
                 for c in info.get("plan", []):
                     clip = self.clips[c["id"]]
                     c0, c1 = c["t_ms"] / 1000, c["t_ms"] / 1000 + clip["dur_s"]
                     if c0 < b_media and c1 > a_media:
                         off = a_wall - a_media * 1000
-                        out.append({"stream": "system", "source": "video", "speaker": narrators.get(c["id"]), "lang": clip["lang"], "text": clip["text"],
+                        out.append({"stream": "system", "source": "video", "proc": proc, "speaker": narrators.get(c["id"]), "lang": clip["lang"], "text": clip["text"],
                                     "t0": round(off + c0 * 1000), "t1": round(off + c1 * 1000),
                                     "spans": [(round(off + (c0 + x) * 1000), round(off + (c0 + y) * 1000)) for x, y in clip["spans"]]})
         return out
@@ -282,7 +341,8 @@ def monitor_names(conn) -> dict[int, str]:
 
 
 class FrameScan:
-    """Decodes each stored frame once, for the change tags (M1) and the canary pixel marker (M10)."""
+    """Decodes each stored frame once, for the change tags (M1) and the canary pixel marker (M10).
+    M10 reads every frame, so the first lookup decodes them all at once on a thread pool."""
 
     def __init__(self, conn, media) -> None:
         self.conn, self.media = conn, media
@@ -290,25 +350,49 @@ class FrameScan:
 
     def info(self, fid: int, path: str) -> tuple[frozenset, bool, bool]:
         """(tag ids in the frame, canary marker anywhere, canary marker inside a window rectangle)."""
+        if not self.cache:
+            self.prefetch()
         if fid not in self.cache:
-            from PIL import Image
+            self.cache[fid] = self._decode(path, *self._geometry(fid))
+        return self.cache[fid]
 
-            arr = np.asarray(Image.open(io.BytesIO(self.media.read(path))).convert("RGB"))
-            # window rectangles are in virtual-desktop pixels; the frame is one monitor, perhaps resized
-            ox, oy, mon_w = self.conn.execute(
-                "SELECT lm.x0, lm.y0, lm.x1 - lm.x0 FROM frames f JOIN layout_monitors lm ON lm.monitor_id = f.monitor_id "
-                "WHERE f.id = ? AND lm.layout_id = (SELECT id FROM monitor_layouts WHERE start_ms <= f.ts_ms ORDER BY start_ms DESC LIMIT 1)", (fid,)).fetchone()
-            to_px = lambda v, origin: max(0, round((v - origin) * arr.shape[1] / mon_w))
-            mask = np.all(np.abs(arr.astype(np.int16) - np.array(CANARY_RGB)) < 24, axis=2)
-            # the canaries draw a solid 300 px square; scattered pixels of that colour (Steam's game art did) are not one
-            side = max(4, round(CANARY_SQUARE_PX * arr.shape[1] / mon_w))
+    def _geometry(self, fid: int):
+        # window rectangles are in virtual-desktop pixels; the frame is one monitor, perhaps resized
+        ox, oy, mon_w = self.conn.execute(
+            "SELECT lm.x0, lm.y0, lm.x1 - lm.x0 FROM frames f JOIN layout_monitors lm ON lm.monitor_id = f.monitor_id "
+            "WHERE f.id = ? AND lm.layout_id = (SELECT id FROM monitor_layouts WHERE start_ms <= f.ts_ms ORDER BY start_ms DESC LIMIT 1)", (fid,)).fetchone()
+        rects = self.conn.execute("SELECT x0, y0, x1, y1 FROM frame_windows WHERE frame_id = ?", (fid,)).fetchall()
+        return ox, oy, mon_w, rects
+
+    def prefetch(self) -> None:
+        import os
+        from concurrent.futures import ThreadPoolExecutor
+
+        todo = [(fid, path, *self._geometry(fid)) for fid, path in self.conn.execute("SELECT id, image_path FROM frames WHERE image_path IS NOT NULL")]
+        with ThreadPoolExecutor(max_workers=min(12, os.cpu_count() or 4)) as pool:
+            for fid, res in zip((t[0] for t in todo), pool.map(lambda t: self._decode(*t[1:]), todo), strict=True):
+                self.cache[fid] = res
+
+    def _decode(self, path: str, ox, oy, mon_w, rects) -> tuple[frozenset, bool, bool]:
+        from PIL import Image
+
+        arr = np.asarray(Image.open(io.BytesIO(self.media.read(path))).convert("RGB"))
+        to_px = lambda v, origin: max(0, round((v - origin) * arr.shape[1] / mon_w))
+        # |channel - marker| < 24 on every channel, compared in uint8 without a widened copy
+        mask = None
+        for k, c in enumerate(CANARY_RGB):
+            ch = arr[..., k]
+            m = (ch >= max(0, c - 23)) & (ch <= min(255, c + 23))
+            mask = m if mask is None else mask & m
+        # the canaries draw a solid 300 px square; scattered pixels of that colour (Steam's game art did) are not one
+        side = max(4, round(CANARY_SQUARE_PX * arr.shape[1] / mon_w))
+        anywhere = in_window = False
+        if np.count_nonzero(mask) >= side * side:  # fewer set pixels cannot fill one square
             square = solid_squares(mask, side)
             anywhere = bool(square.any())
             in_window = anywhere and any(
-                square[to_px(y0, oy):to_px(y1, oy), to_px(x0, ox):to_px(x1, ox)].any()
-                for x0, y0, x1, y1 in self.conn.execute("SELECT x0, y0, x1, y1 FROM frame_windows WHERE frame_id = ?", (fid,)))
-            self.cache[fid] = (frozenset(tags.decode(arr)), bool(anywhere), bool(in_window))
-        return self.cache[fid]
+                square[to_px(y0, oy):to_px(y1, oy), to_px(x0, ox):to_px(x1, ox)].any() for x0, y0, x1, y1 in rects)
+        return frozenset(tags.decode(arr)), bool(anywhere), bool(in_window)
 
 
 def logged_changes(tr: Truth) -> list[dict]:
@@ -420,7 +504,7 @@ def best_line_wer(ref: str, hyp_lines: list[str]) -> float:
     r = fold(ref).split()
     if not r:
         return 0.0
-    return min((lev(r, h.split()) / len(r) for h in hyp_lines), default=1.0)
+    return best_ratio(r, [h.split() for h in hyp_lines])
 
 
 def monitor_of(tr: Truth, wid: str | None) -> dict:
@@ -492,18 +576,23 @@ def m3(tr: Truth, conn) -> dict:
     splits = defaultdict(lambda: [[], [], []])
     dup_chars = total_chars = 0
     sample = rows[:: max(1, len(rows) // MAX_TEXT_ROWS)] if rows else []
+    memo: dict[tuple, tuple[float, float, float]] = {}
     for h, ts, text, src in sample:
         wid = tr.hwnd_to_window.get(h)
         i = bisect.bisect_right(report_times.get(wid, []), ts) - 1
         shown = [lines[x] for x in visible[wid][i][1] if x in lines] if i >= 0 else []
         if not shown:
             continue
-        hyp = [fold(x) for x in text.splitlines() if x.strip()]
+        key = (text, tuple(ln["id"] for ln in shown))
+        if key not in memo:  # an unchanged page is stored many times with the same text
+            hyp = joined([fold(x) for x in text.splitlines() if x.strip()])
+            hyp_f = joined([fold(x, False) for x in text.splitlines() if x.strip()])
+            memo[key] = (statistics.mean(best_line_cer(ln["text"], hyp) for ln in shown),
+                         statistics.mean(best_line_cer(fold(ln["text"], False), hyp_f) for ln in shown),
+                         statistics.mean(best_line_wer(ln["text"], hyp) for ln in shown))
+        cer, cer_f, wer = memo[key]
         params = focus_params.get(shown[-1]["s"], {})
         mon = monitor_of(tr, wid)
-        cer = statistics.mean(best_line_cer(ln["text"], hyp) for ln in shown)
-        cer_f = statistics.mean(best_line_cer(fold(ln["text"], False), [fold(x, False) for x in hyp]) for ln in shown)
-        wer = statistics.mean(best_line_wer(ln["text"], hyp) for ln in shown)
         device_px = params.get("font_px", 16) * mon.get("scale", 1)
         bucket = next((b[2] for b in FONT_BUCKETS if b[0] <= device_px < b[1] + 1), "?")
         for key in (f"lang={params.get('lang', '?')}", f"font={bucket}", f"theme={params.get('theme', '?')}", f"source={src}",
@@ -629,53 +718,111 @@ def truth_gaps(tr: Truth) -> list[tuple[int, int]]:
     return [s for spans in truth_gap_kinds(tr).values() for s in spans]
 
 
-def m6(tr: Truth, conn) -> dict:
-    out = {}
+def recorded_pieces(tr: Truth, conn, a: int, b: int, min_ms: int) -> list[tuple[int, int]]:
+    """A truth session [a, b) as Akashic can record it: clipped to the first stored frame and the
+    drive end, and split at the driver's Pauses (Akashic records nothing then, and a Pause ends a
+    row by design). Pieces shorter than min_ms are dropped. Other no-recording gaps (lock, sleep)
+    only move a piece's start to their end, as before."""
+    if not hasattr(tr, "_rec_span"):
+        first = conn.execute("SELECT min(ts_ms) FROM frames").fetchone()[0]
+        kinds = truth_gap_kinds(tr)
+        tr._rec_span = (first or tr.t0, tr.t1, merge(kinds.get("pause", [])), merge(truth_gaps(tr)))
+    lo, hi, pauses, gaps = tr._rec_span
+    a, b = max(a, lo), min(b, hi)
+    out = []
+    for x, y in pauses:
+        if x < b and y > a:
+            out.append((a, x))
+            a = y
+    out.append((a, b))
+    out = [(next((g1 for g0, g1 in gaps if g0 <= s < g1), s), e) for s, e in out]
+    return [(s, e) for s, e in out if e - s >= min_ms]
+
+
+def assign_rows(pieces: list[tuple[int, int]], rows: list[tuple[int, int]]) -> tuple[list[list[tuple[int, int]]], int]:
+    """Each stored row goes to the one truth piece it overlaps most (rows overlapping none are
+    counted apart), so a row bridging two pieces is not counted twice."""
+    out = [[] for _ in pieces]
+    stray = 0
+    for r in rows:
+        ov = [max(0, min(r[1], e) - max(r[0], s)) for s, e in pieces]
+        if ov and max(ov) > 0:
+            out[ov.index(max(ov))].append(r)
+        else:
+            stray += 1
+    return out, stray
+
+
+def boundary_errors(pieces: list[tuple[int, int]], rows: list[tuple[int, int]], n_truth: int) -> dict:
+    """Per truth piece: its assigned rows, the first row's start error and the last row's end error.
+    A piece with no row counts as missed."""
+    if not pieces:
+        return nul("no truth piece in the recorded span")
+    groups, stray = assign_rows(pieces, sorted(rows))
+    hit = [(p, g) for p, g in zip(pieces, groups, strict=True) if g]
+    return {"truth_sessions": n_truth, "truth_pieces": len(pieces), "stored_rows": len(rows), "missed_pieces": len(pieces) - len(hit),
+            "rows_not_on_truth": stray, "rows_per_truth": [len(g) for g in groups],
+            "rows_per_truth_mean": statistics.mean(len(g) for g in groups), "rows_per_truth_max": max(len(g) for g in groups),
+            "split_rows": sum(len(g) - 1 for _, g in hit),
+            "start_error_s": summarize([abs(g[0][0] - p[0]) / 1000 for p, g in hit]),
+            "end_error_s": summarize([abs(g[-1][1] - p[1]) / 1000 for p, g in hit])}
+
+
+def truth_video_plays(tr: Truth) -> dict[str, tuple[int, int]]:
+    """Per video, what the page really played: first play to its last media event."""
     plays = defaultdict(list)
     for e in tr.pages:
-        if e.get("type") == "media" and e.get("ev") in ("play", "pause", "ended", "tick"):
-            vid = tr.pages_video(e)
-            if vid:
-                plays[vid].append(e)
-    errs_s, errs_e, splits, n = [], [], 0, 0
-    built = {e["video"]: e["title"] for e in tr.pages if e.get("type") == "video_built"}
-    gaps = merge(truth_gaps(tr))
-    def recording_at(t: int) -> int:
-        """A truth time inside a no-recording gap (Pause, UI open, lock) moves to the gap's end:
-        Akashic records nothing then, by design."""
-        return next((b for a, b in gaps if a <= t < b), t)
+        if e.get("type") == "media" and e.get("ev") in ("play", "pause", "ended", "tick") and (vid := tr.pages_video(e)):
+            plays[vid].append(e)
+    out = {}
     for vid, evs in plays.items():
         starts = [e["wall_ms"] for e in evs if e["ev"] == "play"]
-        if not starts:
-            continue
-        truth = (recording_at(min(starts)), max(e["wall_ms"] for e in evs))
-        rows = conn.execute("SELECT start_ms, end_ms FROM media_sessions WHERE title = ? ORDER BY start_ms", (built.get(vid, ""),)).fetchall()
-        n += 1
-        splits += max(0, len(rows) - 1)
-        if rows:
-            errs_s.append(abs(rows[0][0] - truth[0]) / 1000)
-            errs_e.append(abs(rows[-1][1] - truth[1]) / 1000)
+        if starts:
+            out[vid] = (min(starts), max(e["wall_ms"] for e in evs))
+    return out
+
+
+def truth_game_sessions(tr: Truth) -> list[tuple[str, int, int, str]]:
+    """(process prefix, start, end, name) of each truth game session."""
     games = [e for e in tr.game if e["type"] in ("game_start", "game_end")]
-    stored_games = conn.execute("SELECT start_ms, end_ms FROM game_sessions ORDER BY start_ms").fetchall()
-    out["media"] = {"start_error_s": summarize(errs_s), "end_error_s": summarize(errs_e), "split_rows": splits, "n": n} if n else nul("no video session")
-    truth_games = [(a["wall_ms"], b["wall_ms"]) for a, b in zip(games[::2], games[1::2], strict=False)]
-    out["game"] = boundary_errors(truth_games, stored_games) if truth_games else nul("no game session")
-    ow = tr.outer_wilds_span()
-    if ow:
-        first_frame = conn.execute("SELECT min(ts_ms) FROM frames").fetchone()[0]
-        rows = conn.execute("SELECT start_ms, end_ms FROM game_sessions WHERE lower(process) LIKE 'outerwilds%' ORDER BY start_ms").fetchall()
-        # the game was already running when capture started: its session can only begin there
-        out["outer_wilds"] = {**boundary_errors([(max(ow[0], first_frame or ow[0]), ow[1])], rows),
-                              "window_modes": [{"monitor": m["monitor"], "mode": m["mode"]} for m in tr.outer_wilds_modes()]}
+    out = [("qualitygame", a["wall_ms"], b["wall_ms"], "quality game") for a, b in zip(games[::2], games[1::2], strict=False)]
+    if ow := tr.outer_wilds_span():
+        out.append(("outerwilds", ow[0], ow[1], "outer wilds"))
+    return out
+
+
+def m6(tr: Truth, conn) -> dict:
+    out = {}
+    built = {e["video"]: e["title"] for e in tr.pages if e.get("type") == "video_built"}
+    pg, stray, n = [], 0, 0  # all videos pooled: (piece, its rows), rows on no piece, truth videos
+    for vid, (a, b) in truth_video_plays(tr).items():
+        pieces = recorded_pieces(tr, conn, a, b, MIN_VIDEO_PIECE_MS)
+        rows = [tuple(r) for r in conn.execute("SELECT start_ms, end_ms FROM media_sessions WHERE title = ? ORDER BY start_ms", (built.get(vid, ""),))]
+        groups, s = assign_rows(pieces, rows)
+        pg += zip(pieces, groups, strict=True)
+        stray += s
+        n += 1
+    if n:
+        hit = [(p, g) for p, g in pg if g]
+        out["media"] = {"truth_sessions": n, "truth_pieces": len(pg), "missed_pieces": len(pg) - len(hit), "rows_not_on_truth": stray,
+                        "split_rows": sum(len(g) - 1 for _, g in hit), "rows_per_truth_max": max((len(g) for _, g in pg), default=0),
+                        "start_error_s": summarize([abs(g[0][0] - p[0]) / 1000 for p, g in hit]),
+                        "end_error_s": summarize([abs(g[-1][1] - p[1]) / 1000 for p, g in hit]), "n": len(pg)}
+    else:
+        out["media"] = nul("no video session")
+    sessions = truth_game_sessions(tr)
+    for key, prefix in (("game", "qualitygame"), ("outer_wilds", "outerwilds")):
+        mine = [s for s in sessions if s[0] == prefix]
+        if not mine:
+            if key == "game":
+                out[key] = nul("no game session")
+            continue
+        pieces = [p for _, a, b, _ in mine for p in recorded_pieces(tr, conn, a, b, MIN_GAME_PIECE_MS)]
+        rows = [tuple(r) for r in conn.execute("SELECT start_ms, end_ms FROM game_sessions WHERE lower(process) LIKE ? ORDER BY start_ms", (prefix + "%",))]
+        out[key] = boundary_errors(pieces, rows, len(mine)) if rows else nul("no stored game session")
+    if "outer_wilds" in out:
+        out["outer_wilds"]["window_modes"] = [{"monitor": m["monitor"], "mode": m["mode"]} for m in tr.outer_wilds_modes()]
     return {"M6.1": out}
-
-
-def boundary_errors(truth: list[tuple[int, int]], rows: list[tuple[int, int]]) -> dict:
-    if not rows:
-        return nul("no stored game session")
-    return {"truth_sessions": len(truth), "stored_rows": len(rows),
-            "start_error_s": summarize([min(abs(a - t0) for a, _ in rows) / 1000 for t0, _ in truth]),
-            "end_error_s": summarize([min(abs(b - t1) for _, b in rows) / 1000 for _, t1 in truth])}
 
 
 def audible_spans(tr: Truth) -> dict[str, list[tuple[int, int]]]:
@@ -740,9 +887,35 @@ def speech_frames(utts: list[dict], stream: str) -> list[tuple[int, int]]:
     return merge([span for u in utts if u["stream"] == stream for span in u["spans"]])
 
 
+def speech_source(sources: str | None) -> str | None:
+    """A stored segment's one speech source (discord or a browser), None when it lists none or several."""
+    keys = {x.lower() for x in json.loads(sources or "[]")} & SPEECH_PROCS
+    return keys.pop() if len(keys) == 1 else None
+
+
+def by_source(us: list[dict], ss: list[tuple]) -> list[tuple[list[dict], list[tuple]]]:
+    """Split an overlap group per source when that is unambiguous: every segment names one speech
+    source and every utterance's process is among them (per-process streams, or consecutive
+    single-source segments). Two parallel transcripts are then scored each against its own
+    talker instead of being joined in start order. Otherwise the group stays whole, as before."""
+    keys = {x[4] for x in ss}
+    if not ss or None in keys or len(keys) < 2 or any(u.get("proc") not in keys for u in us):
+        return [(us, ss)]
+    return [([u for u in us if u.get("proc") == k], [x for x in ss if x[4] == k]) for k in sorted(keys)]
+
+
+def paused_utterances(tr: Truth, utts: list[dict]) -> set[int]:
+    """Indexes of truth utterances spoken mostly (>= 50 %) inside a driver Pause: never recorded, by design."""
+    pauses = merge(truth_gap_kinds(tr).get("pause", []))
+    return {i for i, u in enumerate(utts) if sum(max(0, min(u["t1"], b) - max(u["t0"], a)) for a, b in pauses) >= 0.5 * max(1, u["t1"] - u["t0"])}
+
+
 def m8_m9(tr: Truth, conn) -> dict:
     utts = tr.utterances()
-    segs = conn.execute("SELECT id, stream, start_ms, end_ms, speech_ms, transcript, speaker_id, language FROM audio_segments").fetchall()
+    paused = paused_utterances(tr, utts)
+    paused_info = {"utterances": len(paused), "words": sum(len(fold(utts[i]["text"]).split()) for i in paused)}
+    utts = [u for i, u in enumerate(utts) if i not in paused]
+    segs = conn.execute("SELECT id, stream, start_ms, end_ms, speech_ms, transcript, speaker_id, language, sources FROM audio_segments").fetchall()
     if not utts:
         return {k: nul("no truth speech") for k in ("M8.1", "M8.2", "M8.3", "M9.1", "M9.2", "M9.3")}
     aud = audible_spans(tr)
@@ -774,7 +947,7 @@ def m8_m9(tr: Truth, conn) -> dict:
     halluc = 0
     for stream in ("mic", "system"):
         items = [("u", u["t0"], u["t1"], u) for u in utts if u["stream"] == stream]
-        items += [("s", a, b, (text or "")) for _, st, a, b, _, text, *_ in segs if st == stream]
+        items += [("s", a, b, (text or ""), speech_source(src)) for _, st, a, b, _, text, _, _, src in segs if st == stream]
         items.sort(key=lambda x: x[1])
         groups, cur, cur_end = [], [], -1
         for it in items:
@@ -787,21 +960,24 @@ def m8_m9(tr: Truth, conn) -> dict:
             groups.append(cur)
         for g in groups:
             us = [x[3] for x in g if x[0] == "u"]
-            hyp = fold(" ".join(x[3] for x in sorted((x for x in g if x[0] == "s"), key=lambda x: x[1])))
+            ss = sorted((x for x in g if x[0] == "s"), key=lambda x: x[1])
             if not us:
-                halluc += len(hyp.split())
+                halluc += len(fold(" ".join(x[3] for x in ss)).split())
                 continue
-            ref = fold(" ".join(u["text"] for u in us))
             langs = {u["lang"] for u in us if u.get("kind") != "tts"}
             lang = "tts" if not langs else (langs.pop() if len(langs) == 1 else "multi")
             overlapped = any(us[i]["t1"] > us[j]["t0"] for i in range(len(us)) for j in range(i + 1, len(us)))
-            for k in (lang, "all", "overlap" if overlapped else "no_overlap"):
-                w = wer[k]
+            for us_p, ss_p in by_source(us, ss):
+                ref = fold(" ".join(u["text"] for u in us_p))
+                hyp = fold(" ".join(x[3] for x in ss_p))
                 rw, hw = ref.split(), hyp.split()
-                w[0] += lev(rw, hw)
-                w[1] += len(rw)
-                w[2] += lev(ref, hyp)
-                w[3] += len(ref)
+                d_w, d_c = lev(rw, hw), lev(ref, hyp)
+                for k in (lang, "all", "overlap" if overlapped else "no_overlap"):
+                    w = wer[k]
+                    w[0] += d_w
+                    w[1] += len(rw)
+                    w[2] += d_c
+                    w[3] += len(ref)
     m91 = {k: {"wer": v[0] / v[1] if v[1] else None, "cer": v[2] / v[3] if v[3] else None, "ref_words": v[1]} for k, v in wer.items()}
     terms = [c["text"] for c in tr.manifest["clips"] if c["kind"] == "tts"]
     present = [(t, u) for u in utts for t in set(terms) if u["text"] == t]
@@ -810,7 +986,7 @@ def m8_m9(tr: Truth, conn) -> dict:
     hours = max((tr.t1 - tr.t0) / 3_600_000, 1e-9)
     # diarization and authors on system segments
     der = diarization(tr, conn, utts, segs)
-    return {"M8.1": m81, "M8.2": der["M8.2"], "M8.3": der["M8.3"], "M9.1": m91 or nul("no reference"),
+    return {"M8.1": m81, "M8.2": der["M8.2"], "M8.3": der["M8.3"], "M9.1": m91 or nul("no reference"), "speech_paused": paused_info,
             "M9.2": {"hallucinated_words_per_hour": halluc / hours, "n": len(segs)}, "M9.3": m93}
 
 
@@ -848,10 +1024,16 @@ def diarization(tr: Truth, conn, utts: list[dict], segs) -> dict:
     purity = {j: conf[:, j].max() / max(1, conf[:, j].sum()) for j in range(len(ids))}
     frag = {names[i]: int(np.sum(conf[i] > 100)) for i in range(len(names))}
     segs_correct = wrong = unknown = 0
-    for sid, stream, a, b, _, text, spk, lang in segs:
+    for _sid, stream, a, b, _, _text, spk, _lang, src in segs:
         if stream != "system":
             continue
-        truth = Counter(u["speaker"] for u in utts if u["stream"] == "system" and u["speaker"] and a <= (u["t0"] + u["t1"]) / 2 < b)
+        # the truth speaker of the segment's own source when it names one speech source and that
+        # source spoke there (per-process streams); otherwise every system talker, as before
+        here = [u for u in utts if u["stream"] == "system" and u["speaker"] and a <= (u["t0"] + u["t1"]) / 2 < b]
+        key = speech_source(src)
+        if key and any(u.get("proc") == key for u in here):
+            here = [u for u in here if u.get("proc") == key]
+        truth = Counter(u["speaker"] for u in here)
         if not truth:
             continue
         if spk is None:
@@ -868,6 +1050,21 @@ def best_assignment(conf: np.ndarray) -> dict[int, int]:
     """hyp speaker -> truth speaker, the one-to-one mapping that overlaps the most time."""
     rows, cols = linear_sum_assignment(-conf)
     return {int(j): int(i) for i, j in zip(rows, cols, strict=True)}
+
+
+class Needles:
+    """`any(n in data for n in needles)` in one pass: an occurrence lies inside a maximal run of the
+    bytes the needles are made of, at least as long as the shortest needle, so only those runs are
+    checked (exact; ciphertext almost never has such a run)."""
+
+    def __init__(self, needles) -> None:
+        self.needles = sorted({n.encode() for n in needles if n})
+        alphabet = sorted({b for n in self.needles for b in n})
+        cls = b"".join(re.escape(bytes([b])) for b in alphabet)
+        self.runs = re.compile(b"[" + cls + b"]{%d,}" % min(map(len, self.needles))) if self.needles else None
+
+    def found_in(self, data: bytes) -> bool:
+        return bool(self.runs) and any(n in m.group() for m in self.runs.finditer(data) for n in self.needles)
 
 
 def m10(tr: Truth, run: Path, run_id: str, conn, scan: FrameScan, paths) -> dict:
@@ -888,6 +1085,7 @@ def m10(tr: Truth, run: Path, run_id: str, conn, scan: FrameScan, paths) -> dict
                         break
             except Exception:  # noqa: BLE001 - virtual tables without plain columns
                 continue
+    needles = Needles(canaries | nonces)
     frame_hits = window_hits = frames_scanned = 0
     for fid, path in conn.execute("SELECT id, image_path FROM frames WHERE image_path IS NOT NULL").fetchall():
         _, anywhere, in_window = scan.info(fid, path)
@@ -897,7 +1095,7 @@ def m10(tr: Truth, run: Path, run_id: str, conn, scan: FrameScan, paths) -> dict
     if frame_hits:
         hits.append({"where": "frames", "frames": frame_hits, "in_window_rect": window_hits})
     for p in sorted(paths.logs_dir.rglob("*")):
-        if p.is_file() and any(n.encode() in p.read_bytes() for n in canaries | nonces):
+        if p.is_file() and needles.found_in(p.read_bytes()):
             hits.append({"where": f"log:{p.relative_to(paths.root).as_posix()}"})
     temp = Path(tempfile.gettempdir())
     snapshot = LOCAL / "runs" / run_id / "temp-before.json"
@@ -912,7 +1110,7 @@ def m10(tr: Truth, run: Path, run_id: str, conn, scan: FrameScan, paths) -> dict
             except OSError:  # held open by another program: counted, not read
                 temp_unreadable += 1
                 continue
-            if any(n.encode() in data for n in canaries | nonces):
+            if needles.found_in(data):
                 hits.append({"where": "temp:" + p.name})
     plain = []
     for p in sorted(paths.root.rglob("*")):
@@ -929,7 +1127,7 @@ def m10(tr: Truth, run: Path, run_id: str, conn, scan: FrameScan, paths) -> dict
             except Exception:  # noqa: BLE001
                 plain.append({"where": f"undecryptable:{rel.as_posix()}"})
         data = p.read_bytes() if p.stat().st_size < 64 << 20 else b""
-        if any(n.encode() in data for n in canaries | nonces):
+        if needles.found_in(data):
             plain.append({"where": f"content:{rel.as_posix()}"})
     outbound = [{"proto": e["proto"], "exe": e["exe"], "rport": e["rport"]} for e in tr.guard if e.get("t") == "conn"]
     return {"M10.1": {"hits": len(hits), "locations": hits, "frames_scanned": frames_scanned, "canaries": len(canaries), "temp_files_unreadable": temp_unreadable,
@@ -956,21 +1154,11 @@ def desk_activities(tr: Truth) -> list[tuple[str, int, int, str | None]]:
 def m11(tr: Truth, conn) -> dict:
     eps = conn.execute("SELECT id, kind, start_ms, end_ms, title FROM episodes").fetchall()
     video_titles = {e["video"]: e["title"].lower() for e in tr.pages if e.get("type") == "video_built"}
-    truth = []
-    # a video's truth span is what the page really played (first play to its last media event), not its step
-    played = defaultdict(list)
-    for e in tr.pages:
-        if e.get("type") == "media" and e.get("ev") in ("play", "pause", "ended", "tick") and (vid := tr.pages_video(e)):
-            played[vid].append(e)
-    for vid, evs in played.items():
-        starts = [e["wall_ms"] for e in evs if e["ev"] == "play"]
-        if starts:
-            truth.append(("video", min(starts), max(e["wall_ms"] for e in evs), video_titles.get(vid)))
+    # videos and games: what was really played, clipped to the recorded span and split at Pauses (as M6.1)
+    truth = [("video", s, e, video_titles.get(vid)) for vid, (a, b) in truth_video_plays(tr).items()
+             for s, e in recorded_pieces(tr, conn, a, b, MIN_VIDEO_PIECE_MS)]
+    truth += [("game", s, e, name) for _, a, b, name in truth_game_sessions(tr) for s, e in recorded_pieces(tr, conn, a, b, MIN_GAME_PIECE_MS)]
     truth += [("conversation", a, b, "discord") for a, b in tr.call_spans().values()]
-    for a, b in zip([e for e in tr.game if e["type"] == "game_start"], [e for e in tr.game if e["type"] == "game_end"], strict=False):
-        truth.append(("game", a["wall_ms"], b["wall_ms"], "quality game"))
-    if ow := tr.outer_wilds_span():
-        truth.append(("game", ow[0], ow[1], "outer wilds"))
     truth += desk_activities(tr)
     if not truth:
         return {k: nul("no truth activity") for k in ("M11.1", "M11.2", "M11.3", "M11.4")}

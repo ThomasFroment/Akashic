@@ -99,9 +99,19 @@ generated locally from the installed Windows voices; music and game sound are sy
 - **Resolution tags** follow the monitor role (primary 4K, sides 1440p) of the target PC.
 - **Hung windows** never exceed 90 s: one `synthetic_window.py hang` process per step.
 - **Approximations in the scorer:** M3.1 scores each shown line against its best-matching stored
-  line (extra stored text is not an error); M1.1 decodes change tags from stored frames, with at
-  most 6 000 changes evaluated (more are sampled evenly up front, and n says how many); the frame
-  decode is shared with the M10 pixel scan; M7.1 leakage counts seconds, not energy.
+  line or run of 2-3 consecutive stored lines joined, so a line OCR wrapped still matches (extra
+  stored text is not an error); M1.1 decodes change tags from stored frames, with at most 6 000
+  changes evaluated (more are sampled evenly up front, and n says how many); the frame decode is
+  shared with the M10 pixel scan; M7.1 leakage counts seconds, not energy.
+- **Truth the store could hold:** M6 and M11 clip each video play and game session to the first
+  stored frame and the drive end, split it at the driver's Pauses, drop pieces under 60 s (video)
+  or 120 s (game), and give each stored row to the piece it overlaps most; M6 reports stored rows
+  per truth piece and start/end errors. M9.1 leaves out speech during a Pause (reported as
+  `speech_paused`) and, when every segment names one speech app (Discord or a browser), scores
+  overlapping speech per app; M8.3 takes the truth speaker from the segment's own app when that
+  app spoke there.
+- **Speed:** edit distances use a bit-parallel Levenshtein (exact) and the best-line search skips
+  lines whose length gap already exceeds the best ratio; frames decode on a thread pool.
 - **Truth for coverage:** `coverage.json` counts a step only when the logs show it happened
   (focus honoured, play event, player start, event action), so a failed launch fills nothing.
 - **Untested here:** the exclusive-fullscreen game, Outer Wilds launch, the attended events, the
