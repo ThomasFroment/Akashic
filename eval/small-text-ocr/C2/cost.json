@@ -1,0 +1,30 @@
+{
+ "c0": 44.04374763012106,
+ "k_n": 0.0,
+ "k_d": 56.936515340600494,
+ "k_b": 14.103643107990731,
+ "pre_c": 13.3,
+ "pre_k": 13.5,
+ "fit": {
+  "n": 960,
+  "abs_err_p50": 6.639977007362134,
+  "abs_err_p95": 23.76866581795137,
+  "rel_err_p95": 0.2702116338568783,
+  "no_content_term": {
+   "c0": 44.04374763012106,
+   "k_d": 56.936515340600494,
+   "k_b": 14.103643107990731,
+   "abs_err_p95": 23.646063683389027
+  },
+  "by_kind_mean_resid": {
+   "mosaic_auto": -2.4450646754356846,
+   "mosaic_lumanorm": 3.3950738662974316,
+   "today_deferred": -0.7594292209299206,
+   "today_live": -3.040607542516165
+  },
+  "pre_ms_p50": 25.986200002080295,
+  "pre_ms_p95": 60.08656999765662,
+  "chosen": "no_content_term (the 4-term fit gave a negative content coefficient)",
+  "pre_refit": "fit_pre.py after the speed-ups: pre = 13.3 + 13.5 ms/Mpix of dense output, resid p95 11.7 ms"
+ }
+}

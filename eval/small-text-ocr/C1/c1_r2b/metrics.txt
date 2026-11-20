@@ -1,0 +1,1 @@
+cer_le11_1440=0.046 cer_le11_4k=0.007 cer_12_15_1440=0.003 cer_ge16_1440=0.002 cer_1440=0.019 cer_4k=0.003 cer_def_le11_1440=0.058 cer_def_le11_4k=0.008 cer_def_ge16_1440=0.002 cer_def_1440=0.024 cer_def_4k=0.004 ms_p50=75.794 ms_p95=106 dms_p95=38.288 ms_def_p50=98.335 ms_def_p95=124 dms_def_p95=35.912 cpu_ratio=1.635 cpu_def_ratio=1.286 bytes_ratio=1.000 runtime_s=81

@@ -42,3 +42,4 @@ spikes/out/
 # Quality harness: per-PC state, disposable stores, models home (eval/quality/README.md). Never committed.
 /eval/quality/local/
 /eval/small-screen-change-detection/harness/cache/
+/eval/small-text-ocr/harness/corpus/

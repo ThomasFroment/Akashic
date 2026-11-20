@@ -1,0 +1,341 @@
+{
+ "corpus": {
+  "chromium/live/1440/bucket=12-15": {
+   "cer": 0.002591244182638715,
+   "n": 270
+  },
+  "chromium/live/1440/bucket=<=11": {
+   "cer": 0.04635482283835848,
+   "n": 270
+  },
+  "chromium/live/1440/bucket=>=16": {
+   "cer": 0.0015005216249555629,
+   "n": 180
+  },
+  "chromium/live/1440/theme=color": {
+   "cer": 0.023572150769494083,
+   "n": 240
+  },
+  "chromium/live/1440/theme=dark": {
+   "cer": 0.021566674504385597,
+   "n": 240
+  },
+  "chromium/live/1440/theme=light": {
+   "cer": 0.011050891343458831,
+   "n": 240
+  },
+  "chromium/live/1440/lang=en": {
+   "cer": 0.018519835003325415,
+   "n": 240
+  },
+  "chromium/live/1440/lang=fr": {
+   "cer": 0.021313830841889914,
+   "n": 240
+  },
+  "chromium/live/1440/lang=mixed": {
+   "cer": 0.01635605077212319,
+   "n": 240
+  },
+  "chromium/live/1440/px=10": {
+   "cer": 0.022006497421874775,
+   "n": 90
+  },
+  "chromium/live/1440/px=11": {
+   "cer": 0.00787022455893155,
+   "n": 90
+  },
+  "chromium/live/1440/px=12": {
+   "cer": 0.002872282802019979,
+   "n": 90
+  },
+  "chromium/live/1440/px=13": {
+   "cer": 0.002025287811042055,
+   "n": 90
+  },
+  "chromium/live/1440/px=14": {
+   "cer": 0.002876161934854111,
+   "n": 90
+  },
+  "chromium/live/1440/px=16": {
+   "cer": 0.0017640371761523548,
+   "n": 90
+  },
+  "chromium/live/1440/px=18": {
+   "cer": 0.0012370060737587703,
+   "n": 90
+  },
+  "chromium/live/1440/px=9": {
+   "cer": 0.10918774653426912,
+   "n": 90
+  },
+  "chromium/live/4k/bucket=12-15": {
+   "cer": 0.003659401534088137,
+   "n": 270
+  },
+  "chromium/live/4k/bucket=<=11": {
+   "cer": 0.006703478976125744,
+   "n": 90
+  },
+  "chromium/live/4k/bucket=>=16": {
+   "cer": 0.0020540089649875703,
+   "n": 360
+  },
+  "chromium/live/4k/theme=color": {
+   "cer": 0.004099822611417715,
+   "n": 240
+  },
+  "chromium/live/4k/theme=dark": {
+   "cer": 0.0028645079384542007,
+   "n": 240
+  },
+  "chromium/live/4k/theme=light": {
+   "cer": 0.0027473142395057484,
+   "n": 240
+  },
+  "chromium/live/4k/lang=en": {
+   "cer": 0.002928618740422611,
+   "n": 240
+  },
+  "chromium/live/4k/lang=fr": {
+   "cer": 0.0029882986202374815,
+   "n": 240
+  },
+  "chromium/live/4k/lang=mixed": {
+   "cer": 0.003794727428717572,
+   "n": 240
+  },
+  "chromium/live/4k/px=10": {
+   "cer": 0.00721017757164123,
+   "n": 90
+  },
+  "chromium/live/4k/px=11": {
+   "cer": 0.0026150053481293935,
+   "n": 90
+  },
+  "chromium/live/4k/px=12": {
+   "cer": 0.0011530216824937886,
+   "n": 90
+  },
+  "chromium/live/4k/px=13": {
+   "cer": 0.0030853673750776407,
+   "n": 90
+  },
+  "chromium/live/4k/px=14": {
+   "cer": 0.002238216378470064,
+   "n": 90
+  },
+  "chromium/live/4k/px=16": {
+   "cer": 0.00115949724294231,
+   "n": 90
+  },
+  "chromium/live/4k/px=18": {
+   "cer": 0.0017329548634602682,
+   "n": 90
+  },
+  "chromium/live/4k/px=9": {
+   "cer": 0.006703478976125744,
+   "n": 90
+  },
+  "chromium/deferred/1440/bucket=12-15": {
+   "cer": 0.005360784823113561,
+   "n": 270
+  },
+  "chromium/deferred/1440/bucket=<=11": {
+   "cer": 0.057757533574502536,
+   "n": 270
+  },
+  "chromium/deferred/1440/bucket=>=16": {
+   "cer": 0.0017121713197462902,
+   "n": 180
+  },
+  "chromium/deferred/1440/theme=color": {
+   "cer": 0.027032408596646455,
+   "n": 240
+  },
+  "chromium/deferred/1440/theme=dark": {
+   "cer": 0.022846226101636218,
+   "n": 240
+  },
+  "chromium/deferred/1440/theme=light": {
+   "cer": 0.022413601988845164,
+   "n": 240
+  },
+  "chromium/deferred/1440/lang=en": {
+   "cer": 0.025803895012359933,
+   "n": 240
+  },
+  "chromium/deferred/1440/lang=fr": {
+   "cer": 0.020771795981372177,
+   "n": 240
+  },
+  "chromium/deferred/1440/lang=mixed": {
+   "cer": 0.02571654569339572,
+   "n": 240
+  },
+  "chromium/deferred/1440/px=10": {
+   "cer": 0.033465071493715845,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=11": {
+   "cer": 0.008866425314015332,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=12": {
+   "cer": 0.012008721011204074,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=13": {
+   "cer": 0.001494713702636581,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=14": {
+   "cer": 0.0025789197555000274,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=16": {
+   "cer": 0.0017922670334961366,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=18": {
+   "cer": 0.0016320756059964442,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=9": {
+   "cer": 0.13094110391577643,
+   "n": 90
+  },
+  "chromium/deferred/4k/bucket=12-15": {
+   "cer": 0.006569894360346233,
+   "n": 270
+  },
+  "chromium/deferred/4k/bucket=<=11": {
+   "cer": 0.007901922498196238,
+   "n": 90
+  },
+  "chromium/deferred/4k/bucket=>=16": {
+   "cer": 0.001348648501277219,
+   "n": 360
+  },
+  "chromium/deferred/4k/theme=color": {
+   "cer": 0.007021208038274556,
+   "n": 240
+  },
+  "chromium/deferred/4k/theme=dark": {
+   "cer": 0.0027762446053835803,
+   "n": 240
+  },
+  "chromium/deferred/4k/theme=light": {
+   "cer": 0.002579872200470794,
+   "n": 240
+  },
+  "chromium/deferred/4k/lang=en": {
+   "cer": 0.004447034946744516,
+   "n": 240
+  },
+  "chromium/deferred/4k/lang=fr": {
+   "cer": 0.0029413833832527365,
+   "n": 240
+  },
+  "chromium/deferred/4k/lang=mixed": {
+   "cer": 0.004988906514131678,
+   "n": 240
+  },
+  "chromium/deferred/4k/px=10": {
+   "cer": 0.016131288516475974,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=11": {
+   "cer": 0.0026228545028095123,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=12": {
+   "cer": 0.0009555400617532092,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=13": {
+   "cer": 0.00047997491461271617,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=14": {
+   "cer": 0.0017388627792207492,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=16": {
+   "cer": 0.0014428014478151425,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=18": {
+   "cer": 0.0017329548634602682,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=9": {
+   "cer": 0.007901922498196238,
+   "n": 90
+  }
+ },
+ "replay": {},
+ "timing": {
+  "base": {
+   "live_ms_p50": 46.62385000119684,
+   "live_cpu_p50": 46.875,
+   "store_ms_p50": 39.03649999847403,
+   "def_ms_p50": 68.82270000642166,
+   "def_cpu_p50": 101.5625,
+   "live_ms_p95": 67.811349992553,
+   "live_cpu_p95": 62.5,
+   "store_ms_p95": 52.42928000006941,
+   "def_ms_p95": 87.61031500253009,
+   "def_cpu_p95": 125.0,
+   "live_cpu_mean": 45.138888888888886,
+   "def_cpu_mean": 101.70717592592592,
+   "n": 108
+  },
+  "cand": {
+   "live_ms_p50": 75.79399999667658,
+   "live_cpu_p50": 78.125,
+   "store_ms_p50": 42.002150003099814,
+   "def_ms_p50": 98.33544999855803,
+   "def_cpu_p50": 125.0,
+   "live_ms_p95": 106.09951499427551,
+   "live_cpu_p95": 93.75,
+   "store_ms_p95": 54.332554996653926,
+   "def_ms_p95": 123.52207000149063,
+   "def_cpu_p95": 156.25,
+   "live_cpu_mean": 73.78472222222223,
+   "def_cpu_mean": 130.78703703703704,
+   "n": 108
+  }
+ },
+ "bytes": {
+  "cand": 8246930,
+  "base": 8246930
+ },
+ "runtime_s": 81.2,
+ "metrics": {
+  "cer_1440": 0.01872990553911284,
+  "cer_le11_1440": 0.04635482283835848,
+  "cer_12_15_1440": 0.002591244182638715,
+  "cer_ge16_1440": 0.0015005216249555629,
+  "cer_4k": 0.0032372149297925546,
+  "cer_le11_4k": 0.006703478976125744,
+  "cer_12_15_4k": 0.003659401534088137,
+  "cer_ge16_4k": 0.0020540089649875703,
+  "cer_def_1440": 0.02409741222904261,
+  "cer_def_le11_1440": 0.057757533574502536,
+  "cer_def_12_15_1440": 0.005360784823113561,
+  "cer_def_ge16_1440": 0.0017121713197462902,
+  "cer_def_4k": 0.004125774948042977,
+  "cer_def_le11_4k": 0.007901922498196238,
+  "cer_def_12_15_4k": 0.006569894360346233,
+  "cer_def_ge16_4k": 0.001348648501277219,
+  "ms_p50": 75.79399999667658,
+  "ms_p95": 106.09951499427551,
+  "dms_p95": 38.288165001722504,
+  "ms_def_p50": 98.33544999855803,
+  "ms_def_p95": 123.52207000149063,
+  "dms_def_p95": 35.91175499896055,
+  "cpu_ratio": 1.6346153846153848,
+  "cpu_def_ratio": 1.2859174964438123,
+  "bytes_ratio": 1.0
+ }
+}

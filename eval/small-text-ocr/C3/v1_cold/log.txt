@@ -1,0 +1,10 @@
+c3_v1: 144 pages x 3 renderers -> eval\small-text-ocr\C3\v1_cold
+  corpus chromium: 37 s
+  corpus chromium_gray: 68 s
+  corpus pillow: 108 s
+  timing: 12 pages x 9 repeats
+  replay 20261119-standard-s21-target-1818: 862 matched rows, 200 sampled, 9 covered skipped
+  replay 20261119-standard-s21-target-1818: 88 s
+  replay 20261119-day-s31-target-0547: 4681 matched rows, 200 sampled, 4 covered skipped
+  replay 20261119-day-s31-target-0547: 80 s
+cer_le11_1440=0.424 cer_le11_4k=0.050 cer_12_15_1440=0.011 cer_ge16_1440=0.002 cer_1440=0.163 cer_4k=0.012 cer_def_le11_1440=0.414 cer_def_le11_4k=0.024 cer_def_ge16_1440=0.002 cer_def_1440=0.159 cer_def_4k=0.007 gray_cer_le11_1440=0.475 gray_cer_1440=0.194 gray_cer_def_1440=0.205 pil_cer_le11_1440=0.365 pil_cer_1440=0.140 pil_cer_def_1440=0.143 ms_p50=97.571 ms_p95=173 dms_p95=74.872 ms_def_p50=131 ms_def_p95=204 dms_def_p95=85.243 cpu_ratio=1.650 cpu_def_ratio=1.290 bytes_ratio=1.000 replay_cer_1440=0.390 replay_cer_4k=0.078 replay_cer_le11=0.476 replay_join_1440=0.211 replay_join_4k=0.012 replay_stored_1440=0.371 replay_stored_4k=0.057 replay_stored_join_1440=0.201 replay_ms_p95=424 runtime_s=340

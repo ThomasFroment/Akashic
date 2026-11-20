@@ -252,6 +252,19 @@ its assets, truth logs, scorer output and baselines at the end of each session.
   confirmation bound is useless); the scorer's M5.3 uses the longest unclipped band; the harness
   driver gives no input between focus steps, so idle cannot be replayed on the runs.
 
+- 2026-11-20 Phase 4 invent 3 of 5, small-text OCR (#190): done.
+  `docs/solutions/2026-11-20 - Small Text Windows OCR/report.md`, artifact
+  https://claude.ai/artifact/MRnUmuowjtah1SgPAEdNrS, harness `eval/small-text-ocr/`.
+  Best fit on live raw pixels C2: one OCR call on a mosaic of line strips, small strips enlarged,
+  ClearType strips rebuilt from their R, G, B subpixels: Edge ClearType <= 11 px at 1440p 0.602 ->
+  0.006, CPU 1.55x, +20 ms p95. Not shown on the runs: stored WebP is 4:2:0, so replays fall back to
+  luma (<= 11 px 0.40-0.49); needs a live run. C1 (luma) replay 1440p 0.043 but <= 11 px 0.10;
+  forced 3x passes at +250-700 ms on dense windows. C3 refuted by its cap.
+  Harness findings: the suspected 1440p cause (#201, lossy WebP) is not real (codec effect <= 0.01;
+  only game-mode windows read WebP); `eval/quality/score.py` M3.1 misreads wrapped lines (1440p
+  0.371 -> 0.201 wrap-tolerant): fix the scorer and rescore before Phase 6 numbers. On real windows
+  OCR time follows words recognised (~0.29 ms/word), not pixels.
+
 ## Harness commands
 
 ```powershell

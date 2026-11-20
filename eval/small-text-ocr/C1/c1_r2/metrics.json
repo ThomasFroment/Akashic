@@ -1,0 +1,341 @@
+{
+ "corpus": {
+  "chromium/live/1440/bucket=12-15": {
+   "cer": 0.0025455306846531383,
+   "n": 270
+  },
+  "chromium/live/1440/bucket=<=11": {
+   "cer": 0.06667902786833006,
+   "n": 270
+  },
+  "chromium/live/1440/bucket=>=16": {
+   "cer": 0.0030164170407192266,
+   "n": 180
+  },
+  "chromium/live/1440/theme=color": {
+   "cer": 0.0355230169404841,
+   "n": 240
+  },
+  "chromium/live/1440/theme=dark": {
+   "cer": 0.03039463297793939,
+   "n": 240
+  },
+  "chromium/live/1440/theme=light": {
+   "cer": 0.014222291234222004,
+   "n": 240
+  },
+  "chromium/live/1440/lang=en": {
+   "cer": 0.02851732378350757,
+   "n": 240
+  },
+  "chromium/live/1440/lang=fr": {
+   "cer": 0.027661203558592487,
+   "n": 240
+  },
+  "chromium/live/1440/lang=mixed": {
+   "cer": 0.023961413810545448,
+   "n": 240
+  },
+  "chromium/live/1440/px=10": {
+   "cer": 0.03777486635785836,
+   "n": 90
+  },
+  "chromium/live/1440/px=11": {
+   "cer": 0.01381711059033102,
+   "n": 90
+  },
+  "chromium/live/1440/px=12": {
+   "cer": 0.003390873485456745,
+   "n": 90
+  },
+  "chromium/live/1440/px=13": {
+   "cer": 0.001576819399773746,
+   "n": 90
+  },
+  "chromium/live/1440/px=14": {
+   "cer": 0.0026688991687289234,
+   "n": 90
+  },
+  "chromium/live/1440/px=16": {
+   "cer": 0.004795828007679683,
+   "n": 90
+  },
+  "chromium/live/1440/px=18": {
+   "cer": 0.0012370060737587703,
+   "n": 90
+  },
+  "chromium/live/1440/px=9": {
+   "cer": 0.14844510665680075,
+   "n": 90
+  },
+  "chromium/live/4k/bucket=12-15": {
+   "cer": 0.0056521223880298425,
+   "n": 270
+  },
+  "chromium/live/4k/bucket=<=11": {
+   "cer": 0.006522768946915848,
+   "n": 90
+  },
+  "chromium/live/4k/bucket=>=16": {
+   "cer": 0.002735192145314545,
+   "n": 360
+  },
+  "chromium/live/4k/theme=color": {
+   "cer": 0.005100764547795257,
+   "n": 240
+  },
+  "chromium/live/4k/theme=dark": {
+   "cer": 0.0042584098609879965,
+   "n": 240
+  },
+  "chromium/live/4k/theme=light": {
+   "cer": 0.0035482898508155795,
+   "n": 240
+  },
+  "chromium/live/4k/lang=en": {
+   "cer": 0.0055006290322923606,
+   "n": 240
+  },
+  "chromium/live/4k/lang=fr": {
+   "cer": 0.003581960572313796,
+   "n": 240
+  },
+  "chromium/live/4k/lang=mixed": {
+   "cer": 0.003824874654992677,
+   "n": 240
+  },
+  "chromium/live/4k/px=10": {
+   "cer": 0.012784097445721305,
+   "n": 90
+  },
+  "chromium/live/4k/px=11": {
+   "cer": 0.0027432825312504825,
+   "n": 90
+  },
+  "chromium/live/4k/px=12": {
+   "cer": 0.0014289871871177387,
+   "n": 90
+  },
+  "chromium/live/4k/px=13": {
+   "cer": 0.0031852889242745524,
+   "n": 90
+  },
+  "chromium/live/4k/px=14": {
+   "cer": 0.0024942218779405705,
+   "n": 90
+  },
+  "chromium/live/4k/px=16": {
+   "cer": 0.003533666283778018,
+   "n": 90
+  },
+  "chromium/live/4k/px=18": {
+   "cer": 0.0017275914952650415,
+   "n": 90
+  },
+  "chromium/live/4k/px=9": {
+   "cer": 0.006522768946915848,
+   "n": 90
+  },
+  "chromium/deferred/1440/bucket=12-15": {
+   "cer": 0.005124558766436508,
+   "n": 270
+  },
+  "chromium/deferred/1440/bucket=<=11": {
+   "cer": 0.0842271899422855,
+   "n": 270
+  },
+  "chromium/deferred/1440/bucket=>=16": {
+   "cer": 0.0019003016766530186,
+   "n": 180
+  },
+  "chromium/deferred/1440/theme=color": {
+   "cer": 0.05037079866952159,
+   "n": 240
+  },
+  "chromium/deferred/1440/theme=dark": {
+   "cer": 0.03248694036226161,
+   "n": 240
+  },
+  "chromium/deferred/1440/theme=light": {
+   "cer": 0.019088204523018796,
+   "n": 240
+  },
+  "chromium/deferred/1440/lang=en": {
+   "cer": 0.04133854725616478,
+   "n": 240
+  },
+  "chromium/deferred/1440/lang=fr": {
+   "cer": 0.031176314991691365,
+   "n": 240
+  },
+  "chromium/deferred/1440/lang=mixed": {
+   "cer": 0.029431081306945866,
+   "n": 240
+  },
+  "chromium/deferred/1440/px=10": {
+   "cer": 0.05853025709855772,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=11": {
+   "cer": 0.025437066724868198,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=12": {
+   "cer": 0.010571126951344713,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=13": {
+   "cer": 0.001589538720875672,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=14": {
+   "cer": 0.00321301062708914,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=16": {
+   "cer": 0.0020735609856761643,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=18": {
+   "cer": 0.001727042367629872,
+   "n": 90
+  },
+  "chromium/deferred/1440/px=9": {
+   "cer": 0.16871424600343052,
+   "n": 90
+  },
+  "chromium/deferred/4k/bucket=12-15": {
+   "cer": 0.005081085994940466,
+   "n": 270
+  },
+  "chromium/deferred/4k/bucket=<=11": {
+   "cer": 0.008381472290649457,
+   "n": 90
+  },
+  "chromium/deferred/4k/bucket=>=16": {
+   "cer": 0.0016429230242603681,
+   "n": 360
+  },
+  "chromium/deferred/4k/theme=color": {
+   "cer": 0.006033684459331697,
+   "n": 240
+  },
+  "chromium/deferred/4k/theme=dark": {
+   "cer": 0.003004213464925577,
+   "n": 240
+  },
+  "chromium/deferred/4k/theme=light": {
+   "cer": 0.0022857604654348503,
+   "n": 240
+  },
+  "chromium/deferred/4k/lang=en": {
+   "cer": 0.003142326723742998,
+   "n": 240
+  },
+  "chromium/deferred/4k/lang=fr": {
+   "cer": 0.0029440396176168876,
+   "n": 240
+  },
+  "chromium/deferred/4k/lang=mixed": {
+   "cer": 0.005237292048332239,
+   "n": 240
+  },
+  "chromium/deferred/4k/px=10": {
+   "cer": 0.011963375673464218,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=11": {
+   "cer": 0.0025192740234831145,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=12": {
+   "cer": 0.0007606082878740668,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=13": {
+   "cer": 0.0008665652717045482,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=14": {
+   "cer": 0.002032137970533647,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=16": {
+   "cer": 0.0017451022174638682,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=18": {
+   "cer": 0.0019278866373394106,
+   "n": 90
+  },
+  "chromium/deferred/4k/px=9": {
+   "cer": 0.008381472290649457,
+   "n": 90
+  }
+ },
+ "replay": {},
+ "timing": {
+  "base": {
+   "live_ms_p50": 46.763749996898696,
+   "live_cpu_p50": 46.875,
+   "store_ms_p50": 42.317999999795575,
+   "def_ms_p50": 68.38240000070073,
+   "def_cpu_p50": 109.375,
+   "live_ms_p95": 71.4908300076786,
+   "live_cpu_p95": 72.65624999999987,
+   "store_ms_p95": 51.47188000046298,
+   "def_ms_p95": 92.927590002364,
+   "def_cpu_p95": 140.625,
+   "live_cpu_mean": 49.18981481481482,
+   "def_cpu_mean": 106.19212962962963,
+   "n": 108
+  },
+  "cand": {
+   "live_ms_p50": 80.71734999975888,
+   "live_cpu_p50": 78.125,
+   "store_ms_p50": 42.60345000511734,
+   "def_ms_p50": 105.06180000083987,
+   "def_cpu_p50": 140.625,
+   "live_ms_p95": 110.41369000595294,
+   "live_cpu_p95": 109.375,
+   "store_ms_p95": 54.849149999790825,
+   "def_ms_p95": 133.00616499691384,
+   "def_cpu_p95": 171.875,
+   "live_cpu_mean": 77.25694444444444,
+   "def_cpu_mean": 136.71875,
+   "n": 108
+  }
+ },
+ "bytes": {
+  "cand": 8246930,
+  "base": 8246930
+ },
+ "runtime_s": 94.1,
+ "metrics": {
+  "cer_1440": 0.0267133137175485,
+  "cer_le11_1440": 0.06667902786833006,
+  "cer_12_15_1440": 0.0025455306846531383,
+  "cer_ge16_1440": 0.0030164170407192266,
+  "cer_4k": 0.004302488086532944,
+  "cer_le11_4k": 0.006522768946915848,
+  "cer_12_15_4k": 0.0056521223880298425,
+  "cer_ge16_4k": 0.002735192145314545,
+  "cer_def_1440": 0.033981981184934,
+  "cer_def_le11_1440": 0.0842271899422855,
+  "cer_def_12_15_1440": 0.005124558766436508,
+  "cer_def_ge16_1440": 0.0019003016766530186,
+  "cer_def_4k": 0.003774552796564041,
+  "cer_def_le11_4k": 0.008381472290649457,
+  "cer_def_12_15_4k": 0.005081085994940466,
+  "cer_def_ge16_4k": 0.0016429230242603681,
+  "ms_p50": 80.71734999975888,
+  "ms_p95": 110.41369000595294,
+  "dms_p95": 38.92285999827435,
+  "ms_def_p50": 105.06180000083987,
+  "ms_def_p95": 133.00616499691384,
+  "dms_def_p95": 40.07857499454984,
+  "cpu_ratio": 1.5705882352941176,
+  "cpu_def_ratio": 1.2874659400544959,
+  "bytes_ratio": 1.0
+ }
+}
