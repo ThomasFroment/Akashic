@@ -1,0 +1,5 @@
+clipped+split truth (post.py clipped_scoring), P2 END=alive P=3600 s, 2026-11-20
+{"rows_per_truth_mean": 1.1875, "rows_per_truth_max": 2, "m6_start_max_s": 6.427, "m6_end_max_s": 0.935, "f1_video_min": 0.8, "f1_game_min": 1.0, "title_acc_min": 0.8}
+0315 rows [1, 1, 1, 1] start [6.4, 0.1, 0.0, 0.0] end [0.1, 0.2, 0.0, 0.0] F1 video 1.0 game 1.0 titles 1.0
+1818 rows [2, 1, 1, 1] start [4.2, 1.1, 0.0, 0.0] end [0.8, 0.8, 0.0, 0.0] F1 video 0.8 game 1.0 titles 0.8
+0547 rows [2, 1, 1, 1, 2, 1, 1, 1] start [0.0, 1.0, 0.0, 0.1, 0.0, 0.9, 0.0, 0.0] end [0.6, 0.9, 0.8, 0.5, 0.7, 0.6, 0.0, 0.1] F1 video 0.86 game 1.0 titles 0.81

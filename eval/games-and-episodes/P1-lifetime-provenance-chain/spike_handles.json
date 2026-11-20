@@ -1,0 +1,85 @@
+{
+ "when": "2026-11-20 02:33",
+ "reps": 101,
+ "quality_game": {
+  "open_ok": true,
+  "open_error": 0,
+  "wait0": "timeout",
+  "times_ok": true,
+  "exit_ms_while_running": 0,
+  "open_close_us": 3.7,
+  "wait0_us": 1.0,
+  "get_process_times_us": 1.9,
+  "creation_after_request_ms": 33,
+  "window_after_creation_ms": 439,
+  "version": {
+   "ProductName": "Python",
+   "OriginalFilename": "python.exe",
+   "FileDescription": "Python"
+  },
+  "exit_seen": true,
+  "exit_times_ok": true,
+  "exit_after_close_ms": 144,
+  "seen_after_exit_ms": 6,
+  "wait0_after_exit": true
+ },
+ "protected": {
+  "msmpeng.exe": {
+   "open_ok": false,
+   "open_error": 5
+  },
+  "lsass.exe": {
+   "open_ok": false,
+   "open_error": 5
+  },
+  "csrss.exe": {
+   "open_ok": false,
+   "open_error": 5
+  }
+ },
+ "outer_wilds": {
+  "open_ok": true,
+  "open_error": 0,
+  "wait0": "timeout",
+  "times_ok": true,
+  "exit_ms_while_running": 0,
+  "open_close_us": 3.7,
+  "wait0_us": 1.2,
+  "get_process_times_us": 1.9,
+  "creation_after_request_ms": 1615,
+  "steam_manifest_name": "Outer Wilds",
+  "version": {},
+  "launcher_facts": {
+   "under_launcher_game_dir": true,
+   "in_gameconfigstore": false,
+   "under_steam_root": true
+  },
+  "window_after_creation_ms": 4227,
+  "window": {
+   "class": "UnityWndClass",
+   "caption": false,
+   "popup": true,
+   "has_frame": false,
+   "exclusive_fullscreen": false,
+   "rect": [
+    0,
+    0,
+    3840,
+    2160
+   ],
+   "monitor": {
+    "monitor": "primary",
+    "covers": true
+   },
+   "foreground": true,
+   "quns": 2,
+   "steam_running_appid_set": false
+  },
+  "wait0_us_in_front": 1.1,
+  "exit_seen": true,
+  "exit_times_ok": true,
+  "exit_after_close_ms": 5240,
+  "seen_after_exit_ms": 22,
+  "wait0_after_exit": true
+ }
+}

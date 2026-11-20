@@ -1,0 +1,359 @@
+{
+ "candidate": "P2: focus rows + identity reopen (P=3600 s, end=alive) + C1 + C3 (180 s)",
+ "aggregate": {
+  "rows_per_truth_mean": 1.4615384615384615,
+  "rows_per_truth_max": 2,
+  "m6_start_med_s": 0.061,
+  "m6_start_max_s": 6.427,
+  "m6_end_med_s": 0.612,
+  "m6_end_max_s": 698.92,
+  "false_game": 0,
+  "missed_game": 0,
+  "excluded_written": 0,
+  "f1_video_min": 1.0,
+  "f1_game_min": 0.5714285714285715,
+  "title_acc_min": 0.75,
+  "useless_max": 0.3076923076923077,
+  "derive_ms_per_day_max": 763.3541825803087,
+  "episodes_ms_per_day_max": 211.21786791599806,
+  "check_extra_us": 2.756249920767732
+ },
+ "runs": {
+  "20261119-standard-s21-target-0315": {
+   "hours": 1.0944405555555556,
+   "rows": 4,
+   "rows_per_truth": [
+    1,
+    1,
+    2
+   ],
+   "m6_start_err_s": [
+    6.427,
+    0.061,
+    0.0
+   ],
+   "m6_end_err_s": [
+    0.073,
+    0.239,
+    698.92
+   ],
+   "f1_video": 1.0,
+   "f1_game": 0.5714285714285715,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    },
+    "conversation": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "game": {
+     "precision": 0.5,
+     "recall": 0.6666666666666666,
+     "f1": 0.5714285714285715,
+     "n_truth": 3,
+     "n_episodes": 4
+    },
+    "work": {
+     "precision": 0.5,
+     "recall": 1.0,
+     "f1": 0.6666666666666666,
+     "n_truth": 1,
+     "n_episodes": 2
+    },
+    "browsing": {
+     "precision": 0.5,
+     "recall": 1.0,
+     "f1": 0.6666666666666666,
+     "n_truth": 1,
+     "n_episodes": 2
+    }
+   },
+   "title_acc": 0.875,
+   "title_n": 8,
+   "useless": 0.3076923076923077,
+   "useless_n": 13,
+   "rows_ms": 15.603700012434274,
+   "episodes_ms": 3.501300001516938,
+   "derive_ms_per_day": 418.9537732381243,
+   "episodes_ms_per_day": 76.78004950552196
+  },
+  "20261119-standard-s21-target-1818": {
+   "hours": 1.0833333333333333,
+   "rows": 4,
+   "rows_per_truth": [
+    2,
+    1,
+    2
+   ],
+   "m6_start_err_s": [
+    4.156,
+    1.645,
+    0.0
+   ],
+   "m6_end_err_s": [
+    0.307,
+    0.807,
+    697.493
+   ],
+   "f1_video": 1.0,
+   "f1_game": 0.5714285714285715,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    },
+    "conversation": {
+     "precision": 0.6666666666666666,
+     "recall": 0.6666666666666666,
+     "f1": 0.6666666666666666,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "game": {
+     "precision": 0.5,
+     "recall": 0.6666666666666666,
+     "f1": 0.5714285714285715,
+     "n_truth": 3,
+     "n_episodes": 4
+    },
+    "work": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 1,
+     "n_episodes": 1
+    },
+    "browsing": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    }
+   },
+   "title_acc": 0.75,
+   "title_n": 8,
+   "useless": 0.25,
+   "useless_n": 12,
+   "rows_ms": 15.263299981597811,
+   "episodes_ms": 3.7911999970674515,
+   "derive_ms_per_day": 422.1304610658151,
+   "episodes_ms_per_day": 83.98966147349431
+  },
+  "20261119-day-s31-target-0547": {
+   "hours": 6.865782777777778,
+   "rows": 8,
+   "rows_per_truth": [
+    2,
+    1,
+    1,
+    1,
+    2,
+    1,
+    2
+   ],
+   "m6_start_err_s": [
+    0.043,
+    1.014,
+    0.0,
+    0.087,
+    0.002,
+    1.175,
+    0.0
+   ],
+   "m6_end_err_s": [
+    0.612,
+    0.935,
+    0.822,
+    0.519,
+    0.448,
+    0.622,
+    0.058
+   ],
+   "f1_video": 1.0,
+   "f1_game": 0.9333333333333333,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "conversation": {
+     "precision": 0.8571428571428571,
+     "recall": 0.6666666666666666,
+     "f1": 0.75,
+     "n_truth": 9,
+     "n_episodes": 7
+    },
+    "game": {
+     "precision": 0.875,
+     "recall": 1.0,
+     "f1": 0.9333333333333333,
+     "n_truth": 7,
+     "n_episodes": 8
+    },
+    "browsing": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 19,
+     "n_episodes": 19
+    },
+    "work": {
+     "precision": 0.9,
+     "recall": 0.75,
+     "f1": 0.8181818181818182,
+     "n_truth": 12,
+     "n_episodes": 10
+    }
+   },
+   "title_acc": 0.8421052631578947,
+   "title_n": 19,
+   "useless": 0.06382978723404255,
+   "useless_n": 47,
+   "rows_ms": 157.95200000866316,
+   "episodes_ms": 60.4239999956917,
+   "derive_ms_per_day": 763.3541825803087,
+   "episodes_ms_per_day": 211.21786791599806
+  }
+ },
+ "detection": {
+  "cases": [
+   {
+    "name": "game_borderless",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "outer_wilds_observed",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "game_exclusive",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "excluded_borderless",
+    "truth_game": false,
+    "excluded": true,
+    "verdict": true,
+    "writes_name": false
+   },
+   {
+    "name": "game_borderless_primary",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "game_exclusive_primary",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "edge_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "chrome_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "edge_f11_primary",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "zen_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "code_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "electron_frameless_maximized",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "terminal_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "discord_maximized_passive",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "photos_fullscreen",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "steam_big_picture",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   }
+  ],
+  "false_game": 0,
+  "missed_game": 0,
+  "excluded_written": 0,
+  "decision_us": 0.706249920767732,
+  "signals": [
+   "class_name",
+   "facts_lookup"
+  ],
+  "signals_us": 2.05,
+  "check_extra_us": 2.756249920767732
+ }
+}

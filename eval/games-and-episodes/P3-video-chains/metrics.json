@@ -1,0 +1,2306 @@
+{
+ "candidate": "P3 video chains (C3 alone, P=180 s, today's game rows)",
+ "aggregate": {
+  "rows_per_truth_mean": 5.384615384615385,
+  "rows_per_truth_max": 25,
+  "m6_start_med_s": 0.945,
+  "m6_start_max_s": 187.222,
+  "m6_end_med_s": 58.4,
+  "m6_end_max_s": 4325.671,
+  "false_game": 4,
+  "missed_game": 0,
+  "excluded_written": 1,
+  "f1_video_min": 1.0,
+  "f1_game_min": 0.3157894736842105,
+  "title_acc_min": 0.625,
+  "useless_max": 0.3333333333333333,
+  "derive_ms_per_day_max": 211.25282393459963,
+  "episodes_ms_per_day_max": 209.95490927738115,
+  "check_extra_us": 0.3687491698656231
+ },
+ "runs": {
+  "20261119-standard-s21-target-0315": {
+   "hours": 1.0944405555555556,
+   "rows": 9,
+   "rows_per_truth": [
+    2,
+    1,
+    7
+   ],
+   "m6_start_err_s": [
+    6.589,
+    187.222,
+    0.199
+   ],
+   "m6_end_err_s": [
+    185.257,
+    2.217,
+    3090.0
+   ],
+   "f1_video": 1.0,
+   "f1_game": 0.3333333333333333,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    },
+    "conversation": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "game": {
+     "precision": 0.3333333333333333,
+     "recall": 0.3333333333333333,
+     "f1": 0.3333333333333333,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "work": {
+     "precision": 0.5,
+     "recall": 1.0,
+     "f1": 0.6666666666666666,
+     "n_truth": 1,
+     "n_episodes": 2
+    },
+    "browsing": {
+     "precision": 0.5,
+     "recall": 1.0,
+     "f1": 0.6666666666666666,
+     "n_truth": 1,
+     "n_episodes": 2
+    }
+   },
+   "title_acc": 0.75,
+   "title_n": 8,
+   "useless": 0.3333333333333333,
+   "useless_n": 12,
+   "rows_ms": 0.1889999839477241,
+   "episodes_ms": 5.963999981759116,
+   "derive_ms_per_day": 134.92920965634673,
+   "episodes_ms_per_day": 130.78462675349294
+  },
+  "20261119-standard-s21-target-1818": {
+   "hours": 1.0833333333333333,
+   "rows": 7,
+   "rows_per_truth": [
+    2,
+    1,
+    5
+   ],
+   "m6_start_err_s": [
+    4.171,
+    1.634,
+    0.212
+   ],
+   "m6_end_err_s": [
+    190.709,
+    10.241,
+    3241.122
+   ],
+   "f1_video": 1.0,
+   "f1_game": 0.3333333333333333,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    },
+    "conversation": {
+     "precision": 0.6666666666666666,
+     "recall": 0.6666666666666666,
+     "f1": 0.6666666666666666,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "game": {
+     "precision": 0.3333333333333333,
+     "recall": 0.3333333333333333,
+     "f1": 0.3333333333333333,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "work": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 1,
+     "n_episodes": 1
+    },
+    "browsing": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    }
+   },
+   "title_acc": 0.625,
+   "title_n": 8,
+   "useless": 0.2727272727272727,
+   "useless_n": 11,
+   "rows_ms": 0.20400001085363328,
+   "episodes_ms": 6.1375999939627945,
+   "derive_ms_per_day": 140.49083087593317,
+   "episodes_ms_per_day": 135.97144602009885
+  },
+  "20261119-day-s31-target-0547": {
+   "hours": 6.865782777777778,
+   "rows": 50,
+   "rows_per_truth": [
+    7,
+    6,
+    3,
+    3,
+    4,
+    4,
+    25
+   ],
+   "m6_start_err_s": [
+    0.051,
+    1.056,
+    0.945,
+    0.096,
+    0.213,
+    22.786,
+    0.199
+   ],
+   "m6_end_err_s": [
+    0.962,
+    7.52,
+    58.4,
+    221.809,
+    23.791,
+    1.235,
+    4325.671
+   ],
+   "f1_video": 1.0,
+   "f1_game": 0.3157894736842105,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "conversation": {
+     "precision": 0.8571428571428571,
+     "recall": 0.6666666666666666,
+     "f1": 0.75,
+     "n_truth": 9,
+     "n_episodes": 7
+    },
+    "game": {
+     "precision": 0.25,
+     "recall": 0.42857142857142855,
+     "f1": 0.3157894736842105,
+     "n_truth": 7,
+     "n_episodes": 12
+    },
+    "browsing": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 19,
+     "n_episodes": 19
+    },
+    "work": {
+     "precision": 0.9,
+     "recall": 0.75,
+     "f1": 0.8181818181818182,
+     "n_truth": 12,
+     "n_episodes": 10
+    }
+   },
+   "title_acc": 0.631578947368421,
+   "title_n": 19,
+   "useless": 0.21568627450980393,
+   "useless_n": 51,
+   "rows_ms": 0.371300004189834,
+   "episodes_ms": 60.06270000943914,
+   "derive_ms_per_day": 211.25282393459963,
+   "episodes_ms_per_day": 209.95490927738115
+  }
+ },
+ "detection": {
+  "cases": [
+   {
+    "name": "game_borderless",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "outer_wilds_observed",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "game_exclusive",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "excluded_borderless",
+    "truth_game": false,
+    "excluded": true,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "game_borderless_primary",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "game_exclusive_primary",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "edge_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "chrome_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "edge_f11_primary",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "zen_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "code_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "electron_frameless_maximized",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "terminal_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "discord_maximized_passive",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "photos_fullscreen",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "steam_big_picture",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   }
+  ],
+  "false_game": 4,
+  "missed_game": 0,
+  "excluded_written": 1,
+  "decision_us": 0.3687491698656231,
+  "signals": [],
+  "signals_us": 0,
+  "check_extra_us": 0.3687491698656231
+ },
+ "p3": {
+  "sweep": {
+   "30": {
+    "20261119-standard-s21-target-0315": {
+     "f1_video": 1.0,
+     "f1_game": 0.3333333333333333,
+     "title_acc": 0.75,
+     "video_title_acc": 1.0,
+     "video_eps": 2,
+     "media_rows": 3,
+     "counts": {
+      "rows": 3,
+      "chains": 2,
+      "multi_row_chains": 1,
+      "bridged_obs": 0,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 1.1614499962888658,
+     "media_game_ms_per_day": 25.469450825296843,
+     "media_ms_per_day": 23.85328246586382,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 851,
+       "episodes_overlapping": 2,
+       "best_iou": 0.93,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.3,
+       "end_err_s": 58.0,
+       "end_signed_s": -58.0
+      },
+      {
+       "vid": "v2",
+       "truth_s": 900,
+       "episodes_overlapping": 2,
+       "best_iou": 0.996,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 2.0,
+       "end_err_s": 1.6,
+       "end_signed_s": -1.6
+      }
+     ]
+    },
+    "20261119-standard-s21-target-1818": {
+     "f1_video": 1.0,
+     "f1_game": 0.3333333333333333,
+     "title_acc": 0.625,
+     "video_title_acc": 1.0,
+     "video_eps": 2,
+     "media_rows": 3,
+     "counts": {
+      "rows": 3,
+      "chains": 2,
+      "multi_row_chains": 1,
+      "bridged_obs": 0,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 1.4245000056689605,
+     "media_game_ms_per_day": 31.558153971743128,
+     "media_ms_per_day": 29.864492432142683,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 851,
+       "episodes_overlapping": 2,
+       "best_iou": 0.976,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.9,
+       "end_err_s": 18.9,
+       "end_signed_s": -18.9
+      },
+      {
+       "vid": "v2",
+       "truth_s": 900,
+       "episodes_overlapping": 2,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.1,
+       "end_err_s": 0.4,
+       "end_signed_s": 0.4
+      }
+     ]
+    },
+    "20261119-day-s31-target-0547": {
+     "f1_video": 1.0,
+     "f1_game": 0.3157894736842105,
+     "title_acc": 0.631578947368421,
+     "video_title_acc": 1.0,
+     "video_eps": 3,
+     "media_rows": 16,
+     "counts": {
+      "rows": 16,
+      "chains": 3,
+      "multi_row_chains": 3,
+      "bridged_obs": 12,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 14.886299992213026,
+     "media_game_ms_per_day": 52.03648460441815,
+     "media_ms_per_day": 51.12116289832437,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 5585,
+       "episodes_overlapping": 1,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.8,
+       "end_err_s": 1.2,
+       "end_signed_s": -1.2
+      },
+      {
+       "vid": "v2",
+       "truth_s": 3798,
+       "episodes_overlapping": 1,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.3,
+       "end_err_s": 1.6,
+       "end_signed_s": -1.6
+      },
+      {
+       "vid": "v3",
+       "truth_s": 4254,
+       "episodes_overlapping": 1,
+       "best_iou": 0.973,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.1,
+       "end_err_s": 116.6,
+       "end_signed_s": -116.6
+      }
+     ]
+    }
+   },
+   "180": {
+    "20261119-standard-s21-target-0315": {
+     "f1_video": 1.0,
+     "f1_game": 0.3333333333333333,
+     "title_acc": 0.75,
+     "video_title_acc": 1.0,
+     "video_eps": 2,
+     "media_rows": 3,
+     "counts": {
+      "rows": 3,
+      "chains": 2,
+      "multi_row_chains": 1,
+      "bridged_obs": 0,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 1.1755000159610063,
+     "media_game_ms_per_day": 25.777553874310957,
+     "media_ms_per_day": 24.207436471477326,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 851,
+       "episodes_overlapping": 2,
+       "best_iou": 0.93,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.3,
+       "end_err_s": 58.0,
+       "end_signed_s": -58.0
+      },
+      {
+       "vid": "v2",
+       "truth_s": 900,
+       "episodes_overlapping": 2,
+       "best_iou": 0.996,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 2.0,
+       "end_err_s": 1.6,
+       "end_signed_s": -1.6
+      }
+     ]
+    },
+    "20261119-standard-s21-target-1818": {
+     "f1_video": 1.0,
+     "f1_game": 0.3333333333333333,
+     "title_acc": 0.625,
+     "video_title_acc": 1.0,
+     "video_eps": 2,
+     "media_rows": 3,
+     "counts": {
+      "rows": 3,
+      "chains": 2,
+      "multi_row_chains": 1,
+      "bridged_obs": 0,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 1.4090499898884445,
+     "media_game_ms_per_day": 31.21587669906708,
+     "media_ms_per_day": 29.537722969857548,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 851,
+       "episodes_overlapping": 2,
+       "best_iou": 0.976,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.9,
+       "end_err_s": 18.9,
+       "end_signed_s": -18.9
+      },
+      {
+       "vid": "v2",
+       "truth_s": 900,
+       "episodes_overlapping": 2,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.1,
+       "end_err_s": 0.4,
+       "end_signed_s": 0.4
+      }
+     ]
+    },
+    "20261119-day-s31-target-0547": {
+     "f1_video": 1.0,
+     "f1_game": 0.3157894736842105,
+     "title_acc": 0.631578947368421,
+     "video_title_acc": 1.0,
+     "video_eps": 3,
+     "media_rows": 16,
+     "counts": {
+      "rows": 16,
+      "chains": 3,
+      "multi_row_chains": 3,
+      "bridged_obs": 12,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 13.324399988050573,
+     "media_game_ms_per_day": 46.57671383782369,
+     "media_ms_per_day": 45.75175325363958,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 5585,
+       "episodes_overlapping": 1,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.8,
+       "end_err_s": 1.2,
+       "end_signed_s": -1.2
+      },
+      {
+       "vid": "v2",
+       "truth_s": 3798,
+       "episodes_overlapping": 1,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.3,
+       "end_err_s": 1.6,
+       "end_signed_s": -1.6
+      },
+      {
+       "vid": "v3",
+       "truth_s": 4254,
+       "episodes_overlapping": 1,
+       "best_iou": 0.973,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.1,
+       "end_err_s": 116.6,
+       "end_signed_s": -116.6
+      }
+     ]
+    }
+   },
+   "600": {
+    "20261119-standard-s21-target-0315": {
+     "f1_video": 1.0,
+     "f1_game": 0.3333333333333333,
+     "title_acc": 0.75,
+     "video_title_acc": 1.0,
+     "video_eps": 2,
+     "media_rows": 3,
+     "counts": {
+      "rows": 3,
+      "chains": 2,
+      "multi_row_chains": 1,
+      "bridged_obs": 0,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 1.1628000065684319,
+     "media_game_ms_per_day": 25.49905521682374,
+     "media_ms_per_day": 23.9453843790626,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 851,
+       "episodes_overlapping": 2,
+       "best_iou": 0.93,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.3,
+       "end_err_s": 58.0,
+       "end_signed_s": -58.0
+      },
+      {
+       "vid": "v2",
+       "truth_s": 900,
+       "episodes_overlapping": 2,
+       "best_iou": 0.996,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 2.0,
+       "end_err_s": 1.6,
+       "end_signed_s": -1.6
+      }
+     ]
+    },
+    "20261119-standard-s21-target-1818": {
+     "f1_video": 1.0,
+     "f1_game": 0.3333333333333333,
+     "title_acc": 0.625,
+     "video_title_acc": 1.0,
+     "video_eps": 2,
+     "media_rows": 3,
+     "counts": {
+      "rows": 3,
+      "chains": 2,
+      "multi_row_chains": 1,
+      "bridged_obs": 0,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 3.6836500075878575,
+     "media_game_ms_per_day": 81.60701555271562,
+     "media_ms_per_day": 78.97513857684457,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 851,
+       "episodes_overlapping": 2,
+       "best_iou": 0.976,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.9,
+       "end_err_s": 18.9,
+       "end_signed_s": -18.9
+      },
+      {
+       "vid": "v2",
+       "truth_s": 900,
+       "episodes_overlapping": 2,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.1,
+       "end_err_s": 0.4,
+       "end_signed_s": 0.4
+      }
+     ]
+    },
+    "20261119-day-s31-target-0547": {
+     "f1_video": 1.0,
+     "f1_game": 0.3157894736842105,
+     "title_acc": 0.631578947368421,
+     "video_title_acc": 1.0,
+     "video_eps": 3,
+     "media_rows": 16,
+     "counts": {
+      "rows": 16,
+      "chains": 3,
+      "multi_row_chains": 3,
+      "bridged_obs": 12,
+      "bridged_rec": 1,
+      "break_gap": 0,
+      "break_recording_gap": 0,
+      "break_other_item": 0,
+      "break_rewatch": 0,
+      "dropped_min_played": 0,
+      "not_final": 0,
+      "late_extension": 0
+     },
+     "media_game_ms": 13.671499997144565,
+     "media_game_ms_per_day": 47.79003509890676,
+     "media_ms_per_day": 46.970492678276216,
+     "videos": [
+      {
+       "vid": "v1",
+       "truth_s": 5585,
+       "episodes_overlapping": 1,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 1.8,
+       "end_err_s": 1.2,
+       "end_signed_s": -1.2
+      },
+      {
+       "vid": "v2",
+       "truth_s": 3798,
+       "episodes_overlapping": 1,
+       "best_iou": 0.999,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.3,
+       "end_err_s": 1.6,
+       "end_signed_s": -1.6
+      },
+      {
+       "vid": "v3",
+       "truth_s": 4254,
+       "episodes_overlapping": 1,
+       "best_iou": 0.973,
+       "matched": true,
+       "title_ok": true,
+       "start_err_s": 0.1,
+       "end_err_s": 116.6,
+       "end_signed_s": -116.6
+      }
+     ]
+    }
+   }
+  },
+  "incremental": {
+   "30": {
+    "20261119-standard-s21-target-0315": {
+     "passes": 25,
+     "episodes_incremental": 2,
+     "episodes_one_pass": 2,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 599.938
+    },
+    "20261119-standard-s21-target-1818": {
+     "passes": 25,
+     "episodes_incremental": 2,
+     "episodes_one_pass": 2,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 621.409
+    },
+    "20261119-day-s31-target-0547": {
+     "passes": 97,
+     "episodes_incremental": 3,
+     "episodes_one_pass": 3,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 602.47
+    }
+   },
+   "180": {
+    "20261119-standard-s21-target-0315": {
+     "passes": 25,
+     "episodes_incremental": 2,
+     "episodes_one_pass": 2,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 643.598
+    },
+    "20261119-standard-s21-target-1818": {
+     "passes": 25,
+     "episodes_incremental": 2,
+     "episodes_one_pass": 2,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 663.65
+    },
+    "20261119-day-s31-target-0547": {
+     "passes": 97,
+     "episodes_incremental": 3,
+     "episodes_one_pass": 3,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2402.47
+    }
+   },
+   "600": {
+    "20261119-standard-s21-target-0315": {
+     "passes": 25,
+     "episodes_incremental": 2,
+     "episodes_one_pass": 2,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2443.598
+    },
+    "20261119-standard-s21-target-1818": {
+     "passes": 25,
+     "episodes_incremental": 2,
+     "episodes_one_pass": 2,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2463.65
+    },
+    "20261119-day-s31-target-0547": {
+     "passes": 97,
+     "episodes_incremental": 3,
+     "episodes_one_pass": 3,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2402.47
+    }
+   }
+  },
+  "adversarial": {
+   "P30 today": {
+    "cases": [
+     {
+      "case": "same title, other channel, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title, other channel, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, new row (10 s)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "rewatch after end, same row (capture keeps it)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url same",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url none",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "Pause 120 min mid-video",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "Pause 20 min mid-video",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "user pause + 5 min Pause, resumed",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     }
+    ],
+    "incremental": {
+     "passes": 1380,
+     "episodes_incremental": 34,
+     "episodes_one_pass": 34,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2400.0
+    },
+    "merged": 4,
+    "split": 2,
+    "ok": 13,
+    "n": 19
+   },
+   "P180 today": {
+    "cases": [
+     {
+      "case": "same title, other channel, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 120s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 120s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, new row (10 s)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "rewatch after end, same row (capture keeps it)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url same",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url none",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "Pause 120 min mid-video",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "Pause 20 min mid-video",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "user pause + 5 min Pause, resumed",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     }
+    ],
+    "incremental": {
+     "passes": 1380,
+     "episodes_incremental": 32,
+     "episodes_one_pass": 32,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2400.0
+    },
+    "merged": 6,
+    "split": 2,
+    "ok": 11,
+    "n": 19
+   },
+   "P600 today": {
+    "cases": [
+     {
+      "case": "same title, other channel, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 120s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 120s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 400s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 400s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "rewatch after end, new row (10 s)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "rewatch after end, same row (capture keeps it)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url same",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url none",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "Pause 120 min mid-video",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "Pause 20 min mid-video",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "user pause + 5 min Pause, resumed",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     }
+    ],
+    "incremental": {
+     "passes": 1380,
+     "episodes_incremental": 30,
+     "episodes_one_pass": 30,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2400.0
+    },
+    "merged": 8,
+    "split": 2,
+    "ok": 9,
+    "n": 19
+   },
+   "P30 +pos": {
+    "cases": [
+     {
+      "case": "same title, other channel, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title, other channel, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title, other channel, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, new row (10 s)",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, same row (capture keeps it)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url same",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url none",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "Pause 120 min mid-video",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "Pause 20 min mid-video",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "user pause + 5 min Pause, resumed",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     }
+    ],
+    "incremental": {
+     "passes": 1380,
+     "episodes_incremental": 37,
+     "episodes_one_pass": 37,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2400.0
+    },
+    "merged": 1,
+    "split": 2,
+    "ok": 16,
+    "n": 19
+   },
+   "P180 +pos": {
+    "cases": [
+     {
+      "case": "same title, other channel, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title, other channel, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title, other channel, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, new row (10 s)",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, same row (capture keeps it)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url same",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url none",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "Pause 120 min mid-video",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "Pause 20 min mid-video",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "user pause + 5 min Pause, resumed",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     }
+    ],
+    "incremental": {
+     "passes": 1380,
+     "episodes_incremental": 37,
+     "episodes_one_pass": 37,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2400.0
+    },
+    "merged": 1,
+    "split": 2,
+    "ok": 16,
+    "n": 19
+   },
+   "P600 +pos": {
+    "cases": [
+     {
+      "case": "same title, other channel, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title, other channel, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title, other channel, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, new row (10 s)",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, same row (capture keeps it)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url same",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url none",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "Pause 120 min mid-video",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "Pause 20 min mid-video",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "user pause + 5 min Pause, resumed",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     }
+    ],
+    "incremental": {
+     "passes": 1380,
+     "episodes_incremental": 37,
+     "episodes_one_pass": 37,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2400.0
+    },
+    "merged": 1,
+    "split": 2,
+    "ok": 16,
+    "n": 19
+   },
+   "P180 proxy": {
+    "cases": [
+     {
+      "case": "same title, other channel, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 120s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, new row (10 s)",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, same row (capture keeps it)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url same",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url none",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "Pause 120 min mid-video",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "Pause 20 min mid-video",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "user pause + 5 min Pause, resumed",
+      "expected": 1,
+      "episodes": 2,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     }
+    ],
+    "incremental": {
+     "passes": 1380,
+     "episodes_incremental": 36,
+     "episodes_one_pass": 36,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2400.0
+    },
+    "merged": 3,
+    "split": 3,
+    "ok": 13,
+    "n": 19
+   },
+   "P180 url-id": {
+    "cases": [
+     {
+      "case": "same title, other channel, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 20s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 20s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 120s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 120s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 120s",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "same title, other channel, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, urls differ, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st finished, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "same title+channel, no url, 1st abandoned, gap 400s",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "rewatch after end, new row (10 s)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "rewatch after end, same row (capture keeps it)",
+      "expected": 2,
+      "episodes": 1,
+      "merged": 1,
+      "split": 0,
+      "ok": false
+     },
+     {
+      "case": "live stream title change, url same",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "live stream title change, url none",
+      "expected": 1,
+      "episodes": 3,
+      "merged": 0,
+      "split": 1,
+      "ok": false
+     },
+     {
+      "case": "Pause 120 min mid-video",
+      "expected": 2,
+      "episodes": 2,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "Pause 20 min mid-video",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     },
+     {
+      "case": "user pause + 5 min Pause, resumed",
+      "expected": 1,
+      "episodes": 1,
+      "merged": 0,
+      "split": 0,
+      "ok": true
+     }
+    ],
+    "incremental": {
+     "passes": 1380,
+     "episodes_incremental": 30,
+     "episodes_one_pass": 30,
+     "rows_in_two_episodes": 0,
+     "late_extensions": 0,
+     "differs_from_one_pass": 0,
+     "same_as_one_pass": true,
+     "emit_latency_s_max": 2400.0
+    },
+    "merged": 6,
+    "split": 1,
+    "ok": 12,
+    "n": 19
+   }
+  },
+  "production_media_ms_per_day": {
+   "20261119-standard-s21-target-0315": 26.426651826047678,
+   "20261119-standard-s21-target-1818": 32.521845557941845,
+   "20261119-day-s31-target-0547": 63.91451852362179
+  },
+  "chosen_p_s": 180
+ }
+}

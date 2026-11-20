@@ -1,0 +1,748 @@
+{
+ "candidate": "P1: C1 provenance + C2 process-lifetime rows + C3 viewing chains",
+ "aggregate": {
+  "rows_per_truth_mean": 1.5384615384615385,
+  "rows_per_truth_max": 2,
+  "m6_start_med_s": 0.0,
+  "m6_start_max_s": 0.538,
+  "m6_end_med_s": 0.0,
+  "m6_end_max_s": 698.92,
+  "false_game": 0,
+  "missed_game": 0,
+  "excluded_written": 0,
+  "f1_video_min": 1.0,
+  "f1_game_min": 1.0,
+  "title_acc_min": 0.8421052631578947,
+  "useless_max": 0.16666666666666666,
+  "derive_ms_per_day_max": 483.4205956637734,
+  "episodes_ms_per_day_max": 208.2067618371371,
+  "check_extra_us": 21.69999957708642
+ },
+ "runs": {
+  "20261119-standard-s21-target-0315": {
+   "hours": 1.0944405555555556,
+   "rows": 4,
+   "rows_per_truth": [
+    1,
+    1,
+    2
+   ],
+   "m6_start_err_s": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "m6_end_err_s": [
+    0.0,
+    0.0,
+    698.92
+   ],
+   "f1_video": 1.0,
+   "f1_game": 1.0,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    },
+    "conversation": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "game": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "work": {
+     "precision": 0.5,
+     "recall": 1.0,
+     "f1": 0.6666666666666666,
+     "n_truth": 1,
+     "n_episodes": 2
+    },
+    "browsing": {
+     "precision": 0.5,
+     "recall": 1.0,
+     "f1": 0.6666666666666666,
+     "n_truth": 1,
+     "n_episodes": 2
+    }
+   },
+   "title_acc": 1.0,
+   "title_n": 8,
+   "useless": 0.16666666666666666,
+   "useless_n": 12,
+   "rows_ms": 12.240000010933727,
+   "episodes_ms": 3.609599982155487,
+   "derive_ms_per_day": 347.56606734209413,
+   "episodes_ms_per_day": 79.15496107301753
+  },
+  "20261119-standard-s21-target-1818": {
+   "hours": 1.0833333333333333,
+   "rows": 4,
+   "rows_per_truth": [
+    2,
+    2,
+    2
+   ],
+   "m6_start_err_s": [
+    0.0,
+    0.538,
+    0.0
+   ],
+   "m6_end_err_s": [
+    0.538,
+    0.0,
+    697.493
+   ],
+   "f1_video": 1.0,
+   "f1_game": 1.0,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    },
+    "conversation": {
+     "precision": 0.6666666666666666,
+     "recall": 0.6666666666666666,
+     "f1": 0.6666666666666666,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "game": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "work": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 1,
+     "n_episodes": 1
+    },
+    "browsing": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 2,
+     "n_episodes": 2
+    }
+   },
+   "title_acc": 0.875,
+   "title_n": 8,
+   "useless": 0.09090909090909091,
+   "useless_n": 11,
+   "rows_ms": 8.035299979383126,
+   "episodes_ms": 3.8072000024840236,
+   "derive_ms_per_day": 262.35692267521074,
+   "episodes_ms_per_day": 84.34412313195375
+  },
+  "20261119-day-s31-target-0547": {
+   "hours": 6.865782777777778,
+   "rows": 8,
+   "rows_per_truth": [
+    1,
+    1,
+    1,
+    1,
+    2,
+    2,
+    2
+   ],
+   "m6_start_err_s": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.227,
+    0.0
+   ],
+   "m6_end_err_s": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.227,
+    0.0,
+    0.0
+   ],
+   "f1_video": 1.0,
+   "f1_game": 1.0,
+   "m11_1": {
+    "video": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 3,
+     "n_episodes": 3
+    },
+    "conversation": {
+     "precision": 0.8571428571428571,
+     "recall": 0.6666666666666666,
+     "f1": 0.75,
+     "n_truth": 9,
+     "n_episodes": 7
+    },
+    "game": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 7,
+     "n_episodes": 7
+    },
+    "browsing": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "n_truth": 19,
+     "n_episodes": 19
+    },
+    "work": {
+     "precision": 0.9,
+     "recall": 0.75,
+     "f1": 0.8181818181818182,
+     "n_truth": 12,
+     "n_episodes": 10
+    }
+   },
+   "title_acc": 0.8421052631578947,
+   "title_n": 19,
+   "useless": 0.043478260869565216,
+   "useless_n": 46,
+   "rows_ms": 78.73160002054647,
+   "episodes_ms": 59.562599984928966,
+   "derive_ms_per_day": 483.4205956637734,
+   "episodes_ms_per_day": 208.2067618371371
+  }
+ },
+ "detection": {
+  "cases": [
+   {
+    "name": "game_borderless",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "outer_wilds_observed",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "game_exclusive",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "excluded_borderless",
+    "truth_game": false,
+    "excluded": true,
+    "verdict": true,
+    "writes_name": false
+   },
+   {
+    "name": "game_borderless_primary",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "game_exclusive_primary",
+    "truth_game": true,
+    "excluded": false,
+    "verdict": true,
+    "writes_name": true
+   },
+   {
+    "name": "edge_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "chrome_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "edge_f11_primary",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "zen_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "code_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "electron_frameless_maximized",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "terminal_f11",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "discord_maximized_passive",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "photos_fullscreen",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   },
+   {
+    "name": "steam_big_picture",
+    "truth_game": false,
+    "excluded": false,
+    "verdict": false,
+    "writes_name": true
+   }
+  ],
+  "false_game": 0,
+  "missed_game": 0,
+  "excluded_written": 0,
+  "decision_us": 0.8999995770864189,
+  "signals": [
+   "exe_path",
+   "class_name",
+   "facts_lookup"
+  ],
+  "signals_us": 20.8,
+  "check_extra_us": 21.69999957708642
+ },
+ "extras": {
+  "runs": {
+   "20261119-standard-s21-target-0315": {
+    "active": [
+     {
+      "process": "qualitygame.exe",
+      "active_s": 344.873,
+      "truth_front_s": 344.8,
+      "span_s": 682.5
+     },
+     {
+      "process": "qualitygame.exe",
+      "active_s": 565.5,
+      "truth_front_s": 565.6,
+      "span_s": 682.5
+     },
+     {
+      "process": "outerwilds.exe",
+      "active_s": 449.8,
+      "truth_front_s": 449.8,
+      "span_s": 4787.331
+     }
+    ],
+    "active_err_s": [
+     0.073,
+     0.1,
+     0.0
+    ],
+    "gaming_now_s": 1394.673,
+    "today_mode_s": 1396.2,
+    "mode_differ_s": 2.727,
+    "media_rows": 3,
+    "chains": 2,
+    "chains_kept": 2,
+    "rows_per_chain_max": 2,
+    "chains_per_truth_video": [
+     1,
+     1
+    ],
+    "parts_ms": {
+     "media": 1.0383999906480312,
+     "games": 0.08779999916441739,
+     "conversations": 2.149299980374053,
+     "app_runs": 0.23820000933483243
+    },
+    "changed_ms_per_day": 29.919943859273882,
+    "parts_ms_per_day": {
+     "media": 22.77108578355098,
+     "games": 1.9253672291743325,
+     "conversations": 47.1320249118444,
+     "app_runs": 5.223490846548572
+    },
+    "rows_per_truth_assigned": [
+     1,
+     1,
+     2
+    ],
+    "m6_end_err_clamped_s": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "truth_end_after_stop_s": [
+     0.0,
+     0.0,
+     698.92
+    ]
+   },
+   "20261119-standard-s21-target-1818": {
+    "active": [
+     {
+      "process": "qualitygame.exe",
+      "active_s": 161.1,
+      "truth_front_s": 161.5,
+      "span_s": 682.501
+     },
+     {
+      "process": "qualitygame.exe",
+      "active_s": 566.7,
+      "truth_front_s": 566.8,
+      "span_s": 682.5
+     },
+     {
+      "process": "outerwilds.exe",
+      "active_s": 424.3,
+      "truth_front_s": 424.3,
+      "span_s": 4724.688
+     }
+    ],
+    "active_err_s": [
+     0.4,
+     0.1,
+     0.0
+    ],
+    "gaming_now_s": 1172.1,
+    "today_mode_s": 1171.7,
+    "mode_differ_s": 0.4,
+    "media_rows": 3,
+    "chains": 2,
+    "chains_kept": 2,
+    "rows_per_chain_max": 2,
+    "chains_per_truth_video": [
+     1,
+     1
+    ],
+    "parts_ms": {
+     "media": 1.2642999936360866,
+     "games": 0.0872999953571707,
+     "conversations": 2.1139000018592924,
+     "app_runs": 0.21470000501722097
+    },
+    "changed_ms_per_day": 34.69956909807829,
+    "parts_ms_per_day": {
+     "media": 28.009107551322536,
+     "games": 1.9340306663742435,
+     "conversations": 46.831015425805866,
+     "app_runs": 4.756430880381511
+    },
+    "rows_per_truth_assigned": [
+     1,
+     1,
+     2
+    ],
+    "m6_end_err_clamped_s": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "truth_end_after_stop_s": [
+     0.0,
+     0.0,
+     697.493
+    ]
+   },
+   "20261119-day-s31-target-0547": {
+    "active": [
+     {
+      "process": "qualitygame.exe",
+      "active_s": 1241.412,
+      "truth_front_s": 1241.0,
+      "span_s": 1851.155
+     },
+     {
+      "process": "qualitygame.exe",
+      "active_s": 1486.8,
+      "truth_front_s": 1485.6,
+      "span_s": 1851.121
+     },
+     {
+      "process": "qualitygame.exe",
+      "active_s": 279.9,
+      "truth_front_s": 279.8,
+      "span_s": 1146.522
+     },
+     {
+      "process": "qualitygame.exe",
+      "active_s": 826.9,
+      "truth_front_s": 827.0,
+      "span_s": 1149.706
+     },
+     {
+      "process": "qualitygame.exe",
+      "active_s": 976.4,
+      "truth_front_s": 976.5,
+      "span_s": 1325.177
+     },
+     {
+      "process": "qualitygame.exe",
+      "active_s": 883.8,
+      "truth_front_s": 883.9,
+      "span_s": 1325.174
+     },
+     {
+      "process": "outerwilds.exe",
+      "active_s": 1082.8,
+      "truth_front_s": 1081.5,
+      "span_s": 25587.058
+     }
+    ],
+    "active_err_s": [
+     0.412,
+     1.2,
+     0.1,
+     0.1,
+     0.1,
+     0.1,
+     1.3
+    ],
+    "gaming_now_s": 6930.8,
+    "today_mode_s": 6928.0,
+    "mode_differ_s": 2.8,
+    "media_rows": 16,
+    "chains": 3,
+    "chains_kept": 3,
+    "rows_per_chain_max": 9,
+    "chains_per_truth_video": [
+     1,
+     1,
+     1
+    ],
+    "parts_ms": {
+     "media": 17.25319999968633,
+     "games": 0.1998000079765916,
+     "conversations": 40.03459998057224,
+     "app_runs": 2.1056999976281077
+    },
+    "changed_ms_per_day": 68.36930548491901,
+    "parts_ms_per_day": {
+     "media": 60.31020983254798,
+     "games": 0.6984200267679082,
+     "conversations": 139.9447711400975,
+     "app_runs": 7.360675625603122
+    },
+    "rows_per_truth_assigned": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     2
+    ],
+    "m6_end_err_clamped_s": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "truth_end_after_stop_s": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "aggregate": {
+   "chain_p_s": 180.0,
+   "active_err_med_s": 0.1,
+   "active_err_max_s": 1.3,
+   "gaming_now_h": 2.6382147222222225,
+   "today_mode_h": 2.63775,
+   "mode_differ_s": 5.927,
+   "media_rows": 22,
+   "chains_kept": 7,
+   "rows_per_chain_max": 9,
+   "chains_per_truth_video_max": 1,
+   "chains_per_truth_video_min": 1,
+   "changed_ms_per_day_max": 68.36930548491901,
+   "media_ms_per_day_max": 60.31020983254798,
+   "games_ms_per_day_max": 1.9340306663742435,
+   "app_runs_ms_per_day_max": 7.360675625603122,
+   "conversations_ms_per_day_max": 139.9447711400975,
+   "rows_per_truth_assigned_mean": 1.2307692307692308,
+   "rows_per_truth_assigned_max": 2,
+   "m6_end_clamped_max_s": 0.0
+  }
+ },
+ "clipped_split": {
+  "runs": {
+   "20261119-standard-s21-target-0315": {
+    "n_game_pieces": 4,
+    "n_video_pieces": 2,
+    "rows_per_truth": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "m6_start_err_s": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "m6_end_err_s": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "f1_video": 1.0,
+    "f1_game": 0.8571428571428571,
+    "title_acc": 0.8888888888888888,
+    "episodes": {
+     "video": 2,
+     "game": 3
+    },
+    "matched": {
+     "video": 2,
+     "game": 3
+    }
+   },
+   "20261119-standard-s21-target-1818": {
+    "n_game_pieces": 4,
+    "n_video_pieces": 3,
+    "rows_per_truth": [
+     2,
+     2,
+     1,
+     1
+    ],
+    "m6_start_err_s": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "m6_end_err_s": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "f1_video": 0.8,
+    "f1_game": 0.8571428571428571,
+    "title_acc": 0.7,
+    "episodes": {
+     "video": 2,
+     "game": 3
+    },
+    "matched": {
+     "video": 2,
+     "game": 3
+    }
+   },
+   "20261119-day-s31-target-0547": {
+    "n_game_pieces": 8,
+    "n_video_pieces": 4,
+    "rows_per_truth": [
+     1,
+     1,
+     1,
+     1,
+     2,
+     2,
+     1,
+     1
+    ],
+    "m6_start_err_s": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "m6_end_err_s": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "f1_video": 0.8571428571428571,
+    "f1_game": 0.9333333333333333,
+    "title_acc": 0.7619047619047619,
+    "episodes": {
+     "video": 3,
+     "game": 7
+    },
+    "matched": {
+     "video": 3,
+     "game": 7
+    }
+   }
+  },
+  "aggregate": {
+   "rows_per_truth_mean": 1.25,
+   "rows_per_truth_max": 2,
+   "m6_start_max_s": 0.0,
+   "m6_end_max_s": 0.0,
+   "f1_video_min": 0.8,
+   "f1_game_min": 0.8571428571428571,
+   "title_acc_min": 0.7
+  }
+ }
+}

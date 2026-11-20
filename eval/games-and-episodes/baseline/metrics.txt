@@ -1,0 +1,1 @@
+rows/truth mean=5.38 max=25 | M6.1 start med=0.9s max=187.2s end med=58.4s max=4325.7s | det false_game=4 missed=0 excluded_written=1 | M11.1 F1 video min=0.12 game min=0.32 (0315:1.00/0.33 1818:0.80/0.33 0547:0.12/0.32) | M11.2 min=0.53 | M11.4 max=0.39 | derive max=236.0 ms/day (episodes 235.0) | check +0.5 us

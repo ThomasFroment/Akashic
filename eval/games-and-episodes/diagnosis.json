@@ -1,0 +1,1074 @@
+{
+ "20261119-standard-s21-target-0315": {
+  "hours": 1.09,
+  "games": {
+   "truth": [
+    {
+     "process": "qualitygame.exe",
+     "start_s": 0.7,
+     "dur_s": 682,
+     "focus_fraction": 0.505,
+     "rows_same_process": 2,
+     "rows_other_game": 1,
+     "rows_spanning_two_truth": 1,
+     "flicker_rows": 0,
+     "short_rows_lt_min_game": 0,
+     "first_row_start_err_s": 6.6,
+     "last_row_end_err_s": 567.5,
+     "splits": [
+      {
+       "end": "focus to foreign",
+       "next_start": "refocus from voice chat",
+       "away_s": 331.3
+      }
+     ],
+     "last_end": "other game in front (outerwilds.exe)"
+    },
+    {
+     "process": "qualitygame.exe",
+     "start_s": 685.3,
+     "dur_s": 682,
+     "focus_fraction": 0.829,
+     "rows_same_process": 1,
+     "rows_other_game": 4,
+     "rows_spanning_two_truth": 1,
+     "flicker_rows": 0,
+     "short_rows_lt_min_game": 0,
+     "first_row_start_err_s": -187.2,
+     "last_row_end_err_s": -117.0,
+     "splits": [],
+     "last_end": "other game in front (outerwilds.exe)"
+    },
+    {
+     "process": "outerwilds.exe",
+     "start_s": -148.4,
+     "dur_s": 4787,
+     "focus_fraction": 0.094,
+     "rows_same_process": 7,
+     "rows_other_game": 2,
+     "rows_spanning_two_truth": 0,
+     "flicker_rows": 4,
+     "short_rows_lt_min_game": 6,
+     "first_row_start_err_s": -0.2,
+     "last_row_end_err_s": -3090.0,
+     "splits": [
+      {
+       "end": "focus to voice chat",
+       "next_start": "refocus from other (notepad.exe)",
+       "away_s": 219.8
+      },
+      {
+       "end": "other game in front (qualitygame.exe)",
+       "next_start": "flicker (<2 s) from qualitygame.exe",
+       "away_s": 753.0
+      },
+      {
+       "end": "focus to voice chat",
+       "next_start": "flicker (<2 s) from other (applicationframehost.exe)",
+       "away_s": 9.4
+      },
+      {
+       "end": "game minimized in front, then voice chat",
+       "next_start": "flicker (<2 s) from voice chat",
+       "away_s": 95.6
+      },
+      {
+       "end": "focus to foreign",
+       "next_start": "flicker (<2 s) from voice chat",
+       "away_s": 8.0
+      },
+      {
+       "end": "focus to foreign",
+       "next_start": "refocus from browser",
+       "away_s": 157.4
+      }
+     ],
+     "last_end": "focus to foreign"
+    }
+   ],
+   "end_causes": {
+    "focus to foreign": 3,
+    "focus to voice chat": 2,
+    "other game in front (qualitygame.exe)": 1,
+    "game minimized in front, then voice chat": 1
+   },
+   "start_causes": {
+    "refocus from voice chat": 1,
+    "refocus from other (notepad.exe)": 1,
+    "flicker (<2 s) from qualitygame.exe": 1,
+    "flicker (<2 s) from other (applicationframehost.exe)": 1,
+    "flicker (<2 s) from voice chat": 2,
+    "refocus from browser": 1
+   },
+   "away_s": [
+    331.3,
+    219.8,
+    753.0,
+    9.4,
+    95.6,
+    8.0,
+    157.4
+   ],
+   "rows_total": 9,
+   "rows_by_process": {
+    "outerwilds.exe": 7,
+    "qualitygame.exe": 2
+   },
+   "rows_outside_truth": 0,
+   "rows_non_game_process": 0
+  },
+  "videos": {
+   "truth": [
+    {
+     "vid": "v1",
+     "title": "Mornhollow S01E03 sabsabcidquafelgrodrenpax",
+     "start_s": 2058.6,
+     "dur_s": 851,
+     "rows": 2,
+     "rows_lt_min_played": 1,
+     "pieces": [
+      {
+       "cause": "capture gap (pause) closed the row",
+       "gap_s": 42.2
+      }
+     ],
+     "video_episodes": 1,
+     "best_iou": 0.821,
+     "miss": null
+    },
+    {
+     "vid": "v2",
+     "title": "tirmunmungimsablopgimfyl Estrel walkthrough",
+     "start_s": 2809.4,
+     "dur_s": 900,
+     "rows": 1,
+     "rows_lt_min_played": 0,
+     "pieces": [],
+     "video_episodes": 1,
+     "best_iou": 0.996,
+     "miss": null
+    }
+   ],
+   "close_causes": {
+    "capture gap (pause) closed the row": 1
+   },
+   "miss_causes": {},
+   "episodes_video": 2,
+   "episodes_other_title": 0,
+   "episodes_duplicate_pieces": 0,
+   "rows_dropped_lt_min_played": 1
+  },
+  "game_episodes": {
+   "truth": [
+    {
+     "process": "qualitygame.exe",
+     "episodes": 2,
+     "best_iou": 0.234,
+     "title_has_name": true
+    },
+    {
+     "process": "qualitygame.exe",
+     "episodes": 1,
+     "best_iou": 0.65,
+     "title_has_name": true
+    },
+    {
+     "process": "outerwilds.exe",
+     "episodes": 1,
+     "best_iou": 0.064,
+     "title_has_name": true
+    }
+   ],
+   "episodes_game": 3
+  },
+  "exclusions": {
+   "vault_foreground_events": 1,
+   "vault_checks_judged_game": 0,
+   "vault_frame_window_rows": 0,
+   "vault_max_rect": [
+    0,
+    0
+   ]
+  }
+ },
+ "20261119-standard-s21-target-1818": {
+  "hours": 1.08,
+  "games": {
+   "truth": [
+    {
+     "process": "qualitygame.exe",
+     "start_s": 2.1,
+     "dur_s": 683,
+     "focus_fraction": 0.237,
+     "rows_same_process": 2,
+     "rows_other_game": 1,
+     "rows_spanning_two_truth": 1,
+     "flicker_rows": 0,
+     "short_rows_lt_min_game": 0,
+     "first_row_start_err_s": 4.2,
+     "last_row_end_err_s": 566.1,
+     "splits": [
+      {
+       "end": "focus to browser",
+       "next_start": "refocus from voice chat",
+       "away_s": 517.0
+      }
+     ],
+     "last_end": "other game in front (outerwilds.exe)"
+    },
+    {
+     "process": "qualitygame.exe",
+     "start_s": 684.1,
+     "dur_s": 682,
+     "focus_fraction": 0.83,
+     "rows_same_process": 1,
+     "rows_other_game": 3,
+     "rows_spanning_two_truth": 1,
+     "flicker_rows": 0,
+     "short_rows_lt_min_game": 0,
+     "first_row_start_err_s": -1.1,
+     "last_row_end_err_s": -115.8,
+     "splits": [],
+     "last_end": "other game in front (outerwilds.exe)"
+    },
+    {
+     "process": "outerwilds.exe",
+     "start_s": -127.2,
+     "dur_s": 4725,
+     "focus_fraction": 0.09,
+     "rows_same_process": 5,
+     "rows_other_game": 2,
+     "rows_spanning_two_truth": 0,
+     "flicker_rows": 3,
+     "short_rows_lt_min_game": 4,
+     "first_row_start_err_s": -0.2,
+     "last_row_end_err_s": -3241.1,
+     "splits": [
+      {
+       "end": "focus to other (steamwebhelper.exe)",
+       "next_start": "refocus from other (notepad.exe)",
+       "away_s": 197.3
+      },
+      {
+       "end": "focus to voice chat",
+       "next_start": "flicker (<2 s) from qualitygame.exe",
+       "away_s": 757.6
+      },
+      {
+       "end": "focus to voice chat",
+       "next_start": "flicker (<2 s) from foreign",
+       "away_s": 74.1
+      },
+      {
+       "end": "focus to voice chat",
+       "next_start": "flicker (<2 s) from voice chat",
+       "away_s": 30.8
+      }
+     ],
+     "last_end": "game minimized in front, then other"
+    }
+   ],
+   "end_causes": {
+    "focus to browser": 1,
+    "focus to other (steamwebhelper.exe)": 1,
+    "focus to voice chat": 3
+   },
+   "start_causes": {
+    "refocus from voice chat": 1,
+    "refocus from other (notepad.exe)": 1,
+    "flicker (<2 s) from qualitygame.exe": 1,
+    "flicker (<2 s) from foreign": 1,
+    "flicker (<2 s) from voice chat": 1
+   },
+   "away_s": [
+    517.0,
+    197.3,
+    757.6,
+    74.1,
+    30.8
+   ],
+   "rows_total": 7,
+   "rows_by_process": {
+    "outerwilds.exe": 5,
+    "qualitygame.exe": 2
+   },
+   "rows_outside_truth": 0,
+   "rows_non_game_process": 0
+  },
+  "videos": {
+   "truth": [
+    {
+     "vid": "v1",
+     "title": "Mornhollow S01E03 sabsabcidquafelgrodrenpax",
+     "start_s": 2019.2,
+     "dur_s": 851,
+     "rows": 2,
+     "rows_lt_min_played": 0,
+     "pieces": [
+      {
+       "cause": "capture gap (pause) closed the row",
+       "gap_s": 60.1
+      }
+     ],
+     "video_episodes": 2,
+     "best_iou": 0.822,
+     "miss": null
+    },
+    {
+     "vid": "v2",
+     "title": "tirmunmungimsablopgimfyl Estrel walkthrough",
+     "start_s": 2808.6,
+     "dur_s": 900,
+     "rows": 1,
+     "rows_lt_min_played": 0,
+     "pieces": [],
+     "video_episodes": 1,
+     "best_iou": 0.999,
+     "miss": null
+    }
+   ],
+   "close_causes": {
+    "capture gap (pause) closed the row": 1
+   },
+   "miss_causes": {},
+   "episodes_video": 3,
+   "episodes_other_title": 0,
+   "episodes_duplicate_pieces": 1,
+   "rows_dropped_lt_min_played": 0
+  },
+  "game_episodes": {
+   "truth": [
+    {
+     "process": "qualitygame.exe",
+     "episodes": 2,
+     "best_iou": 0.234,
+     "title_has_name": true
+    },
+    {
+     "process": "qualitygame.exe",
+     "episodes": 1,
+     "best_iou": 0.829,
+     "title_has_name": true
+    },
+    {
+     "process": "outerwilds.exe",
+     "episodes": 1,
+     "best_iou": 0.064,
+     "title_has_name": true
+    }
+   ],
+   "episodes_game": 3
+  },
+  "exclusions": {
+   "vault_foreground_events": 1,
+   "vault_checks_judged_game": 0,
+   "vault_frame_window_rows": 0,
+   "vault_max_rect": [
+    0,
+    0
+   ]
+  }
+ },
+ "20261119-day-s31-target-0547": {
+  "hours": 6.87,
+  "games": {
+   "truth": [
+    {
+     "process": "qualitygame.exe",
+     "start_s": 1.2,
+     "dur_s": 1851,
+     "focus_fraction": 0.67,
+     "rows_same_process": 7,
+     "rows_other_game": 3,
+     "rows_spanning_two_truth": 1,
+     "flicker_rows": 1,
+     "short_rows_lt_min_game": 4,
+     "first_row_start_err_s": -0.1,
+     "last_row_end_err_s": 297.6,
+     "splits": [
+      {
+       "end": "focus to other (explorer.exe)",
+       "next_start": "refocus from voice chat",
+       "away_s": 79.9
+      },
+      {
+       "end": "focus to outerwilds.exe",
+       "next_start": "refocus from foreign",
+       "away_s": 166.4
+      },
+      {
+       "end": "focus to other (notepad.exe)",
+       "next_start": "flicker (<2 s) from other (notepad.exe)",
+       "away_s": 25.2
+      },
+      {
+       "end": "game minimized in front, then other",
+       "next_start": "refocus from voice chat",
+       "away_s": 149.4
+      },
+      {
+       "end": "focus to outerwilds.exe",
+       "next_start": "refocus from other (steamwebhelper.exe)",
+       "away_s": 118.9
+      },
+      {
+       "end": "focus to other (explorer.exe)",
+       "next_start": "refocus from outerwilds.exe",
+       "away_s": 70.4
+      }
+     ],
+     "last_end": "other game in front (outerwilds.exe)"
+    },
+    {
+     "process": "qualitygame.exe",
+     "start_s": 1852.6,
+     "dur_s": 1851,
+     "focus_fraction": 0.803,
+     "rows_same_process": 6,
+     "rows_other_game": 5,
+     "rows_spanning_two_truth": 1,
+     "flicker_rows": 1,
+     "short_rows_lt_min_game": 3,
+     "first_row_start_err_s": -1.1,
+     "last_row_end_err_s": -199.4,
+     "splits": [
+      {
+       "end": "other game in front (outerwilds.exe)",
+       "next_start": "refocus from qualitygame.exe",
+       "away_s": 1.1
+      },
+      {
+       "end": "other game in front (outerwilds.exe)",
+       "next_start": "refocus from qualitygame.exe",
+       "away_s": 28.7
+      },
+      {
+       "end": "focus to voice chat",
+       "next_start": "refocus from voice chat",
+       "away_s": 34.2
+      },
+      {
+       "end": "focus to voice chat",
+       "next_start": "flicker (<2 s) from qualitygame.exe",
+       "away_s": 102.8
+      },
+      {
+       "end": "other game in front (outerwilds.exe)",
+       "next_start": "refocus from qualitygame.exe",
+       "away_s": 2.0
+      }
+     ],
+     "last_end": "other game in front (outerwilds.exe)"
+    },
+    {
+     "process": "qualitygame.exe",
+     "start_s": 11199.1,
+     "dur_s": 1147,
+     "focus_fraction": 0.244,
+     "rows_same_process": 3,
+     "rows_other_game": 3,
+     "rows_spanning_two_truth": 0,
+     "flicker_rows": 0,
+     "short_rows_lt_min_game": 2,
+     "first_row_start_err_s": -0.9,
+     "last_row_end_err_s": -703.0,
+     "splits": [
+      {
+       "end": "focus to other (steamwebhelper.exe)",
+       "next_start": "refocus from other (steamwebhelper.exe)",
+       "away_s": 6.4
+      },
+      {
+       "end": "focus to other (explorer.exe)",
+       "next_start": "refocus from voice chat",
+       "away_s": 160.2
+      }
+     ],
+     "last_end": "focus to voice chat"
+    },
+    {
+     "process": "qualitygame.exe",
+     "start_s": 12540.6,
+     "dur_s": 1150,
+     "focus_fraction": 0.719,
+     "rows_same_process": 3,
+     "rows_other_game": 0,
+     "rows_spanning_two_truth": 0,
+     "flicker_rows": 0,
+     "short_rows_lt_min_game": 2,
+     "first_row_start_err_s": -0.1,
+     "last_row_end_err_s": -221.8,
+     "splits": [
+      {
+       "end": "focus to browser",
+       "next_start": "refocus from other (notepad.exe)",
+       "away_s": 50.6
+      },
+      {
+       "end": "focus to browser",
+       "next_start": "refocus from other (notepad.exe)",
+       "away_s": 50.7
+      }
+     ],
+     "last_end": "focus to browser"
+    },
+    {
+     "process": "qualitygame.exe",
+     "start_s": 17742.3,
+     "dur_s": 1325,
+     "focus_fraction": 0.737,
+     "rows_same_process": 4,
+     "rows_other_game": 2,
+     "rows_spanning_two_truth": 1,
+     "flicker_rows": 2,
+     "short_rows_lt_min_game": 2,
+     "first_row_start_err_s": -0.2,
+     "last_row_end_err_s": 275.3,
+     "splits": [
+      {
+       "end": "focus to other (python.exe)",
+       "next_start": "refocus from other (python.exe)",
+       "away_s": 14.0
+      },
+      {
+       "end": "focus to browser",
+       "next_start": "flicker (<2 s) from other (notepad.exe)",
+       "away_s": 232.0
+      },
+      {
+       "end": "focus to other (applicationframehost.exe)",
+       "next_start": "refocus from voice chat",
+       "away_s": 103.1
+      }
+     ],
+     "last_end": "other game in front (outerwilds.exe)"
+    },
+    {
+     "process": "qualitygame.exe",
+     "start_s": 19067.2,
+     "dur_s": 1325,
+     "focus_fraction": 0.667,
+     "rows_same_process": 4,
+     "rows_other_game": 7,
+     "rows_spanning_two_truth": 1,
+     "flicker_rows": 1,
+     "short_rows_lt_min_game": 2,
+     "first_row_start_err_s": -22.6,
+     "last_row_end_err_s": -213.9,
+     "splits": [
+      {
+       "end": "other game in front (outerwilds.exe)",
+       "next_start": "refocus from qualitygame.exe",
+       "away_s": 138.7
+      },
+      {
+       "end": "focus to other (python.exe)",
+       "next_start": "flicker (<2 s) from qualitygame.exe",
+       "away_s": 52.4
+      },
+      {
+       "end": "other game in front (outerwilds.exe)",
+       "next_start": "refocus from qualitygame.exe",
+       "away_s": 32.3
+      }
+     ],
+     "last_end": "focus to other (steamwebhelper.exe)"
+    },
+    {
+     "process": "outerwilds.exe",
+     "start_s": -870.2,
+     "dur_s": 25587,
+     "focus_fraction": 0.069,
+     "rows_same_process": 25,
+     "rows_other_game": 25,
+     "rows_spanning_two_truth": 0,
+     "flicker_rows": 18,
+     "short_rows_lt_min_game": 23,
+     "first_row_start_err_s": -0.2,
+     "last_row_end_err_s": -4325.7,
+     "splits": [
+      {
+       "end": "focus to browser",
+       "next_start": "refocus from browser",
+       "away_s": 130.7
+      },
+      {
+       "end": "focus to voice chat",
+       "next_start": "refocus from other (python.exe)",
+       "away_s": 1138.1
+      },
+      {
+       "end": "focus to foreign",
+       "next_start": "refocus from other (explorer.exe)",
+       "away_s": 562.7
+      },
+      {
+       "end": "other game in front (qualitygame.exe)",
+       "next_start": "flicker (<2 s) from qualitygame.exe",
+       "away_s": 298.7
+      },
+      {
+       "end": "other game in front (qualitygame.exe)",
+       "next_start": "refocus from qualitygame.exe",
+       "away_s": 4.0
+      },
+      {
+       "end": "focus to browser",
+       "next_start": "flicker (<2 s) from outerwilds.exe",
+       "away_s": 890.0
+      },
+      {
+       "end": "other game in front (qualitygame.exe)",
+       "next_start": "flicker (<2 s) from qualitygame.exe",
+       "away_s": 454.3
+      },
+      {
+       "end": "focus to browser",
+       "next_start": "refocus from browser",
+       "away_s": 8.8
+      },
+      {
+       "end": "focus to browser",
+       "next_start": "refocus from other (explorer.exe)",
+       "away_s": 536.6
+      },
+      {
+       "end": "focus to other (code.exe)",
+       "next_start": "flicker (<2 s) from other (code.exe)",
+       "away_s": 10.7
+      },
+      {
+       "end": "focus to browser",
+       "next_start": "flicker (<2 s) from qualitygame.exe",
+       "away_s": 7474.6
+      },
+      {
+       "end": "focus to other (applicationframehost.exe)",
+       "next_start": "flicker (<2 s) from outerwilds.exe",
+       "away_s": 489.4
+      },
+      {
+       "end": "focus to browser",
+       "next_start": "flicker (<2 s) from other (notepad.exe)",
+       "away_s": 76.2
+      },
+      {
+       "end": "game minimized in front, then other",
+       "next_start": "flicker (<2 s) from other (notepad.exe)",
+       "away_s": 151.9
+      },
+      {
+       "end": "focus to other (explorer.exe)",
+       "next_start": "flicker (<2 s) from other (notepad.exe)",
+       "away_s": 50.5
+      },
+      {
+       "end": "game minimized in front, then other",
+       "next_start": "flicker (<2 s) from other (notepad.exe)",
+       "away_s": 6528.1
+      },
+      {
+       "end": "game minimized in front, then other",
+       "next_start": "flicker (<2 s) from other (applicationframehost.exe)",
+       "away_s": 25.3
+      },
+      {
+       "end": "game minimized in front, then other",
+       "next_start": "flicker (<2 s) from voice chat",
+       "away_s": 299.7
+      },
+      {
+       "end": "focus to foreign",
+       "next_start": "flicker (<2 s) from other (notepad.exe)",
+       "away_s": 36.1
+      },
+      {
+       "end": "focus to voice chat",
+       "next_start": "flicker (<2 s) from other (steamwebhelper.exe)",
+       "away_s": 25.4
+      },
+      {
+       "end": "game minimized in front, then other",
+       "next_start": "flicker (<2 s) from other (notepad.exe)",
+       "away_s": 602.4
+      },
+      {
+       "end": "focus to other (steamwebhelper.exe)",
+       "next_start": "flicker (<2 s) from browser",
+       "away_s": 26.6
+      },
+      {
+       "end": "game minimized in front, then browser",
+       "next_start": "flicker (<2 s) from other (steamwebhelper.exe)",
+       "away_s": 145.6
+      },
+      {
+       "end": "focus to other (applicationframehost.exe)",
+       "next_start": "flicker (<2 s) from outerwilds.exe",
+       "away_s": 209.1
+      }
+     ],
+     "last_end": "game minimized in front, then other"
+    }
+   ],
+   "end_causes": {
+    "focus to other (explorer.exe)": 4,
+    "focus to outerwilds.exe": 2,
+    "focus to other (notepad.exe)": 1,
+    "game minimized in front, then other": 6,
+    "other game in front (outerwilds.exe)": 5,
+    "focus to voice chat": 4,
+    "focus to other (steamwebhelper.exe)": 2,
+    "focus to browser": 9,
+    "focus to other (python.exe)": 2,
+    "focus to other (applicationframehost.exe)": 3,
+    "focus to foreign": 2,
+    "other game in front (qualitygame.exe)": 3,
+    "focus to other (code.exe)": 1,
+    "game minimized in front, then browser": 1
+   },
+   "start_causes": {
+    "refocus from voice chat": 5,
+    "refocus from foreign": 1,
+    "flicker (<2 s) from other (notepad.exe)": 8,
+    "refocus from other (steamwebhelper.exe)": 2,
+    "refocus from outerwilds.exe": 1,
+    "refocus from qualitygame.exe": 6,
+    "flicker (<2 s) from qualitygame.exe": 5,
+    "refocus from other (notepad.exe)": 2,
+    "refocus from other (python.exe)": 2,
+    "refocus from browser": 2,
+    "refocus from other (explorer.exe)": 2,
+    "flicker (<2 s) from outerwilds.exe": 3,
+    "flicker (<2 s) from other (code.exe)": 1,
+    "flicker (<2 s) from other (applicationframehost.exe)": 1,
+    "flicker (<2 s) from voice chat": 1,
+    "flicker (<2 s) from other (steamwebhelper.exe)": 2,
+    "flicker (<2 s) from browser": 1
+   },
+   "away_s": [
+    79.9,
+    166.4,
+    25.2,
+    149.4,
+    118.9,
+    70.4,
+    1.1,
+    28.7,
+    34.2,
+    102.8,
+    2.0,
+    6.4,
+    160.2,
+    50.6,
+    50.7,
+    14.0,
+    232.0,
+    103.1,
+    138.7,
+    52.4,
+    32.3,
+    130.7,
+    1138.1,
+    562.7,
+    298.7,
+    4.0,
+    890.0,
+    454.3,
+    8.8,
+    536.6,
+    10.7,
+    7474.6,
+    489.4,
+    76.2,
+    151.9,
+    50.5,
+    6528.1,
+    25.3,
+    299.7,
+    36.1,
+    25.4,
+    602.4,
+    26.6,
+    145.6,
+    209.1
+   ],
+   "rows_total": 50,
+   "rows_by_process": {
+    "outerwilds.exe": 25,
+    "qualitygame.exe": 25
+   },
+   "rows_outside_truth": 0,
+   "rows_non_game_process": 0
+  },
+  "videos": {
+   "truth": [
+    {
+     "vid": "v1",
+     "title": "Mornhollow S01E03 sabwulvunloprebzordaxcid",
+     "start_s": 4557.8,
+     "dur_s": 5585,
+     "rows": 2,
+     "rows_lt_min_played": 0,
+     "pieces": [
+      {
+       "cause": "capture gap (pause) closed the row",
+       "gap_s": 54.2
+      }
+     ],
+     "video_episodes": 2,
+     "best_iou": 0.56,
+     "miss": null
+    },
+    {
+     "vid": "v2",
+     "title": "rhonimkalyemcidlopbolgro Estrel walkthrough",
+     "start_s": 13988.7,
+     "dur_s": 3798,
+     "rows": 5,
+     "rows_lt_min_played": 0,
+     "pieces": [
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 6.0
+      }
+     ],
+     "video_episodes": 5,
+     "best_iou": 0.481,
+     "miss": "split into rows, no piece reaches IoU 0.5"
+    },
+    {
+     "vid": "v3",
+     "title": "daxulnfeljektovwulvuntov Quilvane walkthrough",
+     "start_s": 20489.7,
+     "dur_s": 4254,
+     "rows": 9,
+     "rows_lt_min_played": 2,
+     "pieces": [
+      {
+       "cause": "other (16 s apart)",
+       "gap_s": 16.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      },
+      {
+       "cause": "closed and reopened within 10 s, same title (#189 url_unknown hold)",
+       "gap_s": 4.0
+      }
+     ],
+     "video_episodes": 7,
+     "best_iou": 0.275,
+     "miss": "split into rows, no piece reaches IoU 0.5"
+    }
+   ],
+   "close_causes": {
+    "capture gap (pause) closed the row": 1,
+    "closed and reopened within 10 s, same title (#189 url_unknown hold)": 11,
+    "other (16 s apart)": 1
+   },
+   "miss_causes": {
+    "split into rows, no piece reaches IoU 0.5": 2
+   },
+   "episodes_video": 14,
+   "episodes_other_title": 0,
+   "episodes_duplicate_pieces": 13,
+   "rows_dropped_lt_min_played": 2
+  },
+  "game_episodes": {
+   "truth": [
+    {
+     "process": "qualitygame.exe",
+     "episodes": 3,
+     "best_iou": 0.525,
+     "title_has_name": true
+    },
+    {
+     "process": "qualitygame.exe",
+     "episodes": 3,
+     "best_iou": 0.391,
+     "title_has_name": true
+    },
+    {
+     "process": "qualitygame.exe",
+     "episodes": 1,
+     "best_iou": 0.175,
+     "title_has_name": true
+    },
+    {
+     "process": "qualitygame.exe",
+     "episodes": 1,
+     "best_iou": 0.662,
+     "title_has_name": true
+    },
+    {
+     "process": "qualitygame.exe",
+     "episodes": 2,
+     "best_iou": 0.719,
+     "title_has_name": true
+    },
+    {
+     "process": "qualitygame.exe",
+     "episodes": 2,
+     "best_iou": 0.377,
+     "title_has_name": true
+    },
+    {
+     "process": "outerwilds.exe",
+     "episodes": 2,
+     "best_iou": 0.031,
+     "title_has_name": true
+    }
+   ],
+   "episodes_game": 12
+  },
+  "exclusions": {
+   "vault_foreground_events": 1,
+   "vault_checks_judged_game": 0,
+   "vault_frame_window_rows": 0,
+   "vault_max_rect": [
+    0,
+    0
+   ]
+  }
+ },
+ "totals": {
+  "end_causes": {
+   "focus to foreign": 5,
+   "focus to voice chat": 9,
+   "other game in front (qualitygame.exe)": 4,
+   "game minimized in front, then voice chat": 1,
+   "focus to browser": 10,
+   "focus to other (steamwebhelper.exe)": 3,
+   "focus to other (explorer.exe)": 4,
+   "focus to outerwilds.exe": 2,
+   "focus to other (notepad.exe)": 1,
+   "game minimized in front, then other": 6,
+   "other game in front (outerwilds.exe)": 5,
+   "focus to other (python.exe)": 2,
+   "focus to other (applicationframehost.exe)": 3,
+   "focus to other (code.exe)": 1,
+   "game minimized in front, then browser": 1
+  },
+  "start_causes": {
+   "refocus from voice chat": 7,
+   "refocus from other (notepad.exe)": 4,
+   "flicker (<2 s) from qualitygame.exe": 7,
+   "flicker (<2 s) from other (applicationframehost.exe)": 2,
+   "flicker (<2 s) from voice chat": 4,
+   "refocus from browser": 3,
+   "flicker (<2 s) from foreign": 1,
+   "refocus from foreign": 1,
+   "flicker (<2 s) from other (notepad.exe)": 8,
+   "refocus from other (steamwebhelper.exe)": 2,
+   "refocus from outerwilds.exe": 1,
+   "refocus from qualitygame.exe": 6,
+   "refocus from other (python.exe)": 2,
+   "refocus from other (explorer.exe)": 2,
+   "flicker (<2 s) from outerwilds.exe": 3,
+   "flicker (<2 s) from other (code.exe)": 1,
+   "flicker (<2 s) from other (steamwebhelper.exe)": 2,
+   "flicker (<2 s) from browser": 1
+  },
+  "video_close": {
+   "capture gap (pause) closed the row": 3,
+   "closed and reopened within 10 s, same title (#189 url_unknown hold)": 11,
+   "other (16 s apart)": 1
+  },
+  "video_miss": {
+   "split into rows, no piece reaches IoU 0.5": 2
+  },
+  "away_s": [
+   331.3,
+   219.8,
+   753.0,
+   9.4,
+   95.6,
+   8.0,
+   157.4,
+   517.0,
+   197.3,
+   757.6,
+   74.1,
+   30.8,
+   79.9,
+   166.4,
+   25.2,
+   149.4,
+   118.9,
+   70.4,
+   1.1,
+   28.7,
+   34.2,
+   102.8,
+   2.0,
+   6.4,
+   160.2,
+   50.6,
+   50.7,
+   14.0,
+   232.0,
+   103.1,
+   138.7,
+   52.4,
+   32.3,
+   130.7,
+   1138.1,
+   562.7,
+   298.7,
+   4.0,
+   890.0,
+   454.3,
+   8.8,
+   536.6,
+   10.7,
+   7474.6,
+   489.4,
+   76.2,
+   151.9,
+   50.5,
+   6528.1,
+   25.3,
+   299.7,
+   36.1,
+   25.4,
+   602.4,
+   26.6,
+   145.6,
+   209.1
+  ]
+ }
+}
