@@ -54,6 +54,7 @@ already follows it. Change a decision only when the user says so, and update its
 
 | Decision | Date | Status |
 | --- | --- | --- |
+| The GitHub repository stays public while it holds ported screenpipe logic (personal, non-commercial licence); the user accepts the risk ([audit 2026-11-10](audits/2026-11-10.md), Open questions). | 2026-11-10 | rule |
 | No harness for the A9 normal-day spike in the 2026-11-17 Part A epic; it stays open in [TODO.md](../TODO.md) A9. | 2026-11-17 | rule |
 | No development runner limits (memory, process, thread, priority) and no mandatory model preflight; do not restore them without asking. | 2026-11-10 | rule |
 | Agents test on real data only through an **export** the app writes, re-encrypted with a separate passphrase that the user gives the agent. Never open the live data folder. Use disposable encrypted stores for deletion, upgrade and failure tests. | 2026-11-12 | rule |

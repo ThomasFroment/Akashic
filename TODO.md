@@ -694,7 +694,6 @@ Then the user records daily use with Part A in place and exports it; Part C work
 
 ### B12. Workspace (audit 2026-11-10 § Workspace, `/frogg:create-workspace`)
 
-- [ ] Ask the user: does the GitHub repo stay public (it holds ported screenpipe logic)?
 - [ ] Merge or delete `origin/claude/akashic-data-collection-audit-e91ad3`
 - [ ] Remove the five merged local branches and their four worktrees (user's yes)
 - [ ] `.gitignore`: OS files, secrets, `.claude/settings.local.json`, `.claude/worktrees/`, logs,
