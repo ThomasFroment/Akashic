@@ -13,6 +13,7 @@ already follows it. Change a decision only when the user says so, and update its
 
 | Decision | Date | Status |
 | --- | --- | --- |
+| Inter-frame compression of stored screenshots is in scope: disk per day now demands it. The study's best fit, key-relative tile deltas (C1 of [Screenshot Store Growth](solutions/2026-11-20%20-%20Screenshot%20Store%20Growth/report.md)), is queued. Deferred AV1 re-encoding of older screenshots (C5) is not built for now; it may come later, applied retroactively to stored history. | 2026-11-21 | pending, TODO Audit 2026-11-18 |
 | Echo cancellation and digital subtraction of one app's captured audio (process loopback) from the system mix are allowed; echo cancellation is no longer a scope exclusion. | 2026-11-20 | rule |
 | A stop past the deadline is recorded as `crashed` from the last heartbeat; no clean-stop marker is written. Rules: [CAPTURE.md](CAPTURE.md#capture-gaps). | 2026-11-17 | done |
 | An export opened as a data folder is an ordinary store. Documented, not prevented. Rules: [STORAGE.md](STORAGE.md#export). | 2026-11-17 | done |
