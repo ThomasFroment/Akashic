@@ -230,7 +230,10 @@ the place to start.
 
 ## Measured, not yet studied
 
-- **Store growth** 4.2-4.9 GB per day kept forever by default (about 1.5-1.8 TB a year).
+- **Store growth** 4.2-4.9 GB per day kept forever by default (about 1.5-1.8 TB a year); one real
+  desktop hour stores 389 MB (9.3 GB per 24 h of activity). Studied 2026-11-20
+  (`docs/solutions/2026-11-20 - Screenshot Store Growth`): key-relative tile deltas 0.54x on the
+  real hour within every must, deferred SVT-AV1 compaction 0.36x at 954 s of worker CPU per hour.
 - **URL identity** M4.1 0.69-0.92 on the first scoring; 0.86-0.96 once steps the browser never held
   are left out (2026-11-20, baseline last section): no wrong URL remains, only visits under 5 s.
 - **Game borderless change recall** M1.1 0.04-0.12 (game mode stores one frame per 60 s by design).
