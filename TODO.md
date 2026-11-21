@@ -17,6 +17,7 @@ User decisions (D1, D3–D9 and dated ones) are in [DECISIONS.md](docs/DECISIONS
 
 Every item keeps synthesis §7.7: exclusions before disk, everything encrypted, new tables and
 columns covered by retention and "Delete all", no captured text in logs, no dependency without asking.
+Once real recording starts, the first schema change brings numbered migrations back (#222).
 
 Three parts:
 - **Part A, before the real dataset:** changes what is recorded (screen, audio, media, exclusions)
@@ -42,10 +43,13 @@ structure and clean-up items run the tests and `scripts/check.ps1` only.
 
 - [ ] Harness and baseline before the fixes
   - [ ] Driver focus steps that take the foreground (25 browser steps failed on the day run)
+  - [ ] Driver: harness Notepad files never stay as tabs in the user's Notepad session
   - [ ] One-word chat reply and notification badge truth cases (R7's acceptance)
   - [ ] Driver input between focus steps, or presence-aware truth (R5's away span)
   - [ ] OCR time per call (R8's +50 ms p95 budget)
-  - [ ] Clean same-seed standard pair on that harness (5 % rule; the user away)
+  - [ ] Scorer M5.3: clip bands to the truth run (or report the clipped error beside it)
+  - [ ] Driver: switch rates, run lengths and focus shares within the profile's tolerances
+  - [ ] Clean same-seed standard pair: 5 % rule, profile fidelity in tolerance, the user away
 - [ ] R1 Keep transcription alive through a long day
   - [ ] Embedding server gets a small `ctx-size` (`EMBEDDING_FLAGS`, `pipeline/llm.py`); measure VRAM
   - [ ] No model swap per job kind: embedder resident beside Whisper (evict for chat), or drain
@@ -61,6 +65,7 @@ structure and clean-up items run the tests and `scripts/check.ps1` only.
   - [ ] /frogg:invent speaker-profile fragmentation and episode people on the quality runs
     - [ ] With R6's simulated per-app streams (`eval/overlapping-speech/`): wrong authors rise
     - [ ] #204 Evenly spread speaker windows measured alone inside it (recurring C4)
+    - [ ] Count the day's unknown authors past a 10 s boundary or a 30 s seam
 - [ ] R11 /frogg:invent names and terms in transcripts (term hits 0.50-0.75; `docs/SPEECH.md`)
 - [ ] R4 Akashic's own audio session out of every source list
   - [ ] #216 Test `_audible` (state, peak, pid, own pid); hardware test plays a clip
@@ -72,42 +77,60 @@ structure and clean-up items run the tests and `scripts/check.ps1` only.
   - [ ] #222 #223 Plain schema create (`db.migrate` kept), `storage/schema.sql`, docs aligned
     - [ ] `eval/app-time-between-frames` harness off `db.load_migrations`
   - [ ] #220 Old config keys become unknown-key errors; keep the not-offered and default checks
+    - [ ] Drop "old configs still load" from B9's ticked `disk_warning_free_gb` item
   - [ ] #224 Rename `audio.whisper_model` to `speech_model` everywhere, no alias
 - [ ] R3 Games and videos (C1 of "Game Sessions And Episodes")
   - [ ] #215 Test `platform/win/media.py` `_read`
   - [ ] #194 Reset the GSMTC manager after a `get_sessions()` failure
   - [ ] Video episodes from chains of same-title media rows (gaps ≤ 180 s, 60 s on summed play)
   - [ ] #197 One game row per process instance (held process handle); time in front as a ledger
+    - [ ] Check pid reuse while a handle is held (the study's weak assumption)
   - [ ] #188 Provenance verdict, exclusions first: game mode kept, row content-free, no name logged
+    - [ ] Launcher-facts scan once a minute (Steam, Epic, GOG folders, GameConfigStore)
+    - [ ] Verdict cached per (pid, creation), dropped when exclusions change
+    - [ ] `build_games` and `heard_tag` skip the content-free row; update its test
   - [ ] #192 Big Picture, F11 Terminal/VS Code, Photos, frameless Electron are not games
   - [ ] Handle refused (protected, anti-cheat): C2 focus rows with identity reopen, `IsWindow` end
+    - [ ] Test the refused-handle path (error 5)
   - [ ] A Pause splits game rows, game episodes and viewing chains
   - [ ] `gaming_now` and game mode follow the in-front ledger (`last_front_ms`)
   - [ ] App runs drop only the game's own process visits
   - [ ] Game name: Steam appmanifest, then `ProductName` if `OriginalFilename` matches, then title
   - [ ] #200 Drop game-only conversation clusters with no mic segment
   - [ ] #189 Media row held through `url_unknown` while live, bounded by `FRESH_S`
+  - [ ] Picture-in-picture media row ends 116.6 s early (day run): find why, fix
   - [ ] Standard and day runs: game rows per session ≤ 1.5, end error ≤ 15 s, 0 false games
-    and excluded names, episode F1 video and game and titles ≥ 0.8
+    and excluded names, episode F1 video and game and titles ≥ 0.8, 0 missed pieces
 - [ ] R5 App time between frames (C3 + C4 of "App Time Between Frames"; after R3's game rows)
   - [ ] #196 Foreground switches stored as rows end app bands; cut at screen/all gaps, hidden focus
+    - [ ] Switch rows also from the 0.1 s foreground poll (hook misses restore-from-minimized)
+    - [ ] Band held to the next session, a later frame on its monitor, game end or recording end
   - [ ] Keyboard and mouse idle stored as a back-dated record
-  - [ ] Away span: every presence channel quiet 180 s, back-dated, cuts bands
+    - [ ] Idle = max(0, int32(GetTickCount − dwTime)); back-dating clipped after the last stalled gap
+  - [ ] Away span, typed as away, back-dated, cuts bands: every channel quiet 180 s (input,
+    own audible app with a changing picture ≤ 3 h, mic speech with an audible voice app)
   - [ ] A game counts as presence only while in front (R3's ledger), not until its process exits
   - [ ] #196 Test a session across a lock gap
   - [ ] #199 App-session watermark from the newest row
   - [ ] Standard and day runs: holes ≤ 5 % of app time, duration error below today's on each run
+  - [ ] Synthetic away, lock and sleep timelines: away ≈ 0 s, video and calls without input kept
+  - [ ] M5.2 overlap 0, no band in a gap or past the end; band derivation ≤ 50 ms/day
 - [ ] R6 Overlapping speech (C1 + language split of "Overlapping Speech"; after R4)
   - [ ] #193 `DEVICE_CHECK_S` 1 s
   - [ ] #218 Silero VAD scores public speech above 0.5
   - [ ] System rows ≥ 5 s with an unclear FR/EN choice: cut at an energy dip, decode per side
   - [ ] Standard and day runs: mixed WER
+  - [ ] Spike: process loopback on real Chrome, Edge and Zen trees (audio-service child)
+  - [ ] Spike: subtraction depth on the DT-770 over a long loud stretch (so far 23 quiet blocks)
   - [ ] #110 Real Discord call with a video playing: the call stays in the endpoint residual (user)
     - [x] Synthetic tone tree: activation works, all-zero capture, undecided
       (`docs/baselines/2026-11-17-process-loopback.md`)
   - [ ] Per-app process-loopback streams for up to 3 audible non-voice apps, the call as the rest
     (after the #110 call)
     - [ ] Schema: audio streams beyond `mic` and `system`
+    - [ ] Residual: mix − Σ 128-tap FIR ∗ stem (least squares on 1 s stem-only, refit 60 s)
+    - [ ] Residual not 25 dB below the mix on stem-only blocks: today's mix ≥ 10 s, stems muted
+    - [ ] Stem pick: excluded apps first, held 30 s; music stems not transcribed
     - [ ] An excluded app's stream is never kept; any system row overlapping its sound within 1 s
       is dropped (strict rule; keeping other apps' speech stored 33.2 s of excluded audio)
     - [ ] Browser as its own stream, dropped while a private or excluded page is open (after A9;
@@ -115,26 +138,48 @@ structure and clean-up items run the tests and `scripts/check.ps1` only.
     - [ ] Per-stream source for attribution (voice-chat stream = other people, browser = video)
   - [ ] Harness scorer groups overlap by (stream, source), not `stream = 'system'` only
   - [ ] Standard and day runs: overlap WER, DER; watch wrong authors (6 → 19, 46 → 71)
+  - [ ] Runs also: clean EN/FR/mixed WER ≤ today, 0 s of excluded audio, VRAM ≤ +1.5 GB,
+    GPU ≤ x1.30 as a daily average (report the worst hour), capture CPU ≤ +5 % of a core,
+    speakers CPU (study: 453 vs 218 s per recorded hour)
 - [ ] R7 Small screen changes (C5fix of "Small Screen Change Detection")
   - [ ] #208 `imaging.differs` at 1440p and 4K: short text line differs, caret blink does not
   - [ ] Exact clusters of moved pixels, minus regions that change at every check; OCR gate too
+    - [ ] Exact A-B-A toggles at a cluster box stored fewer than 7 times per episode
+    - [ ] Dense-gate stores refresh the last-move map
+    - [ ] Taskbar band (from the monitor work area) keeps today's test
   - [ ] Standard run: one-word reply and badge recall (side monitors checked every 15 s)
+  - [ ] Runs also: M1.1 focused recall ≥ today, M1.2 useless ratio ≤ today + 0.05, useless/h
+  - [ ] Real apps at 4K and 1440p: caret, clock and spinner stores per hour, faint-tint stores
+  - [ ] Optional: OCR gate crops to the union of change-cluster boxes (measure first)
   - [ ] /frogg:invent one image reduction per frame for black check and signature (#195)
   - [ ] #195 fix: the study's chosen candidate; same verdicts, tests and `scripts/check.ps1`
 - [ ] R8 Small text OCR (C2 + C1's scale of "Small Text Windows OCR")
   - [ ] #227 `OcrEngine.recognize` returns blocks; grouping and rendering move into `capture/`
+    - [ ] It also returns the installed languages; language choice moves into `capture/` too
+    - [ ] `test_layout.py`: platform imports only `capture.ports`; `ocr_windows` uses the helper
   - [ ] #214 Test OCR block grouping and column order
   - [ ] #190 One OCR call on a mosaic of line strips; strips under 16 device px enlarged
+    - [ ] Mosaic capped at `OcrEngine.MaxImageDimension` (10000 px here)
   - [ ] ClearType strips rebuilt from their subpixels; other and deferred strips use C1's scale
+    - [ ] Subpixel order voted per window (4 largest strips); XY-cut clears separator columns
   - [ ] Live standard run: CER ≤ 11 px and 1440p, OCR time (stored WebP cannot show it)
+  - [ ] Live run also: M3.3 no lower, 4K CER no worse, UIA CER unchanged, non-browser apps
+  - [ ] Refit the scale budget on real dense windows (OCR time follows words, ~0.29 ms each)
+  - [ ] Ask the user: forced 3x (+250-700 ms on dense windows) if deferred ≤ 11 px CER matters
   - [ ] #191 Focused window: run the OCR gate too and keep the longer of UIA and OCR text
   - [ ] Standard run: focused-window text CER (longer OCR text must not replace good UIA text)
 - [ ] R9 fix: the study's chosen candidate (after the R9 study, R6)
   - [ ] Standard and day runs: distinct people, wrong and unknown authors, useless episodes
 - [ ] R10 Repeated screen text in search
   - [ ] Merge keyword hits per window run (hwnd, title, URL) at query time (`search/keyword.py`)
+    - [ ] A run ends at a gap over 300 s (the study's run rule)
+    - [ ] FTS and Ask query time and M3.3 no worse than today
   - [ ] Measure top-5 slots repeating one window
-  - [ ] Line store (C1 of "Screen Text Duplication And Noise") only if index size or #203 needs it
+  - [ ] Measure misreads returnable and chrome share after the merge (study: 0.06-0.17x with C1)
+  - [ ] Line store (C1 of "Screen Text Duplication And Noise") if index size, #203 or noise needs it
+    - [ ] Nulling `frame_windows.text` fires `frame_windows_passages_au`, `window_text_copies_au`
+    - [ ] Embed worker, keyword run collapse, snippets and answer sources read run documents
+    - [ ] `delete_spent_frames`, delete-all, frame-text expiry and export cover the line tables
 - [ ] R11 fix: the study's chosen candidate (after the R11 study); runs: term hits
 - [ ] Browser visits under 5 s store no focused frame with their URL (M4.1): find why, fix
   - [ ] Standard run: M4.1 URL on visits under 5 s
@@ -146,9 +191,12 @@ structure and clean-up items run the tests and `scripts/check.ps1` only.
   - [ ] #239 Retention docstring: per-type bullets out of "Safety rules"
 - [ ] Store growth: key-relative tile deltas (C1 of "Screenshot Store Growth", after R7, #225)
   - [ ] Delta files: changed 64-px tiles vs the monitor's WebP key, checked bit-exact at full res
+  - [ ] New key at changed fraction > 0.45, after 64 deltas or 1 h; tile map from the signature
+  - [ ] Thumbnails and evidence crops decode key + delta (`api/frames.py`)
   - [ ] Full-size view composes a delta (JPEG q90, or composed in the browser)
   - [ ] Retention expiry and export keep or rewrite the boundary key group per monitor
   - [ ] Standard and day runs: store growth (G4), M3.1 CER, every moment decodes
+  - [ ] Runs also: 4K decode p95 (study 147 ms), writer ms on keys and deltas, capture RAM
 - [ ] Tests
   - [ ] #211 #212 #213 Replace sleeps and tight clocks with `wait_for` and real assertions
   - [ ] #207 Delete `test_capture_ports.py` but its VOICE_APPS invariant; conformance to fakes
@@ -247,7 +295,7 @@ structure and clean-up items run the tests and `scripts/check.ps1` only.
 - [x] #131 Keep a seeded continuation's short fresh speech after a 30 s cut; keep the quiet check
 - [x] #151 Attribute only the recorded endpoint's processes; log a gap when voice plays elsewhere
 - [ ] Record a second loopback on the device voice chat plays on when it is not the recorded one
-  (today only a `voice_elsewhere` gap; check the Wave Link routing first, CHECKLIST audio 7)
+  (today only a `voice_elsewhere` gap; Discord renders to the recorded DT-770: other voice apps only)
 - [x] #152 Music-app audio: speech tag only; music-app songs still dropped (D7, 2026-11-17)
 
 ### A7. Capture gaps
@@ -458,9 +506,12 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] Local speaker comparison (D6): label chosen clips, compare correct/wrong/unknown authors
 - [ ] Quality harness `eval/quality/` follow-ups (audit 2026-11-18-quality)
   - [ ] Brave and Firefox cases in the app list
+  - [ ] Zen case: audible, unmuted media ≥ 3 s, to check Zen publishes a GSMTC session
   - [ ] Scan export for M10.1 once a harness drives the app shell (UI presence, failsafe)
   - [ ] Ask the user: a French SAPI voice, to measure French speech (fr-FR OCR installed)
+  - [ ] Conversational FR/EN speech (SUMM-RE dev/test, AMI headsets) beside read speech
   - [ ] `eval/quality` under ruff and pyright; rename `scripts/eval_quality.py`
+  - [ ] Ask the user: declare scipy for `eval/quality` (today only through librosa), or drop it
   - [ ] Attended run: lock, sleep, default-output change, UAC (M5.4, M13.1)
   - [ ] Exclusive-fullscreen re-entry and real-app launch paths beyond smoke's
 
@@ -643,14 +694,22 @@ Then the user records daily use with Part A in place and exports it; Part C work
 
 ### B12. Workspace (audit 2026-11-10 § Workspace, `/frogg:create-workspace`)
 
-- [ ] `.gitignore`: OS files, secrets, `.claude/settings.local.json`, `.claude/worktrees/`, logs
-- [ ] `.gitattributes` for `.ps1`/`.cmd` line endings and binaries
+- [ ] Ask the user: does the GitHub repo stay public (it holds ported screenpipe logic)?
+- [ ] Merge or delete `origin/claude/akashic-data-collection-audit-e91ad3`
+- [ ] Remove the five merged local branches and their four worktrees (user's yes)
+- [ ] `.gitignore`: OS files, secrets, `.claude/settings.local.json`, `.claude/worktrees/`, logs,
+  `CLAUDE.local.md`, `*.egg-info/`
+- [ ] `.gitattributes`: `* text=auto eol=lf` (`-text` lines still win), `.ps1`/`.cmd` endings,
+  binaries; renormalize in its own commit
 - [ ] AGENTS.md: measure the `@docs` import size; add commands and dev loop; drop dated history
+- [ ] AGENTS.md: list `docs/research/` among the guides
 - [ ] README.md: license line
 - [ ] Add LICENSE and `docs/changelogs/`; decide whether DESIGN.md adds anything to DECISIONS.md
 - [ ] Shared `.claude/settings.json` permissions for the check and test commands
-- [ ] Headless stop/status script, if needed
-- [ ] Dependency audit with `uvx pip-audit` (sends package names to PyPI/OSV: ask first)
+- [ ] Headless stop/status script, if needed; document what exists first
+- [ ] ISSUES.md, or note that OPEN.md and TODO.md stand in for it on purpose
+- [ ] Ask the user: repeat dependency audits? (`uvx pip-audit` sends package names to PyPI/OSV;
+  `uv audit --frozen` ran 2026-11-19 unasked: no known vulnerability in 134 packages)
 - [ ] Run `scripts/check.ps1` before every commit (habit or a git pre-commit hook)
 
 ## Part C: needs the real dataset (after A8)
@@ -678,6 +737,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] #137 Overlap trim tolerates the half-cut word; record success in a `trimmed` column
 - [ ] #140 Add named non-self speakers to the prompt vocabulary within `PROMPT_MAX_CHARS` (after R11)
 - [ ] #139 Short or unsure clips: decode both languages, or reuse the stream's last language
+  - [ ] First measure short-segment FR/EN flips on the export
 - [ ] #43 Constrain Qwen3-ASR to French and English
 - [ ] Re-run the hallucination harness after each change above; refit the gate if needed (§7.3)
 
@@ -696,6 +756,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 
 - [ ] #168 A video doesn't claim source-less audio when a voice app or game was audible
 - [ ] #171 Short videos: lower the 60 s minimum to 10–15 s, or keep clips played to the end
+- [ ] Ask the user: two calls 82 s apart = one conversation? (`CLOSE_GAP_MS` 5 min)
 - [ ] #172 App runs chain on gap only, kind by dominant time; ties go to the first seen
 - [ ] #149 Derive visible-window sessions from unfocused frames too (after A9)
 
@@ -704,6 +765,7 @@ Then the user records daily use with Part A in place and exports it; Part C work
 - [ ] Speech and speakers
   - [ ] Keep music-app segments with evidence of real speech, such as a podcast (D7)
   - [ ] Overlap-gated separation (C6 of "Overlapping Speech"), only on a real same-app need
+    - [ ] Only while no game is in front; MossFormer2 is approved for measurement only
   - [ ] #106 Word timestamps; each word goes to the most-overlapping turn; refit the gate after
   - [ ] Speakers Route B: C7 span statistics plus C9; derived ONNX output pinned by checksum
   - [ ] Route B: `OPENBLAS_NUM_THREADS=1` in the worker; re-run the vector scan harnesses (§7.5)
@@ -711,6 +773,9 @@ Then the user records daily use with Part A in place and exports it; Part C work
   - [ ] #111 Compare Canary-1B-v2 and Cohere Transcribe on French-dominant real clips
   - [ ] Hallucination C3 CTC alignment, only if the last 3% outweighs VRAM and unclear flags
   - [ ] Lead: full-size French Whisper fine-tune (`bofenghuang/whisper-large-v3-french`) (§9)
+- [ ] Capture and timeline
+  - [ ] XInput pad presence (slot probe off the tick), only if pads are used outside games
+  - [ ] Media playback position, only if rewatches inside a viewing chain merge wrongly
 - [ ] Ask, rules stay the default (D8)
   - [ ] Follow-up C6 relation tag, optional when the model is loaded
   - [ ] Time C9 grounded slots in the plan call, optional
