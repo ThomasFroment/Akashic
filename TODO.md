@@ -106,7 +106,7 @@ structure and clean-up items run the tests and `scripts/check.ps1` only.
     - [ ] Switch rows also from the 0.1 s foreground poll (hook misses restore-from-minimized)
     - [ ] Band held to the next session, a later frame on its monitor, game end or recording end
   - [ ] Keyboard and mouse idle stored as a back-dated record
-    - [ ] Idle = max(0, int32(GetTickCount − dwTime)); back-dating clipped after the last stalled gap
+    - [ ] Idle = max(0, int32(GetTickCount − dwTime)); back-date only past the last stalled gap
   - [ ] Away span, typed as away, back-dated, cuts bands: every channel quiet 180 s (input,
     own audible app with a changing picture ≤ 3 h, mic speech with an audible voice app)
   - [ ] A game counts as presence only while in front (R3's ledger), not until its process exits
